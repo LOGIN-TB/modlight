@@ -1,0 +1,408 @@
+{
+  "project": "Podlight (macOS)",
+  "scope": "macOS 26+, SwiftUI; Journeys Einrichtung, Modell anlegen, Starten/Stoppen, Beenden, Kosten",
+  "expected_ids": [
+    "PL-NAV-001",
+    "PL-NAV-002",
+    "PL-NAV-003",
+    "PL-ONB-001",
+    "PL-ONB-002",
+    "PL-ONB-003",
+    "PL-ONB-004",
+    "PL-MOD-001",
+    "PL-MOD-002",
+    "PL-RUN-001",
+    "PL-RUN-002",
+    "PL-RUN-003",
+    "PL-RUN-004",
+    "PL-RUN-005",
+    "PL-RUN-006",
+    "PL-RUN-007",
+    "PL-COST-001",
+    "PL-COST-002",
+    "PL-DEL-001",
+    "PL-HELP-001",
+    "PL-UI-001",
+    "PL-UI-002",
+    "PL-UI-003",
+    "PL-UI-004",
+    "PL-UI-005",
+    "PL-A11Y-001",
+    "PL-A11Y-002",
+    "PL-A11Y-003",
+    "PL-TXT-001",
+    "PL-STATE-001",
+    "PL-PRIV-001"
+  ],
+  "criteria": [
+    {
+      "id": "PL-NAV-001",
+      "requirement": "Hauptfenster als NavigationSplitView: Seitenleiste mit „Dieser Mac“ (Modelle, Verbindungen, Kosten) und später „Server“, höchstens zwei Ebenen, standardmäßig sichtbar",
+      "origin": "hig",
+      "source_ids": [
+        154,
+        32
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-NAV-002",
+      "requirement": "Jeder Befehl (Starten, Stoppen, Neues Modell, Verbindung kopieren, Hilfe) steht auch in der Menüleiste, mit Standard- und eigenen Kürzeln",
+      "origin": "hig",
+      "source_ids": [
+        164,
+        58,
+        167
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-NAV-003",
+      "requirement": "Einstellungen über App-Menü / ⌘, mit stabilen Bereichen, zuletzt genutzter Bereich bleibt; aufgabenbezogene Optionen (Laufzeit, GPU-Ziel) im Kontext, nicht in den Einstellungen",
+      "origin": "hig",
+      "source_ids": [
+        94
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-ONB-001",
+      "requirement": "Erststart: kein Splash; Einrichtung beginnt nach dem Start, besteht nur aus Pflichtschritten (RunPod-Key) plus optionalen (HF-Token), ist unterbrechbar und später fortsetzbar",
+      "origin": "hig",
+      "source_ids": [
+        59,
+        79
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-ONB-002",
+      "requirement": "Jedes Eingabefeld für Schlüssel hat 3–4 Schritte, einen Knopf, der die Key-Seite direkt öffnet, und „Prüfen“ mit Live-Ergebnis",
+      "origin": "product",
+      "source_ids": [
+        38,
+        109
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-ONB-003",
+      "requirement": "Schlüssel werden in sicheren Feldern eingegeben, im Schlüsselbund gespeichert, nie im Klartext angezeigt oder geloggt; Einfügen erlaubt",
+      "origin": "hig",
+      "source_ids": [
+        38,
+        162,
+        87
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-ONB-004",
+      "requirement": "Abschluss zeigt die fertige OpenCode-Konfiguration (Adresse, Schlüssel, Modellname) mit „Kopieren“ und Prüfen der Erreichbarkeit",
+      "origin": "product",
+      "source_ids": [
+        40,
+        78
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-MOD-001",
+      "requirement": "Modellsuche liefert sofortige Treffer, Link-Einfügen erkennt HF-URLs; Ergebnisliste zeigt Größe, Format, Lizenz, Zugriffsbeschränkung",
+      "origin": "hig",
+      "source_ids": [
+        151,
+        92,
+        134
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-MOD-002",
+      "requirement": "Vorschlag einer Variante (z. B. INT4) und GPU nach Ziel Sparsam/Ausgewogen/Schnell; Alternativen mit $/h, tok/s-Schätzung, Laufzeitkosten; Schätzungen als solche gekennzeichnet",
+      "origin": "product",
+      "source_ids": [
+        109,
+        40
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-RUN-001",
+      "requirement": "Start als kurzes Sheet: „Läuft bis“ (Vorschläge + Uhrzeit), Kosten bis dahin, Standardknopf „Starten“, Abbrechen",
+      "origin": "hig",
+      "source_ids": [
+        153,
+        72
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-RUN-002",
+      "requirement": "Kaltstart zeigt ehrlichen Fortschritt nach Phasen (GPU suchen, Laden, Engine startet) mit Erwartungszeit; andere Bereiche bleiben bedienbar",
+      "origin": "hig",
+      "source_ids": [
+        64,
+        147
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-RUN-003",
+      "requirement": "Status nie nur über Farbe: Symbol + Text („Läuft · noch 1:42 h · 0,74 $/h“)",
+      "origin": "hig",
+      "source_ids": [
+        24,
+        8,
+        133
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-RUN-004",
+      "requirement": "Menüleisten-Extra mit Status, Restzeit, Kosten/h und Stopp; nicht einziger Zugang zu Funktionen",
+      "origin": "hig",
+      "source_ids": [
+        164
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-RUN-005",
+      "requirement": "Beenden mit laufenden lokalen Pods: Alert mit Anzahl, Kosten/h, Standard „Stoppen und beenden“, Alternativen „Weiterlaufen lassen“ (mit Hinweis auf Notbremse) und „Abbrechen“",
+      "origin": "hig",
+      "source_ids": [
+        113,
+        40
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-RUN-006",
+      "requirement": "Fenster schließen beendet die App nicht; Gateway läuft weiter, Menüleisten-Symbol bleibt",
+      "origin": "product",
+      "source_ids": [
+        173
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-RUN-007",
+      "requirement": "Ereignisse außerhalb des Fensters (Pod bereit, Laufzeit endet in 10 min, Limit erreicht, Notbremse ausgelöst) als Mitteilung nach Einwilligung, ohne Dubletten",
+      "origin": "hig",
+      "source_ids": [
+        138,
+        68
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-COST-001",
+      "requirement": "Kostenübersicht mit Diagramm (Tag/Monat, je Quelle) und Limit als Gauge; Diagramm hat Text-Alternative",
+      "origin": "hig",
+      "source_ids": [
+        117,
+        22,
+        129
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-COST-002",
+      "requirement": "Limit erreicht: Pod stoppt, Erklärung am Ort mit Lösungsweg (Limit anheben / morgen) statt nur Fehlercode",
+      "origin": "hig",
+      "source_ids": [
+        40,
+        109
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-DEL-001",
+      "requirement": "Löschen eines Modells: Bestätigung nur, wenn Disk/Pod betroffen ist; Undo für Bearbeitungen im Modell-Editor",
+      "origin": "hig",
+      "source_ids": [
+        113,
+        105
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-HELP-001",
+      "requirement": "Kontextbezogene Hilfe: Tooltips beschreiben die Aktion; „?“-Knöpfe an komplexen Feldern (Kontext, Quantisierung, Leerlauf) öffnen kurze Popover; Hilfe-Menü öffnet die Anleitung",
+      "origin": "hig",
+      "source_ids": [
+        78,
+        146
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-UI-001",
+      "requirement": "Systemfarben/-materialien, keine eigenen Blur-Kopien; Liquid Glass nur über Systemkomponenten (Toolbar, Seitenleiste), nicht auf Inhaltskarten",
+      "origin": "hig",
+      "source_ids": [
+        70,
+        24
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-UI-002",
+      "requirement": "Hell/Dunkel folgt dem System; Wechsel bei laufender App",
+      "origin": "hig",
+      "source_ids": [
+        26
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-UI-003",
+      "requirement": "Semantische Textstile, kein abgeschnittener Text bei langen deutschen Begriffen und schmalem Fenster",
+      "origin": "hig",
+      "source_ids": [
+        104,
+        60
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-UI-004",
+      "requirement": "Controls in macOS-Standardgröße (28×28 pt Standard, 20×20 Minimum)",
+      "origin": "hig",
+      "source_ids": [
+        8
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-UI-005",
+      "requirement": "App-Icon nach macOS-Vorgaben, ohne RunPod-Logo",
+      "origin": "hig",
+      "source_ids": [
+        13
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-A11Y-001",
+      "requirement": "Alle Journeys mit VoiceOver ausführbar: Labels, Werte, Zustände, sinnvolle Reihenfolge",
+      "origin": "hig",
+      "source_ids": [
+        8,
+        106
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-A11Y-002",
+      "requirement": "Alle Journeys nur mit Tastatur (Full Keyboard Access) ausführbar",
+      "origin": "hig",
+      "source_ids": [
+        58,
+        84
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-A11Y-003",
+      "requirement": "Bewegung reduzieren respektiert (Fortschritts- und Statusanimationen)",
+      "origin": "hig",
+      "source_ids": [
+        73,
+        8
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-TXT-001",
+      "requirement": "Einheitliche Begriffe de/en („Modell“, „Verbindung“, „Läuft bis“, „Leerlauf-Stopp“); Fehlermeldungen ohne Schuld, mit nächstem Schritt; leere Zustände mit Aktion",
+      "origin": "hig",
+      "source_ids": [
+        109
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-STATE-001",
+      "requirement": "Zustandsmatrix (unten) für jeden datenabhängigen Screen umgesetzt",
+      "origin": "engineering",
+      "source_ids": [
+        64,
+        40
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    },
+    {
+      "id": "PL-PRIV-001",
+      "requirement": "Keine Telemetrie; Netzwerkziele nur RunPod, Hugging Face, Pods, eigene Server, Update-Feed; in der Hilfe benannt",
+      "origin": "product",
+      "source_ids": [
+        87
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+    }
+  ]
+}

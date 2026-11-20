@@ -1,0 +1,48 @@
+{
+ "started": 1795199967.2394068,
+ "pod_id_env": true,
+ "steps": [
+  {
+   "t": 0.0,
+   "step": "env",
+   "names": {
+    "GPG_KEY": 40,
+    "RUNPOD_API_KEY": 50,
+    "RUNPOD_CPU_COUNT": 2,
+    "RUNPOD_GPU_COUNT": 1,
+    "RUNPOD_GPU_NAME": 20,
+    "RUNPOD_MEM_GB": 2,
+    "RUNPOD_POD_HOSTNAME": 23,
+    "RUNPOD_POD_ID": 14,
+    "RUNPOD_PROXY_BASE": 16
+   },
+   "runpodctl": "/usr/bin/runpodctl"
+  },
+  {
+   "t": 0.3,
+   "step": "list_all_pods_v2",
+   "status": 403,
+   "pods_visible": 0
+  },
+  {
+   "t": 0.6,
+   "step": "get_own_pod_v2",
+   "status": 200
+  },
+  {
+   "t": 0.8,
+   "step": "get_own_pod_v1",
+   "status": -1
+  },
+  {
+   "t": 1.0,
+   "step": "catalog_v2",
+   "status": 403
+  },
+  {
+   "t": 1.0,
+   "step": "serving",
+   "hold_seconds": 360
+  }
+ ]
+}
