@@ -46,21 +46,24 @@ class WatchdogTest(unittest.TestCase):
         self.pidfile = f"/tmp/podlight-test-engine-{self.port}.pid"
         full = dict(os.environ, RUNPOD_POD_ID="pod123", RUNPOD_API_KEY="pod-scoped", PODLIGHT_API_KEY="gw",
                     PODLIGHT_HEARTBEAT_MINUTES="0.05", PODLIGHT_BOOT_GRACE_MINUTES="0", PODLIGHT_CHECK_SECONDS="0.3",
-                    PODLIGHT_WATCHDOG_PORT=str(self.port), PODLIGHT_RUNPOD_API=f"http://127.0.0.1:{self.api.port}",
+                    PODLIGHT_WATCHDOG_PORT=str(self.port), PODLIGHT_WATCHDOG_HOST="127.0.0.1", PODLIGHT_RUNPOD_API=f"http://127.0.0.1:{self.api.port}",
                     PODLIGHT_ENGINE_PID_FILE=self.pidfile)
         full.update(env)
+        self.output = open(f"/tmp/podlight-test-watchdog-{self.port}.log", "w+")
         self.proc = subprocess.Popen([sys.executable, "-I", WATCHDOG], env=full,
-                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        for _ in range(50):
+                                     stdout=self.output, stderr=subprocess.STDOUT)
+        for _ in range(200):
             try:
                 socket.create_connection(("127.0.0.1", self.port), timeout=0.1).close()
                 return
             except OSError:
                 time.sleep(0.1)
-        self.fail("watchdog did not start")
+        self.output.seek(0)
+        self.fail(f"watchdog did not start (exit {self.proc.poll()}):\n{self.output.read()}")
 
     def tearDown(self):
         self.proc.kill(); self.proc.wait()
+        self.output.close(); os.remove(self.output.name)
         self.api.close()
         if os.path.exists(self.pidfile): os.remove(self.pidfile)
 

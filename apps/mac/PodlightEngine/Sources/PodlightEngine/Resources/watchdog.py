@@ -20,6 +20,7 @@ GATEWAY_KEY = os.environ.get("PODLIGHT_API_KEY", "")
 MINUTES = float(os.environ.get("PODLIGHT_HEARTBEAT_MINUTES", "15"))
 BOOT_GRACE_MINUTES = float(os.environ.get("PODLIGHT_BOOT_GRACE_MINUTES", "20"))
 PORT = int(os.environ.get("PODLIGHT_WATCHDOG_PORT", "8001"))
+HOST = os.environ.get("PODLIGHT_WATCHDOG_HOST", "0.0.0.0")  # all interfaces in the pod; tests use loopback
 API = os.environ.get("PODLIGHT_RUNPOD_API", "https://api.runpod.io")  # overridable for tests only
 CHECK_SECONDS = float(os.environ.get("PODLIGHT_CHECK_SECONDS", "15"))
 ENGINE_PID_FILE = os.environ.get("PODLIGHT_ENGINE_PID_FILE", "/tmp/podlight-engine.pid")
@@ -147,4 +148,4 @@ if __name__ == "__main__":
         log("RUNPOD_POD_ID or RUNPOD_API_KEY missing: the pod cannot stop itself")
     threading.Thread(target=check_loop, daemon=True).start()
     log(f"watching: heartbeat every {MINUTES:g} min, deadline {state['deadline']}")
-    ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
+    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()
