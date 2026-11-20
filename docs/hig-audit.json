@@ -45,7 +45,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-NAV-002",
@@ -58,7 +58,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-NAV-003",
@@ -69,7 +69,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-ONB-001",
@@ -79,9 +79,12 @@
         59,
         79
       ],
-      "status": "not_tested",
-      "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "status": "pass",
+      "evidence": [
+        "Setup shown inline in the main window, resumable via Help → Run Setup Again",
+        "Quit with setup open verified 2026-11-20 (-PodlightQuitAfter test hook)"
+      ],
+      "reason": ""
     },
     {
       "id": "PL-ONB-002",
@@ -91,9 +94,14 @@
         38,
         109
       ],
-      "status": "not_tested",
-      "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "status": "pass",
+      "evidence": [
+        "apps/mac/App/Views/SetupView.swift (steps, link, Check and Save)",
+        "RunpodClientTests.checksAKeyWithoutChangingAnything (valid/invalid/forbidden/unreachable)",
+        "RunpodLiveTests.aWrongKeyIsReportedAsInvalid (real API, 2026-11-20)",
+        "spec/help/screenshots/*/setup-key.png"
+      ],
+      "reason": ""
     },
     {
       "id": "PL-ONB-003",
@@ -104,9 +112,12 @@
         162,
         87
       ],
-      "status": "not_tested",
-      "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "status": "pass",
+      "evidence": [
+        "KeychainStoreTests.roundTripTrimsAndDeletes",
+        "SecureField in SetupView/SettingsView; no logging of secrets in the codebase (review 2026-11-20)"
+      ],
+      "reason": ""
     },
     {
       "id": "PL-ONB-004",
@@ -118,7 +129,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-MOD-001",
@@ -131,7 +142,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-MOD-002",
@@ -143,7 +154,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-RUN-001",
@@ -155,7 +166,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-RUN-002",
@@ -167,7 +178,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-RUN-003",
@@ -178,9 +189,12 @@
         8,
         133
       ],
-      "status": "not_tested",
-      "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "status": "pass",
+      "evidence": [
+        "PhaseIcon + PhaseText: symbol and text for every phase (ModelsView.swift)",
+        "spec/help/screenshots/*/models.png, menubar.png"
+      ],
+      "reason": ""
     },
     {
       "id": "PL-RUN-004",
@@ -191,7 +205,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-RUN-005",
@@ -203,7 +217,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-RUN-006",
@@ -214,7 +228,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-RUN-007",
@@ -224,9 +238,9 @@
         138,
         68
       ],
-      "status": "not_tested",
+      "status": "fail",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Not implemented in 0.1: no notifications yet. The menu bar shows time left instead."
     },
     {
       "id": "PL-COST-001",
@@ -239,7 +253,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-COST-002",
@@ -249,9 +263,12 @@
         40,
         109
       ],
-      "status": "not_tested",
-      "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "status": "pass",
+      "evidence": [
+        "GatewayFlowTests.wakesStreamsAndStopsAtTheEnd: 429 spend_limit with sentence",
+        "Describe.error(.limitReached) in apps/mac/App/Format.swift"
+      ],
+      "reason": ""
     },
     {
       "id": "PL-DEL-001",
@@ -263,7 +280,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-HELP-001",
@@ -275,7 +292,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-UI-001",
@@ -287,7 +304,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-UI-002",
@@ -298,7 +315,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-UI-003",
@@ -310,7 +327,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-UI-004",
@@ -321,7 +338,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-UI-005",
@@ -330,9 +347,12 @@
       "source_ids": [
         13
       ],
-      "status": "not_tested",
-      "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "status": "pass",
+      "evidence": [
+        "tools/make-icon.swift",
+        "apps/mac/App/Assets.xcassets/AppIcon.appiconset (no RunPod marks)"
+      ],
+      "reason": ""
     },
     {
       "id": "PL-A11Y-001",
@@ -344,7 +364,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-A11Y-002",
@@ -356,7 +376,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-A11Y-003",
@@ -368,7 +388,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-TXT-001",
@@ -377,9 +397,12 @@
       "source_ids": [
         109
       ],
-      "status": "not_tested",
-      "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "status": "pass",
+      "evidence": [
+        "tools/i18n/de.py (glossary in header)",
+        "tools/i18n/apply.py: 279 strings, 0 missing, 0 mismatched (also in CI)"
+      ],
+      "reason": ""
     },
     {
       "id": "PL-STATE-001",
@@ -391,7 +414,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     },
     {
       "id": "PL-PRIV-001",
@@ -402,7 +425,7 @@
       ],
       "status": "not_tested",
       "evidence": [],
-      "reason": "Noch nicht implementiert (Stand 2026-11-20)"
+      "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
     }
   ]
 }
