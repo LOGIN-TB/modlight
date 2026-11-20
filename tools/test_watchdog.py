@@ -5,7 +5,7 @@ checks that it stops the pod in each case it must, and only then. Standard libra
 
     python3 -I tools/test_watchdog.py
 """
-import json, os, socket, subprocess, sys, threading, time, unittest, urllib.request, urllib.error
+import http.client, json, os, socket, subprocess, sys, threading, time, unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 WATCHDOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "apps", "mac", "PodlightEngine",
@@ -68,13 +68,17 @@ class WatchdogTest(unittest.TestCase):
         if os.path.exists(self.pidfile): os.remove(self.pidfile)
 
     def post(self, path, body, key="gw"):
-        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", data=json.dumps(body).encode(), method="POST",
-                                     headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+        # http.client directly: urllib consults the system proxy settings on every request, which
+        # is slow enough on CI runners to make heartbeats arrive late.
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
         try:
-            with urllib.request.urlopen(req, timeout=5) as r:
-                return r.status
-        except urllib.error.HTTPError as e:
-            return e.code
+            conn.request("POST", path, body=json.dumps(body),
+                         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+            response = conn.getresponse()
+            response.read()
+            return response.status
+        finally:
+            conn.close()
 
     def wait_for_stop(self, seconds):
         end = time.time() + seconds
@@ -84,7 +88,7 @@ class WatchdogTest(unittest.TestCase):
 
     def test_stops_without_heartbeat(self):
         self.start()
-        stops = self.wait_for_stop(8)
+        stops = self.wait_for_stop(20)
         self.assertEqual(len(stops), 1)
         path, auth, body = stops[0]
         self.assertEqual(path, "/v2/pods/pod123/action")
@@ -98,7 +102,7 @@ class WatchdogTest(unittest.TestCase):
             time.sleep(0.5)
         self.assertEqual(self.api.stops, [])
         self.assertEqual(self.post("/heartbeat", {"deadline": time.time() - 1}), 200)
-        self.assertEqual(len(self.wait_for_stop(3)), 1)
+        self.assertEqual(len(self.wait_for_stop(10)), 1)
 
     def test_rejects_a_heartbeat_without_the_key(self):
         self.start()
@@ -108,7 +112,7 @@ class WatchdogTest(unittest.TestCase):
         dead = subprocess.Popen(["true"]); dead.wait()
         self.start(PODLIGHT_HEARTBEAT_MINUTES="10")
         with open(self.pidfile, "w") as f: f.write(str(dead.pid))
-        self.assertEqual(len(self.wait_for_stop(4)), 1)
+        self.assertEqual(len(self.wait_for_stop(10)), 1)
 
     def test_a_past_deadline_from_the_environment_is_ignored(self):
         # A resumed pod keeps its creation-time environment; that old deadline must not fire.

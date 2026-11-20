@@ -11,7 +11,7 @@
 # so the next start is fast, and Podlight deletes unused pods itself after three days.
 #
 # Standard library only: it must run in any image that has python3.
-import json, os, sys, threading, time, urllib.request, urllib.error
+import json, os, socketserver, sys, threading, time, urllib.request, urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 POD_ID = os.environ.get("RUNPOD_POD_ID", "")
@@ -35,6 +35,8 @@ state = {
     "stopping": None,
 }
 lock = threading.Lock()
+# Direct connections only: the pod has no proxy, and resolving system proxy settings can stall.
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 def log(msg):
@@ -53,7 +55,7 @@ def stop(reason):
             f"{API}/v2/pods/{POD_ID}/action", data=body, method="POST",
             headers={"Authorization": f"Bearer {RUNPOD_KEY}", "Content-Type": "application/json"})
         try:
-            with urllib.request.urlopen(req, timeout=20) as r:
+            with opener.open(req, timeout=20) as r:
                 log(f"stop accepted: HTTP {r.status}")
                 return
         except urllib.error.HTTPError as e:
@@ -140,6 +142,14 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
+class Server(ThreadingHTTPServer):
+    # http.server looks up its own host name with getfqdn() when binding. That reverse DNS lookup
+    # can hang for many seconds (seen on CI runners); the name is never used here.
+    def server_bind(self):
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = str(self.server_address[0]), self.server_address[1]
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 2 and sys.argv[1] == "stop":
         stop(" ".join(sys.argv[2:]))
@@ -148,4 +158,4 @@ if __name__ == "__main__":
         log("RUNPOD_POD_ID or RUNPOD_API_KEY missing: the pod cannot stop itself")
     threading.Thread(target=check_loop, daemon=True).start()
     log(f"watching: heartbeat every {MINUTES:g} min, deadline {state['deadline']}")
-    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()
+    Server((HOST, PORT), Handler).serve_forever()
