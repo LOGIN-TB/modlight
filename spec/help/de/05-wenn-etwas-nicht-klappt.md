@@ -1,0 +1,27 @@
+# Wenn etwas nicht klappt
+
+## „RunPod kennt diesen Key nicht“
+
+Der Key wurde nicht vollständig kopiert oder ist widerrufen. Lege bei RunPod einen neuen an und füge ihn unter Einstellungen → Zugänge ein.
+
+## „Keine freie Karte bei RunPod“
+
+Alle passenden Karten waren in dem Moment vergeben. Versuche es nach ein paar Minuten noch einmal oder wähle beim Modell das Ziel „Schnell“, dann kommen mehr Kartentypen in Frage.
+
+## Der Start dauert lange
+
+Der erste Start lädt das Modell herunter, bei großen Modellen einige Gigabyte. Danach startet vLLM, was allein rund zwei Minuten braucht. Solange Podlight „Modell wird geladen“ zeigt, läuft das normal.
+
+## „Das Modell braucht einen Hugging-Face-Token“
+
+Manche Hersteller geben ihre Modelle erst nach Zustimmung frei. Öffne die Modellseite auf huggingface.co, stimme den Bedingungen zu und trage unter Einstellungen → Zugänge einen Token mit Leserecht ein.
+
+## OpenCode bekommt keine Antwort
+
+- Prüfe unter „Verbindung“, ob dort „Agenten auf diesem Mac können sich jetzt verbinden“ steht.
+- Prüfe, ob der Schlüssel in `opencode.json` noch stimmt. Nach „Neuen Schlüssel erstellen“ muss er dort ersetzt werden.
+- Stimmt der Modellname? `/v1/models` liefert die Namen, die Podlight kennt.
+
+## Ein Pod lief weiter, obwohl Podlight zu war
+
+Podlight war beendet, und die Notbremse im Pod stoppt ihn erst nach der eingestellten Zeit ohne Kontakt, standardmäßig 15 Minuten. Beim nächsten Öffnen zeigt Podlight beim Modell an, dass er außerhalb von Podlight gestoppt wurde. Prüfe im Zweifel die RunPod-Konsole: Dort steht verbindlich, welche Pods laufen.

@@ -53,8 +53,9 @@ public actor PodManager {
     // MARK: Models
 
     public func save(_ model: PodlightModel) async throws {
-        var model = model
-        model.schedule.idleStopMinutes = max(5, model.schedule.idleStopMinutes)
+        var adjusted = model
+        adjusted.schedule.idleStopMinutes = max(5, adjusted.schedule.idleStopMinutes)
+        let model = adjusted
         try await store.update { state in
             if let index = state.models.firstIndex(where: { $0.id == model.id }) {
                 state.models[index] = model

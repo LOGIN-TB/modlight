@@ -52,6 +52,19 @@ public struct ModelInfo: Codable, Sendable, Equatable {
     /// vLLM `--reasoning-parser` for thinking models.
     public var reasoningParser: String?
 
+    public init(repoId: String, access: Access, gated: Bool, format: WeightFormat, weightBytes: Double,
+                nativeContextTokens: Int?, license: String?, toolCallParser: String?, reasoningParser: String?) {
+        self.repoId = repoId
+        self.access = access
+        self.gated = gated
+        self.format = format
+        self.weightBytes = weightBytes
+        self.nativeContextTokens = nativeContextTokens
+        self.license = license
+        self.toolCallParser = toolCallParser
+        self.reasoningParser = reasoningParser
+    }
+
     public var weightsGiB: Double { Capacity.bytesToGiB(weightBytes) }
     public var weightsGB: Double { weightBytes / 1_000_000_000 }
 }

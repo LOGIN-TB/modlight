@@ -17,6 +17,8 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
     public var goal: SuggestionGoal
     /// The card the user picked. Tried first; the suggestion list follows as fallbacks.
     public var preferredGPU: GPUChoice?
+    /// That card's hourly price when the model was set up, for estimates before the first start.
+    public var expectedPricePerHour: Double?
     /// Optional recurring window plus idle stop and runtime ceiling. Idle stop is never 0.
     public var schedule: Schedule
     public var createdAt: Date
@@ -190,7 +192,7 @@ public actor StateStore {
 
     public func current() -> PodlightState { state }
 
-    public func update<T>(_ change: (inout PodlightState) throws -> T) throws -> T {
+    public func update<T: Sendable>(_ change: @Sendable (inout PodlightState) throws -> T) throws -> T {
         let result = try change(&state)
         try save()
         return result
