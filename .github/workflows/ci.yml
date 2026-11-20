@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    name: PodlightEngine against spec/
+    # Pinned rather than macos-latest: a runner-image rollover that silently swaps the Xcode
+    # version should show up as a deliberate change here, not as a mystery failure.
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # The package needs Swift 6.2+ and the macOS 26 SDK. Pick the newest Xcode 26 or later on
+      # the image and say which, so a failure can be traced to the toolchain at a glance.
+      - name: Select Xcode
+        run: |
+          xcode=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$xcode" ]; then
+            echo "::error::No Xcode 26 or later on this runner"; ls -d /Applications/Xcode*.app; exit 1
+          fi
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+          swift --version
+
+      - name: swift test
+        working-directory: apps/mac/PodlightEngine
+        run: swift test
+
+      # spec/ is the contract between implementations; a file that does not parse would let
+      # every runner skip it silently.
+      - name: spec files are valid JSON
+        run: for f in spec/cases/*.json; do python3 -m json.tool "$f" > /dev/null || { echo "::error file=$f::invalid JSON"; exit 1; }; done
