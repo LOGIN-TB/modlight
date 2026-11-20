@@ -7,8 +7,8 @@ against each other.
 
 | Path | Contents | Status |
 |---|---|---|
-| `cases/scheduler.json` | When a pod starts, stops or is left alone (window, idle, runtime ceiling, spend limits, pause, manual start). 49 cases. | Recorded from the RunPod Launcher tests; the Node service passes them |
-| `cases/scheduler-podlight.json` | New rules: "Läuft bis" (`run-until`), wake refused at a spend limit (`admitWake`). | **proposed**, no implementation yet |
+| `cases/scheduler.json` | When a pod starts, stops or is left alone (window, idle, runtime ceiling, spend limits, pause, manual start). 49 cases. | Recorded from the RunPod Launcher tests; the Node service and the Swift engine pass them |
+| `cases/scheduler-podlight.json` | New rules: "Läuft bis" (`run-until`), wake refused at a spend limit (`admitWake`). 7 cases. | Swift engine passes them; Node service not yet (milestone 2) |
 | `cases/capacity*.json`, `cases/gpu-suggest*.json` | VRAM need, context and GPU suggestion | to do |
 | `data/gpus.json` | GPU table incl. memory bandwidth for the speed estimate | to do |
 | `openapi.yaml` | Control API and `/v1` gateway | to do |
@@ -17,9 +17,16 @@ against each other.
 
 ## Rules for cases
 
-- One case = `{id, title, function, input, expected}`; `status: "proposed"` marks rules that are
-  agreed but not yet built. A test runner must run proposed cases too and report them separately.
+- One case = `{id, title, function, input, expected}`. An optional `status` lists the implementations
+  that already pass a new rule (e.g. `"swift"`). Every test runner runs every case anyway.
+- Run the Swift side with `swift test` in `apps/mac/PodlightEngine`.
 - Times are ISO 8601 in UTC. Weekdays are 0 = Sunday … 6 = Saturday. Money is USD as a number.
 - Never edit an `expected` value to make an implementation pass. If a rule changes, the change
   goes here first, with the reason in `title`, and every implementation follows.
 - `title` explains *why* the rule exists. Several come from incidents observed on real pods.
+
+## Open questions
+
+- A pod stuck in `STARTING`/`PROVISIONING` is only ever stopped by a spend limit; neither the
+  runtime ceiling nor "Läuft bis" applies to it (inherited from RunPod Launcher). A boot that never
+  finishes can therefore bill until the limit. Needs a rule and cases before milestone 1 ships.
