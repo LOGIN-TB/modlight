@@ -6,10 +6,16 @@ import Security
 /// Only the macOS Keychain, never a file or `UserDefaults`, and never logged. A value is written,
 /// read back when needed, and replaced or deleted; there is deliberately no way to list values.
 public struct KeychainStore: Sendable {
-    public enum Item: String, Sendable, CaseIterable {
-        case runpodAPIKey = "runpod-api-key"
-        case huggingFaceToken = "huggingface-token"
-        case gatewayKey = "gateway-key"
+    public struct Item: Sendable, Hashable {
+        public let account: String
+        public init(_ account: String) { self.account = account }
+
+        public static let runpodAPIKey = Item("runpod-api-key")
+        public static let huggingFaceToken = Item("huggingface-token")
+        /// The key local agents use for Podlight's gateway.
+        public static let gatewayKey = Item("gateway-key")
+        /// The key between Podlight and one model's pod (vLLM and the watchdog).
+        public static func podKey(_ model: UUID) -> Item { Item("pod-key-\(model.uuidString)") }
     }
 
     public struct Failure: Error, Sendable, Equatable, CustomStringConvertible {
@@ -75,7 +81,7 @@ public struct KeychainStore: Sendable {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: item.rawValue,
+            kSecAttrAccount as String: item.account,
         ]
     }
 }

@@ -1,0 +1,1388 @@
+{
+  "description": "VRAM and context arithmetic, recorded on 2026-11-20 from RunPod Launcher (packages/shared/src/capacity.ts, vram.ts, engine.ts). GiB throughout; card memory as RunPod reports it. Numbers are compared with a tolerance of 1e-9.",
+  "cases": [
+    {
+      "id": "estimateKvHeadroomGib/48-28.51",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 28.51
+      },
+      "expected": 11.195599999999995
+    },
+    {
+      "id": "recommendCapacity/48-28.51-262144",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 28.51,
+        "nativeContextTokens": 262144
+      },
+      "expected": {
+        "contextTokens": 126976,
+        "concurrency": 1
+      }
+    },
+    {
+      "id": "planCapacity/48-28.51-262144-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 28.51,
+        "nativeContextTokens": 262144,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 11.195599999999995,
+        "budgetTokens": 126976,
+        "contextCeiling": 126976,
+        "concurrencyCeiling": 3,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/48-28.51-262144-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 28.51,
+        "nativeContextTokens": 262144,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 11.195599999999995,
+        "budgetTokens": 126976,
+        "contextCeiling": 126976,
+        "concurrencyCeiling": 1,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/48-28.51-262144-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 28.51,
+        "nativeContextTokens": 262144,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": 11.195599999999995,
+        "budgetTokens": 126976,
+        "contextCeiling": 31744,
+        "concurrencyCeiling": 7,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/48-28.51-262144-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 28.51,
+        "nativeContextTokens": 262144,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": 11.195599999999995,
+        "budgetTokens": 126976,
+        "contextCeiling": 15360,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/48-28.51-262144-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 28.51,
+        "nativeContextTokens": 262144,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 11.195599999999995,
+        "budgetTokens": 126976,
+        "contextCeiling": 126976,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "estimateKvHeadroomGib/48-17.71",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 17.71
+      },
+      "expected": 21.995599999999996
+    },
+    {
+      "id": "recommendCapacity/48-17.71-262144",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 262144
+      },
+      "expected": {
+        "contextTokens": 248832,
+        "concurrency": 1
+      }
+    },
+    {
+      "id": "planCapacity/48-17.71-262144-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 262144,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 21.995599999999996,
+        "budgetTokens": 248832,
+        "contextCeiling": 248832,
+        "concurrencyCeiling": 7,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/48-17.71-262144-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 262144,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 21.995599999999996,
+        "budgetTokens": 248832,
+        "contextCeiling": 248832,
+        "concurrencyCeiling": 3,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/48-17.71-262144-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 262144,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": 21.995599999999996,
+        "budgetTokens": 248832,
+        "contextCeiling": 61440,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/48-17.71-262144-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 262144,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": 21.995599999999996,
+        "budgetTokens": 248832,
+        "contextCeiling": 30720,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/48-17.71-262144-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 48,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 262144,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 21.995599999999996,
+        "budgetTokens": 248832,
+        "contextCeiling": 248832,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "estimateKvHeadroomGib/32-17.71",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 32,
+        "weightsGib": 17.71
+      },
+      "expected": 8.760399999999997
+    },
+    {
+      "id": "recommendCapacity/32-17.71-131072",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 32,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 131072
+      },
+      "expected": {
+        "contextTokens": 99328,
+        "concurrency": 1
+      }
+    },
+    {
+      "id": "planCapacity/32-17.71-131072-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 32,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 131072,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 8.760399999999997,
+        "budgetTokens": 99328,
+        "contextCeiling": 99328,
+        "concurrencyCeiling": 3,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/32-17.71-131072-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 32,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 131072,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 8.760399999999997,
+        "budgetTokens": 99328,
+        "contextCeiling": 99328,
+        "concurrencyCeiling": 1,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/32-17.71-131072-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 32,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 131072,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": 8.760399999999997,
+        "budgetTokens": 99328,
+        "contextCeiling": 24576,
+        "concurrencyCeiling": 6,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/32-17.71-131072-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 32,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 131072,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": 8.760399999999997,
+        "budgetTokens": 99328,
+        "contextCeiling": 12288,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/32-17.71-131072-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 32,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 131072,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 8.760399999999997,
+        "budgetTokens": 99328,
+        "contextCeiling": 99328,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "estimateKvHeadroomGib/24-17.71",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 17.71
+      },
+      "expected": 2.1427999999999976
+    },
+    {
+      "id": "recommendCapacity/24-17.71-32768",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 32768
+      },
+      "expected": {
+        "contextTokens": 23552,
+        "concurrency": 1
+      }
+    },
+    {
+      "id": "planCapacity/24-17.71-32768-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 32768,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 2.1427999999999976,
+        "budgetTokens": 23552,
+        "contextCeiling": 23552,
+        "concurrencyCeiling": 0,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/24-17.71-32768-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 32768,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 2.1427999999999976,
+        "budgetTokens": 23552,
+        "contextCeiling": 23552,
+        "concurrencyCeiling": 0,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/24-17.71-32768-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 32768,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": 2.1427999999999976,
+        "budgetTokens": 23552,
+        "contextCeiling": 5120,
+        "concurrencyCeiling": 1,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/24-17.71-32768-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 32768,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": 2.1427999999999976,
+        "budgetTokens": 23552,
+        "contextCeiling": 2048,
+        "concurrencyCeiling": 2,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/24-17.71-32768-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 17.71,
+        "nativeContextTokens": 32768,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 2.1427999999999976,
+        "budgetTokens": 23552,
+        "contextCeiling": 23552,
+        "concurrencyCeiling": 5,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "estimateKvHeadroomGib/16-4.5",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 4.5
+      },
+      "expected": 8.735199999999999
+    },
+    {
+      "id": "recommendCapacity/16-4.5-32768",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 4.5,
+        "nativeContextTokens": 32768
+      },
+      "expected": {
+        "contextTokens": 32768,
+        "concurrency": 1
+      }
+    },
+    {
+      "id": "planCapacity/16-4.5-32768-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 4.5,
+        "nativeContextTokens": 32768,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 8.735199999999999,
+        "budgetTokens": 98304,
+        "contextCeiling": 32768,
+        "concurrencyCeiling": 3,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/16-4.5-32768-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 4.5,
+        "nativeContextTokens": 32768,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 8.735199999999999,
+        "budgetTokens": 98304,
+        "contextCeiling": 32768,
+        "concurrencyCeiling": 1,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/16-4.5-32768-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 4.5,
+        "nativeContextTokens": 32768,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": 8.735199999999999,
+        "budgetTokens": 98304,
+        "contextCeiling": 24576,
+        "concurrencyCeiling": 6,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/16-4.5-32768-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 4.5,
+        "nativeContextTokens": 32768,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": 8.735199999999999,
+        "budgetTokens": 98304,
+        "contextCeiling": 12288,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/16-4.5-32768-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 4.5,
+        "nativeContextTokens": 32768,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 8.735199999999999,
+        "budgetTokens": 98304,
+        "contextCeiling": 32768,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "estimateKvHeadroomGib/24-14.2",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 14.2
+      },
+      "expected": 5.652799999999999
+    },
+    {
+      "id": "recommendCapacity/24-14.2-null",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 14.2,
+        "nativeContextTokens": null
+      },
+      "expected": {
+        "contextTokens": 63488,
+        "concurrency": 1
+      }
+    },
+    {
+      "id": "planCapacity/24-14.2-null-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 14.2,
+        "nativeContextTokens": null,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 5.652799999999999,
+        "budgetTokens": 63488,
+        "contextCeiling": 63488,
+        "concurrencyCeiling": 1,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/24-14.2-null-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 14.2,
+        "nativeContextTokens": null,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 5.652799999999999,
+        "budgetTokens": 63488,
+        "contextCeiling": 63488,
+        "concurrencyCeiling": 0,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/24-14.2-null-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 14.2,
+        "nativeContextTokens": null,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": 5.652799999999999,
+        "budgetTokens": 63488,
+        "contextCeiling": 15360,
+        "concurrencyCeiling": 3,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/24-14.2-null-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 14.2,
+        "nativeContextTokens": null,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": 5.652799999999999,
+        "budgetTokens": 63488,
+        "contextCeiling": 7168,
+        "concurrencyCeiling": 7,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/24-14.2-null-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 24,
+        "weightsGib": 14.2,
+        "nativeContextTokens": null,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 5.652799999999999,
+        "budgetTokens": 63488,
+        "contextCeiling": 63488,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "estimateKvHeadroomGib/80-40",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 80,
+        "weightsGib": 40
+      },
+      "expected": 26.175999999999988
+    },
+    {
+      "id": "recommendCapacity/80-40-131072",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 80,
+        "weightsGib": 40,
+        "nativeContextTokens": 131072
+      },
+      "expected": {
+        "contextTokens": 131072,
+        "concurrency": 1
+      }
+    },
+    {
+      "id": "planCapacity/80-40-131072-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 80,
+        "weightsGib": 40,
+        "nativeContextTokens": 131072,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 26.175999999999988,
+        "budgetTokens": 295936,
+        "contextCeiling": 131072,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/80-40-131072-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 80,
+        "weightsGib": 40,
+        "nativeContextTokens": 131072,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 26.175999999999988,
+        "budgetTokens": 295936,
+        "contextCeiling": 131072,
+        "concurrencyCeiling": 4,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/80-40-131072-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 80,
+        "weightsGib": 40,
+        "nativeContextTokens": 131072,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": 26.175999999999988,
+        "budgetTokens": 295936,
+        "contextCeiling": 73728,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/80-40-131072-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 80,
+        "weightsGib": 40,
+        "nativeContextTokens": 131072,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": 26.175999999999988,
+        "budgetTokens": 295936,
+        "contextCeiling": 36864,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/80-40-131072-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 80,
+        "weightsGib": 40,
+        "nativeContextTokens": 131072,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 26.175999999999988,
+        "budgetTokens": 295936,
+        "contextCeiling": 131072,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "estimateKvHeadroomGib/6-1",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 6,
+        "weightsGib": 1
+      },
+      "expected": 3.9631999999999996
+    },
+    {
+      "id": "recommendCapacity/6-1-32768",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 6,
+        "weightsGib": 1,
+        "nativeContextTokens": 32768
+      },
+      "expected": {
+        "contextTokens": 32768,
+        "concurrency": 1
+      }
+    },
+    {
+      "id": "planCapacity/6-1-32768-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 6,
+        "weightsGib": 1,
+        "nativeContextTokens": 32768,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 3.9631999999999996,
+        "budgetTokens": 44032,
+        "contextCeiling": 32768,
+        "concurrencyCeiling": 1,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/6-1-32768-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 6,
+        "weightsGib": 1,
+        "nativeContextTokens": 32768,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 3.9631999999999996,
+        "budgetTokens": 44032,
+        "contextCeiling": 32768,
+        "concurrencyCeiling": 0,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/6-1-32768-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 6,
+        "weightsGib": 1,
+        "nativeContextTokens": 32768,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": 3.9631999999999996,
+        "budgetTokens": 44032,
+        "contextCeiling": 10240,
+        "concurrencyCeiling": 2,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/6-1-32768-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 6,
+        "weightsGib": 1,
+        "nativeContextTokens": 32768,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": 3.9631999999999996,
+        "budgetTokens": 44032,
+        "contextCeiling": 5120,
+        "concurrencyCeiling": 5,
+        "fits": false,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/6-1-32768-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 6,
+        "weightsGib": 1,
+        "nativeContextTokens": 32768,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 3.9631999999999996,
+        "budgetTokens": 44032,
+        "contextCeiling": 32768,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "estimateKvHeadroomGib/16-15",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 15
+      },
+      "expected": -1.764800000000001
+    },
+    {
+      "id": "recommendCapacity/16-15-8192",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 15,
+        "nativeContextTokens": 8192
+      },
+      "expected": null
+    },
+    {
+      "id": "planCapacity/16-15-8192-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 15,
+        "nativeContextTokens": 8192,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": -1.764800000000001,
+        "budgetTokens": 0,
+        "contextCeiling": 0,
+        "concurrencyCeiling": 0,
+        "fits": false,
+        "usable": false
+      }
+    },
+    {
+      "id": "planCapacity/16-15-8192-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 15,
+        "nativeContextTokens": 8192,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": -1.764800000000001,
+        "budgetTokens": 0,
+        "contextCeiling": 0,
+        "concurrencyCeiling": 0,
+        "fits": false,
+        "usable": false
+      }
+    },
+    {
+      "id": "planCapacity/16-15-8192-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 15,
+        "nativeContextTokens": 8192,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": -1.764800000000001,
+        "budgetTokens": 0,
+        "contextCeiling": 0,
+        "concurrencyCeiling": 0,
+        "fits": false,
+        "usable": false
+      }
+    },
+    {
+      "id": "planCapacity/16-15-8192-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 15,
+        "nativeContextTokens": 8192,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": -1.764800000000001,
+        "budgetTokens": 0,
+        "contextCeiling": 0,
+        "concurrencyCeiling": 0,
+        "fits": false,
+        "usable": false
+      }
+    },
+    {
+      "id": "planCapacity/16-15-8192-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 16,
+        "weightsGib": 15,
+        "nativeContextTokens": 8192,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": -1.764800000000001,
+        "budgetTokens": 0,
+        "contextCeiling": 0,
+        "concurrencyCeiling": 0,
+        "fits": false,
+        "usable": false
+      }
+    },
+    {
+      "id": "estimateKvHeadroomGib/96-60",
+      "function": "estimateKvHeadroomGib",
+      "input": {
+        "gpuMemoryGib": 96,
+        "weightsGib": 60
+      },
+      "expected": 19.411199999999994
+    },
+    {
+      "id": "recommendCapacity/96-60-262144",
+      "function": "recommendCapacity",
+      "input": {
+        "gpuMemoryGib": 96,
+        "weightsGib": 60,
+        "nativeContextTokens": 262144
+      },
+      "expected": {
+        "contextTokens": 220160,
+        "concurrency": 1
+      }
+    },
+    {
+      "id": "planCapacity/96-60-262144-32768x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 96,
+        "weightsGib": 60,
+        "nativeContextTokens": 262144,
+        "contextTokens": 32768,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 19.411199999999994,
+        "budgetTokens": 220160,
+        "contextCeiling": 220160,
+        "concurrencyCeiling": 6,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/96-60-262144-65536x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 96,
+        "weightsGib": 60,
+        "nativeContextTokens": 262144,
+        "contextTokens": 65536,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 19.411199999999994,
+        "budgetTokens": 220160,
+        "contextCeiling": 220160,
+        "concurrencyCeiling": 3,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/96-60-262144-16384x4",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 96,
+        "weightsGib": 60,
+        "nativeContextTokens": 262144,
+        "contextTokens": 16384,
+        "concurrency": 4
+      },
+      "expected": {
+        "headroomGib": 19.411199999999994,
+        "budgetTokens": 220160,
+        "contextCeiling": 54272,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/96-60-262144-8192x8",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 96,
+        "weightsGib": 60,
+        "nativeContextTokens": 262144,
+        "contextTokens": 8192,
+        "concurrency": 8
+      },
+      "expected": {
+        "headroomGib": 19.411199999999994,
+        "budgetTokens": 220160,
+        "contextCeiling": 26624,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "planCapacity/96-60-262144-4096x1",
+      "function": "planCapacity",
+      "input": {
+        "gpuMemoryGib": 96,
+        "weightsGib": 60,
+        "nativeContextTokens": 262144,
+        "contextTokens": 4096,
+        "concurrency": 1
+      },
+      "expected": {
+        "headroomGib": 19.411199999999994,
+        "budgetTokens": 220160,
+        "contextCeiling": 220160,
+        "concurrencyCeiling": 8,
+        "fits": true,
+        "usable": true
+      }
+    },
+    {
+      "id": "maxContextTokens/0",
+      "function": "maxContextTokens",
+      "input": {
+        "headroomGib": 0
+      },
+      "expected": 0
+    },
+    {
+      "id": "maxContextTokens/-2",
+      "function": "maxContextTokens",
+      "input": {
+        "headroomGib": -2
+      },
+      "expected": 0
+    },
+    {
+      "id": "maxContextTokens/1.5",
+      "function": "maxContextTokens",
+      "input": {
+        "headroomGib": 1.5
+      },
+      "expected": 18432
+    },
+    {
+      "id": "maxContextTokens/10.58",
+      "function": "maxContextTokens",
+      "input": {
+        "headroomGib": 10.58
+      },
+      "expected": 133120
+    },
+    {
+      "id": "maxContextTokens/21.58",
+      "function": "maxContextTokens",
+      "input": {
+        "headroomGib": 21.58
+      },
+      "expected": 272384
+    },
+    {
+      "id": "gpuSupports/NVIDIA L40S",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA L40S"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA L40",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA L40"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA L4",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA L4"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA RTX 6000 Ada Generation",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA RTX 6000 Ada Generation"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA RTX PRO 4500 Blackwell",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA RTX PRO 4500 Blackwell"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": true
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA H100 PCIe",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA H100 PCIe"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA H200",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA H200"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA GeForce RTX 5090",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA GeForce RTX 5090"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": true
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA GeForce RTX 4090",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA GeForce RTX 4090"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA GeForce RTX 3090",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA GeForce RTX 3090"
+      },
+      "expected": {
+        "fp8": false,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA RTX A6000",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA RTX A6000"
+      },
+      "expected": {
+        "fp8": false,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA A40",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA A40"
+      },
+      "expected": {
+        "fp8": false,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA A100 80GB PCIe",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA A100 80GB PCIe"
+      },
+      "expected": {
+        "fp8": false,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA RTX A4000",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA RTX A4000"
+      },
+      "expected": {
+        "fp8": false,
+        "nvfp4": false
+      }
+    },
+    {
+      "id": "gpuSupports/NVIDIA B200",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "NVIDIA B200"
+      },
+      "expected": {
+        "fp8": true,
+        "nvfp4": true
+      }
+    },
+    {
+      "id": "gpuSupports/Tesla V100-SXM2-16GB",
+      "function": "gpuSupports",
+      "input": {
+        "gpuId": "Tesla V100-SXM2-16GB"
+      },
+      "expected": {
+        "fp8": false,
+        "nvfp4": false
+      }
+    }
+  ]
+}
