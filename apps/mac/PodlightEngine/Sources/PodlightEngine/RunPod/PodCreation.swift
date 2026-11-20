@@ -45,11 +45,19 @@ extension RunpodClient {
     ///   skipped without asking RunPod. An empty or missing catalog tries everything.
     public func createPod(_ base: CreatePodRequest, tryingInOrder choices: [GPUChoice],
                           catalog: [RunpodGPUType] = []) async throws -> PodCreated {
-        let availability = Dictionary(catalog.map { ($0.id, $0.availability) }, uniquingKeysWith: { a, _ in a })
+        let cards = Dictionary(catalog.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         var attempts: [CreationAttempt] = []
 
         for choice in choices {
-            if let known = availability[choice.gpuId], let known, !known.mayBeAvailable {
+            let card = cards[choice.gpuId]
+            let noneFree = card?.availability.map { !$0.mayBeAvailable } ?? false
+            // A card whose free hosts all run an older CUDA than the engine image needs would
+            // accept the pod and then fail to start the engine.
+            let noSuitableHost: Bool = {
+                guard let minimum = base.gpu.minCudaVersion, let card else { return false }
+                return !card.mayHaveCuda(atLeast: minimum)
+            }()
+            if noneFree || noSuitableHost {
                 attempts.append(CreationAttempt(choice: choice, outcome: .skippedUnavailable))
                 continue
             }

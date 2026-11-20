@@ -9,6 +9,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Test hook: quit through the same path as ⌘Q after a delay.
+        if let i = CommandLine.arguments.firstIndex(of: "-PodlightQuitAfter"), i + 1 < CommandLine.arguments.count,
+           let seconds = Double(CommandLine.arguments[i + 1]) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { NSApp.terminate(nil) }
+        }
         if let folder = Snapshots.requestedDirectory {
             Task { @MainActor in
                 await Snapshots.run(into: folder)
@@ -22,6 +27,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        NSLog("Podlight: applicationShouldTerminate, %d local pods", model?.runningLocalPods.count ?? -1)
+        // An open sheet (setup, add model) must not keep Podlight from quitting.
+        for window in NSApp.windows { if let sheet = window.attachedSheet { window.endSheet(sheet) } }
         guard let model else { return .terminateNow }
         let running = model.runningLocalPods
         guard !running.isEmpty else { return .terminateNow }

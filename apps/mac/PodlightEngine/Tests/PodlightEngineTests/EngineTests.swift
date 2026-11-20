@@ -170,3 +170,44 @@ struct PodPlanTests {
         #expect(choices.contains { $0.gpuId == "NVIDIA L40S" })
     }
 }
+
+@Suite("Engine image requirements")
+struct EngineImageTests {
+    private func card(_ id: String, cuda: [(String, Bool)]?) throws -> RunpodGPUType {
+        var json: [String: Any] = ["id": id, "name": id, "manufacturer": "NVIDIA", "memory": 48, "secure": true,
+                                   "community": false, "price": ["secure": 0.5], "availability": "LOW"]
+        if let cuda { json["cudaVersions"] = cuda.map { ["version": $0.0, "available": $0.1] } }
+        return try RunpodClient.decoder.decode(RunpodGPUType.self, from: JSONSerialization.data(withJSONObject: json))
+    }
+
+    @Test func voltaCardsCannotRunTheImage() {
+        #expect(!CardSupport.runsEngineImage("Tesla V100-SXM2-16GB"))
+        #expect(CardSupport.runsEngineImage("NVIDIA RTX A2000"))
+        #expect(CardSupport.runsEngineImage("NVIDIA L40S"))
+    }
+
+    @Test func onlyCardsWithAFreeCuda13HostAreSuggested() throws {
+        let catalog = [
+            try card("NVIDIA L40S", cuda: [("12.4", true), ("13.2", false)]),
+            try card("NVIDIA RTX A6000", cuda: [("12.4", false), ("13.0", true)]),
+            try card("NVIDIA A40", cuda: nil),
+        ]
+        let model = PodlightModel(name: "m", repoId: "o/m", format: .awq, weightBytes: 10e9, nativeContextTokens: 65_536,
+                                  toolCallParser: nil, reasoningParser: nil, contextTokens: 32_768)
+        let ids = Set(GPUSuggestion.options(for: model.info, catalog: catalog, goal: .economical).map(\.choice.gpuId))
+        #expect(ids == ["NVIDIA RTX A6000", "NVIDIA A40"])
+    }
+
+    @Test func theRequestAsksForACuda13Host() {
+        let model = PodlightModel(name: "m", repoId: "o/m", format: .awq, weightBytes: 10e9, nativeContextTokens: nil,
+                                  toolCallParser: nil, reasoningParser: nil, contextTokens: 32_768)
+        let request = PodPlan.request(for: model, podKey: "k", huggingFaceToken: nil, runUntil: nil, heartbeatMinutes: 15)
+        #expect(request.gpu.minCudaVersion == "13.0")
+    }
+
+    @Test func versionsCompareNumerically() {
+        #expect(RunpodGPUType.compare("13.10", "13.2") == 1)
+        #expect(RunpodGPUType.compare("12.9", "13.0") == -1)
+        #expect(RunpodGPUType.compare("13.0", "13") == 0)
+    }
+}

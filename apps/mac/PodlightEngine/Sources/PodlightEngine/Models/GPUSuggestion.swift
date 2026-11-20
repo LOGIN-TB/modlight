@@ -70,7 +70,8 @@ public enum GPUSuggestion {
         var options: [GPUOption] = []
         for gpu in catalog where gpu.manufacturer.uppercased() == "NVIDIA" {
             if !includeUnavailable, let a = gpu.availability, !a.mayBeAvailable { continue }
-            guard model.format.runs(on: gpu.id) else { continue }
+            if !includeUnavailable, !gpu.mayHaveCuda(atLeast: PodPlan.minCudaVersion) { continue }
+            guard CardSupport.runsEngineImage(gpu.id), model.format.runs(on: gpu.id) else { continue }
             guard let recommended = Capacity.recommend(gpuMemoryGiB: Double(gpu.memory), weightsGiB: model.weightsGiB,
                                                        nativeContextTokens: model.nativeContextTokens),
                   recommended.contextTokens >= min(minimumUsefulContext, model.nativeContextTokens ?? .max)

@@ -5,8 +5,8 @@ import SwiftUI
 /// (a Hugging Face token), and then straight to the first model. Can be left and resumed.
 struct SetupView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.dismiss) private var dismiss
     @State private var page = 0
+    private func dismiss() { model.showingSetup = false }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -20,7 +20,7 @@ struct SetupView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(24)
         }
-        .frame(width: 600, height: 520)
+        .frame(maxWidth: 600, maxHeight: 520)
         .onAppear { if model.hasRunpodKey { page = 2 } }
     }
 

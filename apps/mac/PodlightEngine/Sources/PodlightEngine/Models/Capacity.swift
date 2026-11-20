@@ -95,6 +95,13 @@ public enum Capacity {
 
 /// Which weight precisions a card can run. Name patterns, as RunPod names its cards.
 public enum CardSupport {
+    /// The pinned vLLM image is built for compute capability 7.5 and newer
+    /// (TORCH_CUDA_ARCH_LIST in vllm/vllm-openai:v0.28.0). Volta and older cannot run it at all.
+    public static func runsEngineImage(_ gpuId: String) -> Bool {
+        gpuId.range(of: #"(V100|P100|P40|\bP4\b|K80|M60|Titan V|Quadro GV100)"#,
+                    options: [.regularExpression, .caseInsensitive]) == nil
+    }
+
     public static func fp8(_ gpuId: String) -> Bool {
         gpuId.range(of: #"(\bada\b|\bl40s?\b|\bl4\b|rtx\s?(40|50)\d\d|rtx\s?pro|\bh100\b|\bh200\b|\bb200\b|\bb300\b|blackwell|hopper)"#,
                     options: [.regularExpression, .caseInsensitive]) != nil

@@ -166,7 +166,7 @@ struct AuthMiddleware<Context: RequestContext>: RouterMiddleware {
         let header = request.headers[.authorization] ?? ""
         let given = header.hasPrefix("Bearer ") ? String(header.dropFirst(7)) : ""
         guard Self.constantTimeEqual(given, expected) else {
-            return LocalGateway.error(401, "Wrong or missing API key. Copy it from Podlight → Connections.", code: "invalid_api_key")
+            return LocalGateway.error(401, "Wrong or missing API key. Copy it from Podlight → Connection.", code: "invalid_api_key")
         }
         return try await next(request, context)
     }

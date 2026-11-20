@@ -8,7 +8,20 @@ struct RootView: View {
 
     var body: some View {
         @Bindable var model = model
-        NavigationSplitView {
+        if model.showingSetup {
+            // Inline, not a sheet: macOS refuses to quit an app while a sheet is attached, and the
+            // first launch must always be easy to leave.
+            SetupView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear { model.openMainWindow = { openWindow(id: "main") } }
+        } else {
+            main
+        }
+    }
+
+    private var main: some View {
+        @Bindable var model = model
+        return NavigationSplitView {
             List(selection: $model.selection) {
                 Section("This Mac") {
                     Label("Models", systemImage: "cpu").tag(SidebarItem.models)
@@ -25,7 +38,6 @@ struct RootView: View {
             case .costs: CostsView()
             }
         }
-        .sheet(isPresented: $model.showingSetup) { SetupView() }
         .sheet(isPresented: $model.showingAddModel) { AddModelSheet() }
         .sheet(item: $model.startingModel) { StartSheet(model: $0) }
         .onAppear { model.openMainWindow = { openWindow(id: "main") } }

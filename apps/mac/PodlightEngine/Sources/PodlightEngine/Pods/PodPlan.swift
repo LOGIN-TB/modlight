@@ -6,6 +6,9 @@ public enum PodPlan {
     /// Pinned: `latest` has broken freshly released architectures before. v0.28.0 is the version
     /// RunPod Launcher was measured with (2026-08-30), and its parser names are the ones used here.
     public static let image = "vllm/vllm-openai:v0.28.0"
+    /// The image is built on CUDA 13.0.2 (NVIDIA_REQUIRE_CUDA=cuda>=13.0, read from its config on
+    /// 2026-11-20). A host with an older driver cannot start it, and RunPod has 12.4 hosts.
+    public static let minCudaVersion = "13.0"
     public static let enginePort = 8000
     public static let watchdogPort = 8001
     /// Extra time past "Läuft bis" before the pod's own deadline fires. The app stops it on time;
@@ -36,7 +39,7 @@ public enum PodPlan {
             name: "podlight-\(model.name)".prefix(60).description,
             image: image,
             cloud: model.preferredGPU?.cloud ?? .secure,
-            gpu: .init(id: model.preferredGPU?.gpuId ?? "placeholder"),
+            gpu: .init(id: model.preferredGPU?.gpuId ?? "placeholder", minCudaVersion: minCudaVersion),
             disk: 30,
             ports: ["\(enginePort)/http", "\(watchdogPort)/http"],
             env: env,
