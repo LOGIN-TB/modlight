@@ -15,7 +15,7 @@ Die Konfiguration enthält deinen Podlight-Schlüssel. Lege sie deshalb in deine
 
 ## Was passiert bei der ersten Anfrage
 
-Läuft das Modell gerade nicht, startet Podlight es von selbst und hält die Anfrage fest, bis es antwortet. Beim ersten Mal kann das einige Minuten dauern. Die Konfiguration erlaubt OpenCode deshalb bis zu 10 Minuten Wartezeit.
+Läuft das Modell gerade nicht, startet Podlight es von selbst und hält die Anfrage fest, bis es antwortet. Ein gestoppter Pod ist nach etwa einer Minute wieder da. Ein ganz neuer Pod braucht bis zu 25 Minuten. Die Konfiguration lässt OpenCode bis zu 10 Minuten warten, starte ein neues Modell deshalb beim ersten Mal in Podlight selbst.
 
 Ein so geweckter Pod hat kein festes Ende. Er stoppt, wenn keine Anfragen mehr kommen (Leerlauf-Stopp), spätestens nach der Höchstlaufzeit von 12 Stunden.
 

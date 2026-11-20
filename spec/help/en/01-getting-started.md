@@ -30,7 +30,7 @@ None of this costs anything. Only "Start" rents a card.
 
 ## Starting
 
-"Start" asks how long the pod should run and shows the cost until then. The first start downloads the model and takes 3 to 10 minutes depending on its size. Later starts are faster because the pod keeps its disk.
+"Start" asks how long the pod should run and shows the cost until then. A new pod takes 10 to 25 minutes: the RunPod host first downloads the engine (about 9 GB), then the model. Measured: 22 minutes for a small model. Resuming a stopped pod takes about a minute (measured: 64 seconds), because it keeps its disk.
 
 
 ![Starting with "Runs until"](screenshots/en/start.png)

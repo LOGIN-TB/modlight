@@ -19,6 +19,9 @@ def specifiers(text):
 
 path = sys.argv[1]
 catalog = json.load(open(path, encoding="utf-8"))
+# Strings the code no longer uses: drop them rather than translate dead text.
+for key in [k for k, v in catalog["strings"].items() if v.get("extractionState") == "stale"]:
+    del catalog["strings"][key]
 missing, mismatched = [], []
 for key, entry in catalog["strings"].items():
     if entry.get("shouldTranslate") is False:
@@ -30,7 +33,6 @@ for key, entry in catalog["strings"].items():
     if specifiers(key) != specifiers(german):
         mismatched.append(key)
     entry.setdefault("localizations", {})["de"] = {"stringUnit": {"state": "translated", "value": german}}
-    entry.pop("extractionState", None) if entry.get("extractionState") == "stale" else None
 
 json.dump(catalog, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=2, sort_keys=True)
 open(path, "a").write("\n")

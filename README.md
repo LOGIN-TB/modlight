@@ -21,7 +21,8 @@ On first launch Podlight asks for your RunPod API key and shows where to create 
 
 1. **Add a model**: search Hugging Face or paste a link. Podlight checks it and suggests a GPU,
    with price per hour and an estimated speed.
-2. **Start** it and choose how long it runs. The first start downloads the model (3–10 minutes).
+2. **Start** it and choose how long it runs. A new pod takes 10–25 minutes (the GPU host downloads
+   the 9 GB engine, then the model); resuming a stopped one takes about a minute.
 3. **Connect OpenCode**: Podlight → Connection → *Copy OpenCode Configuration*, paste it into
    `~/.config/opencode/opencode.json`, pick `podlight/<name>` with `/models`.
 

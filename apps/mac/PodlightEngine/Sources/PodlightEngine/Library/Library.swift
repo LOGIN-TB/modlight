@@ -117,7 +117,7 @@ public struct PodlightSettings: Codable, Sendable, Equatable {
     /// Minutes without a heartbeat after which a pod stops itself (Mac asleep, app gone).
     public var heartbeatMinutes: Int = 15
     /// How long the gateway holds a request while a stopped pod starts.
-    public var wakeWaitSeconds: Int = 420
+    public var wakeWaitSeconds: Int = 600
     public var gatewayPort: Int = 7635
     /// Stopped pods unused for this long are deleted, disk included.
     public var deleteStoppedAfterDays: Int = 3

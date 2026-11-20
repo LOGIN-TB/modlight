@@ -289,6 +289,16 @@
         }
       }
     },
+    "A new pod can take 10–25 minutes: the GPU host first downloads the engine (about 9 GB), then the model. Resuming a stopped pod takes about a minute.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein neuer Pod braucht 10 bis 25 Minuten: Der Host lädt zuerst die Engine (etwa 9 GB), dann das Modell. Einen gestoppten Pod fortzusetzen dauert etwa eine Minute."
+          }
+        }
+      }
+    },
     "A time of day…": {
       "localizations": {
         "de": {
@@ -2355,16 +2365,6 @@
         }
       }
     },
-    "The first start downloads the model. Expect 3–10 minutes; later starts are faster.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der erste Start lädt das Modell herunter. Rechne mit 3 bis 10 Minuten, spätere Starts gehen schneller."
-          }
-        }
-      }
-    },
     "The key is stored in this Mac's keychain and only ever sent to RunPod.": {
       "localizations": {
         "de": {
@@ -2395,12 +2395,12 @@
         }
       }
     },
-    "The model is still loading. The first start downloads it and can take several minutes.": {
+    "The model is still loading. A new pod can take up to 25 minutes; resuming one takes about a minute.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das Modell wird noch geladen. Der erste Start lädt es herunter und kann einige Minuten dauern."
+            "value": "Das Modell wird noch geladen. Ein neuer Pod kann bis zu 25 Minuten brauchen, ein fortgesetzter etwa eine Minute."
           }
         }
       }

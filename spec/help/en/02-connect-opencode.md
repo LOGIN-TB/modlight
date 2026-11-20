@@ -15,7 +15,7 @@ The configuration contains your Podlight key. Keep it in your home folder, never
 
 ## What happens on the first request
 
-If the model is not running, Podlight starts it and holds the request until it answers. The first time this can take several minutes, so the configuration lets OpenCode wait up to 10 minutes.
+If the model is not running, Podlight starts it and holds the request until it answers. A stopped pod is back after about a minute. A brand-new pod takes up to 25 minutes. The configuration lets OpenCode wait up to 10 minutes, so start a new model in Podlight itself the first time.
 
 A pod woken this way has no fixed end. It stops when no more requests come in (idle stop), at the latest after the 12-hour maximum.
 

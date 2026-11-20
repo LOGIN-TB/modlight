@@ -30,7 +30,7 @@ Bis hierhin kostet nichts. Erst „Starten“ mietet eine Karte.
 
 ## Starten
 
-„Starten“ fragt, wie lange der Pod laufen soll, und zeigt die Kosten bis dahin. Der erste Start lädt das Modell herunter und dauert je nach Größe 3 bis 10 Minuten. Spätere Starts sind schneller, weil der Pod seine Festplatte behält.
+„Starten“ fragt, wie lange der Pod laufen soll, und zeigt die Kosten bis dahin. Ein neuer Pod braucht 10 bis 25 Minuten: Der Host bei RunPod lädt zuerst die Engine (etwa 9 GB), dann das Modell. Gemessen: 22 Minuten für ein kleines Modell. Einen gestoppten Pod fortzusetzen dauert etwa eine Minute (gemessen: 64 Sekunden), weil er seine Festplatte behält.
 
 
 ![Starten mit „Läuft bis“](screenshots/de/start.png)

@@ -10,7 +10,7 @@ Alle passenden Karten waren in dem Moment vergeben. Versuche es nach ein paar Mi
 
 ## Der Start dauert lange
 
-Der erste Start lädt das Modell herunter, bei großen Modellen einige Gigabyte. Danach startet vLLM, was allein rund zwei Minuten braucht. Solange Podlight „Modell wird geladen“ zeigt, läuft das normal.
+Ein neuer Pod lädt zuerst die Engine (etwa 9 GB) und dann das Modell. Danach startet vLLM, was allein rund zwei Minuten braucht. Bis zu 25 Minuten sind normal, solange Podlight „Modell wird geladen“ zeigt. Fortsetzen geht schneller, weil der Pod seine Festplatte behält.
 
 ## „Das Modell braucht einen Hugging-Face-Token“
 

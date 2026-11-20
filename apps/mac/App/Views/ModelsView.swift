@@ -138,7 +138,7 @@ struct ModelDetailView: View {
                 .padding(.vertical, 4)
                 if run.phase == .loading || run.phase == .creating {
                     ProgressView {
-                        Text("The first start downloads the model. Expect 3–10 minutes; later starts are faster.")
+                        Text("A new pod can take 10–25 minutes: the GPU host first downloads the engine (about 9 GB), then the model. Resuming a stopped pod takes about a minute.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .progressViewStyle(.linear)

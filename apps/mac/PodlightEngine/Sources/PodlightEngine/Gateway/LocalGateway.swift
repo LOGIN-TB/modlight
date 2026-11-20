@@ -132,7 +132,7 @@ public struct LocalGateway: Sendable {
         case .noSuitableCard:
             return Self.error(503, "No RunPod card can hold \(model) with its configured context.", code: "no_suitable_card")
         case .notReadyInTime:
-            return Self.error(503, "\(model) is still starting (the first start downloads the model and can take several minutes). Try again shortly.", code: "starting")
+            return Self.error(503, "\(model) is still starting. A new pod can take up to 25 minutes (the GPU host downloads the engine and the model); a resumed one about a minute. Try again shortly, or start it in Podlight beforehand.", code: "starting")
         case .wakeDisabled:
             return Self.error(503, "\(model) is stopped. Start it in Podlight.", code: "stopped")
         case .runpod(let status, let message):

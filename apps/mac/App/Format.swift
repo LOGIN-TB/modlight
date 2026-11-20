@@ -60,7 +60,7 @@ enum Describe {
                     ? String(localized: "RunPod did not accept the API key. Check it in Settings → Access.")
                     : String(localized: "RunPod refused: \(message)")
             case .notReadyInTime:
-                return String(localized: "The model is still loading. The first start downloads it and can take several minutes.")
+                return String(localized: "The model is still loading. A new pod can take up to 25 minutes; resuming one takes about a minute.")
             case .wakeDisabled:
                 return String(localized: "The model is stopped. Start it in Podlight.")
             case .keychain(let message):

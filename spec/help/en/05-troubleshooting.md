@@ -10,7 +10,7 @@ Every suitable card was taken at that moment. Try again in a few minutes, or set
 
 ## The start takes long
 
-The first start downloads the model, several gigabytes for large ones. Then vLLM starts, which alone takes about two minutes. While Podlight shows "Loading the model", this is normal.
+A new pod first downloads the engine (about 9 GB), then the model. Then vLLM starts, which alone takes about two minutes. Up to 25 minutes is normal while Podlight shows "Loading the model". Resuming is faster because the pod keeps its disk.
 
 ## "This model needs a Hugging Face token"
 
