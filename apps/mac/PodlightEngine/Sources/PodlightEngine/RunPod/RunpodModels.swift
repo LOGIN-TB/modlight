@@ -54,10 +54,28 @@ public struct CreatePodRequest: Codable, Sendable, Equatable {
     public var env: [String: String]
     /// Arguments for the image's entrypoint. Parsed shell-style by RunPod.
     public var args: String?
+    /// Replaces the image's entrypoint (exec form). Lets Podlight run its own start script in the
+    /// stock vLLM image instead of maintaining an image of its own.
+    public var entrypoint: [String]?
+    public var cmd: [String]?
+    public var mounts: Mounts?
     public var dataCenterIds: [String]?
 
+    /// Host-local disk that survives stop/start, so a resumed pod does not download the model again.
+    public struct Mounts: Codable, Sendable, Equatable {
+        public struct Persistent: Codable, Sendable, Equatable {
+            public var size: Int
+            public var path: String
+        }
+        public var persistent: Persistent?
+        public init(persistentGB: Int, path: String = "/workspace") {
+            persistent = Persistent(size: max(10, persistentGB), path: path)
+        }
+    }
+
     public init(name: String, image: String, cloud: RunpodCloud, gpu: GPU, disk: Int, ports: [String],
-                env: [String: String], args: String? = nil, dataCenterIds: [String]? = nil) {
+                env: [String: String], args: String? = nil, entrypoint: [String]? = nil, cmd: [String]? = nil,
+                mounts: Mounts? = nil, dataCenterIds: [String]? = nil) {
         self.name = name
         self.image = image
         self.cloud = cloud
@@ -66,6 +84,9 @@ public struct CreatePodRequest: Codable, Sendable, Equatable {
         self.ports = ports
         self.env = env
         self.args = args
+        self.entrypoint = entrypoint
+        self.cmd = cmd
+        self.mounts = mounts
         self.dataCenterIds = dataCenterIds
     }
 }

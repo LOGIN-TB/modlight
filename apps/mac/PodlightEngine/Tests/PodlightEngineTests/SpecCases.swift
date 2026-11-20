@@ -81,14 +81,26 @@ private struct WakeInput: Decodable {
     var spend: Spend
 }
 
+private struct CapacityInput: Decodable {
+    var gpuMemoryGib: Double
+    var weightsGib: Double
+    var nativeContextTokens: Int?
+    var contextTokens: Int?
+    var concurrency: Int?
+}
+
+private struct Support: Decodable, Equatable { var fp8: Bool; var nvfp4: Bool }
+
+private func close(_ a: Double, _ b: Double) -> Bool { abs(a - b) < 1e-9 }
+
 @Suite("spec/cases")
 struct SpecCaseTests {
-    static let all = Spec.load(["scheduler.json", "scheduler-podlight.json"])
+    static let all = Spec.load(["scheduler.json", "scheduler-podlight.json", "capacity.json"])
 
     @Test("every spec file was found and parsed")
     func specIsReadable() {
         #expect(!Self.all.contains { $0.id == "<unreadable>" }, "spec files missing under \(Spec.root.path)")
-        #expect(Self.all.count >= 56)
+        #expect(Self.all.count >= 56 + 91)
     }
 
     @Test(arguments: all)
@@ -114,6 +126,30 @@ struct SpecCaseTests {
         case "admitWake":
             let i = try d.decode(WakeInput.self, from: c.input)
             #expect(Scheduler.admitWake(spend: i.spend) == (try d.decode(WakeDecision.self, from: c.expected)))
+        case "estimateKvHeadroomGib":
+            let i = try d.decode(CapacityInput.self, from: c.input)
+            let expected = try d.decode(Double.self, from: c.expected)
+            #expect(close(Capacity.kvHeadroomGiB(gpuMemoryGiB: i.gpuMemoryGib, weightsGiB: i.weightsGib), expected))
+        case "maxContextTokens":
+            struct I: Decodable { var headroomGib: Double }
+            let i = try d.decode(I.self, from: c.input)
+            #expect(Capacity.maxContextTokens(headroomGiB: i.headroomGib) == (try d.decode(Int.self, from: c.expected)))
+        case "recommendCapacity":
+            let i = try d.decode(CapacityInput.self, from: c.input)
+            let got = Capacity.recommend(gpuMemoryGiB: i.gpuMemoryGib, weightsGiB: i.weightsGib, nativeContextTokens: i.nativeContextTokens)
+            #expect(got == (try d.decode(Capacity.Choice?.self, from: c.expected)))
+        case "planCapacity":
+            let i = try d.decode(CapacityInput.self, from: c.input)
+            let got = Capacity.plan(gpuMemoryGiB: i.gpuMemoryGib, weightsGiB: i.weightsGib, nativeContextTokens: i.nativeContextTokens,
+                                    chosen: .init(contextTokens: i.contextTokens ?? 0, concurrency: i.concurrency ?? 1))
+            var expected = try d.decode(Capacity.Plan.self, from: c.expected)
+            #expect(close(got.headroomGib, expected.headroomGib))
+            expected.headroomGib = got.headroomGib
+            #expect(got == expected)
+        case "gpuSupports":
+            struct I: Decodable { var gpuId: String }
+            let i = try d.decode(I.self, from: c.input)
+            #expect(Support(fp8: CardSupport.fp8(i.gpuId), nvfp4: CardSupport.nvfp4(i.gpuId)) == (try d.decode(Support.self, from: c.expected)))
         default:
             Issue.record("unknown function \(c.function) in \(c.file)")
         }

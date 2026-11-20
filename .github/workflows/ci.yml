@@ -38,7 +38,14 @@ jobs:
         working-directory: apps/mac/PodlightEngine
         run: swift test
 
+      # The dead-man switch runs inside every pod; tested against a fake RunPod API.
+      - name: watchdog
+        run: python3 -I tools/test_watchdog.py
+
+      - name: pod start script parses
+        run: bash -n apps/mac/PodlightEngine/Sources/PodlightEngine/Resources/boot.sh
+
       # spec/ is the contract between implementations; a file that does not parse would let
       # every runner skip it silently.
       - name: spec files are valid JSON
-        run: for f in spec/cases/*.json; do python3 -m json.tool "$f" > /dev/null || { echo "::error file=$f::invalid JSON"; exit 1; }; done
+        run: for f in spec/cases/*.json spec/data/*.json; do python3 -m json.tool "$f" > /dev/null || { echo "::error file=$f::invalid JSON"; exit 1; }; done
