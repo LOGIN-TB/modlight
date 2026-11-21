@@ -13,6 +13,8 @@ actor FakeRunPod: HTTPTransport {
     var podStatus = "RUNNING"
     var created = 0
     var actions: [String] = []
+    var dataCenterId: String?
+    var lastCreateData = Data()
     var heartbeats: [String] = []
     let catalog: String
 
@@ -37,9 +39,15 @@ actor FakeRunPod: HTTPTransport {
         case ("POST", "/v2/pods"):
             created += 1
             podStatus = "RUNNING"
-            return reply(201, Fixture.pod(id: "fakepod", gpu: "NVIDIA L40S", status: "RUNNING"))
+            lastCreateData = request.httpBody ?? Data()
+            return reply(201, Fixture.pod(id: "fakepod", gpu: "NVIDIA L40S", status: "RUNNING", dataCenterId: dataCenterId))
         case ("GET", "/v2/pods/fakepod"):
-            return reply(200, Fixture.pod(id: "fakepod", gpu: "NVIDIA L40S", status: podStatus))
+            if podStatus == "DELETED" { return reply(404, #"{"detail":"pod not found"}"#) }
+            return reply(200, Fixture.pod(id: "fakepod", gpu: "NVIDIA L40S", status: podStatus, dataCenterId: dataCenterId))
+        case ("DELETE", "/v2/pods/fakepod"):
+            actions.append("delete")
+            podStatus = "DELETED"
+            return reply(204, "")
         case ("POST", "/v2/pods/fakepod/action"):
             let body = try JSONSerialization.jsonObject(with: request.httpBody!) as? [String: String]
             let action = body?["action"] ?? "?"
@@ -97,8 +105,10 @@ struct GatewayFlowTests {
         let manager = PodManager(store: StateStore(url: stateURL), keychain: keychain, transport: fake,
                                  podURL: { _, port in URL(string: "http://127.0.0.1:\(enginePort)\(port == PodPlan.watchdogPort ? "/wd" : "")")! })
 
+        // With the disk kept, the end of a run stops the pod instead of deleting it.
         let m = PodlightModel(name: "qwen-test", repoId: "Org/Qwen-Test-AWQ", format: .awq, weightBytes: 19e9,
-                              nativeContextTokens: 262_144, toolCallParser: nil, reasoningParser: nil, contextTokens: 32_768)
+                              nativeContextTokens: 262_144, toolCallParser: nil, reasoningParser: nil, contextTokens: 32_768,
+                              keepDisk: true)
         try await manager.save(m)
         let podKey: @Sendable () -> String? = { try? keychain.read(.podKey(m.id)) }
 
@@ -154,4 +164,87 @@ struct GatewayFlowTests {
         #expect(String(decoding: limitData, as: UTF8.self).contains("spend_limit"))
         #expect(await fake.actions == ["stop"])
     }
+}
+
+@Suite("Pod lifecycle", .serialized, .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil,
+                                              "uses the login keychain; runs on a developer Mac"))
+struct PodLifecycleTests {
+    static let catalog = #"{"gpus":[{"id":"NVIDIA L40S","name":"L40S","manufacturer":"NVIDIA","memory":48,"secure":true,"community":true,"price":{"secure":0.86,"community":0.79},"availability":"LOW","maxCount":{"secure":8,"community":8},"dataCenters":[{"id":"EU-RO-1","availability":"LOW"},{"id":"US-TX-3","availability":"LOW"}]}]}"#
+
+    func setUp(keepDisk: Bool, region: HostingRegion = .anywhere, dataCenter: String? = nil)
+        async throws -> (PodManager, FakeRunPod, PodlightModel, KeychainStore, URL) {
+        let keychain = KeychainStore(service: "app.podlight.tests.\(UUID().uuidString)")
+        try keychain.write("rp-test", for: .runpodAPIKey)
+        let fake = FakeRunPod(catalog: Self.catalog)
+        await fake.setDataCenter(dataCenter)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("podlight-test-\(UUID()).json")
+        let manager = PodManager(store: StateStore(url: url), keychain: keychain, transport: fake,
+                                 podURL: { _, _ in URL(string: "http://127.0.0.1:9")! })
+        let m = PodlightModel(name: "m", repoId: "o/m", format: .awq, weightBytes: 19e9, nativeContextTokens: 65_536,
+                              toolCallParser: nil, reasoningParser: nil, contextTokens: 32_768, keepDisk: keepDisk)
+        try await manager.save(m)
+        _ = try await manager.store.update { $0.settings.hostingRegion = region }
+        return (manager, fake, m, keychain, url)
+    }
+
+    func tearDown(_ keychain: KeychainStore, _ id: UUID, _ url: URL) {
+        try? keychain.delete(.runpodAPIKey); try? keychain.delete(.podKey(id)); try? FileManager.default.removeItem(at: url)
+    }
+
+    @Test func withoutTheCacheTheEndDeletesThePodAndNoDiskIsRequested() async throws {
+        let (manager, fake, m, keychain, url) = try await setUp(keepDisk: false)
+        defer { tearDown(keychain, m.id, url) }
+        try await manager.start(m.id, until: Date().addingTimeInterval(3600))
+        let body = await createBody(fake)
+        #expect(body["mounts"] == nil, "no volume disk without the cache")
+        #expect((body["disk"] as? Int ?? 0) >= 41, "the container disk must hold the 19 GB download")
+        try await manager.stop(m.id, reason: "manual")
+        #expect(await fake.actions == ["delete"])
+        let run = await manager.state().run(m.id)
+        #expect(run.podId == nil && run.phase == .stopped && run.lastReason == "manual")
+    }
+
+    @Test func withTheCacheTheEndStopsThePodAndItsDiskIsBilledWhileStopped() async throws {
+        let (manager, fake, m, keychain, url) = try await setUp(keepDisk: true)
+        defer { tearDown(keychain, m.id, url) }
+        try await manager.start(m.id, until: Date().addingTimeInterval(3600))
+        #expect(await createBody(fake)["mounts"] != nil)
+        try await manager.stop(m.id, reason: "manual")
+        #expect(await fake.actions == ["stop"])
+        // Pretend a day has passed since the stop and let the tick book the disk.
+        _ = try await manager.store.update { $0.runs[m.id]?.storageAccountedUntil = Date().addingTimeInterval(-86_400) }
+        let before = await manager.state().spendByDay.values.reduce(0, +)
+        await manager.tick()
+        let after = await manager.state().spendByDay.values.reduce(0, +)
+        let gb = Double(PodPlan.persistentGB(for: m))
+        #expect(abs((after - before) - gb * 0.20 / 730 * 24) < 0.01)
+    }
+
+    @Test func aPodPlacedOutsideTheAllowedRegionIsDeletedAtOnce() async throws {
+        let (manager, fake, m, keychain, url) = try await setUp(keepDisk: false, region: .eu, dataCenter: "US-TX-3")
+        defer { tearDown(keychain, m.id, url) }
+        try await manager.start(m.id, until: Date().addingTimeInterval(3600))
+        #expect(await createBody(fake)["dataCenterIds"] as? [String] == ["EU-RO-1"])
+        await manager.refresh(m.id)
+        #expect(await fake.actions == ["delete"])
+        let run = await manager.state().run(m.id)
+        #expect(run.phase == .failed && run.lastReason == "outside-region" && run.podId == nil)
+    }
+
+    @Test func aPodInsideTheRegionIsKept() async throws {
+        let (manager, fake, m, keychain, url) = try await setUp(keepDisk: false, region: .eu, dataCenter: "EU-RO-1")
+        defer { tearDown(keychain, m.id, url) }
+        try await manager.start(m.id, until: Date().addingTimeInterval(3600))
+        await manager.refresh(m.id)
+        #expect(await fake.actions.isEmpty)
+        #expect(await manager.state().run(m.id).dataCenterId == "EU-RO-1")
+    }
+}
+
+extension FakeRunPod {
+    func setDataCenter(_ id: String?) { dataCenterId = id }
+}
+
+private func createBody(_ fake: FakeRunPod) async -> [String: Any] {
+    (try? JSONSerialization.jsonObject(with: await fake.lastCreateData)) as? [String: Any] ?? [:]
 }

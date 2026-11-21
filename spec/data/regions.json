@@ -1,0 +1,21 @@
+{
+  "description": "Which RunPod data centers count for Podlight's hosting choices. Matched by ID prefix, so data centers RunPod adds later in the same countries are included. RunPod treats dataCenterIds only as a preference (OpenAPI CreatePodRequest, 2026-11-21) and its DPA guarantees no data residency, so Podlight checks where a pod actually landed and deletes it if it is outside.",
+  "source": "Data center IDs from RunPod's catalog and https://getdeploying.com/runpod (2026-11-21); countries inferred from the IDs.",
+  "regions": {
+    "eu": {
+      "prefixes": ["EU-"],
+      "known": { "EU-RO-1": "Romania", "EU-SE-1": "Sweden", "EU-NL-1": "Netherlands", "EU-CZ-1": "Czechia", "EU-FR-1": "France" }
+    },
+    "euEEA": {
+      "prefixes": ["EU-", "EUR-IS-", "EUR-NO-"],
+      "known": { "EUR-IS-1": "Iceland", "EUR-IS-2": "Iceland", "EUR-IS-3": "Iceland", "EUR-IS-4": "Iceland", "EUR-IS-5": "Iceland", "EUR-NO-1": "Norway", "EUR-NO-2": "Norway" }
+    }
+  },
+  "storagePricing": {
+    "source": "https://docs.runpod.io/pods/pricing (2026-11-21)",
+    "containerDiskRunningUsdPerGBMonth": 0.10,
+    "volumeDiskRunningUsdPerGBMonth": 0.10,
+    "volumeDiskStoppedUsdPerGBMonth": 0.20,
+    "hoursPerMonth": 730
+  }
+}

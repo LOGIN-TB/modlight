@@ -28,10 +28,11 @@ actor FakeTransport: HTTPTransport {
 
 enum Fixture {
     /// Shape of a real create/get response (spike pod, since deleted), private values replaced.
-    static func pod(id: String = "abc123podid", gpu: String = "Tesla V100-SXM2-16GB", status: String = "RUNNING") -> String {
+    static func pod(id: String = "abc123podid", gpu: String = "Tesla V100-SXM2-16GB", status: String = "RUNNING",
+                    dataCenterId: String? = nil) -> String {
         """
         {"actions":["stop","restart","terminate"],"args":null,"cloud":"COMMUNITY","cost":0.23,
-         "createdAt":"2026-11-20T18:39:25.101Z","cudaVersion":"12.4","dataCenterId":null,"disk":5,
+         "createdAt":"2026-11-20T18:39:25.101Z","cudaVersion":"12.4","dataCenterId":\(dataCenterId.map { "\"\($0)\"" } ?? "null"),"disk":5,
          "env":{"EXAMPLE":"value"},"globalNetworking":{"enabled":false},
          "gpu":{"count":1,"id":"\(gpu)","memory":62,"vcpuCount":6},"id":"\(id)",
          "image":"python:3.12-slim","locked":false,"mounts":{},"name":"podlight-test","ports":["8000/http"],

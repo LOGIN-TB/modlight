@@ -24,6 +24,8 @@ args=(
 # Hybrid-attention models need one recurrent cache block per concurrent sequence; vLLM's default
 # of 256 does not fit beside large weights and the engine refuses to start.
 [[ -n "${PODLIGHT_MAX_SEQS:-}" ]] && args+=(--max-num-seqs "$PODLIGHT_MAX_SEQS")
+# Several cards: split the model across them.
+[[ "${PODLIGHT_TP:-1}" -gt 1 ]] && args+=(--tensor-parallel-size "$PODLIGHT_TP")
 [[ -n "${PODLIGHT_TOOL_PARSER:-}" ]] && args+=(--enable-auto-tool-choice --tool-call-parser "$PODLIGHT_TOOL_PARSER")
 [[ -n "${PODLIGHT_REASONING_PARSER:-}" ]] && args+=(--reasoning-parser "$PODLIGHT_REASONING_PARSER")
 

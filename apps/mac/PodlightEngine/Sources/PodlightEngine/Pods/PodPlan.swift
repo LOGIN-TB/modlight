@@ -16,7 +16,8 @@ public enum PodPlan {
     public static let deadlineGrace: TimeInterval = 10 * 60
 
     public static func request(for model: PodlightModel, podKey: String, huggingFaceToken: String?,
-                               runUntil: Date?, heartbeatMinutes: Int) -> CreatePodRequest {
+                               runUntil: Date?, heartbeatMinutes: Int, dataCenterIds: [String]? = nil) -> CreatePodRequest {
+        let cards = model.preferredGPU?.count ?? 1
         var env: [String: String] = [
             "PODLIGHT_MODEL": model.repoId,
             "PODLIGHT_SERVED_NAME": model.name,
@@ -27,9 +28,12 @@ public enum PodPlan {
             "PODLIGHT_HEARTBEAT_MINUTES": String(heartbeatMinutes),
             "PODLIGHT_WATCHDOG_B64": resource("watchdog", "py").base64EncodedString(),
             "PODLIGHT_BOOT_B64": resource("boot", "sh").base64EncodedString(),
-            // Downloads go to the persistent disk, so a resumed pod starts without downloading.
-            "HF_HOME": "/workspace/hf",
+            "PODLIGHT_TP": String(cards),
+            // Xet's high-performance mode replaced hf_transfer for fast Hub downloads.
+            "HF_XET_HIGH_PERFORMANCE": "1",
         ]
+        // With a kept disk, downloads go there so a resumed pod starts without downloading.
+        if model.keepDisk { env["HF_HOME"] = "/workspace/hf" }
         if let parser = model.toolCallParser { env["PODLIGHT_TOOL_PARSER"] = parser }
         if let parser = model.reasoningParser { env["PODLIGHT_REASONING_PARSER"] = parser }
         if let token = huggingFaceToken, !token.isEmpty { env["HF_TOKEN"] = token }
@@ -39,18 +43,30 @@ public enum PodPlan {
             name: "podlight-\(model.name)".prefix(60).description,
             image: image,
             cloud: model.preferredGPU?.cloud ?? .secure,
-            gpu: .init(id: model.preferredGPU?.gpuId ?? "placeholder", minCudaVersion: minCudaVersion),
-            disk: 30,
+            gpu: .init(id: model.preferredGPU?.gpuId ?? "placeholder", count: cards, minCudaVersion: minCudaVersion),
+            disk: containerGB(for: model),
             ports: ["\(enginePort)/http", "\(watchdogPort)/http"],
             env: env,
             entrypoint: ["/bin/bash", "-c"],
             cmd: [#"echo "$PODLIGHT_BOOT_B64" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"#],
-            mounts: .init(persistentGB: persistentGB(for: model)))
+            mounts: model.keepDisk ? .init(persistentGB: persistentGB(for: model)) : nil,
+            dataCenterIds: dataCenterIds)
     }
 
     /// Room for the weights plus tokenizer, compile caches and a margin.
     public static func persistentGB(for model: PodlightModel) -> Int {
         Int((model.weightBytes / 1_000_000_000 * 1.15).rounded(.up)) + 10
+    }
+
+    /// Without a kept disk the download lands on the container disk, which must hold it.
+    public static func containerGB(for model: PodlightModel) -> Int {
+        model.keepDisk ? 30 : Int((model.weightBytes / 1_000_000_000 * 1.15).rounded(.up)) + 20
+    }
+
+    /// Storage cost per hour while this model's pod runs.
+    public static func storagePerHour(for model: PodlightModel) -> Double {
+        StoragePricing.runningPerHour(containerGB: containerGB(for: model),
+                                      volumeGB: model.keepDisk ? persistentGB(for: model) : 0)
     }
 
     /// RunPod's HTTP proxy for one port of a pod.
@@ -67,17 +83,14 @@ public enum PodPlan {
     }
 
     /// The fallback order for a start: the user's card first, then the suggestion for the goal.
-    public static func choices(for model: PodlightModel, catalog: [RunpodGPUType], limit: Int = 6) -> [GPUChoice] {
-        // A fallback card must hold the context this model is configured for, not just the
-        // weights: vLLM refuses to start otherwise, after the download.
-        var ordered = GPUSuggestion.options(for: model.info, catalog: catalog, goal: model.goal)
-            .filter { option in
-                Capacity.plan(gpuMemoryGiB: Double(option.memoryGiB), weightsGiB: model.info.weightsGiB,
-                              nativeContextTokens: model.nativeContextTokens,
-                              chosen: .init(contextTokens: model.contextTokens, concurrency: model.concurrency)).fits
-            }
-            .map(\.choice)
-        if let preferred = model.preferredGPU {
+    /// Every fallback holds the configured context (vLLM refuses to start otherwise, after the
+    /// download) and obeys the hosting rules.
+    public static func choices(for model: PodlightModel, catalog: [RunpodGPUType], hosting: HostingPolicy = .anywhere,
+                               limit: Int = 6) -> [GPUChoice] {
+        var ordered = GPUSuggestion.options(for: model.info, catalog: catalog, goal: model.goal,
+                                            context: model.contextTokens, concurrency: model.concurrency,
+                                            hosting: hosting).map(\.choice)
+        if let preferred = model.preferredGPU, hosting.clouds.contains(preferred.cloud) {
             ordered.removeAll { $0 == preferred }
             ordered.insert(preferred, at: 0)
         }

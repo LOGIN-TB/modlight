@@ -1,10 +1,25 @@
 import Foundation
 
-/// One card in one cloud to try.
+/// One card type in one cloud to try, and how many of them in one pod.
 public struct GPUChoice: Sendable, Hashable, Codable {
     public var gpuId: String
     public var cloud: RunpodCloud
-    public init(gpuId: String, cloud: RunpodCloud) { self.gpuId = gpuId; self.cloud = cloud }
+    /// Cards in the pod (tensor parallel). 1 unless a long context needs more memory.
+    public var count: Int
+
+    public init(gpuId: String, cloud: RunpodCloud, count: Int = 1) {
+        self.gpuId = gpuId
+        self.cloud = cloud
+        self.count = max(1, count)
+    }
+
+    // 0.1 stored choices without a count.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        gpuId = try c.decode(String.self, forKey: .gpuId)
+        cloud = try c.decode(RunpodCloud.self, forKey: .cloud)
+        count = try c.decodeIfPresent(Int.self, forKey: .count) ?? 1
+    }
 }
 
 /// What happened to one choice while creating a pod. Shown to the user ("RTX 3090 was taken,
@@ -63,6 +78,7 @@ extension RunpodClient {
             }
             var request = base
             request.gpu.id = choice.gpuId
+            request.gpu.count = choice.count
             request.cloud = choice.cloud
             do {
                 let pod = try await createPod(request)

@@ -18,21 +18,23 @@ public enum Capacity {
     public static let minUsableKVGiB = 4.0
     /// KV cache cost of one token, measured on Qwen3.8-27B (83 KiB at two precisions). Smaller
     /// models are cheaper per token, so this errs on the safe side.
-    public static let kvBytesPerToken = 83.0 * 1024
+    public static let defaultKVBytesPerToken = 83.0 * 1024
     private static let step = 1024
 
     public static func bytesToGiB(_ bytes: Double) -> Double { bytes / 1_073_741_824 }
 
     /// GiB left for the KV cache after the engine's cap, a 12% overhead share, and the weights.
     /// The overhead share is a fit to three measurements, not a model of the allocator.
+    /// With several cards (tensor parallel) the weights and the cache are spread across all of
+    /// them, and each card keeps its own overhead.
     public static func kvHeadroomGiB(gpuMemoryGiB: Double, weightsGiB: Double,
-                                     otherSlotGiB: Double = 0, utilization: Double = 0.94) -> Double {
-        let usable = gpuMemoryGiB * utilization
+                                     otherSlotGiB: Double = 0, utilization: Double = 0.94, gpuCount: Int = 1) -> Double {
+        let usable = gpuMemoryGiB * Double(max(1, gpuCount)) * utilization
         return usable * (1 - 0.12) - weightsGiB - otherSlotGiB
     }
 
-    public static func maxContextTokens(headroomGiB: Double) -> Int {
-        guard headroomGiB > 0 else { return 0 }
+    public static func maxContextTokens(headroomGiB: Double, kvBytesPerToken: Double = defaultKVBytesPerToken) -> Int {
+        guard headroomGiB > 0, kvBytesPerToken > 0 else { return 0 }
         let tokens = headroomGiB * 1_073_741_824 / kvBytesPerToken
         return Int((tokens / 1024).rounded(.down)) * 1024
     }
@@ -58,9 +60,9 @@ public enum Capacity {
 
     /// One budget spent two ways: context × concurrency has to fit in the same pool of tokens.
     public static func plan(gpuMemoryGiB: Double, weightsGiB: Double, nativeContextTokens: Int?,
-                            chosen: Choice) -> Plan {
-        let headroom = kvHeadroomGiB(gpuMemoryGiB: gpuMemoryGiB, weightsGiB: weightsGiB)
-        let budget = floorToStep(Double(maxContextTokens(headroomGiB: headroom)) * margin)
+                            chosen: Choice, kvBytesPerToken: Double = defaultKVBytesPerToken, gpuCount: Int = 1) -> Plan {
+        let headroom = kvHeadroomGiB(gpuMemoryGiB: gpuMemoryGiB, weightsGiB: weightsGiB, gpuCount: gpuCount)
+        let budget = floorToStep(Double(maxContextTokens(headroomGiB: headroom, kvBytesPerToken: kvBytesPerToken)) * margin)
         let native = nativeContextTokens ?? Int.max
 
         let concurrency = min(max(chosen.concurrency, 1), maxConcurrency)
@@ -81,9 +83,11 @@ public enum Capacity {
 
     /// The pair to start from: the whole budget as context, one request at a time. Nil when
     /// nothing usable fits.
-    public static func recommend(gpuMemoryGiB: Double, weightsGiB: Double, nativeContextTokens: Int?) -> Choice? {
+    public static func recommend(gpuMemoryGiB: Double, weightsGiB: Double, nativeContextTokens: Int?,
+                                 kvBytesPerToken: Double = defaultKVBytesPerToken, gpuCount: Int = 1) -> Choice? {
         let p = plan(gpuMemoryGiB: gpuMemoryGiB, weightsGiB: weightsGiB, nativeContextTokens: nativeContextTokens,
-                     chosen: Choice(contextTokens: minContextTokens, concurrency: 1))
+                     chosen: Choice(contextTokens: minContextTokens, concurrency: 1),
+                     kvBytesPerToken: kvBytesPerToken, gpuCount: gpuCount)
         guard p.usable else { return nil }
         return Choice(contextTokens: max(minContextTokens, p.contextCeiling), concurrency: 1)
     }
