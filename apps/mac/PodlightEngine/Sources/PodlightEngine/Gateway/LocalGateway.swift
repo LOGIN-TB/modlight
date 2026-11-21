@@ -78,6 +78,30 @@ public struct LocalGateway: Sendable {
         "/v1/messages", "/v1/messages/count_tokens",
     ]
 
+    /// Claude Code puts entries with `role: "system"` into `messages` (its environment, reminders),
+    /// after the first user turn. The engines turn each into one more system message, and many chat
+    /// templates, Qwen's among them, refuse that with "System message must be at the beginning".
+    /// Podlight hands them on in the same place as user text inside `<system-reminder>`, the way
+    /// Claude Code marks such text elsewhere, so the prefix the engine caches stays the same.
+    /// Returns nil when there is nothing to change, so the body goes on byte for byte.
+    static func systemMessagesAsReminders(_ json: [String: Any]) -> [String: Any]? {
+        guard var messages = json["messages"] as? [[String: Any]],
+              messages.contains(where: { $0["role"] as? String == "system" }) else { return nil }
+        for index in messages.indices where messages[index]["role"] as? String == "system" {
+            let text: String
+            switch messages[index]["content"] {
+            case let string as String: text = string
+            case let blocks as [[String: Any]]: text = blocks.compactMap { $0["text"] as? String }.joined(separator: "\n\n")
+            default: text = ""
+            }
+            messages[index] = ["role": "user",
+                               "content": [["type": "text", "text": "<system-reminder>\n\(text)\n</system-reminder>"]]]
+        }
+        var result = json
+        result["messages"] = messages
+        return result
+    }
+
     /// Request headers the engine needs to see unchanged.
     static let passedHeaders = ["anthropic-version", "anthropic-beta", "openai-beta"]
 
@@ -86,9 +110,13 @@ public struct LocalGateway: Sendable {
         let anthropic = path.hasPrefix("/v1/messages")
         await manager.clientSeen()
         let body = try await incoming.collectBody(upTo: 64 * 1024 * 1024)
-        let data = Data(buffer: body)
+        var data = Data(buffer: body)
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return Self.error(400, "The request body is not JSON.", code: "invalid_json", anthropic: anthropic)
+        }
+        if anthropic, let fixed = Self.systemMessagesAsReminders(json),
+           let encoded = try? JSONSerialization.data(withJSONObject: fixed) {
+            data = encoded
         }
         guard let name = json["model"] as? String, !name.isEmpty else {
             let names = await manager.state().models.map(\.name)

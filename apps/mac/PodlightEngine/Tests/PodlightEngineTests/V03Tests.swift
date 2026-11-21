@@ -207,3 +207,31 @@ struct GGUFTests {
         #expect(info.toolCallParser != nil)
     }
 }
+
+@Suite("System entries in Messages requests")
+struct SystemReminderTests {
+    @Test func aSystemEntryBecomesAReminderInTheSamePlace() throws {
+        let json: [String: Any] = [
+            "model": "m", "system": [["type": "text", "text": "top"]],
+            "messages": [
+                ["role": "user", "content": [["type": "text", "text": "hello"]]],
+                ["role": "system", "content": "# Environment"],
+                ["role": "assistant", "content": "hi"],
+                ["role": "system", "content": [["type": "text", "text": "a"], ["type": "text", "text": "b"]]],
+            ],
+        ]
+        let fixed = try #require(LocalGateway.systemMessagesAsReminders(json))
+        let messages = try #require(fixed["messages"] as? [[String: Any]])
+        #expect(messages.map { $0["role"] as? String } == ["user", "user", "assistant", "user"])
+        let second = try #require((messages[1]["content"] as? [[String: Any]])?.first?["text"] as? String)
+        #expect(second == "<system-reminder>\n# Environment\n</system-reminder>")
+        let fourth = try #require((messages[3]["content"] as? [[String: Any]])?.first?["text"] as? String)
+        #expect(fourth == "<system-reminder>\na\n\nb\n</system-reminder>")
+        #expect((fixed["system"] as? [[String: Any]])?.first?["text"] as? String == "top")
+    }
+
+    @Test func withoutSystemEntriesTheBodyIsLeftAlone() {
+        let json: [String: Any] = ["model": "m", "messages": [["role": "user", "content": "hi"]]]
+        #expect(LocalGateway.systemMessagesAsReminders(json) == nil)
+    }
+}

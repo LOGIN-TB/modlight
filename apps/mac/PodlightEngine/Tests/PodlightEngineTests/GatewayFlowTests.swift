@@ -81,13 +81,17 @@ private func runFakeEngine(port: Int, podKey: @escaping @Sendable () -> String?)
     // Anthropic Messages, as Claude Code calls it: a ping first, and the headers and query it sent.
     router.post("/v1/messages") { request, _ -> Response in
         guard request.headers[.authorization] == "Bearer \(podKey() ?? "")" else { return Response(status: .unauthorized) }
+        var request = request
         let version = LocalGateway.header("anthropic-version", in: request) ?? "-"
         let query = request.uri.query ?? "-"
+        let body = try await request.collectBody(upTo: 1 << 20)
+        let json = (try? JSONSerialization.jsonObject(with: Data(buffer: body))) as? [String: Any]
+        let roles = ((json?["messages"] as? [[String: Any]]) ?? []).compactMap { $0["role"] as? String }.joined(separator: ",")
         var headers = HTTPFields()
         headers[.contentType] = "text/event-stream"
         return Response(status: .ok, headers: headers, body: ResponseBody { writer in
             try await writer.write(ByteBuffer(string: "event: ping\ndata: {\"type\": \"ping\"}\n\n"))
-            try await writer.write(ByteBuffer(string: "event: message_stop\ndata: {\"seen\":\"\(version)|\(query)\"}\n\n"))
+            try await writer.write(ByteBuffer(string: "event: message_stop\ndata: {\"seen\":\"\(version)|\(query)|\(roles)\"}\n\n"))
             try await writer.finish(nil)
         })
     }
@@ -226,12 +230,14 @@ struct AgentRouteTests {
         messages.setValue("gw-test", forHTTPHeaderField: "x-api-key")
         messages.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         messages.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        messages.httpBody = Data(#"{"model":"coder","max_tokens":10,"stream":true,"messages":[{"role":"user","content":"Hi"}]}"#.utf8)
+        // Shaped like Claude Code's: a system entry after the first user turn, which Qwen's template refuses.
+        messages.httpBody = Data(#"{"model":"coder","max_tokens":10,"stream":true,"system":[{"type":"text","text":"You are an agent."}],"messages":[{"role":"user","content":[{"type":"text","text":"Hi"}]},{"role":"system","content":"Environment"}]}"#.utf8)
         let (messageData, messageResponse) = try await URLSession.shared.data(for: messages)
         let text = String(decoding: messageData, as: UTF8.self)
         #expect((messageResponse as? HTTPURLResponse)?.statusCode == 200)
         #expect(text.contains("event: ping"), "SSE pings reach Claude Code, or its idle watchdog aborts")
-        #expect(text.contains(#""seen":"2023-06-01|beta=true""#), "header and query pass through")
+        #expect(text.contains(#""seen":"2023-06-01|beta=true|user,user""#),
+                "header and query pass through; the system entry arrives as a user turn")
         #expect(await manager.state().lastClientRequestAt != nil)
 
         // Codex: Responses API with a bearer token.
