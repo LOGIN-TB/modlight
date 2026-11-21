@@ -45,7 +45,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             \(names) cost about \(Format.money(perHour)) per hour. Once Podlight has quit, agents on this Mac can no longer reach them.
 
             If you keep them running, each pod stops itself after \(model.state.settings.heartbeatMinutes) minutes without Podlight.
-            """)
+            """) + (model.servers.contains { !($0.snapshot?.activeRuns.isEmpty ?? true) }
+                ? "\n\n" + String(localized: "Models on your Podlight servers are not affected and keep running under the servers' rules.")
+                : "")
         alert.addButton(withTitle: String(localized: "Stop and Quit"))
         alert.addButton(withTitle: String(localized: "Cancel"))
         alert.addButton(withTitle: String(localized: "Quit and Keep Running"))

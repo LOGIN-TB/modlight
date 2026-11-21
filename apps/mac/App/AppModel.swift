@@ -11,6 +11,10 @@ enum SidebarItem: Hashable {
     case connection
     case costs
     case settings
+    /// Server mode: one server's connection, costs and settings.
+    case serverConnection(UUID)
+    case serverCosts(UUID)
+    case serverSettings(UUID)
 }
 
 /// The app's state and actions, shared by every window and the menu bar.
@@ -37,6 +41,11 @@ final class AppModel {
     var startingModel: PodlightModel?
     /// A model just added with "Add and Start…": its start sheet opens when the add sheet is gone.
     var startAfterAdding: UUID?
+    /// Where the add sheet puts a new model.
+    var addingTo: Source = .local
+    var showingAddServer = false
+    /// The Podlight servers this app controls, in the order the user added them.
+    var servers: [ServerMirror] = []
     var selection: SidebarItem?
     /// Set by any view that has SwiftUI's openWindow action, so the Dock and the menu bar can
     /// bring the main window back after it was closed.
@@ -73,6 +82,14 @@ final class AppModel {
                 try? await Task.sleep(for: .seconds(1))
             }
         })
+        // Servers run their own rules; the app only mirrors what they report.
+        loops.append(Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                await self.refreshServers()
+                try? await Task.sleep(for: .seconds(5))
+            }
+        })
         loops.append(Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
@@ -86,25 +103,30 @@ final class AppModel {
     func reloadState() async {
         let previous = state
         state = await manager.state()
+        syncServers()
         notifier.compare(previous: previous, current: state)
         if selection == nil || !isValid(selection) { selection = .overview }
     }
 
     private func isValid(_ item: SidebarItem?) -> Bool {
-        guard case .model(let id) = item else { return item != nil }
-        return state.models.contains { $0.id == id }
+        switch item {
+        case .model(let id): return model(id) != nil || servers.contains { $0.snapshot == nil }
+        case .serverConnection(let id), .serverCosts(let id), .serverSettings(let id): return server(id) != nil
+        case nil: return false
+        default: return true
+        }
     }
 
     /// Opens the start sheet for a model added with "Add and Start…".
     func addSheetDismissed() {
         guard let id = startAfterAdding else { return }
         startAfterAdding = nil
-        startingModel = state.models.first { $0.id == id }
+        startingModel = model(id)
     }
 
     var selectedModel: PodlightModel? {
         guard case .model(let id) = selection else { return nil }
-        return state.models.first { $0.id == id }
+        return model(id)
     }
 
     private func refreshSecrets() {
@@ -190,21 +212,43 @@ final class AppModel {
 
     // MARK: Models
 
-    func save(_ model: PodlightModel) async {
+    /// Saves a model where it lives; a new one goes to `source` (the add sheet's target).
+    /// Returns false when it could not be saved; the reason is in `actionError`.
+    @discardableResult
+    func save(_ model: PodlightModel, to target: Source? = nil) async -> Bool {
+        let where_ = target ?? source(of: model.id)
         do {
-            try await manager.save(model)
-            await reloadState()
+            switch where_ {
+            case .local:
+                try await manager.save(model)
+                await reloadState()
+            case .server(let id):
+                guard let server = server(id) else { return false }
+                try await server.client(keychain).save(model)
+                await server.refresh(keychain)
+            }
+            actionError = nil
             selection = .model(model.id)
+            return true
         } catch {
-            actionError = error.localizedDescription
+            actionError = Describe.error(error)
+            return false
         }
     }
 
     func remove(_ model: PodlightModel) async {
+        let where_ = source(of: model.id)
         do {
-            try await manager.remove(model.id)
-            await reloadState()
-            if selection == .model(model.id) { selection = state.models.first.map { .model($0.id) } ?? .connection }
+            switch where_ {
+            case .local:
+                try await manager.remove(model.id)
+                await reloadState()
+            case .server(let id):
+                guard let server = server(id) else { return }
+                try await server.client(keychain).remove(model.id)
+                await server.refresh(keychain)
+            }
+            if selection == .model(model.id) { selection = .overview }
         } catch {
             actionError = Describe.error(error)
         }
@@ -214,7 +258,14 @@ final class AppModel {
         actionError = nil
         notifier.requestPermissionOnce()
         do {
-            try await manager.start(model.id, until: until, manual: true)
+            switch source(of: model.id) {
+            case .local:
+                try await manager.start(model.id, until: until, manual: true)
+            case .server(let id):
+                guard let server = server(id) else { return }
+                try await server.client(keychain).start(model.id, until: until)
+                await server.refresh(keychain)
+            }
         } catch {
             actionError = Describe.error(error)
         }
@@ -223,7 +274,14 @@ final class AppModel {
 
     func stop(_ model: PodlightModel) async {
         do {
-            try await manager.stop(model.id, reason: "manual")
+            switch source(of: model.id) {
+            case .local:
+                try await manager.stop(model.id, reason: "manual")
+            case .server(let id):
+                guard let server = server(id) else { return }
+                try await server.client(keychain).stop(model.id)
+                await server.refresh(keychain)
+            }
         } catch {
             actionError = Describe.error(error)
         }
@@ -231,8 +289,16 @@ final class AppModel {
     }
 
     func extend(_ model: PodlightModel, by interval: TimeInterval) async {
-        let base = max(state.run(model.id).runUntil ?? .now, .now)
-        try? await manager.extend(model.id, until: base.addingTimeInterval(interval))
+        let base = max(run(model.id).runUntil ?? .now, .now)
+        let until = base.addingTimeInterval(interval)
+        switch source(of: model.id) {
+        case .local:
+            try? await manager.extend(model.id, until: until)
+        case .server(let id):
+            guard let server = server(id) else { return }
+            do { try await server.client(keychain).extend(model.id, until: until) } catch { actionError = Describe.error(error) }
+            await server.refresh(keychain)
+        }
         await reloadState()
     }
 
@@ -245,7 +311,7 @@ final class AppModel {
 
     /// What a run of `model` until `end` costs at most: cards plus storage.
     func maximumCost(of model: PodlightModel, until end: Date) -> Double? {
-        let run = state.run(model.id)
+        let run = run(model.id)
         guard let price = run.pricePerHour ?? model.expectedPricePerHour else { return nil }
         let storage = run.storagePerHour ?? PodPlan.storagePerHour(for: model)
         return GPUSuggestion.cost(pricePerHour: price + storage, from: .now, until: end)
@@ -282,137 +348,11 @@ final class AppModel {
 
     // MARK: Configuration files for agents
 
-    /// OpenCode, current format (opencode.ai/docs/models, "Compatible"), for the global
-    /// ~/.config/opencode/opencode.json. Contains the key, so never for a repository.
-    func openCodeConfig(baseURL: String) -> String {
-        let first = state.models.first?.name ?? "model"
-        let models = state.models.map { model in
-            """
-                    "\(model.name)": {
-                      "name": "\(model.name) (Podlight)",
-                      "capabilities": { "tools": \(model.toolCallParser != nil), "input": ["text"], "output": ["text"] },
-                      "limit": { "context": \(model.contextTokens), "output": \(min(16_384, model.contextTokens / 4)) }
-                    }
-            """
-        }.joined(separator: ",\n")
-        return """
-        {
-          "$schema": "https://opencode.ai/config.json",
-          "model": "podlight/\(first)",
-          "providers": {
-            "podlight": {
-              "name": "Podlight",
-              "package": "@opencode/ai/providers/openai-compatible",
-              "settings": {
-                "baseURL": "\(baseURL)",
-                "apiKey": "\(gatewayKey ?? "")",
-                "headerTimeout": 600000
-              },
-              "models": {
-        \(models)
-              }
-            }
-          }
-        }
-        """
-    }
+    /// The ready-made agent configurations for this Mac's gateway.
+    var localAgentConfigs: AgentConfigs { AgentConfigs(key: gatewayKey ?? "", models: state.models) }
 
-    /// pi, ~/.pi/agent/models.json (github.com/earendil-works/pi, docs/models.md).
-    func piConfig(baseURL: String) -> String {
-        let models = state.models.map { model in
-            "        { \"id\": \"\(model.name)\", \"contextWindow\": \(model.contextTokens), \"maxTokens\": \(min(16_384, model.contextTokens / 4)) }"
-        }.joined(separator: ",\n")
-        return """
-        {
-          "$schema": "https://pi.dev/schemas/models.schema.json",
-          "providers": {
-            "podlight": {
-              "baseUrl": "\(baseURL)",
-              "api": "openai-completions",
-              "apiKey": "\(gatewayKey ?? "")",
-              "models": [
-        \(models)
-              ]
-            }
-          }
-        }
-        """
-    }
-
-    /// Environment variables most OpenAI-compatible tools read (Aider, scripts, SDKs).
-    func environmentConfig(baseURL: String) -> String {
-        """
-        export OPENAI_BASE_URL="\(baseURL)"
-        export OPENAI_API_BASE="\(baseURL)"
-        export OPENAI_API_KEY="\(gatewayKey ?? "")"
-        # Model: \(state.models.map(\.name).joined(separator: " | "))
-        """
-    }
+    func openCodeConfig(baseURL: String) -> String { localAgentConfigs.openCode(baseURL: baseURL) }
 
     /// Claude Code needs at least this much context to work; below it compacts constantly.
-    static let claudeCodeMinimumContext = 131_072
-
-    /// Claude Code in the terminal, pointed at Podlight through its Anthropic-compatible route
-    /// (code.claude.com/docs/en/llm-gateway, env-vars). The normal Claude Code login stays untouched.
-    private func claudeCodeVariables(baseURL: String, model item: PodlightModel?) -> [String] {
-        let name = item?.name ?? "model"
-        let context = item?.contextTokens ?? 131_072
-        let root = baseURL.hasSuffix("/v1") ? String(baseURL.dropLast(3)) : baseURL
-        return [
-            "ANTHROPIC_BASE_URL='\(root)'",
-            "ANTHROPIC_AUTH_TOKEN='\(gatewayKey ?? "")'",
-            "ANTHROPIC_API_KEY=''",
-            "ANTHROPIC_MODEL='\(name)'",
-            "ANTHROPIC_DEFAULT_OPUS_MODEL='\(name)'",
-            "ANTHROPIC_DEFAULT_SONNET_MODEL='\(name)'",
-            "ANTHROPIC_DEFAULT_HAIKU_MODEL='\(name)'",
-            "CLAUDE_CODE_MAX_CONTEXT_TOKENS=\(context)",
-            "CLAUDE_CODE_MAX_OUTPUT_TOKENS=\(min(32_000, context / 4))",
-            "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
-            // Beta request fields only Anthropic's own API knows; open engines may reject them.
-            "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1",
-        ]
-    }
-
-    /// Claude Code once, for this terminal.
-    func claudeCodeOnce(baseURL: String, model item: PodlightModel?) -> String {
-        claudeCodeVariables(baseURL: baseURL, model: item).joined(separator: " \\\n  ") + " \\\n  claude"
-    }
-
-    /// Claude Code permanently as `claude-podlight`, for ~/.zshrc.
-    func claudeCodeFunction(baseURL: String, model item: PodlightModel?) -> String {
-        """
-        claude-podlight() {
-          \(claudeCodeVariables(baseURL: baseURL, model: item).joined(separator: " \\\n  ")) \\
-            claude "$@"
-        }
-        """
-    }
-
-    /// Codex CLI: a provider for ~/.codex/config.toml that leaves the user's default untouched
-    /// (learn.chatgpt.com/docs/config-file/config-reference; `wire_api = "responses"` is the only
-    /// value Codex still accepts).
-    func codexProvider(baseURL: String) -> String {
-        """
-        [model_providers.podlight]
-        name = "Podlight"
-        base_url = "\(baseURL)"
-        env_key = "PODLIGHT_API_KEY"
-        wire_api = "responses"
-        stream_idle_timeout_ms = 900000
-        """
-    }
-
-    /// The shell function that selects the provider, for ~/.zshrc.
-    func codexFunction(model item: PodlightModel?) -> String {
-        let name = item?.name ?? "model"
-        let context = item?.contextTokens ?? 131_072
-        return """
-        codex-podlight() {
-          PODLIGHT_API_KEY='\(gatewayKey ?? "")' codex \\
-            -c model_provider=podlight -m '\(name)' \\
-            -c model_context_window=\(context) "$@"
-        }
-        """
-    }
+    static let claudeCodeMinimumContext = AgentConfigs.claudeCodeMinimumContext
 }

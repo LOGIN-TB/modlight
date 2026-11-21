@@ -23,9 +23,22 @@ struct StartSheet: View {
     }
 
 
+    private var source: Source { model.source(of: model_.id) }
+
+    private var stopsEarlier: String {
+        let minutes = model.heartbeatMinutes(in: source)
+        if case .server = source {
+            return String(localized: "It stops earlier when no requests come in for \(model_.schedule.idleStopMinutes) minutes, and by itself if the server \(model.name(of: source)) is unreachable for more than \(minutes) minutes. It keeps running when this Mac sleeps or Podlight quits. You can extend it while it runs.")
+        }
+        return String(localized: "It stops earlier when no requests come in for \(model_.schedule.idleStopMinutes) minutes, and by itself if this Mac sleeps or Podlight quits for more than \(minutes) minutes. You can extend it while it runs.")
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Start \(model_.name)").font(.title2.weight(.semibold))
+            if case .server = source {
+                Label("On \(model.name(of: source))", systemImage: "server.rack").foregroundStyle(.secondary)
+            }
             Form {
                 Picker("Runs until", selection: $length) {
                     Text("1 hour from now").tag(Length.hours(1))
@@ -49,7 +62,7 @@ struct StartSheet: View {
                 }
             }
             .formStyle(.grouped)
-            Text("It stops earlier when no requests come in for \(model_.schedule.idleStopMinutes) minutes, and by itself if this Mac sleeps or Podlight quits for more than \(model.state.settings.heartbeatMinutes) minutes. You can extend it while it runs.")
+            Text(stopsEarlier)
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

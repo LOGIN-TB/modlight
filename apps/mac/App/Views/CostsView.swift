@@ -2,10 +2,11 @@ import Charts
 import PodlightEngine
 import SwiftUI
 
-/// What this Mac's pods cost, against the limits that stop them.
+/// What the pods of this Mac or of one server cost, against the limits that stop them.
 struct CostsView: View {
     @Environment(AppModel.self) private var model
     @State private var editingLimits = false
+    var source: Source = .local
 
     private struct Day: Identifiable {
         var id: Date { date }
@@ -13,26 +14,50 @@ struct CostsView: View {
         let usd: Double
     }
 
-    private var spend: Spend { model.state.spend(on: .now) }
+    private var spend: Spend { model.spend(in: source) }
+
+    private var spendByDay: [String: Double] {
+        switch source {
+        case .local: model.state.spendByDay
+        case .server(let id): model.server(id)?.snapshot?.spendByDay ?? [:]
+        }
+    }
+
+    private var runs: [ModelRun] { model.models(in: source).map { model.run($0.id) } }
+
+    private func setLimits(daily: Double?? = .none, monthly: Double?? = .none) async {
+        switch source {
+        case .local:
+            await model.updateSettings { settings in
+                if let daily { settings.dailyLimitUsd = daily }
+                if let monthly { settings.monthlyLimitUsd = monthly }
+            }
+        case .server(let id):
+            var change = ServerSettingsChange()
+            if let daily { change.dailyLimit(daily) }
+            if let monthly { change.monthlyLimit(monthly) }
+            model.actionError = await model.updateServer(id, change)
+        }
+    }
 
     private var lastThirtyDays: [Day] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
         return (0..<30).reversed().compactMap { offset in
             guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
-            return Day(date: date, usd: model.state.spendByDay[PodlightState.dayKey(date)] ?? 0)
+            return Day(date: date, usd: spendByDay[PodlightState.dayKey(date)] ?? 0)
         }
     }
 
     private var stoppedDiskGB: Int {
-        model.state.runs.values.filter { $0.podId != nil && $0.phase == .stopped }.compactMap(\.persistentGB).reduce(0, +)
+        runs.filter { $0.podId != nil && $0.phase == .stopped }.compactMap(\.persistentGB).reduce(0, +)
     }
 
     var body: some View {
         Form {
             Section("Now") {
-                LabeledContent("Running pods", value: "\(model.state.activeRuns.count)")
-                LabeledContent("Cost per hour", value: Format.perHour(model.state.costPerHour))
+                LabeledContent("Running pods", value: "\(model.activeRuns(in: source).count)")
+                LabeledContent("Cost per hour", value: Format.perHour(model.costPerHour(in: source)))
             }
             Section {
                 LimitRow(title: "Today", spent: spend.todayUsd, limit: spend.dailyLimitUsd)
@@ -40,8 +65,8 @@ struct CostsView: View {
                 Button("Change Limits…") { editingLimits = true }
                     .popover(isPresented: $editingLimits, arrowEdge: .bottom) {
                         Form {
-                            LimitField(title: "Per day", value: model.state.settings.dailyLimitUsd) { v in await model.updateSettings { $0.dailyLimitUsd = v } }
-                            LimitField(title: "Per month", value: model.state.settings.monthlyLimitUsd) { v in await model.updateSettings { $0.monthlyLimitUsd = v } }
+                            LimitField(title: "Per day", value: spend.dailyLimitUsd) { v in await setLimits(daily: .some(v)) }
+                            LimitField(title: "Per month", value: spend.monthlyLimitUsd) { v in await setLimits(monthly: .some(v)) }
                             Text("Leave a field empty for no limit.").font(.caption).foregroundStyle(.secondary)
                         }
                         .formStyle(.grouped)
@@ -50,7 +75,9 @@ struct CostsView: View {
             } header: {
                 Text("Spending limits")
             } footer: {
-                Text("At a limit, Podlight stops this Mac's pods and does not start or wake them again until the next day or month.")
+                Text(source == .local
+                     ? "At a limit, Podlight stops this Mac's pods and does not start or wake them again until the next day or month."
+                     : "At a limit, the server stops its pods and does not start or wake them again until the next day or month. Days are counted in the server's time zone.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Last 30 days") {
@@ -66,18 +93,20 @@ struct CostsView: View {
                 Section("Kept disks") {
                     LabeledContent("Disk kept", value: "\(stoppedDiskGB) GB")
                     LabeledContent("Costs while stopped", value: String(localized: "about \(Format.money(StoragePricing.stoppedPerMonth(volumeGB: stoppedDiskGB))) a month"))
-                    Text("Models with \"Keep model on disk\" switched on keep their disk while stopped, so the next start skips the download. RunPod charges 0.20 USD per GB and month for it; it is included in the figures above. Podlight deletes pods left unused for \(model.state.settings.deleteStoppedAfterDays) days.")
+                    Text("Models with \"Keep model on disk\" switched on keep their disk while stopped, so the next start skips the download. RunPod charges 0.20 USD per GB and month for it; it is included in the figures above. Podlight deletes pods left unused for \(model.deleteStoppedAfterDays(in: source)) days.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
             Section {
-                Text("These figures are Podlight's own count of this Mac's pods (price per hour × running time). Your RunPod account shows the exact charges, including other pods.")
+                Text(source == .local
+                     ? "These figures are Podlight's own count of this Mac's pods (price per hour × running time). Your RunPod account shows the exact charges, including other pods."
+                     : "These figures are the server's own count of its pods (price per hour × running time). Your RunPod account shows the exact charges, including other pods.")
                     .font(.caption).foregroundStyle(.secondary)
                 Link("Open RunPod billing", destination: Links.runpodBilling)
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Costs")
+        .navigationTitle(source == .local ? String(localized: "Costs") : String(localized: "Costs · \(model.name(of: source))"))
     }
 }
 

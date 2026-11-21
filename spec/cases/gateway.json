@@ -1,0 +1,645 @@
+{
+  "cases" : [
+    {
+      "expected" : null,
+      "function" : "systemMessagesAsReminders",
+      "id" : "reminders-no-system",
+      "input" : {
+        "body" : {
+          "messages" : [
+            {
+              "content" : "hi",
+              "role" : "user"
+            }
+          ],
+          "model" : "m"
+        }
+      },
+      "title" : "System entries in messages: no-system"
+    },
+    {
+      "expected" : {
+        "messages" : [
+          {
+            "content" : [
+              {
+                "text" : "hi",
+                "type" : "text"
+              }
+            ],
+            "role" : "user"
+          },
+          {
+            "content" : [
+              {
+                "text" : "<system-reminder>\nEnvironment\n</system-reminder>",
+                "type" : "text"
+              }
+            ],
+            "role" : "user"
+          },
+          {
+            "content" : "ok",
+            "role" : "assistant"
+          }
+        ],
+        "model" : "m",
+        "system" : [
+          {
+            "text" : "top",
+            "type" : "text"
+          }
+        ]
+      },
+      "function" : "systemMessagesAsReminders",
+      "id" : "reminders-system-string",
+      "input" : {
+        "body" : {
+          "messages" : [
+            {
+              "content" : [
+                {
+                  "text" : "hi",
+                  "type" : "text"
+                }
+              ],
+              "role" : "user"
+            },
+            {
+              "content" : "Environment",
+              "role" : "system"
+            },
+            {
+              "content" : "ok",
+              "role" : "assistant"
+            }
+          ],
+          "model" : "m",
+          "system" : [
+            {
+              "text" : "top",
+              "type" : "text"
+            }
+          ]
+        }
+      },
+      "title" : "System entries in messages: system-string"
+    },
+    {
+      "expected" : {
+        "messages" : [
+          {
+            "content" : "a",
+            "role" : "user"
+          },
+          {
+            "content" : [
+              {
+                "text" : "<system-reminder>\none\n\ntwo\n</system-reminder>",
+                "type" : "text"
+              }
+            ],
+            "role" : "user"
+          }
+        ],
+        "model" : "m"
+      },
+      "function" : "systemMessagesAsReminders",
+      "id" : "reminders-system-blocks",
+      "input" : {
+        "body" : {
+          "messages" : [
+            {
+              "content" : "a",
+              "role" : "user"
+            },
+            {
+              "content" : [
+                {
+                  "text" : "one",
+                  "type" : "text"
+                },
+                {
+                  "text" : "two",
+                  "type" : "text"
+                },
+                {
+                  "type" : "image"
+                }
+              ],
+              "role" : "system"
+            }
+          ],
+          "model" : "m"
+        }
+      },
+      "title" : "System entries in messages: system-blocks"
+    },
+    {
+      "expected" : {
+        "messages" : [
+          {
+            "content" : [
+              {
+                "text" : "<system-reminder>\n\n</system-reminder>",
+                "type" : "text"
+              }
+            ],
+            "role" : "user"
+          },
+          {
+            "content" : "a",
+            "role" : "user"
+          }
+        ],
+        "model" : "m"
+      },
+      "function" : "systemMessagesAsReminders",
+      "id" : "reminders-system-empty",
+      "input" : {
+        "body" : {
+          "messages" : [
+            {
+              "role" : "system"
+            },
+            {
+              "content" : "a",
+              "role" : "user"
+            }
+          ],
+          "model" : "m"
+        }
+      },
+      "title" : "System entries in messages: system-empty"
+    },
+    {
+      "expected" : null,
+      "function" : "systemMessagesAsReminders",
+      "id" : "reminders-no-messages",
+      "input" : {
+        "body" : {
+          "model" : "m",
+          "prompt" : "x"
+        }
+      },
+      "title" : "System entries in messages: no-messages"
+    },
+    {
+      "expected" : {
+        "code" : "model_not_found",
+        "status" : 404
+      },
+      "function" : "gatewayError",
+      "id" : "error-unknown-model-openai",
+      "input" : {
+        "anthropic" : false,
+        "error" : {
+          "kind" : "unknownModel"
+        },
+        "model" : "m"
+      },
+      "title" : "Error unknown-model, OpenAI shape"
+    },
+    {
+      "expected" : {
+        "status" : 404,
+        "type" : "not_found_error"
+      },
+      "function" : "gatewayError",
+      "id" : "error-unknown-model-anthropic",
+      "input" : {
+        "anthropic" : true,
+        "error" : {
+          "kind" : "unknownModel"
+        },
+        "model" : "m"
+      },
+      "title" : "Error unknown-model, Anthropic shape"
+    },
+    {
+      "expected" : {
+        "code" : "setup_incomplete",
+        "status" : 503
+      },
+      "function" : "gatewayError",
+      "id" : "error-setup-openai",
+      "input" : {
+        "anthropic" : false,
+        "error" : {
+          "kind" : "missingRunpodKey"
+        },
+        "model" : "m"
+      },
+      "title" : "Error setup, OpenAI shape"
+    },
+    {
+      "expected" : {
+        "status" : 503,
+        "type" : "overloaded_error"
+      },
+      "function" : "gatewayError",
+      "id" : "error-setup-anthropic",
+      "input" : {
+        "anthropic" : true,
+        "error" : {
+          "kind" : "missingRunpodKey"
+        },
+        "model" : "m"
+      },
+      "title" : "Error setup, Anthropic shape"
+    },
+    {
+      "expected" : {
+        "code" : "spend_limit",
+        "status" : 429
+      },
+      "function" : "gatewayError",
+      "id" : "error-daily-openai",
+      "input" : {
+        "anthropic" : false,
+        "error" : {
+          "kind" : "limitReached",
+          "limit" : "daily-limit"
+        },
+        "model" : "m"
+      },
+      "title" : "Error daily, OpenAI shape"
+    },
+    {
+      "expected" : {
+        "status" : 429,
+        "type" : "rate_limit_error"
+      },
+      "function" : "gatewayError",
+      "id" : "error-daily-anthropic",
+      "input" : {
+        "anthropic" : true,
+        "error" : {
+          "kind" : "limitReached",
+          "limit" : "daily-limit"
+        },
+        "model" : "m"
+      },
+      "title" : "Error daily, Anthropic shape"
+    },
+    {
+      "expected" : {
+        "code" : "spend_limit",
+        "status" : 429
+      },
+      "function" : "gatewayError",
+      "id" : "error-monthly-openai",
+      "input" : {
+        "anthropic" : false,
+        "error" : {
+          "kind" : "limitReached",
+          "limit" : "monthly-limit"
+        },
+        "model" : "m"
+      },
+      "title" : "Error monthly, OpenAI shape"
+    },
+    {
+      "expected" : {
+        "status" : 429,
+        "type" : "rate_limit_error"
+      },
+      "function" : "gatewayError",
+      "id" : "error-monthly-anthropic",
+      "input" : {
+        "anthropic" : true,
+        "error" : {
+          "kind" : "limitReached",
+          "limit" : "monthly-limit"
+        },
+        "model" : "m"
+      },
+      "title" : "Error monthly, Anthropic shape"
+    },
+    {
+      "expected" : {
+        "code" : "no_capacity",
+        "status" : 503
+      },
+      "function" : "gatewayError",
+      "id" : "error-capacity-openai",
+      "input" : {
+        "anthropic" : false,
+        "error" : {
+          "kind" : "noCapacity",
+          "tried" : [
+            "NVIDIA L40S"
+          ]
+        },
+        "model" : "m"
+      },
+      "title" : "Error capacity, OpenAI shape"
+    },
+    {
+      "expected" : {
+        "status" : 503,
+        "type" : "overloaded_error"
+      },
+      "function" : "gatewayError",
+      "id" : "error-capacity-anthropic",
+      "input" : {
+        "anthropic" : true,
+        "error" : {
+          "kind" : "noCapacity",
+          "tried" : [
+            "NVIDIA L40S"
+          ]
+        },
+        "model" : "m"
+      },
+      "title" : "Error capacity, Anthropic shape"
+    },
+    {
+      "expected" : {
+        "code" : "no_suitable_card",
+        "status" : 503
+      },
+      "function" : "gatewayError",
+      "id" : "error-no-card-openai",
+      "input" : {
+        "anthropic" : false,
+        "error" : {
+          "kind" : "noSuitableCard"
+        },
+        "model" : "m"
+      },
+      "title" : "Error no-card, OpenAI shape"
+    },
+    {
+      "expected" : {
+        "status" : 503,
+        "type" : "overloaded_error"
+      },
+      "function" : "gatewayError",
+      "id" : "error-no-card-anthropic",
+      "input" : {
+        "anthropic" : true,
+        "error" : {
+          "kind" : "noSuitableCard"
+        },
+        "model" : "m"
+      },
+      "title" : "Error no-card, Anthropic shape"
+    },
+    {
+      "expected" : {
+        "code" : "starting",
+        "status" : 503
+      },
+      "function" : "gatewayError",
+      "id" : "error-not-ready-openai",
+      "input" : {
+        "anthropic" : false,
+        "error" : {
+          "kind" : "notReadyInTime"
+        },
+        "model" : "m"
+      },
+      "title" : "Error not-ready, OpenAI shape"
+    },
+    {
+      "expected" : {
+        "status" : 503,
+        "type" : "overloaded_error"
+      },
+      "function" : "gatewayError",
+      "id" : "error-not-ready-anthropic",
+      "input" : {
+        "anthropic" : true,
+        "error" : {
+          "kind" : "notReadyInTime"
+        },
+        "model" : "m"
+      },
+      "title" : "Error not-ready, Anthropic shape"
+    },
+    {
+      "expected" : {
+        "code" : "stopped",
+        "status" : 503
+      },
+      "function" : "gatewayError",
+      "id" : "error-wake-off-openai",
+      "input" : {
+        "anthropic" : false,
+        "error" : {
+          "kind" : "wakeDisabled"
+        },
+        "model" : "m"
+      },
+      "title" : "Error wake-off, OpenAI shape"
+    },
+    {
+      "expected" : {
+        "status" : 503,
+        "type" : "overloaded_error"
+      },
+      "function" : "gatewayError",
+      "id" : "error-wake-off-anthropic",
+      "input" : {
+        "anthropic" : true,
+        "error" : {
+          "kind" : "wakeDisabled"
+        },
+        "model" : "m"
+      },
+      "title" : "Error wake-off, Anthropic shape"
+    },
+    {
+      "expected" : {
+        "code" : "runpod_error",
+        "status" : 502
+      },
+      "function" : "gatewayError",
+      "id" : "error-runpod-openai",
+      "input" : {
+        "anthropic" : false,
+        "error" : {
+          "kind" : "runpod",
+          "message" : "boom",
+          "status" : 500
+        },
+        "model" : "m"
+      },
+      "title" : "Error runpod, OpenAI shape"
+    },
+    {
+      "expected" : {
+        "status" : 502,
+        "type" : "api_error"
+      },
+      "function" : "gatewayError",
+      "id" : "error-runpod-anthropic",
+      "input" : {
+        "anthropic" : true,
+        "error" : {
+          "kind" : "runpod",
+          "message" : "boom",
+          "status" : 500
+        },
+        "model" : "m"
+      },
+      "title" : "Error runpod, Anthropic shape"
+    },
+    {
+      "expected" : true,
+      "function" : "isValidName",
+      "id" : "name-qwen3-coder-30b",
+      "input" : {
+        "name" : "qwen3-coder-30b"
+      },
+      "title" : "Served name \"qwen3-coder-30b\""
+    },
+    {
+      "expected" : true,
+      "function" : "isValidName",
+      "id" : "name-a",
+      "input" : {
+        "name" : "a"
+      },
+      "title" : "Served name \"a\""
+    },
+    {
+      "expected" : true,
+      "function" : "isValidName",
+      "id" : "name-a.b_c-d",
+      "input" : {
+        "name" : "a.b_c-d"
+      },
+      "title" : "Served name \"a.b_c-d\""
+    },
+    {
+      "expected" : false,
+      "function" : "isValidName",
+      "id" : "name-Qwen3",
+      "input" : {
+        "name" : "Qwen3"
+      },
+      "title" : "Served name \"Qwen3\""
+    },
+    {
+      "expected" : false,
+      "function" : "isValidName",
+      "id" : "name--lead",
+      "input" : {
+        "name" : "-lead"
+      },
+      "title" : "Served name \"-lead\""
+    },
+    {
+      "expected" : false,
+      "function" : "isValidName",
+      "id" : "name-with/slash",
+      "input" : {
+        "name" : "with/slash"
+      },
+      "title" : "Served name \"with/slash\""
+    },
+    {
+      "expected" : false,
+      "function" : "isValidName",
+      "id" : "name-with space",
+      "input" : {
+        "name" : "with space"
+      },
+      "title" : "Served name \"with space\""
+    },
+    {
+      "expected" : false,
+      "function" : "isValidName",
+      "id" : "name-empty",
+      "input" : {
+        "name" : ""
+      },
+      "title" : "Served name \"\""
+    },
+    {
+      "expected" : true,
+      "function" : "isValidName",
+      "id" : "name-len63",
+      "input" : {
+        "name" : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "title" : "Served name \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\""
+    },
+    {
+      "expected" : false,
+      "function" : "isValidName",
+      "id" : "name-len64",
+      "input" : {
+        "name" : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "title" : "Served name \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\""
+    },
+    {
+      "expected" : false,
+      "function" : "isValidName",
+      "id" : "name-ümlaut",
+      "input" : {
+        "name" : "ümlaut"
+      },
+      "title" : "Served name \"ümlaut\""
+    },
+    {
+      "expected" : "torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 2.00 GiB",
+      "function" : "summarizeEngineLog",
+      "id" : "log-oom",
+      "input" : {
+        "lines" : [
+          "INFO loading",
+          "torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 2.00 GiB",
+          "INFO shutting down"
+        ]
+      },
+      "title" : "Engine log summary: oom"
+    },
+    {
+      "expected" : "line 2\nline 3\nline 4",
+      "function" : "summarizeEngineLog",
+      "id" : "log-none",
+      "input" : {
+        "lines" : [
+          "line 1",
+          "line 2",
+          "line 3",
+          "line 4"
+        ]
+      },
+      "title" : "Engine log summary: none"
+    },
+    {
+      "expected" : "llama_model_load: error loading model: tensor shape mismatch",
+      "function" : "summarizeEngineLog",
+      "id" : "log-llama",
+      "input" : {
+        "lines" : [
+          "llama_model_load: error loading model: tensor shape mismatch",
+          "srv main: exiting"
+        ]
+      },
+      "title" : "Engine log summary: llama"
+    },
+    {
+      "expected" : "Error b\nTraceback (most recent call last):\nValueError: bad",
+      "function" : "summarizeEngineLog",
+      "id" : "log-many-errors",
+      "input" : {
+        "lines" : [
+          "Error a",
+          "  Error b  ",
+          "Traceback (most recent call last):",
+          "ValueError: bad",
+          "INFO end"
+        ]
+      },
+      "title" : "Engine log summary: many-errors"
+    }
+  ],
+  "description" : "What the gateway changes and says. `systemMessagesAsReminders` (Anthropic Messages API only): expected is the rewritten body, or null when the body must be forwarded unchanged. `gatewayError`: status and code (OpenAI shape) or error type (Anthropic shape); the message text may differ per implementation. `isValidName`: the served-name rule. `summarizeEngineLog`: the lines shown when an engine dies.",
+  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+}

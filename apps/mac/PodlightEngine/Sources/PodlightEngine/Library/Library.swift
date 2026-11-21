@@ -255,8 +255,25 @@ public struct PodlightState: Codable, Sendable, Equatable {
     public var spendByDay: [String: Double] = [:]
     /// When an agent last reached the gateway with a valid key, for "agent connected" on the overview.
     public var lastClientRequestAt: Date?
+    /// Podlight servers this app controls (server mode). Their device tokens are in the keychain.
+    public var servers: [ServerEntry] = []
 
     public init() {}
+
+    private enum CodingKeys: String, CodingKey {
+        case models, runs, settings, spendByDay, lastClientRequestAt, servers
+    }
+
+    // Every field optional on read, so a state file from an older version still loads.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        models = try c.decodeIfPresent([PodlightModel].self, forKey: .models) ?? []
+        runs = try c.decodeIfPresent([UUID: ModelRun].self, forKey: .runs) ?? [:]
+        settings = try c.decodeIfPresent(PodlightSettings.self, forKey: .settings) ?? PodlightSettings()
+        spendByDay = try c.decodeIfPresent([String: Double].self, forKey: .spendByDay) ?? [:]
+        lastClientRequestAt = try c.decodeIfPresent(Date.self, forKey: .lastClientRequestAt)
+        servers = try c.decodeIfPresent([ServerEntry].self, forKey: .servers) ?? []
+    }
 
     public func run(_ id: UUID) -> ModelRun { runs[id] ?? ModelRun() }
 

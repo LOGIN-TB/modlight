@@ -17,9 +17,12 @@ public struct LocalGateway: Sendable {
     private let manager: PodManager
     private let keyProvider: @Sendable () -> String?
     private let transport: HTTPTransport
+    /// Wait between tries while RunPod's proxy is not yet routing; shorter in tests.
+    private let proxyRetryDelay: Duration
 
     public init(port: Int, host: String = "127.0.0.1", manager: PodManager, transport: HTTPTransport = URLSession.shared,
-                key: @escaping @Sendable () -> String?) {
+                proxyRetryDelay: Duration = .seconds(5), key: @escaping @Sendable () -> String?) {
+        self.proxyRetryDelay = proxyRetryDelay
         self.port = port
         self.host = host
         self.manager = manager
@@ -102,6 +105,15 @@ public struct LocalGateway: Sendable {
         return result
     }
 
+    /// Tries after a proxy 404: up to 30 seconds for RunPod's proxy to start routing.
+    static let proxyRetries = 6
+
+    /// An engine answers with JSON; RunPod's proxy, before it routes to the pod, does not.
+    static func isProxyNotReady(_ response: URLResponse) -> Bool {
+        guard let http = response as? HTTPURLResponse, http.statusCode == 404 else { return false }
+        return !(http.value(forHTTPHeaderField: "Content-Type") ?? "").contains("application/json")
+    }
+
     /// Request headers the engine needs to see unchanged.
     static let passedHeaders = ["anthropic-version", "anthropic-beta", "openai-beta"]
 
@@ -148,13 +160,25 @@ public struct LocalGateway: Sendable {
             if let value = Self.header(name, in: incoming) { upstream.setValue(value, forHTTPHeaderField: name) }
         }
 
-        let bytes: URLSession.AsyncBytes
-        let response: URLResponse
-        do {
-            (bytes, response) = try await URLSession.shared.bytes(for: upstream)
-        } catch {
+        // RunPod's proxy answers 404 without JSON while it is not yet routing to a freshly started
+        // pod, even after the engine reported ready (seen live 2026-11-21 on the first request
+        // after a wake). The request is held anyway, so it is tried again for up to 30 seconds.
+        var bytes: URLSession.AsyncBytes?
+        var response: URLResponse?
+        for attempt in 0...Self.proxyRetries {
+            do {
+                (bytes, response) = try await URLSession.shared.bytes(for: upstream)
+            } catch {
+                await manager.requestEnded(endpoint.modelId)
+                return Self.error(502, "The pod for \(name) did not answer: \(error.localizedDescription)", code: "upstream_unreachable", anthropic: anthropic)
+            }
+            guard let r = response, Self.isProxyNotReady(r) else { break }
+            bytes?.task.cancel()
+            if attempt < Self.proxyRetries { try? await Task.sleep(for: proxyRetryDelay) }
+        }
+        guard let bytes, let response, !Self.isProxyNotReady(response) else {
             await manager.requestEnded(endpoint.modelId)
-            return Self.error(502, "The pod for \(name) did not answer: \(error.localizedDescription)", code: "upstream_unreachable", anthropic: anthropic)
+            return Self.response(for: .notReadyInTime, model: name, anthropic: anthropic)
         }
         let http = response as? HTTPURLResponse
         var headers = HTTPFields()
@@ -184,42 +208,60 @@ public struct LocalGateway: Sendable {
 
     // MARK: Responses
 
-    static func response(for error: PodlightError, model: String, anthropic: Bool = false) -> Response {
+    /// What the gateway answers for an error: HTTP status, sentence and code. Pure, so the server
+    /// can be held to the same codes (spec/cases/gateway.json).
+    struct Failure: Equatable, Sendable {
+        var status: Int
+        var message: String
+        var code: String
+    }
+
+    static func failure(for error: PodlightError, model: String) -> Failure {
         switch error {
         case .unknownModel:
-            return Self.error(404, "Podlight has no model named \"\(model)\". GET /v1/models lists them.", code: "model_not_found", anthropic: anthropic)
+            return Failure(status: 404, message: "Podlight has no model named \"\(model)\". GET /v1/models lists them.", code: "model_not_found")
         case .missingRunpodKey:
-            return Self.error(503, "Podlight has no RunPod API key yet. Open Podlight and finish setup.", code: "setup_incomplete", anthropic: anthropic)
+            return Failure(status: 503, message: "Podlight has no RunPod API key yet. Open Podlight and finish setup.", code: "setup_incomplete")
         case .limitReached(let which):
             let limit = which == "monthly-limit" ? "monthly" : "daily"
-            return Self.error(429, "Podlight's \(limit) spending limit is reached, so \(model) stays stopped. Raise the limit in Podlight → Costs.", code: "spend_limit", anthropic: anthropic)
+            return Failure(status: 429, message: "Podlight's \(limit) spending limit is reached, so \(model) stays stopped. Raise the limit in Podlight → Costs.", code: "spend_limit")
         case .noCapacity(let tried):
-            return Self.error(503, "RunPod has no free card for \(model) right now (tried: \(tried.joined(separator: ", "))). Try again in a few minutes.", code: "no_capacity", anthropic: anthropic)
+            return Failure(status: 503, message: "RunPod has no free card for \(model) right now (tried: \(tried.joined(separator: ", "))). Try again in a few minutes.", code: "no_capacity")
         case .noSuitableCard:
-            return Self.error(503, "No RunPod card can hold \(model) with its configured context.", code: "no_suitable_card", anthropic: anthropic)
+            return Failure(status: 503, message: "No RunPod card can hold \(model) with its configured context.", code: "no_suitable_card")
         case .notReadyInTime:
-            return Self.error(503, "\(model) is still starting. A new pod can take up to 25 minutes (the GPU host downloads the engine and the model); a resumed one about a minute. Try again shortly, or start it in Podlight beforehand.", code: "starting", anthropic: anthropic)
+            return Failure(status: 503, message: "\(model) is still starting. A new pod can take up to 25 minutes (the GPU host downloads the engine and the model); a resumed one about a minute. Try again shortly, or start it in Podlight beforehand.", code: "starting")
         case .wakeDisabled:
-            return Self.error(503, "\(model) is stopped. Start it in Podlight.", code: "stopped", anthropic: anthropic)
+            return Failure(status: 503, message: "\(model) is stopped. Start it in Podlight.", code: "stopped")
         case .runpod(let status, let message):
-            return Self.error(502, "RunPod refused (\(status)): \(message.prefix(200))", code: "runpod_error", anthropic: anthropic)
+            return Failure(status: 502, message: "RunPod refused (\(status)): \(message.prefix(200))", code: "runpod_error")
         case .keychain(let message):
-            return Self.error(500, "Podlight could not read its keychain: \(message)", code: "keychain", anthropic: anthropic)
+            return Failure(status: 500, message: "Podlight could not read its keychain: \(message)", code: "keychain")
+        }
+    }
+
+    static func response(for error: PodlightError, model: String, anthropic: Bool = false) -> Response {
+        let f = failure(for: error, model: model)
+        return Self.error(f.status, f.message, code: f.code, anthropic: anthropic)
+    }
+
+    /// Anthropic's error type for an HTTP status.
+    static func anthropicType(_ status: Int) -> String {
+        switch status {
+        case 400: "invalid_request_error"
+        case 401: "authentication_error"
+        case 403: "permission_error"
+        case 404: "not_found_error"
+        case 429: "rate_limit_error"
+        case 503: "overloaded_error"
+        default: "api_error"
         }
     }
 
     /// OpenAI's error shape, or Anthropic's for the Messages API so Claude Code shows the message.
     static func error(_ status: Int, _ message: String, code: String, anthropic: Bool = false) -> Response {
         if anthropic {
-            let type = switch status {
-            case 400: "invalid_request_error"
-            case 401: "authentication_error"
-            case 404: "not_found_error"
-            case 429: "rate_limit_error"
-            case 503: "overloaded_error"
-            default: "api_error"
-            }
-            return json(status, ["type": "error", "error": ["type": type, "message": message]])
+            return json(status, ["type": "error", "error": ["type": anthropicType(status), "message": message]])
         }
         return json(status, ["error": ["message": message, "type": "podlight_error", "code": code]])
     }

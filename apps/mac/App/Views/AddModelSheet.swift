@@ -7,6 +7,8 @@ struct AddModelSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     private let editing: PodlightModel?
+    /// Where the model is set up: this Mac or a server. Fixed for an existing model.
+    private let target: Source
 
     enum Step: Int { case find, check, card, finish }
     @State private var step: Step = .find
@@ -42,8 +44,9 @@ struct AddModelSheet: View {
     @State private var idleMinutes = 30
     @State private var keepDisk = false
 
-    init(editing: PodlightModel? = nil) {
+    init(editing: PodlightModel? = nil, target: Source = .local) {
         self.editing = editing
+        self.target = target
         guard let editing else { return }
         _step = State(initialValue: .card)
         _info = State(initialValue: editing.info)
@@ -89,7 +92,8 @@ struct AddModelSheet: View {
         .frame(width: 760, height: 600)
         .task {
             if !hostingLoaded {
-                let start = editing?.hosting(default: model.state.settings.hosting) ?? model.state.settings.hosting
+                let fallback = model.defaultHosting(in: target)
+                let start = editing?.hosting(default: fallback) ?? fallback
                 region = start.region
                 secureOnly = start.secureOnly
                 hostingLoaded = true
@@ -100,7 +104,12 @@ struct AddModelSheet: View {
 
     private var header: some View {
         HStack {
-            Text(editing == nil ? "Add Model" : "Edit \(editing?.name ?? "")").font(.title2.weight(.semibold))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(editing == nil ? "Add Model" : "Edit \(editing?.name ?? "")").font(.title2.weight(.semibold))
+                if case .server = target {
+                    Label("On \(model.name(of: target))", systemImage: "server.rack").font(.callout).foregroundStyle(.secondary)
+                }
+            }
             Spacer()
             Text(stepTitle).foregroundStyle(.secondary)
         }
@@ -341,12 +350,12 @@ struct AddModelSheet: View {
     // MARK: Step 3
 
     private func loadCatalog() async {
-        guard let info, let client = model.runpod() else { catalogError = Describe.error(PodlightError.missingRunpodKey); return }
+        guard let info else { return }
         loadingCatalog = true
         catalogError = nil
         defer { loadingCatalog = false }
         do {
-            catalog = try await client.gpuCatalog()
+            catalog = try await model.gpuCatalog(for: target)
             recompute(info)
         } catch {
             catalogError = Describe.error(error)
@@ -463,7 +472,7 @@ struct AddModelSheet: View {
     }
 
     private var nameIsValid: Bool {
-        PodlightModel.isValidName(name) && !model.state.models.contains { $0.name == name && $0.id != editing?.id }
+        PodlightModel.isValidName(name) && !model.models(in: target).contains { $0.name == name && $0.id != editing?.id }
     }
 
     /// The model as it would be saved, for cost previews.
@@ -487,7 +496,7 @@ struct AddModelSheet: View {
                 TextField("Name for agents", text: $name)
                     .disabled(editing != nil)
                 if !name.isEmpty && !nameIsValid {
-                    Text(model.state.models.contains { $0.name == name }
+                    Text(model.models(in: target).contains { $0.name == name }
                          ? "Another model already uses this name."
                          : "Use lowercase letters, digits, dots and dashes.")
                         .font(.caption).foregroundStyle(.red)
@@ -500,7 +509,7 @@ struct AddModelSheet: View {
                 Toggle("Keep model on disk", isOn: $keepDisk)
                 if let draft {
                     Text(keepDisk
-                         ? "The next start takes about a minute instead of 10–25. The disk (\(PodPlan.persistentGB(for: draft)) GB) costs about \(Format.money(StoragePricing.stoppedPerMonth(volumeGB: PodPlan.persistentGB(for: draft)))) a month while the model is stopped. Podlight deletes it after \(model.state.settings.deleteStoppedAfterDays) days without use."
+                         ? "The next start takes about a minute instead of 10–25. The disk (\(PodPlan.persistentGB(for: draft)) GB) costs about \(Format.money(StoragePricing.stoppedPerMonth(volumeGB: PodPlan.persistentGB(for: draft)))) a month while the model is stopped. Podlight deletes it after \(model.deleteStoppedAfterDays(in: target)) days without use."
                          : "Nothing is billed while the model is stopped. Each start downloads the model again, which takes 10–25 minutes.")
                         .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
@@ -521,7 +530,7 @@ struct AddModelSheet: View {
 
     private func save(start: Bool) async {
         guard let item = draft else { return }
-        await model.save(item)
+        guard await model.save(item, to: editing == nil ? target : nil) else { return }
         // The start sheet opens once this one is gone; two sheets cannot share a window.
         if start { model.startAfterAdding = item.id }
         dismiss()

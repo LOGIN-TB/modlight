@@ -13,8 +13,6 @@ struct ConnectionView: View {
     @State private var agent: Agent = .openCode
     @State private var forNetwork = false
 
-    @State private var agentModelId: UUID?
-
     init(agent: Agent = .openCode, showFiles: Bool = false) {
         _agent = State(initialValue: agent)
         _showFiles = State(initialValue: showFiles)
@@ -23,11 +21,6 @@ struct ConnectionView: View {
     enum Agent: String, CaseIterable, Identifiable {
         case openCode, pi, claudeCode, codex, environment
         var id: String { rawValue }
-    }
-
-    /// The model the Claude Code and Codex snippets are written for.
-    private var agentModel: PodlightModel? {
-        model.state.models.first { $0.id == agentModelId } ?? model.state.models.first
     }
 
     private var baseURL: String {
@@ -72,49 +65,13 @@ struct ConnectionView: View {
 
             Section {
                 DisclosureGroup("Configuration files for experts", isExpanded: $showFiles) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Picker("Agent", selection: $agent) {
-                            Text("OpenCode").tag(Agent.openCode)
-                            Text("pi").tag(Agent.pi)
-                            Text("Claude Code").tag(Agent.claudeCode)
-                            Text("Codex").tag(Agent.codex)
-                            Text("Variables").tag(Agent.environment)
-                        }
-                        .pickerStyle(.segmented)
-                        if (agent == .claudeCode || agent == .codex) && model.state.models.count > 1 {
-                            Picker("Model", selection: Binding(get: { agentModel?.id }, set: { agentModelId = $0 })) {
-                                ForEach(model.state.models) { Text($0.name).tag(Optional($0.id)) }
-                            }
-                        }
-                        if let install = installCommand {
-                            HStack {
-                                LabeledContent("Install") { Text(install).font(.caption.monospaced()).textSelection(.enabled) }
-                                Button(copied == "install" ? "Copied" : "Copy") { Pasteboard.copy(install); copied = "install" }
-                            }
-                        }
-                        ForEach(agentWarnings, id: \.self) { warning in
-                            Label(warning, systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.orange)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
+                    AgentConfigPanel(configs: model.localAgentConfigs, baseURL: baseURL, initialAgent: agent) {
                         if !model.networkBaseURLs.isEmpty {
                             Picker("For", selection: $forNetwork) {
                                 Text("This Mac").tag(false)
                                 Text("Another computer").tag(true)
                             }
                             .pickerStyle(.segmented)
-                        }
-                        ForEach(snippets) { snippet in
-                            SnippetBox(snippet: snippet, copied: $copied) {
-                                if let folder = snippet.folder {
-                                    Button("Open Folder in Finder") { open(folder) }
-                                }
-                            }
-                        }
-                        if let documentation {
-                            HStack {
-                                Spacer()
-                                Link("Documentation", destination: documentation)
-                            }
                         }
                     }
                     .padding(.top, 6)
@@ -150,13 +107,91 @@ struct ConnectionView: View {
         }
     }
 
+    private func test() async {
+        testing = true
+        defer { testing = false }
+        var request = URLRequest(url: URL(string: "\(model.localBaseURL)/models")!)
+        request.setValue("Bearer \(model.gatewayKey ?? "")", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 5
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            testResult = status == 200 ? String(localized: "Works.") : String(localized: "Answered with \(status).")
+        } catch {
+            testResult = String(localized: "No answer: \(error.localizedDescription)")
+        }
+    }
+}
+
+/// The agent picker and the snippets for the chosen agent, for this Mac or a server.
+struct AgentConfigPanel<Accessory: View>: View {
+    let configs: AgentConfigs
+    let baseURL: String
+    @ViewBuilder var accessory: () -> Accessory
+    @State private var agent: ConnectionView.Agent
+    @State private var agentModelId: UUID?
+    @State private var copied: String?
+
+    init(configs: AgentConfigs, baseURL: String, initialAgent: ConnectionView.Agent = .openCode,
+         @ViewBuilder accessory: @escaping () -> Accessory = { EmptyView() }) {
+        self.configs = configs
+        self.baseURL = baseURL
+        self.accessory = accessory
+        _agent = State(initialValue: initialAgent)
+    }
+
+    /// The model the Claude Code and Codex snippets are written for.
+    private var agentModel: PodlightModel? {
+        configs.models.first { $0.id == agentModelId } ?? configs.models.first
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Picker("Agent", selection: $agent) {
+                Text("OpenCode").tag(ConnectionView.Agent.openCode)
+                Text("pi").tag(ConnectionView.Agent.pi)
+                Text("Claude Code").tag(ConnectionView.Agent.claudeCode)
+                Text("Codex").tag(ConnectionView.Agent.codex)
+                Text("Variables").tag(ConnectionView.Agent.environment)
+            }
+            .pickerStyle(.segmented)
+            if (agent == .claudeCode || agent == .codex) && configs.models.count > 1 {
+                Picker("Model", selection: Binding(get: { agentModel?.id }, set: { agentModelId = $0 })) {
+                    ForEach(configs.models) { Text($0.name).tag(Optional($0.id)) }
+                }
+            }
+            if let install = installCommand {
+                HStack {
+                    LabeledContent("Install") { Text(install).font(.caption.monospaced()).textSelection(.enabled) }
+                    Button(copied == "install" ? "Copied" : "Copy") { Pasteboard.copy(install); copied = "install" }
+                }
+            }
+            ForEach(agentWarnings, id: \.self) { warning in
+                Label(warning, systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            accessory()
+            ForEach(snippets) { snippet in
+                SnippetBox(snippet: snippet, copied: $copied) {
+                    if let folder = snippet.folder {
+                        Button("Open Folder in Finder") { open(folder) }
+                    }
+                }
+            }
+            if let documentation {
+                HStack {
+                    Spacer()
+                    Link("Documentation", destination: documentation)
+                }
+            }
+        }
+    }
+
     private var installCommand: String? {
         switch agent {
-        case .openCode: nil
-        case .pi: nil
+        case .openCode, .pi, .environment: nil
         case .claudeCode: "curl -fsSL https://claude.ai/install.sh | bash"
         case .codex: "npm install -g @openai/codex"
-        case .environment: nil
         }
     }
 
@@ -173,7 +208,7 @@ struct ConnectionView: View {
     private var agentWarnings: [String] {
         guard agent == .claudeCode || agent == .codex else { return [] }
         var warnings: [String] = []
-        if let item = agentModel, item.contextTokens < AppModel.claudeCodeMinimumContext {
+        if let item = agentModel, item.contextTokens < AgentConfigs.claudeCodeMinimumContext {
             warnings.append(String(localized: "\(item.name) is set to \(Format.tokens(item.contextTokens)) tokens. These agents send long instructions and need at least 128k, better 200k: choose more context under Edit."))
         }
         if let item = agentModel, item.toolCallParser == nil {
@@ -185,35 +220,38 @@ struct ConnectionView: View {
         return warnings
     }
 
+    private var claudeFunction: String { configs.provider == "podlight" ? "claude-podlight" : "claude-\(configs.provider)" }
+    private var codexFunction: String { configs.provider == "podlight" ? "codex-podlight" : "codex-\(configs.provider)" }
+
     /// What to copy for the chosen agent, one box per place it goes, so each copies on its own.
     private var snippets: [ConfigSnippet] {
         switch agent {
         case .openCode:
             [ConfigSnippet(id: "opencode", title: String(localized: "For ~/.config/opencode/opencode.json"),
-                           hint: String(localized: "If the file has content, merge the \"providers\" entry. Then pick podlight/<name> with /models."),
-                           content: model.openCodeConfig(baseURL: baseURL), folder: ".config/opencode")]
+                           hint: String(localized: "If the file has content, merge the \"providers\" entry. Then pick \(configs.provider)/<name> with /models."),
+                           content: configs.openCode(baseURL: baseURL), folder: ".config/opencode")]
         case .pi:
             [ConfigSnippet(id: "pi", title: String(localized: "For ~/.pi/agent/models.json"),
                            hint: String(localized: "If the file has content, merge the \"providers\" entry. Then pick the model with /model."),
-                           content: model.piConfig(baseURL: baseURL), folder: ".pi/agent")]
+                           content: configs.pi(baseURL: baseURL), folder: ".pi/agent")]
         case .claudeCode:
             [ConfigSnippet(id: "claude-once", title: String(localized: "Once, in a terminal"),
                            hint: String(localized: "Starts Claude Code with Podlight in this terminal. Plain claude keeps your normal login."),
-                           content: model.claudeCodeOnce(baseURL: baseURL, model: agentModel)),
-             ConfigSnippet(id: "claude-function", title: String(localized: "Permanently as claude-podlight"),
-                           hint: String(localized: "Add to ~/.zshrc and open a new terminal; from then on claude-podlight starts Claude Code with Podlight."),
-                           content: model.claudeCodeFunction(baseURL: baseURL, model: agentModel))]
+                           content: configs.claudeCodeOnce(baseURL: baseURL, model: agentModel)),
+             ConfigSnippet(id: "claude-function", title: String(localized: "Permanently as \(claudeFunction)"),
+                           hint: String(localized: "Add to ~/.zshrc and open a new terminal; from then on \(claudeFunction) starts Claude Code with Podlight."),
+                           content: configs.claudeCodeFunction(baseURL: baseURL, model: agentModel))]
         case .codex:
             [ConfigSnippet(id: "codex-provider", title: String(localized: "1. Provider for ~/.codex/config.toml"),
                            hint: String(localized: "Add at the end of the file. Your default provider stays as it is."),
-                           content: model.codexProvider(baseURL: baseURL), folder: ".codex"),
-             ConfigSnippet(id: "codex-function", title: String(localized: "2. Function codex-podlight for ~/.zshrc"),
-                           hint: String(localized: "Add to ~/.zshrc and open a new terminal, then start Codex with codex-podlight. Plain codex keeps your normal setup."),
-                           content: model.codexFunction(model: agentModel))]
+                           content: configs.codexProvider(baseURL: baseURL), folder: ".codex"),
+             ConfigSnippet(id: "codex-function", title: String(localized: "2. Function \(codexFunction) for ~/.zshrc"),
+                           hint: String(localized: "Add to ~/.zshrc and open a new terminal, then start Codex with \(codexFunction). Plain codex keeps your normal setup."),
+                           content: configs.codexFunction(model: agentModel))]
         case .environment:
             [ConfigSnippet(id: "environment", title: String(localized: "Environment variables"),
                            hint: String(localized: "For tools that read OpenAI's environment variables, such as Aider: add these lines to ~/.zshrc or run them before the tool."),
-                           content: model.environmentConfig(baseURL: baseURL))]
+                           content: configs.environment(baseURL: baseURL))]
         }
     }
 
@@ -221,21 +259,6 @@ struct ConnectionView: View {
         let folder = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(relative, isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         NSWorkspace.shared.activateFileViewerSelecting([folder])
-    }
-
-    private func test() async {
-        testing = true
-        defer { testing = false }
-        var request = URLRequest(url: URL(string: "\(model.localBaseURL)/models")!)
-        request.setValue("Bearer \(model.gatewayKey ?? "")", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 5
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-            testResult = status == 200 ? String(localized: "Works.") : String(localized: "Answered with \(status).")
-        } catch {
-            testResult = String(localized: "No answer: \(error.localizedDescription)")
-        }
     }
 }
 

@@ -7,7 +7,6 @@
   "cases": [
     {
       "id": "decide/run-until-stops-a-running-pod-at-its-end",
-      "status": "swift",
       "title": "every start has an end: the pod stops when 'Läuft bis' is reached, even inside the window",
       "function": "decide",
       "input": {
@@ -54,7 +53,6 @@
     },
     {
       "id": "decide/run-until-not-yet-reached",
-      "status": "swift",
       "title": "one minute before its end the pod keeps running",
       "function": "decide",
       "input": {
@@ -101,7 +99,6 @@
     },
     {
       "id": "decide/run-until-overrides-work-in-progress",
-      "status": "swift",
       "title": "like the runtime ceiling, the end of a run is not deferred by a request in flight (the user was warned 10 minutes before and could extend)",
       "function": "decide",
       "input": {
@@ -148,7 +145,6 @@
     },
     {
       "id": "decide/spend-limit-still-comes-before-run-until",
-      "status": "swift",
       "title": "a spend limit is reported as the reason even when the run has also ended",
       "function": "decide",
       "input": {
@@ -195,7 +191,6 @@
     },
     {
       "id": "admitWake/refused-at-the-daily-limit",
-      "status": "swift",
       "title": "a request cannot wake a pod once the daily limit is reached (bug in RunPod Launcher: resolve.ts woke it and the next tick stopped it again)",
       "function": "admitWake",
       "input": {
@@ -213,7 +208,6 @@
     },
     {
       "id": "admitWake/refused-at-the-monthly-limit",
-      "status": "swift",
       "title": "the monthly limit refuses a wake just the same",
       "function": "admitWake",
       "input": {
@@ -231,7 +225,6 @@
     },
     {
       "id": "admitWake/admitted-below-the-limits",
-      "status": "swift",
       "title": "below both limits the wake goes ahead",
       "function": "admitWake",
       "input": {

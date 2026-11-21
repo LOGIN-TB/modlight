@@ -1,0 +1,31 @@
+{
+  "name": "podlight-server",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Podlight server mode: the OpenAI/Anthropic-compatible gateway and pod lifecycle as a container, controlled by the Podlight app",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/**/*.test.ts\"",
+    "gen": "node --disable-warning=ExperimentalWarning src/emit-contracts.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "fastify": "^5.6.1",
+    "undici": "^7.30.2",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.2"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true
+  }
+}

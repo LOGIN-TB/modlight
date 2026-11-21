@@ -1,0 +1,7 @@
+# Only server/ and spec/ go into the server image.
+*
+!server/package.json
+!server/package-lock.json
+!server/src
+!spec/data
+!spec/pod
