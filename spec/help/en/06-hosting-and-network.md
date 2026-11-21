@@ -9,6 +9,8 @@ Under Settings → Hosting you choose where Podlight may create pods:
 - **EU and EEA:** Iceland and Norway as well.
 - **Secure Cloud only:** certified data centers instead of community hosts. RunPod names SOC 2, ISO 27001 and PCI DSS. Usually somewhat more expensive.
 
+With "EU only" or "EU and EEA" Podlight uses Secure Cloud only: community hosts report no location, so it could not be checked.
+
 RunPod treats requested data centers as a preference only. Podlight therefore checks where each pod actually landed. If it is outside, Podlight deletes it straight away, before it answers anything, and tells you.
 
 For the GDPR, RunPod offers a data processing agreement with standard contractual clauses (runpod.io/legal/data-processing-agreement). It does not guarantee a fixed data location. Whether that is enough for your use is yours to judge.

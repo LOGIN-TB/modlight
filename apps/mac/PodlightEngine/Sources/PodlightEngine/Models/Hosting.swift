@@ -26,7 +26,13 @@ public struct HostingPolicy: Codable, Sendable, Equatable {
 
     public static let anywhere = HostingPolicy()
 
-    public var clouds: [RunpodCloud] { secureOnly ? [.secure] : [.secure, .community] }
+    /// With a region chosen only Secure Cloud is used: community pods report no data center
+    /// (`dataCenterId` stayed empty while running, measured 2026-11-21), so their location could
+    /// never be checked.
+    public var clouds: [RunpodCloud] { secureOnly || region.prefixes != nil ? [.secure] : [.secure, .community] }
+
+    /// Whether a pod's placement must be confirmed by a reported data center.
+    public var needsPlacementCheck: Bool { region.prefixes != nil }
 
     public func allows(dataCenterId: String?) -> Bool {
         guard let prefixes = region.prefixes else { return true }

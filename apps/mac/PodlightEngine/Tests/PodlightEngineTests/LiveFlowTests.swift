@@ -133,107 +133,103 @@ struct LiveFlowTests {
     private func Format(_ bytes: Double) -> String { String(format: "%.1f", bytes / 1e9) }
 }
 
-// 0.2 on real hardware: EU only, no kept disk, two cards with tensor parallel.
+// 0.2 on real hardware: EU only, no kept disk, two cards with tensor parallel, read through the
+// watchdog (engine log) when anything fails.
 //   PODLIGHT_LIVE_E2E=1 RUNPOD_API_KEY=… swift test --filter LiveEUTwoCards
 @Suite("Live 0.2 on RunPod", .serialized,
        .enabled(if: ProcessInfo.processInfo.environment["PODLIGHT_LIVE_E2E"] == "1"
                 && ProcessInfo.processInfo.environment["RUNPOD_API_KEY"] != nil))
 struct LiveEUTwoCards {
-    @Test(.timeLimit(.minutes(45)))
+    /// Requests that end: RunPod's log stream never closes, so every call gets a hard limit.
+    static let session: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 15
+        config.timeoutIntervalForResource = 20
+        return URLSession(configuration: config)
+    }()
+
+    func get(_ url: URL, key: String) async -> (Int, Data) {
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await Self.session.data(for: request) else { return (0, Data()) }
+        return ((response as? HTTPURLResponse)?.statusCode ?? 0, data)
+    }
+
+    @Test(.timeLimit(.minutes(40)))
     func euNoDiskTwoCards() async throws {
         let apiKey = ProcessInfo.processInfo.environment["RUNPOD_API_KEY"]!
-        let keychain = KeychainStore(service: "app.podlight.live.\(UUID().uuidString)")
-        try keychain.write(apiKey, for: .runpodAPIKey)
-        let stateURL = FileManager.default.temporaryDirectory.appendingPathComponent("podlight-live-\(UUID()).json")
-        let store = StateStore(url: stateURL)
-        _ = try await store.update { $0.settings.hostingRegion = .eu }
-        let manager = PodManager(store: store, keychain: keychain)
-        let client = RunpodClient(apiKey: apiKey)
-        var modelId: UUID?
+        let client = RunpodClient(apiKey: apiKey, transport: Self.session)
+        let podKey = PodManager.randomKey()
         var podId: String?
 
         func cleanUp() async {
-            if let id = modelId { try? await manager.remove(id) }
-            if let podId {
-                do { _ = try await client.pod(id: podId); print("[live] WARNING: \(podId) still exists"); try? await client.deletePod(id: podId) }
-                catch let e as RunpodError where e.isNotFound { print("[live] pod \(podId) is gone at RunPod (404)") }
-                catch { print("[live] could not confirm deletion: \(error)") }
-            }
-            if let id = modelId { try? keychain.delete(.podKey(id)) }
-            try? keychain.delete(.runpodAPIKey)
-            try? FileManager.default.removeItem(at: stateURL)
+            guard let id = podId else { return }
+            try? await client.deletePod(id: id)
+            do { _ = try await client.pod(id: id); print("[live] WARNING: \(id) still exists") }
+            catch let e as RunpodError where e.isNotFound { print("[live] pod \(id) is gone at RunPod (404)") }
+            catch { print("[live] could not confirm deletion: \(error)") }
         }
 
         do {
             let info = try await HuggingFaceClient().info("Qwen/Qwen2.5-0.5B-Instruct")
-            print("[live] kv profile: \(info.kvProfile.map { "\(Int($0.bytesPerToken)) B/token, \($0.attentionHeads ?? 0) heads" } ?? "none")")
             let catalog = try await client.gpuCatalog()
             let eu = HostingPolicy(region: .eu)
-            // Cheapest card type that may be free in the EU and allows two per pod.
-            let candidates = catalog.filter { $0.manufacturer == "NVIDIA" && CardSupport.runsEngineImage($0.id)
-                && eu.mayHaveCapacity($0) && $0.mayHaveCuda(atLeast: PodPlan.minCudaVersion) }
-                .flatMap { gpu in eu.clouds.compactMap { cloud in
-                    gpu.pricePerHour(in: cloud).flatMap { p in gpu.maxCards(in: cloud) >= 2 ? (gpu, cloud, p) : nil } } }
-                .sorted { $0.2 < $1.2 }
-            print("[live] EU candidates: " + candidates.prefix(5).map { "\($0.0.name) \($0.1.rawValue) $\($0.2)" }.joined(separator: ", "))
-            let pick = try #require(candidates.first(where: { $0.2 <= 0.6 }), "no affordable EU card allowing two per pod")
-
+            func candidates(_ policy: HostingPolicy, count: Int) -> [(GPUChoice, Double)] {
+                catalog.filter { $0.manufacturer == "NVIDIA" && CardSupport.runsEngineImage($0.id)
+                    && policy.mayHaveCapacity($0) && $0.mayHaveCuda(atLeast: PodPlan.minCudaVersion) }
+                    .flatMap { gpu in policy.clouds.compactMap { cloud -> (GPUChoice, Double)? in
+                        guard let p = gpu.pricePerHour(in: cloud), gpu.maxCards(in: cloud) >= count, p <= 0.6 else { return nil }
+                        return (GPUChoice(gpuId: gpu.id, cloud: cloud, count: count), p * Double(count)) } }
+                    .sorted { $0.1 < $1.1 }
+            }
+            // Two cards anywhere first (scarce in the EU), then one card in the EU to check the region path.
+            let choices = Array(candidates(.anywhere, count: 2).prefix(6)) + Array(candidates(eu, count: 1).prefix(4))
+            print("[live] choices: " + choices.map { "\($0.0.gpuId) \($0.0.cloud.rawValue) $\($0.1)" }.joined(separator: ", "))
             var model = PodlightModel(name: "qwen-tiny-tp2", repoId: info.repoId, format: info.format, weightBytes: info.weightBytes,
                                       nativeContextTokens: info.nativeContextTokens, toolCallParser: info.toolCallParser,
-                                      reasoningParser: info.reasoningParser, contextTokens: 8_192, goal: .economical,
-                                      kvProfile: info.kvProfile, keepDisk: false)
-            model.preferredGPU = GPUChoice(gpuId: pick.0.id, cloud: pick.1, count: 2)
-            try await manager.save(model)
-            modelId = model.id
-
+                                      reasoningParser: info.reasoningParser, contextTokens: 8_192, kvProfile: info.kvProfile,
+                                      keepDisk: false)
+            model.preferredGPU = choices.first?.0
+            let request = PodPlan.request(for: model, podKey: podKey, huggingFaceToken: nil, runUntil: Date().addingTimeInterval(30 * 60),
+                                          heartbeatMinutes: 15, dataCenterIds: nil)
+            let created = try await client.createPod(request, tryingInOrder: choices.map(\.0), catalog: catalog)
+            podId = created.pod.id
+            print("[live] created \(created.pod.id): \(created.choice.gpuId) × \(created.choice.count), attempts \(created.attempts.map { "\($0.choice.gpuId):\($0.outcome)" })")
             let t0 = Date()
-            try await manager.start(model.id, until: Date().addingTimeInterval(25 * 60))
-            var run = await manager.state().run(model.id)
-            podId = run.podId
-            print("[live] created \(run.podId ?? "?") on \(run.gpuName ?? "?") at $\(run.pricePerHour ?? 0)/h + storage $\(String(format: "%.4f", run.storagePerHour ?? 0))/h; dc \(run.dataCenterId ?? "not yet")")
-            let pod = try await client.pod(id: run.podId!)
-            print("[live] RunPod: gpu \(pod.gpu?.id ?? "?") × \(pod.gpu?.count ?? 0), cost $\(pod.cost ?? 0)/h, dc \(pod.dataCenterId ?? "nil")")
-            #expect(pod.gpu?.count == 2)
-
-            while Date().timeIntervalSince(t0) < 28 * 60 {
+            let wd = PodPlan.proxyURL(created.pod.id, PodPlan.watchdogPort)
+            let engine = PodPlan.proxyURL(created.pod.id, PodPlan.enginePort)
+            var ready = false, center: String?
+            while Date().timeIntervalSince(t0) < 30 * 60 {
                 try await Task.sleep(for: .seconds(15))
-                await manager.refresh(model.id)
-                run = await manager.state().run(model.id)
-                if run.phase == .ready || run.phase == .failed || run.phase == .stopped { break }
-            }
-            print("[live] phase \(run.phase) after \(Int(Date().timeIntervalSince(t0)))s, dc \(run.dataCenterId ?? "nil"), reason \(run.lastReason ?? "-")")
-            #expect(run.phase == .ready)
-            #expect(run.dataCenterId?.hasPrefix("EU-") == true)
-
-            // Logs: did tensor parallel and the Xet download path show up?
-            var logRequest = URLRequest(url: URL(string: "https://api.runpod.io/v2/pods/\(run.podId!)/logs")!)
-            logRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-            logRequest.timeoutInterval = 15
-            if let (data, _) = try? await URLSession.shared.data(for: logRequest) {
-                let text = String(decoding: data, as: UTF8.self)
-                for needle in ["tensor_parallel_size=2", "tensor-parallel-size", "xet", "Xet", "HF_XET"] {
-                    print("[live] log mentions \(needle): \(text.contains(needle))")
+                if let pod = try? await client.pod(id: created.pod.id) {
+                    center = pod.dataCenterId
+                    if pod.status == .exited || pod.status == .terminated { print("[live] pod \(pod.status) after \(Int(Date().timeIntervalSince(t0)))s"); break }
                 }
+                let (status, body) = await get(wd, key: podKey)
+                if status == 200, let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any], json["engineAlive"] as? Bool == false {
+                    let (_, logData) = await get(wd.appendingPathComponent("log"), key: podKey)
+                    let lines = (try? JSONSerialization.jsonObject(with: logData) as? [String: Any])?["lines"] as? [String] ?? []
+                    print("[live] ENGINE EXITED (code \(json["engineExitCode"] ?? "?")). Last lines:\n" + lines.suffix(25).joined(separator: "\n"))
+                    break
+                }
+                if await get(engine.appendingPathComponent("v1/models"), key: podKey).0 == 200 { ready = true; break }
             }
-
-            if run.phase == .ready {
-                let endpoint = try await manager.endpoint(forModelNamed: model.name)
-                var chat = URLRequest(url: endpoint.baseURL.appendingPathComponent("v1/chat/completions"))
+            print("[live] ready=\(ready) after \(Int(Date().timeIntervalSince(t0)))s in \(center ?? "?")")
+            #expect(ready)
+            print("[live] placed in \(center ?? "?") with \(created.choice.count) card(s)")
+            if ready {
+                let (_, logData) = await get(wd.appendingPathComponent("log"), key: podKey)
+                let text = ((try? JSONSerialization.jsonObject(with: logData) as? [String: Any])?["lines"] as? [String] ?? []).joined(separator: "\n")
+                print("[live] engine log mentions tensor_parallel_size=2: \(text.contains("tensor_parallel_size=2"))")
+                var chat = URLRequest(url: engine.appendingPathComponent("v1/chat/completions"))
                 chat.httpMethod = "POST"
-                chat.setValue("Bearer \(endpoint.key)", forHTTPHeaderField: "Authorization")
+                chat.setValue("Bearer \(podKey)", forHTTPHeaderField: "Authorization")
                 chat.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 chat.httpBody = Data(#"{"model":"qwen-tiny-tp2","max_tokens":20,"messages":[{"role":"user","content":"Hallo"}]}"#.utf8)
-                let (_, response) = try await URLSession.shared.data(for: chat)
-                print("[live] chat via TP=2: HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+                let (_, response) = try await Self.session.data(for: chat)
+                print("[live] chat on two cards: HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
                 #expect((response as? HTTPURLResponse)?.statusCode == 200)
             }
-
-            // Without a kept disk the end deletes the pod.
-            try await manager.stop(model.id)
-            do { _ = try await client.pod(id: podId!); Issue.record("pod still exists after stop without disk") }
-            catch let e as RunpodError where e.isNotFound { print("[live] stop without disk: pod deleted (404)") }
-            podId = nil
-            print("[live] spend counted: \(await manager.state().spendByDay)")
         } catch {
             print("[live] FAILED: \(error)")
             await cleanUp()

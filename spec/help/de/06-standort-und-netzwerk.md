@@ -9,6 +9,8 @@ Unter Einstellungen → Hosting legst du fest, wo Podlight Pods anlegen darf:
 - **EU und EWR:** zusätzlich Island und Norwegen.
 - **Nur Secure Cloud:** zertifizierte Rechenzentren statt Community-Rechnern. RunPod nennt dafür SOC 2, ISO 27001 und PCI DSS. Meist etwas teurer.
 
+Mit „Nur EU“ oder „EU und EWR“ nutzt Podlight nur Secure Cloud: Community-Rechner melden keinen Standort, er ließe sich also nicht prüfen.
+
 RunPod behandelt die gewünschten Rechenzentren nur als Vorgabe. Podlight prüft deshalb nach jedem Start, wo der Pod tatsächlich gelandet ist. Liegt er außerhalb, löscht Podlight ihn sofort, bevor er eine Anfrage beantwortet, und sagt dir Bescheid.
 
 Für die DSGVO bietet RunPod einen Auftragsverarbeitungsvertrag mit Standardvertragsklauseln an (runpod.io/legal/data-processing-agreement). Einen festen Datenstandort sichert RunPod darin nicht zu. Ob das für deinen Einsatz genügt, musst du selbst bewerten.

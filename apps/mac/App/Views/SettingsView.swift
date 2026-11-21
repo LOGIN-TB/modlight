@@ -44,11 +44,14 @@ struct SettingsContent: View {
                     Text("EU only").tag(HostingRegion.eu)
                     Text("EU and EEA (incl. Iceland, Norway)").tag(HostingRegion.euEEA)
                 }
-                Toggle("Secure Cloud only", isOn: binding(\.secureCloudOnly))
+                Toggle("Secure Cloud only", isOn: Binding(
+                    get: { settings.secureCloudOnly || settings.hostingRegion != .anywhere },
+                    set: { value in Task { await model.updateSettings { $0.secureCloudOnly = value } } }))
+                    .disabled(settings.hostingRegion != .anywhere)
             } header: {
                 Text("Hosting")
             } footer: {
-                Text("Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. RunPod treats the chosen region as a preference and gives no data residency guarantee, so Podlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.")
+                Text("Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. With a region chosen, Podlight uses Secure Cloud only, because community hosts report no location. RunPod treats the region as a preference and gives no data residency guarantee, so Podlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 

@@ -231,6 +231,16 @@ struct PodLifecycleTests {
         #expect(run.phase == .failed && run.lastReason == "outside-region" && run.podId == nil)
     }
 
+    @Test func aPodThatReportsNoDataCenterCannotBeConfirmedAndIsDeleted() async throws {
+        let (manager, fake, m, keychain, url) = try await setUp(keepDisk: false, region: .eu, dataCenter: nil)
+        defer { tearDown(keychain, m.id, url) }
+        try await manager.start(m.id, until: Date().addingTimeInterval(3600))
+        #expect(await createBody(fake)["cloud"] as? String == "SECURE", "a region implies Secure Cloud")
+        await manager.refresh(m.id)
+        #expect(await fake.actions == ["delete"])
+        #expect(await manager.state().run(m.id).lastReason == "outside-region")
+    }
+
     @Test func aPodInsideTheRegionIsKept() async throws {
         let (manager, fake, m, keychain, url) = try await setUp(keepDisk: false, region: .eu, dataCenter: "EU-RO-1")
         defer { tearDown(keychain, m.id, url) }
@@ -247,4 +257,38 @@ extension FakeRunPod {
 
 private func createBody(_ fake: FakeRunPod) async -> [String: Any] {
     (try? JSONSerialization.jsonObject(with: await fake.lastCreateData)) as? [String: Any] ?? [:]
+}
+
+@Suite("Local network access", .serialized, .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil && !NetworkAddresses.lanIPv4().isEmpty,
+                                                     "needs a LAN address; runs on a developer Mac"))
+struct LANAccessTests {
+    func status(_ url: String, key: String?) async -> Int {
+        var request = URLRequest(url: URL(string: url)!)
+        request.timeoutInterval = 3
+        if let key { request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization") }
+        guard let (_, response) = try? await URLSession.shared.data(for: request) else { return 0 }
+        return (response as? HTTPURLResponse)?.statusCode ?? 0
+    }
+
+    @Test func onlyThisMacUnlessTheNetworkIsAllowed() async throws {
+        let ip = try #require(NetworkAddresses.lanIPv4().first)
+        let manager = PodManager(store: StateStore(url: FileManager.default.temporaryDirectory.appendingPathComponent("lan-\(UUID()).json")))
+        let port = Int.random(in: 48_100...48_900)
+
+        let local = Task { try await LocalGateway(port: port, host: "127.0.0.1", manager: manager, key: { "k" }).run() }
+        try await Task.sleep(for: .milliseconds(500))
+        #expect(await status("http://127.0.0.1:\(port)/v1/models", key: "k") == 200)
+        #expect(await status("http://\(ip):\(port)/v1/models", key: "k") == 0, "loopback-only must not answer on the LAN address")
+        local.cancel()
+        try await Task.sleep(for: .milliseconds(500))
+
+        let shared = Task { try await LocalGateway(port: port + 1, host: "0.0.0.0", manager: manager, key: { "k" }).run() }
+        defer { shared.cancel() }
+        try await Task.sleep(for: .milliseconds(500))
+        #expect(await status("http://\(ip):\(port + 1)/v1/models", key: "k") == 200)
+        let started = Date()
+        #expect(await status("http://\(ip):\(port + 1)/v1/models", key: "wrong") == 401)
+        #expect(Date().timeIntervalSince(started) >= 0.9, "a wrong key costs a second")
+        #expect(await status("http://\(ip):\(port + 1)/v1/models", key: nil) == 401)
+    }
 }

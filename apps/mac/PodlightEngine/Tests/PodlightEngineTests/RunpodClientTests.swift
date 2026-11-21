@@ -113,6 +113,23 @@ struct RunpodClientTests {
                               "COMMUNITY|NVIDIA RTX A2000"])
     }
 
+    @Test func aFallbackWithFewerCardsTellsTheEngineSo() async throws {
+        // Seen live: two cards were asked for, a one-card fallback was created, and vLLM exited with
+        // "World size (2) is larger than the number of available GPUs (1)".
+        let transport = FakeTransport([.status(400, Fixture.noCapacity), .status(201, Fixture.pod())])
+        let client = RunpodClient(apiKey: "k", transport: transport)
+        var base = Fixture.base
+        base.env["PODLIGHT_TP"] = "2"
+        _ = try await client.createPod(base, tryingInOrder: [
+            GPUChoice(gpuId: "NVIDIA RTX 3070", cloud: .community, count: 2),
+            GPUChoice(gpuId: "NVIDIA A40", cloud: .secure, count: 1),
+        ])
+        let bodies = try await transport.requests.map { try JSONSerialization.jsonObject(with: $0.httpBody!) as! [String: Any] }
+        #expect((bodies[0]["env"] as? [String: String])?["PODLIGHT_TP"] == "2")
+        #expect((bodies[1]["env"] as? [String: String])?["PODLIGHT_TP"] == "1")
+        #expect((bodies[1]["gpu"] as? [String: Any])?["count"] as? Int == 1)
+    }
+
     @Test func stopsAtTheFirstErrorThatIsNotCapacity() async throws {
         let transport = FakeTransport([.status(401, #"{"detail":"unauthorized"}"#), .status(201, Fixture.pod())])
         let client = RunpodClient(apiKey: "k", transport: transport)

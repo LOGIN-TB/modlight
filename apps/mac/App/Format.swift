@@ -92,6 +92,7 @@ enum Describe {
         case "no-suitable-card": String(localized: "No card can hold this model.")
         case "runpod-error": String(localized: "RunPod reported an error.")
         case "pod-error": String(localized: "The pod is in an error state at RunPod.")
+        case "engine-exited": String(localized: "The engine stopped with an error, so Podlight ended the pod:")
         case "outside-region": String(localized: "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions in Settings.")
         default: code
         }

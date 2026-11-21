@@ -24,6 +24,10 @@ HOST = os.environ.get("PODLIGHT_WATCHDOG_HOST", "0.0.0.0")  # all interfaces in 
 API = os.environ.get("PODLIGHT_RUNPOD_API", "https://api.runpod.io")  # overridable for tests only
 CHECK_SECONDS = float(os.environ.get("PODLIGHT_CHECK_SECONDS", "15"))
 ENGINE_PID_FILE = os.environ.get("PODLIGHT_ENGINE_PID_FILE", "/tmp/podlight-engine.pid")
+ENGINE_EXIT_FILE = os.environ.get("PODLIGHT_ENGINE_EXIT_FILE", "/tmp/podlight-engine.exit")
+ENGINE_LOG = os.environ.get("PODLIGHT_ENGINE_LOG", "/tmp/podlight-engine.log")
+# After the engine exits, wait this long before stopping, so Podlight can read the reason.
+ENGINE_EXIT_GRACE = float(os.environ.get("PODLIGHT_ENGINE_EXIT_GRACE", "120"))
 
 state = {
     "started": time.time(),
@@ -33,6 +37,7 @@ state = {
     # only a future one counts. The app's heartbeat sets the current one.
     "deadline": (lambda d: d if d and d > time.time() else None)(float(os.environ.get("PODLIGHT_DEADLINE") or 0)),
     "stopping": None,
+    "engine_exited_at": None,
 }
 lock = threading.Lock()
 # Direct connections only: the pod has no proxy, and resolving system proxy settings can stall.
@@ -68,7 +73,26 @@ def stop(reason):
     log("could not stop through the API")
 
 
+def engine_exit_code():
+    try:
+        return int(open(ENGINE_EXIT_FILE).read().strip())
+    except (OSError, ValueError):
+        return None
+
+
+def engine_log_tail(lines=80):
+    try:
+        with open(ENGINE_LOG, "rb") as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - 64_000))
+            return f.read().decode("utf-8", "replace").splitlines()[-lines:]
+    except OSError:
+        return []
+
+
 def engine_alive():
+    if engine_exit_code() is not None:
+        return False
     try:
         pid = int(open(ENGINE_PID_FILE).read().strip())
         os.kill(pid, 0)
@@ -90,7 +114,13 @@ def check_loop():
         elif deadline and now > deadline:
             stop("deadline reached")
         elif engine_alive() is False:
-            stop("engine exited")
+            with lock:
+                if state["engine_exited_at"] is None:
+                    state["engine_exited_at"] = now
+                    log(f"engine exited (code {engine_exit_code()}); stopping in {ENGINE_EXIT_GRACE:g} s")
+                exited_at = state["engine_exited_at"]
+            if now - exited_at >= ENGINE_EXIT_GRACE:
+                stop(f"engine exited with code {engine_exit_code()}")
         time.sleep(CHECK_SECONDS)
 
 
@@ -114,12 +144,15 @@ class Handler(BaseHTTPRequestHandler):
                 "stopping": state["stopping"],
                 "heartbeatMinutes": MINUTES,
                 "engineAlive": engine_alive(),
+                "engineExitCode": engine_exit_code(),
                 "uptimeSeconds": int(time.time() - state["started"]),
             }
 
     def do_GET(self):
         if not self._authorised():
             return self._reply(401, {"error": "unauthorized"})
+        if self.path == "/log":
+            return self._reply(200, {"lines": engine_log_tail()})
         self._reply(200, self._status())
 
     def do_POST(self):

@@ -347,7 +347,10 @@ public actor PodManager {
         // RunPod treats requested data centers as a preference. A pod outside the allowed region
         // is deleted at once, before it serves anything.
         let hosting = await store.current().settings.hosting
-        if let center = pod.dataCenterId, !hosting.allows(dataCenterId: center) {
+        // A running pod that reports no data center cannot be confirmed inside the region either.
+        let unverifiable = hosting.needsPlacementCheck && pod.dataCenterId == nil && pod.status == .running
+        if unverifiable || pod.dataCenterId.map({ !hosting.allows(dataCenterId: $0) }) == true {
+            let center = pod.dataCenterId ?? "unknown"
             try? await client.deletePod(id: podId)
             try? await updateRun(id) {
                 $0.podId = nil; $0.podStatus = nil; $0.phase = .failed; $0.engineReady = false
@@ -358,7 +361,16 @@ public actor PodManager {
         var ready = run.engineReady
         var heartbeatAt = run.lastHeartbeatAt
         if pod.status == .running {
-            if await heartbeat(podId: podId, modelId: id, runUntil: run.runUntil) { heartbeatAt = now() }
+            let watchdog = await heartbeat(podId: podId, modelId: id, runUntil: run.runUntil)
+            if watchdog != nil { heartbeatAt = now() }
+            // The engine died: say why, then end the pod now instead of after the watchdog's grace.
+            if watchdog?.engineAlive == false {
+                let message = await engineFailure(podId: podId, modelId: id)
+                    ?? "exit code \(watchdog?.engineExitCode.map(String.init) ?? "?")"
+                try? await stop(id, reason: "engine-exited")
+                try? await updateRun(id) { $0.phase = .failed; $0.lastReason = "engine-exited"; $0.lastMessage = message }
+                return
+            }
             if !ready { ready = await engineAnswers(podId: podId, modelId: id) }
         } else {
             ready = false
@@ -437,8 +449,14 @@ public actor PodManager {
 
     // MARK: Pod HTTP
 
-    private func heartbeat(podId: String, modelId: UUID, runUntil: Date?) async -> Bool {
-        guard let key = try? podKey(for: modelId) else { return false }
+    /// What the watchdog reports with each heartbeat.
+    struct WatchdogStatus: Sendable {
+        var engineAlive: Bool?
+        var engineExitCode: Int?
+    }
+
+    private func heartbeat(podId: String, modelId: UUID, runUntil: Date?) async -> WatchdogStatus? {
+        guard let key = try? podKey(for: modelId) else { return nil }
         var request = URLRequest(url: podURL(podId, PodPlan.watchdogPort).appendingPathComponent("heartbeat"))
         request.httpMethod = "POST"
         request.timeoutInterval = 10
@@ -446,8 +464,29 @@ public actor PodManager {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let deadline: Any = runUntil.map { $0.addingTimeInterval(PodPlan.deadlineGrace).timeIntervalSince1970 } ?? NSNull()
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["deadline": deadline])
-        guard let (_, response) = try? await transport.send(request) else { return false }
-        return response.statusCode == 200
+        guard let (data, response) = try? await transport.send(request), response.statusCode == 200 else { return nil }
+        let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        return WatchdogStatus(engineAlive: json?["engineAlive"] as? Bool, engineExitCode: json?["engineExitCode"] as? Int)
+    }
+
+    /// The last lines vLLM wrote, kept by the watchdog because RunPod drops a stopped pod's output.
+    /// Reduced to the lines that say what went wrong.
+    private func engineFailure(podId: String, modelId: UUID) async -> String? {
+        guard let key = try? podKey(for: modelId) else { return nil }
+        var request = URLRequest(url: podURL(podId, PodPlan.watchdogPort).appendingPathComponent("log"))
+        request.timeoutInterval = 10
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await transport.send(request), response.statusCode == 200,
+              let lines = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["lines"] as? [String]
+        else { return nil }
+        return Self.summarizeEngineLog(lines)
+    }
+
+    /// The error lines of an engine log, or its last lines when none says "error".
+    static func summarizeEngineLog(_ lines: [String]) -> String {
+        let errors = lines.filter { $0.range(of: #"(Error|Exception|error:|CUDA|out of memory|Traceback)"#, options: .regularExpression) != nil }
+        let picked = (errors.isEmpty ? lines : errors).suffix(3)
+        return picked.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: "\n")
     }
 
     private func engineAnswers(podId: String, modelId: UUID) async -> Bool {

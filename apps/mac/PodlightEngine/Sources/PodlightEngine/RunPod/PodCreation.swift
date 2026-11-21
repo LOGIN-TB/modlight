@@ -80,6 +80,10 @@ extension RunpodClient {
             request.gpu.id = choice.gpuId
             request.gpu.count = choice.count
             request.cloud = choice.cloud
+            // The engine must split across exactly the cards this attempt gets. A fallback with fewer
+            // cards than the first choice otherwise starts vLLM with a tensor-parallel size the pod
+            // cannot meet, and it exits at once (seen live on 2026-11-21).
+            if request.env["PODLIGHT_TP"] != nil { request.env["PODLIGHT_TP"] = String(choice.count) }
             do {
                 let pod = try await createPod(request)
                 attempts.append(CreationAttempt(choice: choice, outcome: .created))

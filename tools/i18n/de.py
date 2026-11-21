@@ -371,7 +371,7 @@ DE = {
     "Save": "Sichern",
     "Saved for %@.": "Gespeichert für %@.",
     "Secure Cloud only": "Nur Secure Cloud",
-    "Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. RunPod treats the chosen region as a preference and gives no data residency guarantee, so Podlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.": "Secure Cloud läuft in zertifizierten Rechenzentren (RunPod nennt SOC 2, ISO 27001, PCI DSS) statt auf Community-Rechnern, meist zu einem höheren Preis. RunPod behandelt die gewählte Region als Wunsch und garantiert keinen Datenstandort. Podlight prüft deshalb, wo jeder Pod gelandet ist, und löscht ihn sofort, wenn er außerhalb liegt. Mit diesen Einschränkungen gibt es weniger Karten.",
+    "Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. With a region chosen, Podlight uses Secure Cloud only, because community hosts report no location. RunPod treats the region as a preference and gives no data residency guarantee, so Podlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.": "Secure Cloud läuft in zertifizierten Rechenzentren (RunPod nennt SOC 2, ISO 27001, PCI DSS) statt auf Community-Rechnern, meist zu einem höheren Preis. Mit einer gewählten Region nutzt Podlight nur Secure Cloud, weil Community-Rechner keinen Standort melden. RunPod behandelt die Region als Wunsch und garantiert keinen Datenstandort. Podlight prüft deshalb, wo jeder Pod gelandet ist, und löscht ihn sofort, wenn er außerhalb liegt. Mit diesen Einschränkungen gibt es weniger Karten.",
     "Settings": "Einstellungen",
     "Skip": "Überspringen",
     "Start this model for a set time": "Dieses Modell für eine feste Zeit starten",
@@ -391,4 +391,5 @@ DE = {
     "about %@ a month for the disk": "etwa %@ pro Monat für die Festplatte",
     "pi": "pi",
     "the pod is deleted, nothing billed": "der Pod wird gelöscht, nichts wird berechnet",
+    "The engine stopped with an error, so Podlight ended the pod:": "Die Engine ist mit einem Fehler abgebrochen, deshalb hat Podlight den Pod beendet:",
 }
