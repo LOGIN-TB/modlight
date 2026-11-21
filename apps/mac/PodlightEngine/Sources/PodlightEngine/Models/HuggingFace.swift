@@ -21,6 +21,9 @@ public enum WeightFormat: String, Codable, Sendable, Equatable {
         }
     }
 
+    /// Some engine in Podlight serves it: vLLM, or llama.cpp for GGUF. MLX never runs on NVIDIA.
+    public var runsOnAnEngine: Bool { self != .mlx }
+
     /// Shown to the user; 4-bit builds are the ones worth suggesting.
     public var isFourBit: Bool { self == .awq || self == .gptq || self == .nvfp4 }
 }
@@ -72,6 +75,7 @@ public struct ModelInfo: Codable, Sendable, Equatable {
     public var weightsGiB: Double { Capacity.bytesToGiB(weightBytes) }
     public var kvBytesPerToken: Double { kvProfile?.bytesPerToken ?? Capacity.defaultKVBytesPerToken }
     public var weightsGB: Double { weightBytes / 1_000_000_000 }
+    public var engine: InferenceEngine { format == .gguf ? .llamaCpp : .vllm }
 }
 
 /// Reads the Hugging Face Hub. A token is optional and only needed for gated models.

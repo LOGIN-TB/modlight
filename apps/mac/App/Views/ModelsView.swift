@@ -82,6 +82,7 @@ struct ModelDetailView: View {
                     }
                 }
                 .padding(.vertical, 4)
+                ModelActions(item: item, run: run, prominent: true)
                 if run.phase == .loading || run.phase == .creating {
                     ProgressView {
                         Text(item.keepDisk && run.persistentGB != nil
@@ -104,8 +105,9 @@ struct ModelDetailView: View {
             Section("GPU and costs") {
                 LabeledContent("GPU", value: run.gpuName ?? gpuLabel)
                 if let price = run.pricePerHour ?? item.expectedPricePerHour {
-                    LabeledContent("Price", value: Format.perHour(price + (run.storagePerHour ?? PodPlan.storagePerHour(for: item))))
+                    LabeledContent("Price", value: Describe.price(gpu: price, storage: run.storagePerHour ?? PodPlan.storagePerHour(for: item)))
                 }
+                LabeledContent("Where", value: Describe.hosting(item.hosting(default: model.state.settings.hosting)))
                 if let end = run.runUntil, !isIdle {
                     LabeledContent("Runs until", value: Format.time(end))
                 }
@@ -154,6 +156,7 @@ struct ModelDetailView: View {
 
     private var gpuLabel: String {
         guard let gpu = item.preferredGPU else { return "–" }
+        if let name = item.preferredGPUName { return name }
         let name = gpu.gpuId.replacingOccurrences(of: "NVIDIA ", with: "").replacingOccurrences(of: "GeForce ", with: "")
         return gpu.count > 1 ? "\(gpu.count) × \(name)" : name
     }
@@ -201,6 +204,47 @@ struct ModelDetailView: View {
                     .buttonStyle(.glassProminent)
                     .help("Start this model for a set time")
             }
+        }
+    }
+}
+
+/// Start, or Stop and Extend, in the content: the toolbar's action is easy to miss on a first
+/// visit, so the model's status says what to do next right where the user looks.
+struct ModelActions: View {
+    @Environment(AppModel.self) private var model
+    let item: PodlightModel
+    let run: ModelRun
+    var prominent = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            switch run.phase {
+            case .stopped, .failed:
+                Button { model.startingModel = item } label: { Label("Start…", systemImage: "play.fill") }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(prominent ? .large : .regular)
+                    .disabled(!model.hasRunpodKey)
+                if prominent {
+                    Text("You choose how long it runs when you start it.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+            case .loading, .ready:
+                Button { Task { await model.stop(item) } } label: { Label("Stop", systemImage: "stop.fill") }
+                    .controlSize(prominent ? .large : .regular)
+                Menu {
+                    Button("1 Hour") { Task { await model.extend(item, by: 3600) } }
+                    Button("2 Hours") { Task { await model.extend(item, by: 7200) } }
+                    Button("4 Hours") { Task { await model.extend(item, by: 4 * 3600) } }
+                } label: {
+                    Label("Extend", systemImage: "clock.arrow.circlepath")
+                }
+                .fixedSize()
+                .controlSize(prominent ? .large : .regular)
+                .disabled(run.runUntil == nil)
+            case .creating, .stopping:
+                ProgressView().controlSize(.small)
+            }
+            Spacer(minLength: 0)
         }
     }
 }

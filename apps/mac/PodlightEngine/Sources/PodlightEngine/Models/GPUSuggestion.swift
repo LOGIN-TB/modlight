@@ -88,27 +88,30 @@ public enum GPUSuggestion {
                                includeUnavailable: Bool = false) -> [GPUOption] {
         let context = min(requested, model.nativeContextTokens ?? requested)
         let kv = model.kvBytesPerToken
+        let engine = model.engine
         var options: [GPUOption] = []
         for gpu in catalog where gpu.manufacturer.uppercased() == "NVIDIA" {
             if !includeUnavailable, let a = gpu.availability, !a.mayBeAvailable { continue }
-            if !includeUnavailable, !gpu.mayHaveCuda(atLeast: PodPlan.minCudaVersion) { continue }
+            if !includeUnavailable, !gpu.mayHaveCuda(atLeast: PodPlan.minCudaVersion(for: engine)) { continue }
             if !includeUnavailable, !hosting.mayHaveCapacity(gpu) { continue }
-            guard CardSupport.runsEngineImage(gpu.id), model.format.runs(on: gpu.id) else { continue }
+            guard CardSupport.runsEngineImage(gpu.id, engine: engine), model.format.runs(on: gpu.id) else { continue }
             let baseSpeed = speeds.tokensPerSecond(gpuId: gpu.id, weightsGB: model.weightsGB)
             let centers = (gpu.dataCenters ?? []).map(\.id).filter { hosting.allows(dataCenterId: $0) }
 
             for cloud in hosting.clouds {
                 guard let price = gpu.pricePerHour(in: cloud) else { continue }
                 for count in cardCounts where count <= gpu.maxCards(in: cloud) {
-                    if let heads = model.kvProfile?.attentionHeads, heads % count != 0 { continue }
+                    // vLLM's tensor parallel splits the attention heads; llama.cpp splits layers.
+                    if engine == .vllm, let heads = model.kvProfile?.attentionHeads, heads % count != 0 { continue }
                     let plan = Capacity.plan(gpuMemoryGiB: Double(gpu.memory), weightsGiB: model.weightsGiB,
                                              nativeContextTokens: model.nativeContextTokens,
                                              chosen: .init(contextTokens: context, concurrency: concurrency),
-                                             kvBytesPerToken: kv, gpuCount: count)
+                                             kvBytesPerToken: kv, gpuCount: count, engine: engine)
                     guard plan.fits else { continue }
-                    // More cards add bandwidth, but splitting costs communication: count each extra
-                    // card at 60 %. An estimate, shown as one.
-                    let speed = baseSpeed.map { $0 * (1 + 0.6 * Double(count - 1)) }
+                    // vLLM: more cards add bandwidth, but splitting costs communication, so each
+                    // extra card counts at 60 %. llama.cpp works through the layers card after card,
+                    // so for one request more cards add memory, not speed. Estimates, shown as such.
+                    let speed = engine == .vllm ? baseSpeed.map { $0 * (1 + 0.6 * Double(count - 1)) } : baseSpeed
                     options.append(GPUOption(
                         choice: GPUChoice(gpuId: gpu.id, cloud: cloud, count: count), displayName: gpu.name,
                         memoryGiB: gpu.memory, pricePerHour: price * Double(count), estimatedTokensPerSecond: speed,
@@ -119,6 +122,30 @@ public enum GPUSuggestion {
             }
         }
         return rank(options, goal: goal)
+    }
+
+    /// What happened to the selection after the list changed, so the interface can say it.
+    public enum Reselection: Equatable, Sendable {
+        /// Nothing to say: the chosen row is still there, or it follows the suggestion.
+        case unchanged
+        /// The user's card needs more of itself now: `from` → `to`.
+        case moreCards(from: GPUChoice, to: GPUChoice)
+        /// The user's card no longer holds the context; the suggestion took its place.
+        case replaced(GPUChoice)
+    }
+
+    /// Keeps the selection sensible when the options change (context, goal, hosting).
+    /// - Without a choice of the user's own, the selection follows the suggestion (first row).
+    /// - The user's choice stays while it is offered; otherwise the same card with more cards of
+    ///   it, otherwise the suggestion, and the interface says so.
+    public static func reselect(previous: GPUChoice?, userPicked: Bool, options: [GPUOption])
+        -> (selection: GPUChoice?, change: Reselection) {
+        guard userPicked, let previous else { return (options.first?.choice, .unchanged) }
+        if options.contains(where: { $0.choice == previous }) { return (previous, .unchanged) }
+        if let same = options.first(where: { $0.choice.gpuId == previous.gpuId && $0.choice.cloud == previous.cloud }) {
+            return (same.choice, .moreCards(from: previous, to: same.choice))
+        }
+        return (options.first?.choice, .replaced(previous))
     }
 
     /// The longest context any offered card combination could hold, for "at most …" hints when

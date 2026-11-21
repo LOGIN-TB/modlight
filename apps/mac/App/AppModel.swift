@@ -6,6 +6,7 @@ import ServiceManagement
 
 /// What the sidebar shows: each model, then the app's own areas.
 enum SidebarItem: Hashable {
+    case overview
     case model(UUID)
     case connection
     case costs
@@ -34,6 +35,8 @@ final class AppModel {
     var showingAddModel = false
     var editingModel: PodlightModel?
     var startingModel: PodlightModel?
+    /// A model just added with "Add and Start…": its start sheet opens when the add sheet is gone.
+    var startAfterAdding: UUID?
     var selection: SidebarItem?
     /// Set by any view that has SwiftUI's openWindow action, so the Dock and the menu bar can
     /// bring the main window back after it was closed.
@@ -84,12 +87,19 @@ final class AppModel {
         let previous = state
         state = await manager.state()
         notifier.compare(previous: previous, current: state)
-        if selection == nil || !isValid(selection) { selection = state.models.first.map { .model($0.id) } ?? .connection }
+        if selection == nil || !isValid(selection) { selection = .overview }
     }
 
     private func isValid(_ item: SidebarItem?) -> Bool {
         guard case .model(let id) = item else { return item != nil }
         return state.models.contains { $0.id == id }
+    }
+
+    /// Opens the start sheet for a model added with "Add and Start…".
+    func addSheetDismissed() {
+        guard let id = startAfterAdding else { return }
+        startAfterAdding = nil
+        startingModel = state.models.first { $0.id == id }
     }
 
     var selectedModel: PodlightModel? {
@@ -336,6 +346,65 @@ final class AppModel {
         export OPENAI_API_BASE="\(baseURL)"
         export OPENAI_API_KEY="\(gatewayKey ?? "")"
         # Model: \(state.models.map(\.name).joined(separator: " | "))
+        """
+    }
+
+    /// Claude Code needs at least this much context to work; below it compacts constantly.
+    static let claudeCodeMinimumContext = 131_072
+
+    /// Claude Code in the terminal, pointed at Podlight through its Anthropic-compatible route
+    /// (code.claude.com/docs/en/llm-gateway, env-vars). As a one-off command and as a shell function,
+    /// so the normal Claude Code login stays untouched.
+    func claudeCodeCommand(baseURL: String, model item: PodlightModel?) -> String {
+        let name = item?.name ?? "model"
+        let context = item?.contextTokens ?? 131_072
+        let root = baseURL.hasSuffix("/v1") ? String(baseURL.dropLast(3)) : baseURL
+        let variables = [
+            "ANTHROPIC_BASE_URL='\(root)'",
+            "ANTHROPIC_AUTH_TOKEN='\(gatewayKey ?? "")'",
+            "ANTHROPIC_API_KEY=''",
+            "ANTHROPIC_MODEL='\(name)'",
+            "ANTHROPIC_DEFAULT_OPUS_MODEL='\(name)'",
+            "ANTHROPIC_DEFAULT_SONNET_MODEL='\(name)'",
+            "ANTHROPIC_DEFAULT_HAIKU_MODEL='\(name)'",
+            "CLAUDE_CODE_MAX_CONTEXT_TOKENS=\(context)",
+            "CLAUDE_CODE_MAX_OUTPUT_TOKENS=\(min(32_000, context / 4))",
+            "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+        ]
+        return """
+        # Once, in a terminal:
+        \(variables.joined(separator: " \\\n  ")) \\
+          claude
+
+        # Or permanently as "claude-podlight": add to ~/.zshrc, then open a new terminal.
+        claude-podlight() {
+          \(variables.joined(separator: " \\\n  ")) \\
+            claude "$@"
+        }
+        """
+    }
+
+    /// Codex CLI: a provider for ~/.codex/config.toml that leaves the user's default untouched,
+    /// and a shell function that selects it (learn.chatgpt.com/docs/config-file/config-reference;
+    /// `wire_api = "responses"` is the only value Codex still accepts).
+    func codexConfig(baseURL: String, model item: PodlightModel?) -> String {
+        let name = item?.name ?? "model"
+        let context = item?.contextTokens ?? 131_072
+        return """
+        # 1. Add to ~/.codex/config.toml:
+        [model_providers.podlight]
+        name = "Podlight"
+        base_url = "\(baseURL)"
+        env_key = "PODLIGHT_API_KEY"
+        wire_api = "responses"
+        stream_idle_timeout_ms = 900000
+
+        # 2. Add to ~/.zshrc, open a new terminal, then run "codex-podlight":
+        codex-podlight() {
+          PODLIGHT_API_KEY='\(gatewayKey ?? "")' codex \\
+            -c model_provider=podlight -m '\(name)' \\
+            -c model_context_window=\(context) "$@"
+        }
         """
     }
 }

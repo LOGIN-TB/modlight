@@ -1,7 +1,7 @@
 import PodlightEngine
 import SwiftUI
 
-/// The main window: the models in the sidebar, then Connection, Costs and Settings; the chosen
+/// The main window: the overview, the models, then Connection, Costs and Settings in the sidebar; the chosen
 /// item beside it. Standard NavigationSplitView and toolbar, so the system draws them in Liquid
 /// Glass; no custom backgrounds behind bars.
 struct RootView: View {
@@ -23,7 +23,7 @@ struct RootView: View {
                 } detail: {
                     Detail()
                 }
-                .sheet(isPresented: $model.showingAddModel) { AddModelSheet() }
+                .sheet(isPresented: $model.showingAddModel, onDismiss: { model.addSheetDismissed() }) { AddModelSheet() }
                 .sheet(item: $model.editingModel) { AddModelSheet(editing: $0) }
                 .sheet(item: $model.startingModel) { StartSheet(model: $0) }
             }
@@ -41,6 +41,7 @@ private struct Sidebar: View {
     var body: some View {
         @Bindable var model = model
         List(selection: $model.selection) {
+            Label("Overview", systemImage: "house").tag(SidebarItem.overview)
             Section("Models") {
                 ForEach(model.state.models) { item in
                     ModelRow(item: item, run: model.state.run(item.id))
@@ -74,6 +75,7 @@ private struct Detail: View {
 
     var body: some View {
         switch model.selection {
+        case .overview: OverviewView()
         case .model:
             if let item = model.selectedModel { ModelDetailView(item: item) } else { NoModelView() }
         case .connection: ConnectionView()

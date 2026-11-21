@@ -13,9 +13,16 @@ struct ConnectionView: View {
     @State private var agent: Agent = .openCode
     @State private var forNetwork = false
 
+    @State private var agentModelId: UUID?
+
     enum Agent: String, CaseIterable, Identifiable {
-        case openCode, pi, environment
+        case openCode, pi, claudeCode, codex, environment
         var id: String { rawValue }
+    }
+
+    /// The model the Claude Code and Codex snippets are written for.
+    private var agentModel: PodlightModel? {
+        model.state.models.first { $0.id == agentModelId } ?? model.state.models.first
     }
 
     private var baseURL: String {
@@ -64,9 +71,26 @@ struct ConnectionView: View {
                         Picker("Agent", selection: $agent) {
                             Text("OpenCode").tag(Agent.openCode)
                             Text("pi").tag(Agent.pi)
-                            Text("Environment variables").tag(Agent.environment)
+                            Text("Claude Code").tag(Agent.claudeCode)
+                            Text("Codex").tag(Agent.codex)
+                            Text("Variables").tag(Agent.environment)
                         }
                         .pickerStyle(.segmented)
+                        if (agent == .claudeCode || agent == .codex) && model.state.models.count > 1 {
+                            Picker("Model", selection: Binding(get: { agentModel?.id }, set: { agentModelId = $0 })) {
+                                ForEach(model.state.models) { Text($0.name).tag(Optional($0.id)) }
+                            }
+                        }
+                        if let install = installCommand {
+                            HStack {
+                                LabeledContent("Install") { Text(install).font(.caption.monospaced()).textSelection(.enabled) }
+                                Button(copied == "install" ? "Copied" : "Copy") { Pasteboard.copy(install); copied = "install" }
+                            }
+                        }
+                        ForEach(agentWarnings, id: \.self) { warning in
+                            Label(warning, systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.orange)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                         if !model.networkBaseURLs.isEmpty {
                             Picker("For", selection: $forNetwork) {
                                 Text("This Mac").tag(false)
@@ -90,8 +114,9 @@ struct ConnectionView: View {
                                 Button("Open Folder in Finder") { open(folder) }
                             }
                             Spacer()
-                            Link("Documentation", destination: agent == .pi ? Links.pi : Links.openCode)
-                                .opacity(agent == .environment ? 0 : 1)
+                            if let documentation {
+                                Link("Documentation", destination: documentation)
+                            }
                         }
                     }
                     .padding(.top, 6)
@@ -127,10 +152,47 @@ struct ConnectionView: View {
         }
     }
 
+    private var installCommand: String? {
+        switch agent {
+        case .openCode: nil
+        case .pi: nil
+        case .claudeCode: "curl -fsSL https://claude.ai/install.sh | bash"
+        case .codex: "npm install -g @openai/codex"
+        case .environment: nil
+        }
+    }
+
+    private var documentation: URL? {
+        switch agent {
+        case .openCode: Links.openCode
+        case .pi: Links.pi
+        case .claudeCode: Links.claudeCodeGateway
+        case .codex: Links.codexConfig
+        case .environment: nil
+        }
+    }
+
+    private var agentWarnings: [String] {
+        guard agent == .claudeCode || agent == .codex else { return [] }
+        var warnings: [String] = []
+        if let item = agentModel, item.contextTokens < AppModel.claudeCodeMinimumContext {
+            warnings.append(String(localized: "\(item.name) is set to \(Format.tokens(item.contextTokens)) tokens. These agents send long instructions and need at least 128k, better 200k: choose more context under Edit."))
+        }
+        if let item = agentModel, item.toolCallParser == nil {
+            warnings.append(String(localized: "\(item.name) has no tool calls, so the agent cannot edit files or run commands with it."))
+        }
+        if agent == .claudeCode {
+            warnings.append(String(localized: "Anthropic does not officially support other models in Claude Code. It works through Podlight's Anthropic-compatible route, but web search and some newer features do not."))
+        }
+        return warnings
+    }
+
     private var fileContent: String {
         switch agent {
         case .openCode: model.openCodeConfig(baseURL: baseURL)
         case .pi: model.piConfig(baseURL: baseURL)
+        case .claudeCode: model.claudeCodeCommand(baseURL: baseURL, model: agentModel)
+        case .codex: model.codexConfig(baseURL: baseURL, model: agentModel)
         case .environment: model.environmentConfig(baseURL: baseURL)
         }
     }
@@ -141,6 +203,10 @@ struct ConnectionView: View {
             String(localized: "Paste into ~/.config/opencode/opencode.json (if the file has content, merge the \"providers\" entry), then pick podlight/<name> with /models.")
         case .pi:
             String(localized: "Paste into ~/.pi/agent/models.json (if the file has content, merge the \"providers\" entry), then pick the model with /model.")
+        case .claudeCode:
+            String(localized: "Run the first command in Terminal to use Claude Code with Podlight once, or add the function to ~/.zshrc and start it with claude-podlight. Plain claude keeps your normal login.")
+        case .codex:
+            String(localized: "Add the provider to ~/.codex/config.toml and the function to ~/.zshrc, then start Codex with codex-podlight. Plain codex keeps your normal setup.")
         case .environment:
             String(localized: "For tools that read OpenAI's environment variables, such as Aider: add these lines to ~/.zshrc or run them before the tool.")
         }
@@ -150,7 +216,8 @@ struct ConnectionView: View {
         switch agent {
         case .openCode: ".config/opencode"
         case .pi: ".pi/agent"
-        case .environment: nil
+        case .codex: ".codex"
+        case .claudeCode, .environment: nil
         }
     }
 

@@ -9,6 +9,16 @@ public enum PodPlan {
     /// The image is built on CUDA 13.0.2 (NVIDIA_REQUIRE_CUDA=cuda>=13.0, read from its config on
     /// 2026-11-20). A host with an older driver cannot start it, and RunPod has 12.4 hosts.
     public static let minCudaVersion = "13.0"
+
+    /// llama.cpp's server image, `full` because it carries the Python the watchdog needs. Pinned to
+    /// a build; its cuda12 flavour needs a host with CUDA 12.8 or newer (NVIDIA_REQUIRE_CUDA).
+    public static let llamaImage = "ghcr.io/ggml-org/llama.cpp:full-cuda12-b12602"
+    public static let llamaMinCudaVersion = "12.8"
+
+    public static func image(for engine: InferenceEngine) -> String { engine == .vllm ? image : llamaImage }
+    public static func minCudaVersion(for engine: InferenceEngine) -> String {
+        engine == .vllm ? minCudaVersion : llamaMinCudaVersion
+    }
     public static let enginePort = 8000
     public static let watchdogPort = 8001
     /// Extra time past "Läuft bis" before the pod's own deadline fires. The app stops it on time;
