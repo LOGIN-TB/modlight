@@ -80,11 +80,16 @@ notarise "$out/Podlight.zip"
 staple "$app"
 
 echo "==> Building the disk image"
-staging="$out/dmg"
-mkdir -p "$staging"
-cp -R "$app" "$staging/"
-ln -s /Applications "$staging/Applications"
-hdiutil create -volname "Podlight" -srcfolder "$staging" -ov -format UDZO "$dmg" >/dev/null
+# A designed window (background with an arrow, fixed icon positions) written by dmgbuild, which
+# needs no Finder scripting and so runs headless. Finder cannot animate a disk image window; the
+# app offers the move with an animation instead.
+assets="$out/dmg-assets"
+swift "$root/tools/dmg/background.swift" "$assets" >/dev/null
+tiffutil -cathidpicheck "$assets/background.png" "$assets/background@2x.png" -out "$assets/background.tiff" >/dev/null
+venv="$root/build/dmg-venv"
+[[ -x "$venv/bin/dmgbuild" ]] || { python3 -m venv "$venv" && "$venv/bin/pip" install --quiet "dmgbuild==1.6.5"; }
+"$venv/bin/dmgbuild" -s "$root/tools/dmg/settings.py" -D app="$app" -D background="$assets/background.tiff" \
+  "Podlight" "$dmg" >/dev/null
 codesign --sign "Developer ID Application" --timestamp "$dmg"
 
 echo "==> Notarising the disk image"

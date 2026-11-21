@@ -82,6 +82,10 @@ Herkunft: **HIG** = Apple-Empfehlung, **ENG** = Engineering-Ableitung, **PROD** 
 | PL-A11Y-003 | Bewegung reduzieren respektiert (Fortschritts- und Statusanimationen) | HIG | 73, 8 | alle | Einstellung an: keine dekorative Bewegung |
 | PL-TXT-001 | Einheitliche Begriffe de/en („Modell“, „Verbindung“, „Läuft bis“, „Leerlauf-Stopp“); Fehlermeldungen ohne Schuld, mit nächstem Schritt; leere Zustände mit Aktion | HIG | 109 | alle | Glossar vorhanden; jeder Fehler hat Aktion |
 | PL-STATE-001 | Zustandsmatrix (unten) für jeden datenabhängigen Screen umgesetzt | ENG | 64, 40 | alle | je Zustand ein UI-Test oder Screenshot |
+| PL-UI-006 | Liquid Glass über Standard-Bausteine: Seitenleiste und Toolbar ohne eigene Hintergründe; Glas nur auf Bedienelementen (Start/Stopp), nie auf Inhalten | HIG | 70, 154, 167 | alle | Echtes Fenster hell/dunkel, „Transparenz reduzieren“: Glas sichtbar bzw. sauber ersetzt |
+| PL-NAV-004 | Einstellungen in der Seitenleiste und unter ⌘, (gleicher Inhalt); Limits direkt in „Kosten“ änderbar | PROD | 94 | Einstellungen | Beide Wege zeigen dieselben Werte |
+| PL-NET-001 | LAN-Zugriff nur nach Einschalten, mit Hinweis auf unverschlüsselte Verbindung, Schlüssel immer Pflicht | PROD | 87 | Einstellungen/Verbindung | Ohne Freigabe von außen nicht erreichbar; mit Freigabe nur mit Schlüssel |
+| PL-INS-001 | Gestaltetes DMG-Fenster; Angebot zum Verschieben in Programme, Animation aus bei „Bewegung reduzieren“ | ENG | 73, 59 | Installation | DMG einhängen; App aus Downloads starten |
 | PL-PRIV-001 | Keine Telemetrie; Netzwerkziele nur RunPod, Hugging Face, Pods, eigene Server, Update-Feed; in der Hilfe benannt | PROD | 87 | Hilfe | Netzwerkmitschnitt eines Durchlaufs |
 
 ## Informationsarchitektur
