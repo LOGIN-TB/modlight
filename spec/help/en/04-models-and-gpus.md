@@ -4,9 +4,15 @@
 
 Coding agents need models that can make tool calls. Podlight reads this from the model's chat template and shows it during the check. Without it, an agent cannot read files or run commands.
 
-4-bit builds (AWQ, GPTQ, INT4) need about half the memory of the originals. In one measurement, the same 27-billion-parameter model on the same card ran more than twice as fast in 4 bits and had twice the room for context.
+4-bit builds (AWQ, GPTQ, NVFP4 or GGUF in Q4) need about half the memory of the originals. In one measurement, the same 27-billion-parameter model on the same card ran more than twice as fast in 4 bits and had twice the room for context.
 
-Podlight 0.1 runs models with vLLM. GGUF files (llama.cpp) and MLX builds do not run with it. Podlight says so during the check and suggests alternatives.
+## GGUF models
+
+Many models on Hugging Face exist only as GGUF. Podlight runs them with llama.cpp and every other format with vLLM. Podlight picks the engine from the format.
+
+A GGUF repository usually holds the model in many quantisations, such as Q4_K_M, Q8_0 or BF16. You pick one during the check; Podlight suggests Q4_K_M, llama.cpp's own default. As a rule of thumb, 4 bits need half the memory of 8 bits and lose little. Below 4 bits (Q2, Q3) models get noticeably worse at code and tool calls. Q8_0 and BF16 are close to the original but need two to four times the memory.
+
+Podlight reads how much memory a token needs from the GGUF file's header, without downloading the model. llama.cpp's engine is about 4 GB, much smaller than vLLM's, so a new pod is often ready sooner. MLX builds run on Apple chips only, not at RunPod.
 
 ## Economical, balanced or fast
 
@@ -28,4 +34,4 @@ Podlight reads how much memory one token needs from the model's configuration. S
 
 ## Several cards
 
-If a long context does not fit on one card, Podlight suggests 2, 4 or 8 cards in one pod, for example "2 × L40S". vLLM then spreads the model across all of them. The price covers all cards together. Getting several identical cards free at once is harder at RunPod; if needed, Podlight tries the next suggestions.
+If a long context does not fit on one card, Podlight suggests 2, 4 or 8 cards in one pod, for example "2 × L40S". vLLM then spreads the model across all of them, which also makes it faster. llama.cpp spreads the model's layers across the cards: more room, but no extra speed for a single request. The price covers all cards together. Getting several identical cards free at once is harder at RunPod; if needed, Podlight tries the next suggestions.

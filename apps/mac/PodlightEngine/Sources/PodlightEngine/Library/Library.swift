@@ -2,6 +2,14 @@ import Foundation
 
 /// A model the user has set up: what to run, how, and on which cards. Called "Modell" in the
 /// interface; `name` is what an agent puts in the `model` field.
+/// The program that serves a model inside the pod.
+public enum InferenceEngine: String, Codable, Sendable {
+    /// vLLM: safetensors, AWQ, GPTQ, FP8, NVFP4. Tensor parallel across cards.
+    case vllm
+    /// llama.cpp's llama-server: GGUF. Layers split across cards.
+    case llamaCpp
+}
+
 public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
     public var id: UUID
     /// Served name, e.g. `qwen3-coder-30b`. Unique; lowercase letters, digits, `-`, `.`, `_`.
@@ -28,12 +36,25 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
     /// but the disk is billed while the pod is stopped. Off: the pod is deleted at its end and
     /// nothing is billed in between.
     public var keepDisk: Bool
+    /// Where this model's pods may run. Nil: the default from the settings (models from 0.2).
+    public var hosting: HostingPolicy?
+    /// The catalog name of `preferredGPU` when it was chosen, e.g. "B300", for display.
+    public var preferredGPUName: String?
+    /// For GGUF repositories: which quantisation to run, e.g. `Q4_K_M` (llama.cpp's `-hf repo:quant`).
+    public var quant: String?
+
+    /// Which engine serves this model: GGUF runs on llama.cpp, everything else on vLLM.
+    public var engine: InferenceEngine { format == .gguf ? .llamaCpp : .vllm }
 
     public init(id: UUID = UUID(), name: String, repoId: String, format: WeightFormat, weightBytes: Double,
                 nativeContextTokens: Int?, toolCallParser: String?, reasoningParser: String?,
                 contextTokens: Int, concurrency: Int = 1, goal: SuggestionGoal = .balanced,
                 preferredGPU: GPUChoice? = nil, schedule: Schedule = PodlightModel.defaultSchedule,
-                createdAt: Date = Date(), kvProfile: KVProfile? = nil, keepDisk: Bool = false) {
+                createdAt: Date = Date(), kvProfile: KVProfile? = nil, keepDisk: Bool = false,
+                hosting: HostingPolicy? = nil, preferredGPUName: String? = nil, quant: String? = nil) {
+        self.hosting = hosting
+        self.preferredGPUName = preferredGPUName
+        self.quant = quant
         self.kvProfile = kvProfile
         self.keepDisk = keepDisk
         self.id = id
@@ -57,15 +78,20 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
         startAt: "08:00", stopAt: "18:00", idleStopMinutes: 30, maxRuntimeHours: 12)
 
     public var info: ModelInfo {
-        ModelInfo(repoId: repoId, access: .open, gated: false, format: format, weightBytes: weightBytes,
-                  nativeContextTokens: nativeContextTokens, license: nil,
-                  toolCallParser: toolCallParser, reasoningParser: reasoningParser, kvProfile: kvProfile)
+        var info = ModelInfo(repoId: repoId, access: .open, gated: false, format: format, weightBytes: weightBytes,
+                             nativeContextTokens: nativeContextTokens, license: nil,
+                             toolCallParser: toolCallParser, reasoningParser: reasoningParser, kvProfile: kvProfile)
+        info.quant = quant
+        return info
     }
+
+    /// The hosting rules for this model's next start.
+    public func hosting(default fallback: HostingPolicy) -> HostingPolicy { hosting ?? fallback }
 
     private enum CodingKeys: String, CodingKey {
         case id, name, repoId, format, weightBytes, nativeContextTokens, toolCallParser, reasoningParser,
              contextTokens, concurrency, goal, preferredGPU, expectedPricePerHour, schedule, createdAt,
-             kvProfile, keepDisk
+             kvProfile, keepDisk, hosting, preferredGPUName, quant
     }
 
     public init(from decoder: Decoder) throws {
@@ -88,6 +114,9 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
         kvProfile = try c.decodeIfPresent(KVProfile.self, forKey: .kvProfile)
         // Models from 0.1 always had a disk; keep their behaviour until the user changes it.
         keepDisk = try c.decodeIfPresent(Bool.self, forKey: .keepDisk) ?? true
+        hosting = try c.decodeIfPresent(HostingPolicy.self, forKey: .hosting)
+        preferredGPUName = try c.decodeIfPresent(String.self, forKey: .preferredGPUName)
+        quant = try c.decodeIfPresent(String.self, forKey: .quant)
     }
 
     /// A served name derived from a repo id: `Qwen/Qwen3-8B-AWQ` → `qwen3-8b-awq`.
@@ -151,6 +180,8 @@ public struct ModelRun: Codable, Sendable, Equatable {
     public var accountedUntil: Date?
     /// Storage of a stopped pod is booked up to here.
     public var storageAccountedUntil: Date?
+    /// The hosting rules the pod was created under; its placement is checked against these.
+    public var hosting: HostingPolicy?
 
     public init() {}
 }
@@ -222,6 +253,8 @@ public struct PodlightState: Codable, Sendable, Equatable {
     public var settings = PodlightSettings()
     /// USD spent per local calendar day, key `yyyy-MM-dd`.
     public var spendByDay: [String: Double] = [:]
+    /// When an agent last reached the gateway with a valid key, for "agent connected" on the overview.
+    public var lastClientRequestAt: Date?
 
     public init() {}
 

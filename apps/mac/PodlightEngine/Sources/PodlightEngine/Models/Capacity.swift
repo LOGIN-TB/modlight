@@ -27,10 +27,35 @@ public enum Capacity {
     /// The overhead share is a fit to three measurements, not a model of the allocator.
     /// With several cards (tensor parallel) the weights and the cache are spread across all of
     /// them, and each card keeps its own overhead.
+    ///
+    /// llama.cpp takes what it needs instead of a share: a compute buffer per card (about 1 GiB,
+    /// measured as "CUDA compute buffer size" in its log) and a reserve of 1 GiB, as its own
+    /// `--fit` keeps back.
     public static func kvHeadroomGiB(gpuMemoryGiB: Double, weightsGiB: Double,
-                                     otherSlotGiB: Double = 0, utilization: Double = 0.94, gpuCount: Int = 1) -> Double {
-        let usable = gpuMemoryGiB * Double(max(1, gpuCount)) * utilization
-        return usable * (1 - 0.12) - weightsGiB - otherSlotGiB
+                                     otherSlotGiB: Double = 0, utilization: Double = 0.94, gpuCount: Int = 1,
+                                     engine: InferenceEngine = .vllm) -> Double {
+        let cards = Double(max(1, gpuCount))
+        switch engine {
+        case .vllm:
+            return gpuMemoryGiB * cards * utilization * (1 - 0.12) - weightsGiB - otherSlotGiB
+        case .llamaCpp:
+            return gpuMemoryGiB * cards - llamaComputeBufferGiB * cards - llamaReserveGiB - weightsGiB - otherSlotGiB
+        }
+    }
+
+    public static let llamaComputeBufferGiB = 1.0
+    public static let llamaReserveGiB = 1.0
+
+    /// Card memory (all cards together) a model needs for `contextTokens` × `concurrency`: the
+    /// inverse of `plan`, for "needs about 142 GB" next to the card list.
+    public static func requiredGiB(weightsGiB: Double, contextTokens: Int, concurrency: Int = 1,
+                                   kvBytesPerToken: Double = defaultKVBytesPerToken,
+                                   engine: InferenceEngine = .vllm) -> Double {
+        let kvGiB = Double(contextTokens * max(1, concurrency)) * kvBytesPerToken / 1_073_741_824 / margin
+        switch engine {
+        case .vllm: return (weightsGiB + kvGiB) / (0.94 * (1 - 0.12))
+        case .llamaCpp: return weightsGiB + kvGiB + llamaComputeBufferGiB + llamaReserveGiB
+        }
     }
 
     public static func maxContextTokens(headroomGiB: Double, kvBytesPerToken: Double = defaultKVBytesPerToken) -> Int {
@@ -60,8 +85,9 @@ public enum Capacity {
 
     /// One budget spent two ways: context × concurrency has to fit in the same pool of tokens.
     public static func plan(gpuMemoryGiB: Double, weightsGiB: Double, nativeContextTokens: Int?,
-                            chosen: Choice, kvBytesPerToken: Double = defaultKVBytesPerToken, gpuCount: Int = 1) -> Plan {
-        let headroom = kvHeadroomGiB(gpuMemoryGiB: gpuMemoryGiB, weightsGiB: weightsGiB, gpuCount: gpuCount)
+                            chosen: Choice, kvBytesPerToken: Double = defaultKVBytesPerToken, gpuCount: Int = 1,
+                            engine: InferenceEngine = .vllm) -> Plan {
+        let headroom = kvHeadroomGiB(gpuMemoryGiB: gpuMemoryGiB, weightsGiB: weightsGiB, gpuCount: gpuCount, engine: engine)
         let budget = floorToStep(Double(maxContextTokens(headroomGiB: headroom, kvBytesPerToken: kvBytesPerToken)) * margin)
         let native = nativeContextTokens ?? Int.max
 
@@ -101,8 +127,11 @@ public enum Capacity {
 public enum CardSupport {
     /// The pinned vLLM image is built for compute capability 7.5 and newer
     /// (TORCH_CUDA_ARCH_LIST in vllm/vllm-openai:v0.28.0). Volta and older cannot run it at all.
-    public static func runsEngineImage(_ gpuId: String) -> Bool {
-        gpuId.range(of: #"(V100|P100|P40|\bP4\b|K80|M60|Titan V|Quadro GV100)"#,
+    /// llama.cpp's cuda12 image also carries code for Maxwell, Pascal and Volta (compute 5.0+), so
+    /// only Kepler is out.
+    public static func runsEngineImage(_ gpuId: String, engine: InferenceEngine = .vllm) -> Bool {
+        if engine == .llamaCpp { return gpuId.range(of: #"\bK(80|40|20)\b"#, options: .regularExpression) == nil }
+        return gpuId.range(of: #"(V100|P100|P40|\bP4\b|K80|M60|Titan V|Quadro GV100)"#,
                     options: [.regularExpression, .caseInsensitive]) == nil
     }
 

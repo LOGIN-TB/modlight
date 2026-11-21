@@ -78,6 +78,26 @@ private func runFakeEngine(port: Int, podKey: @escaping @Sendable () -> String?)
             try await writer.finish(nil)
         })
     }
+    // Anthropic Messages, as Claude Code calls it: a ping first, and the headers and query it sent.
+    router.post("/v1/messages") { request, _ -> Response in
+        guard request.headers[.authorization] == "Bearer \(podKey() ?? "")" else { return Response(status: .unauthorized) }
+        let version = LocalGateway.header("anthropic-version", in: request) ?? "-"
+        let query = request.uri.query ?? "-"
+        var headers = HTTPFields()
+        headers[.contentType] = "text/event-stream"
+        return Response(status: .ok, headers: headers, body: ResponseBody { writer in
+            try await writer.write(ByteBuffer(string: "event: ping\ndata: {\"type\": \"ping\"}\n\n"))
+            try await writer.write(ByteBuffer(string: "event: message_stop\ndata: {\"seen\":\"\(version)|\(query)\"}\n\n"))
+            try await writer.finish(nil)
+        })
+    }
+    // OpenAI Responses, as Codex calls it.
+    router.post("/v1/responses") { request, _ -> Response in
+        guard request.headers[.authorization] == "Bearer \(podKey() ?? "")" else { return Response(status: .unauthorized) }
+        var headers = HTTPFields()
+        headers[.contentType] = "application/json"
+        return Response(status: .ok, headers: headers, body: .init(byteBuffer: ByteBuffer(string: #"{"object":"response","status":"completed"}"#)))
+    }
     try await Application(router: router, configuration: .init(address: .hostname("127.0.0.1", port: port))).run()
 }
 
@@ -166,6 +186,71 @@ struct GatewayFlowTests {
     }
 }
 
+@Suite("Claude Code and Codex routes", .serialized, .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil,
+                                                             "uses the login keychain; runs on a developer Mac"))
+struct AgentRouteTests {
+    @Test func messagesAndResponsesReachTheEngine() async throws {
+        let keychain = KeychainStore(service: "app.podlight.tests.\(UUID().uuidString)")
+        defer { for item in [KeychainStore.Item.runpodAPIKey, .gatewayKey] { try? keychain.delete(item) } }
+        try keychain.write("rp-test", for: .runpodAPIKey)
+        let enginePort = Int.random(in: 44_100...45_900)
+        let gatewayPort = enginePort + 1000
+        let fake = FakeRunPod(catalog: #"{"gpus":[{"id":"NVIDIA L40S","name":"L40S","manufacturer":"NVIDIA","memory":48,"secure":true,"community":true,"price":{"secure":0.86,"community":0.79},"availability":"LOW"}]}"#)
+        let stateURL = FileManager.default.temporaryDirectory.appendingPathComponent("podlight-test-\(UUID()).json")
+        defer { try? FileManager.default.removeItem(at: stateURL) }
+        let manager = PodManager(store: StateStore(url: stateURL), keychain: keychain, transport: fake,
+                                 podURL: { _, port in URL(string: "http://127.0.0.1:\(enginePort)\(port == PodPlan.watchdogPort ? "/wd" : "")")! })
+        let m = PodlightModel(name: "coder", repoId: "o/coder-AWQ", format: .awq, weightBytes: 19e9, nativeContextTokens: 262_144,
+                              toolCallParser: "qwen3_xml", reasoningParser: nil, contextTokens: 131_072)
+        try await manager.save(m)
+        defer { try? keychain.delete(.podKey(m.id)) }
+        let podKey: @Sendable () -> String? = { try? keychain.read(.podKey(m.id)) }
+        let engine = Task { try await runFakeEngine(port: enginePort, podKey: podKey) }
+        let gateway = Task { try await LocalGateway(port: gatewayPort, manager: manager, key: { "gw-test" }).run() }
+        defer { engine.cancel(); gateway.cancel() }
+        try await waitForServer(port: gatewayPort)
+        let base = "http://127.0.0.1:\(gatewayPort)"
+        #expect(await manager.state().lastClientRequestAt == nil)
+
+        // Claude Code with ANTHROPIC_API_KEY sends the key as X-Api-Key; a wrong one gets Anthropic's error shape.
+        var wrong = URLRequest(url: URL(string: "\(base)/v1/messages")!)
+        wrong.httpMethod = "POST"
+        wrong.setValue("nope", forHTTPHeaderField: "x-api-key")
+        wrong.httpBody = Data(#"{"model":"coder","max_tokens":10,"messages":[]}"#.utf8)
+        let (wrongData, wrongResponse) = try await URLSession.shared.data(for: wrong)
+        #expect((wrongResponse as? HTTPURLResponse)?.statusCode == 401)
+        #expect(String(decoding: wrongData, as: UTF8.self).contains(#""type":"authentication_error""#))
+
+        var messages = URLRequest(url: URL(string: "\(base)/v1/messages?beta=true")!)
+        messages.httpMethod = "POST"
+        messages.setValue("gw-test", forHTTPHeaderField: "x-api-key")
+        messages.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        messages.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        messages.httpBody = Data(#"{"model":"coder","max_tokens":10,"stream":true,"messages":[{"role":"user","content":"Hi"}]}"#.utf8)
+        let (messageData, messageResponse) = try await URLSession.shared.data(for: messages)
+        let text = String(decoding: messageData, as: UTF8.self)
+        #expect((messageResponse as? HTTPURLResponse)?.statusCode == 200)
+        #expect(text.contains("event: ping"), "SSE pings reach Claude Code, or its idle watchdog aborts")
+        #expect(text.contains(#""seen":"2023-06-01|beta=true""#), "header and query pass through")
+        #expect(await manager.state().lastClientRequestAt != nil)
+
+        // Codex: Responses API with a bearer token.
+        var responses = URLRequest(url: URL(string: "\(base)/v1/responses")!)
+        responses.httpMethod = "POST"
+        responses.setValue("Bearer gw-test", forHTTPHeaderField: "Authorization")
+        responses.httpBody = Data(#"{"model":"coder","input":"Hi"}"#.utf8)
+        let (responseData, responseResponse) = try await URLSession.shared.data(for: responses)
+        #expect((responseResponse as? HTTPURLResponse)?.statusCode == 200)
+        #expect(String(decoding: responseData, as: UTF8.self).contains(#""object":"response""#))
+
+        // An unknown model on the Messages API answers in Anthropic's shape too.
+        var unknown = messages
+        unknown.httpBody = Data(#"{"model":"nope","max_tokens":10,"messages":[]}"#.utf8)
+        let (unknownData, _) = try await URLSession.shared.data(for: unknown)
+        #expect(String(decoding: unknownData, as: UTF8.self).contains(#""type":"not_found_error""#))
+    }
+}
+
 @Suite("Pod lifecycle", .serialized, .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil,
                                               "uses the login keychain; runs on a developer Mac"))
 struct PodLifecycleTests {
@@ -236,6 +321,23 @@ struct PodLifecycleTests {
         defer { tearDown(keychain, m.id, url) }
         try await manager.start(m.id, until: Date().addingTimeInterval(3600))
         #expect(await createBody(fake)["cloud"] as? String == "SECURE", "a region implies Secure Cloud")
+        await manager.refresh(m.id)
+        #expect(await fake.actions == ["delete"])
+        #expect(await manager.state().run(m.id).lastReason == "outside-region")
+    }
+
+    @Test func aModelsOwnLocationOverridesTheSettings() async throws {
+        let (manager, fake, m, keychain, url) = try await setUp(keepDisk: false, region: .anywhere, dataCenter: "US-TX-3")
+        defer { tearDown(keychain, m.id, url) }
+        var own = m
+        own.hosting = HostingPolicy(region: .eu)
+        try await manager.save(own)
+        try await manager.start(m.id, until: Date().addingTimeInterval(3600))
+        #expect(await createBody(fake)["dataCenterIds"] as? [String] == ["EU-RO-1"])
+        #expect(await manager.state().run(m.id).hosting == HostingPolicy(region: .eu))
+        // Edited to "anywhere" while it runs: the pod is still checked against the rules it started with.
+        own.hosting = .anywhere
+        try await manager.save(own)
         await manager.refresh(m.id)
         #expect(await fake.actions == ["delete"])
         #expect(await manager.state().run(m.id).lastReason == "outside-region")

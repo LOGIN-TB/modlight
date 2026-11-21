@@ -127,7 +127,7 @@ public actor PodManager {
         try await updateRun(id) { $0.phase = .creating; $0.lastReason = nil; $0.lastMessage = nil; $0.fellBackFrom = nil }
         do {
             let catalog = try await client.gpuCatalog()
-            let hosting = state.settings.hosting
+            let hosting = model.hosting(default: state.settings.hosting)
             let choices = PodPlan.choices(for: model, catalog: catalog, hosting: hosting)
             guard !choices.isEmpty else { throw PodlightError.noSuitableCard }
             let token = try? keychain.read(.huggingFaceToken)
@@ -149,6 +149,7 @@ public actor PodManager {
                 $0.persistentGB = model.keepDisk ? PodPlan.persistentGB(for: model) : nil
                 $0.containerGB = PodPlan.containerGB(for: model)
                 $0.dataCenterId = created.pod.dataCenterId
+                $0.hosting = hosting
                 $0.fellBackFrom = created.attempts.filter { $0.outcome != .created }.map { names[$0.choice.gpuId] ?? $0.choice.gpuId }
             }
             try await markStarted(id, pod: created.pod, runUntil: runUntil, manual: manual)
@@ -282,6 +283,13 @@ public actor PodManager {
         return PodEndpoint(modelId: id, baseURL: podURL(podId, PodPlan.enginePort), key: try podKey(for: id))
     }
 
+    /// An agent reached the gateway with a valid key. Written at most once a minute.
+    public func clientSeen() async {
+        let t = now()
+        if let last = await store.current().lastClientRequestAt, t.timeIntervalSince(last) < 60 { return }
+        _ = try? await store.update { $0.lastClientRequestAt = t }
+    }
+
     public func requestBegan(_ id: UUID) async {
         inFlight[id, default: 0] += 1
         let t = now()
@@ -346,7 +354,10 @@ public actor PodManager {
 
         // RunPod treats requested data centers as a preference. A pod outside the allowed region
         // is deleted at once, before it serves anything.
-        let hosting = await store.current().settings.hosting
+        let current = await store.current()
+        let hosting = run.hosting
+            ?? current.models.first { $0.id == id }?.hosting(default: current.settings.hosting)
+            ?? current.settings.hosting
         // A running pod that reports no data center cannot be confirmed inside the region either.
         let unverifiable = hosting.needsPlacementCheck && pod.dataCenterId == nil && pod.status == .running
         if unverifiable || pod.dataCenterId.map({ !hosting.allows(dataCenterId: $0) }) == true {
@@ -484,7 +495,7 @@ public actor PodManager {
 
     /// The error lines of an engine log, or its last lines when none says "error".
     static func summarizeEngineLog(_ lines: [String]) -> String {
-        let errors = lines.filter { $0.range(of: #"(Error|Exception|error:|CUDA|out of memory|Traceback)"#, options: .regularExpression) != nil }
+        let errors = lines.filter { $0.range(of: #"(Error|Exception|error:|CUDA|out of memory|Traceback|failed to|unable to allocate|error loading model)"#, options: .regularExpression) != nil }
         let picked = (errors.isEmpty ? lines : errors).suffix(3)
         return picked.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: "\n")
     }

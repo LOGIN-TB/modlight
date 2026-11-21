@@ -108,6 +108,8 @@ enum Links {
     static let huggingFace = URL(string: "https://huggingface.co/models?pipeline_tag=text-generation&sort=trending")!
     static let repository = URL(string: "https://github.com/LOGIN-TB/podlight")!
     static let openCode = URL(string: "https://opencode.ai/docs/models")!
+    static let claudeCodeGateway = URL(string: "https://code.claude.com/docs/en/llm-gateway")!
+    static let codexConfig = URL(string: "https://learn.chatgpt.com/docs/config-file/config-reference")!
     static let pi = URL(string: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/models.md")!
 }
 

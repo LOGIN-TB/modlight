@@ -95,7 +95,7 @@ private func close(_ a: Double, _ b: Double) -> Bool { abs(a - b) < 1e-9 }
 
 @Suite("spec/cases")
 struct SpecCaseTests {
-    static let all = Spec.load(["scheduler.json", "scheduler-podlight.json", "capacity.json", "kv-profile.json"])
+    static let all = Spec.load(["scheduler.json", "scheduler-podlight.json", "capacity.json", "kv-profile.json", "gguf.json"])
 
     @Test("every spec file was found and parsed")
     func specIsReadable() {
@@ -153,6 +153,25 @@ struct SpecCaseTests {
         case "kvProfile":
             let input = try JSONSerialization.jsonObject(with: c.input) as? [String: Any]
             let got = KVProfile.from(config: input?["config"] as? [String: Any])
+            if let expected = try d.decode(KVProfile?.self, from: c.expected) {
+                let value = try #require(got)
+                #expect(abs(value.bytesPerToken - expected.bytesPerToken) < 1e-6)
+                #expect(value.attentionHeads == expected.attentionHeads && value.hybrid == expected.hybrid)
+            } else {
+                #expect(got == nil)
+            }
+        case "ggufQuants":
+            struct File: Decodable { var path: String; var bytes: Double }
+            struct I: Decodable { var files: [File] }
+            struct E: Decodable { var names: [String]; var recommended: String? }
+            let i = try d.decode(I.self, from: c.input)
+            let e = try d.decode(E.self, from: c.expected)
+            let quants = GGUF.quants(from: i.files.map { ($0.path, $0.bytes) })
+            #expect(quants.map(\.name) == e.names)
+            #expect(GGUF.recommended(quants)?.name == e.recommended)
+        case "ggufKvProfile":
+            let input = try JSONSerialization.jsonObject(with: c.input) as? [String: Any]
+            let got = GGUF.kvProfile(from: input?["meta"] as? [String: Any] ?? [:])
             if let expected = try d.decode(KVProfile?.self, from: c.expected) {
                 let value = try #require(got)
                 #expect(abs(value.bytesPerToken - expected.bytesPerToken) < 1e-6)

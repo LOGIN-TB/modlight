@@ -93,8 +93,27 @@ enum Describe {
         case "runpod-error": String(localized: "RunPod reported an error.")
         case "pod-error": String(localized: "The pod is in an error state at RunPod.")
         case "engine-exited": String(localized: "The engine stopped with an error, so Podlight ended the pod:")
-        case "outside-region": String(localized: "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions in Settings.")
+        case "outside-region": String(localized: "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions under Edit.")
         default: code
         }
+    }
+
+    /// "EU only · Secure Cloud", for summaries and the model's detail.
+    static func hosting(_ policy: HostingPolicy) -> String {
+        let region = switch policy.region {
+        case .anywhere: String(localized: "Anywhere")
+        case .eu: String(localized: "EU only")
+        case .euEEA: String(localized: "EU and EEA")
+        }
+        return policy.clouds == [.secure] ? String(localized: "\(region) · Secure Cloud") : region
+    }
+
+    /// "8.99 $/h + 0.02 $/h storage": the card price and the disks, kept apart so the card's
+    /// price matches the one in the list.
+    static func price(gpu: Double, storage: Double) -> String {
+        if storage <= 0.0005 { return Format.perHour(gpu) }
+        // Under a cent the rounded figure would read "0.00", which looks like nothing.
+        let shown = storage < 0.005 ? "< " + Format.perHour(0.01) : Format.perHour(storage)
+        return String(localized: "\(Format.perHour(gpu)) + \(shown) storage")
     }
 }

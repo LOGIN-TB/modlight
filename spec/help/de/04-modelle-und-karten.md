@@ -4,9 +4,15 @@
 
 Für Coding-Agenten eignen sich Modelle, die Werkzeugaufrufe beherrschen. Podlight liest das aus der Vorlage des Modells und zeigt es bei der Prüfung an. Ohne diese Fähigkeit kann ein Agent keine Dateien lesen oder Befehle ausführen.
 
-4-Bit-Varianten (AWQ, GPTQ, INT4) brauchen etwa halb so viel Speicher wie die Originale. In einer Messung lief dasselbe 27-Milliarden-Modell auf derselben Karte in 4 Bit mehr als doppelt so schnell und hatte doppelt so viel Platz für Kontext.
+4-Bit-Varianten (AWQ, GPTQ, NVFP4 oder GGUF in Q4) brauchen etwa halb so viel Speicher wie die Originale. In einer Messung lief dasselbe 27-Milliarden-Modell auf derselben Karte in 4 Bit mehr als doppelt so schnell und hatte doppelt so viel Platz für Kontext.
 
-Podlight 0.1 betreibt Modelle mit vLLM. GGUF-Dateien (llama.cpp) und MLX-Builds laufen damit nicht. Podlight sagt das bei der Prüfung und schlägt Alternativen vor.
+## GGUF-Modelle
+
+Viele Modelle gibt es bei Hugging Face nur als GGUF. Podlight betreibt sie mit llama.cpp, alle anderen Formate mit vLLM. Welche Engine es wird, entscheidet Podlight selbst nach dem Format.
+
+Ein GGUF-Repository enthält das Modell meist in vielen Quantisierungen, etwa Q4_K_M, Q8_0 oder BF16. Bei der Prüfung wählst du eine aus; Podlight schlägt Q4_K_M vor, die Standardwahl von llama.cpp. Als Faustregel: 4 Bit brauchen halb so viel Speicher wie 8 Bit und verlieren dabei wenig. Unter 4 Bit (Q2, Q3) werden Modelle beim Programmieren und bei Werkzeugaufrufen merklich schlechter. Q8_0 und BF16 liegen nah am Original, brauchen aber doppelt bis viermal so viel Speicher.
+
+Wie viel Speicher ein Token braucht, liest Podlight aus dem Kopf der GGUF-Datei, ohne das Modell herunterzuladen. Die Engine von llama.cpp ist mit etwa 4 GB deutlich kleiner als die von vLLM, ein neuer Pod ist darum oft schneller bereit. MLX-Builds laufen nur auf Apple-Chips und nicht bei RunPod.
 
 ## Sparsam, ausgewogen oder schnell
 
@@ -28,4 +34,4 @@ Wie viel Speicher ein Token braucht, liest Podlight aus der Konfiguration des Mo
 
 ## Mehrere Karten
 
-Passt ein langer Kontext nicht auf eine einzelne Karte, schlägt Podlight 2, 4 oder 8 Karten in einem Pod vor, etwa „2 × L40S“. vLLM verteilt das Modell dann auf alle Karten. Der Preis gilt für alle Karten zusammen. Mehrere gleiche Karten gleichzeitig frei zu bekommen ist bei RunPod schwerer; Podlight probiert notfalls die nächsten Vorschläge.
+Passt ein langer Kontext nicht auf eine einzelne Karte, schlägt Podlight 2, 4 oder 8 Karten in einem Pod vor, etwa „2 × L40S“. vLLM verteilt das Modell dann auf alle Karten und wird dadurch auch schneller. llama.cpp verteilt die Schichten des Modells auf die Karten: Das bringt mehr Platz, bei einer einzelnen Anfrage aber kein höheres Tempo. Der Preis gilt für alle Karten zusammen. Mehrere gleiche Karten gleichzeitig frei zu bekommen ist bei RunPod schwerer; Podlight probiert notfalls die nächsten Vorschläge.

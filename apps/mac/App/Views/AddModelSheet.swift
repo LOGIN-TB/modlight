@@ -27,6 +27,12 @@ struct AddModelSheet: View {
     @State private var catalog: [RunpodGPUType] = []
     @State private var options: [GPUOption] = []
     @State private var chosen: GPUOption.ID?
+    /// Set only when the user clicks a row: until then the selection follows the suggestion.
+    @State private var userPicked = false
+    @State private var selectionNote: String?
+    @State private var region: HostingRegion = .anywhere
+    @State private var secureOnly = false
+    @State private var hostingLoaded = false
     @State private var loadingCatalog = false
     @State private var catalogError: String?
 
@@ -46,6 +52,21 @@ struct AddModelSheet: View {
         _idleMinutes = State(initialValue: editing.schedule.idleStopMinutes)
         _keepDisk = State(initialValue: editing.keepDisk)
         _goal = State(initialValue: editing.goal)
+        if let preferred = editing.preferredGPU {
+            _chosen = State(initialValue: "\(preferred.cloud.rawValue)|\(preferred.gpuId)|\(preferred.count)")
+            _userPicked = State(initialValue: true)
+        }
+    }
+
+    private var hosting: HostingPolicy { HostingPolicy(region: region, secureOnly: secureOnly) }
+
+    /// The table's selection; a click there counts as the user's own choice.
+    private var tableSelection: Binding<GPUOption.ID?> {
+        Binding(get: { chosen }, set: { value in
+            chosen = value
+            userPicked = value != nil
+            selectionNote = nil
+        })
     }
 
     var body: some View {
@@ -66,7 +87,15 @@ struct AddModelSheet: View {
             footer
         }
         .frame(width: 760, height: 600)
-        .task { if editing != nil && catalog.isEmpty { await loadCatalog() } }
+        .task {
+            if !hostingLoaded {
+                let start = editing?.hosting(default: model.state.settings.hosting) ?? model.state.settings.hosting
+                region = start.region
+                secureOnly = start.secureOnly
+                hostingLoaded = true
+            }
+            if editing != nil && catalog.isEmpty { await loadCatalog() }
+        }
     }
 
     private var header: some View {
@@ -82,7 +111,7 @@ struct AddModelSheet: View {
         switch step {
         case .find: String(localized: "Step 1 of 4: Find")
         case .check: String(localized: "Step 2 of 4: Check")
-        case .card: String(localized: "Step 3 of 4: Context and GPU")
+        case .card: String(localized: "Step 3 of 4: Location, context and GPU")
         case .finish: String(localized: "Step 4 of 4: Name and disk")
         }
     }
@@ -98,7 +127,7 @@ struct AddModelSheet: View {
             case .find:
                 EmptyView()
             case .check:
-                Button("Choose Context and GPU") {
+                Button("Choose Location and GPU") {
                     context = min(GPUSuggestion.defaultContext, info?.nativeContextTokens ?? GPUSuggestion.defaultContext)
                     step = .card
                     Task { await loadCatalog() }
@@ -110,9 +139,17 @@ struct AddModelSheet: View {
                     .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
                     .disabled(chosen == nil)
             case .finish:
-                Button(editing == nil ? "Add Model" : "Save") { Task { await save() } }
-                    .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
-                    .disabled(!nameIsValid)
+                if editing == nil {
+                    Button("Add Only") { Task { await save(start: false) } }
+                        .disabled(!nameIsValid)
+                    Button("Add and Start…") { Task { await save(start: true) } }
+                        .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                        .disabled(!nameIsValid)
+                } else {
+                    Button("Save") { Task { await save(start: false) } }
+                        .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                        .disabled(!nameIsValid)
+                }
             }
         }
         .padding(16)
@@ -151,7 +188,7 @@ struct AddModelSheet: View {
             .overlay {
                 if hits.isEmpty && !searching {
                     VStack(spacing: 8) {
-                        Text("Tip: 4-bit builds (AWQ, GPTQ, INT4) need half the memory and run faster.")
+                        Text("Tip: 4-bit builds (AWQ, GPTQ, NVFP4, or GGUF Q4) need half the memory and run faster.")
                         Link("Browse popular models on Hugging Face", destination: Links.huggingFace)
                     }
                     .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
@@ -187,7 +224,7 @@ struct AddModelSheet: View {
         do {
             let result = try await model.huggingFace.info(repo)
             info = result
-            if !result.format.isFourBit { variants = await model.huggingFace.fourBitVariants(of: repo) }
+            if !result.format.isFourBit && result.format != .gguf { variants = await model.huggingFace.fourBitVariants(of: repo) }
         } catch {
             info = ModelInfo(repoId: repo, access: .unreachable, gated: false, format: .unknown, weightBytes: 0,
                              nativeContextTokens: nil, license: nil, toolCallParser: nil, reasoningParser: nil)
@@ -195,7 +232,7 @@ struct AddModelSheet: View {
     }
 
     private func canRun(_ info: ModelInfo) -> Bool {
-        info.access == .open && info.format.runsOnVLLM && info.weightBytes > 0
+        info.access == .open && info.format.runsOnAnEngine && info.weightBytes > 0 && (info.format != .gguf || info.quant != nil)
     }
 
     private var checkStep: some View {
@@ -208,7 +245,31 @@ struct AddModelSheet: View {
                     problems(info)
                     if info.access == .open {
                         Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
-                            GridRow { Text("Format").foregroundStyle(.secondary); FormatBadge(format: info.format) }
+                            GridRow {
+                                Text("Format").foregroundStyle(.secondary)
+                                HStack { FormatBadge(format: info.format); if info.format == .gguf { Text("runs with llama.cpp").foregroundStyle(.secondary) } }
+                            }
+                            if let quants = info.quants, !quants.isEmpty {
+                                GridRow {
+                                    Text("Quantisation").foregroundStyle(.secondary)
+                                    Picker("Quantisation", selection: Binding(get: { info.quant ?? "" }, set: { self.info = info.choosing(quant: $0) })) {
+                                        ForEach(quants) { q in
+                                            Text("\(q.name) · \(Format.gigabytes(q.bytes))\(q.name == GGUF.recommended(quants)?.name ? String(localized: " · suggested") : "")").tag(q.name)
+                                        }
+                                    }
+                                    .labelsHidden()
+                                    .fixedSize()
+                                }
+                                if let q = quants.first(where: { $0.name == info.quant }) {
+                                    GridRow {
+                                        Text("")
+                                        Text(q.isVeryLow ? "Below 4 bits models get noticeably worse at code and tool calls."
+                                             : q.isHigh ? "Close to the original, but about twice the memory of 4 bits."
+                                             : "4 bits: half the memory of 8 bits, with little loss. A good default.")
+                                            .font(.caption).foregroundStyle(q.isVeryLow ? Color.orange : Color.secondary)
+                                    }
+                                }
+                            }
                             GridRow { Text("Download").foregroundStyle(.secondary); Text(Format.gigabytes(info.weightBytes)) }
                             if let native = info.nativeContextTokens {
                                 GridRow { Text("Longest context").foregroundStyle(.secondary); Text("\(Format.tokens(native)) tokens") }
@@ -266,9 +327,8 @@ struct AddModelSheet: View {
         case .unreachable:
             Label("Hugging Face could not be reached. Check the connection and try again.", systemImage: "wifi.exclamationmark")
         case .open:
-            if info.format == .gguf {
-                Label("This is a GGUF build. Podlight runs vLLM, which needs safetensors weights. Pick a 4-bit AWQ or GPTQ build instead.", systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.orange)
+            if info.format == .gguf && (info.quants ?? []).isEmpty {
+                Label("No GGUF files found in this repository.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
             } else if info.format == .mlx {
                 Label("MLX builds run on Apple chips only, not on RunPod's NVIDIA cards.", systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
@@ -294,18 +354,47 @@ struct AddModelSheet: View {
     }
 
     private func recompute(_ info: ModelInfo) {
-        options = GPUSuggestion.options(for: info, catalog: catalog, goal: goal, context: context,
-                                        hosting: model.state.settings.hosting)
-        if let preferred = editing?.preferredGPU, let match = options.first(where: { $0.choice == preferred }) {
-            chosen = match.id
-        } else if !options.contains(where: { $0.id == chosen }) {
-            chosen = options.first?.id
+        let previous = selectedOption?.choice ?? options.first { $0.id == chosen }?.choice ?? choice(from: chosen)
+        options = GPUSuggestion.options(for: info, catalog: catalog, goal: goal, context: context, hosting: hosting)
+        let result = GPUSuggestion.reselect(previous: previous, userPicked: userPicked, options: options)
+        chosen = result.selection.map { "\($0.cloud.rawValue)|\($0.gpuId)|\($0.count)" }
+        switch result.change {
+        case .unchanged:
+            selectionNote = nil
+        case .moreCards(_, let to):
+            selectionNote = String(localized: "Your card needs \(to.count) of itself for \(Format.tokens(context)) tokens; the selection follows.")
+        case .replaced:
+            userPicked = false
+            selectionNote = String(localized: "Your card no longer holds \(Format.tokens(context)) tokens here, so the suggestion is selected.")
         }
+    }
+
+    /// Rebuilds a choice from a row id (`cloud|gpu|count`), for a selection whose row is gone.
+    private func choice(from id: GPUOption.ID?) -> GPUChoice? {
+        guard let parts = id?.split(separator: "|", omittingEmptySubsequences: false), parts.count == 3,
+              let cloud = RunpodCloud(rawValue: String(parts[0])), let count = Int(parts[2]) else { return nil }
+        return GPUChoice(gpuId: String(parts[1]), cloud: cloud, count: count)
+    }
+
+    /// Card memory the model needs for the chosen context, so the effect of the context is visible.
+    private var requiredMemoryText: String? {
+        guard let info else { return nil }
+        let gib = Capacity.requiredGiB(weightsGiB: info.weightsGiB, contextTokens: min(context, info.nativeContextTokens ?? context),
+                                       kvBytesPerToken: info.kvBytesPerToken, engine: info.engine)
+        return String(localized: "For \(Format.tokens(context)) tokens the model needs about \(Int(gib.rounded(.up))) GB of card memory.")
     }
 
     private var cardStep: some View {
         VStack(alignment: .leading, spacing: 12) {
             Form {
+                Picker("Where pods may run", selection: $region) {
+                    Text("Anywhere").tag(HostingRegion.anywhere)
+                    Text("EU only").tag(HostingRegion.eu)
+                    Text("EU and EEA (incl. Iceland, Norway)").tag(HostingRegion.euEEA)
+                }
+                Toggle("Secure Cloud only", isOn: Binding(get: { secureOnly || region != .anywhere }, set: { secureOnly = $0 }))
+                    .disabled(region != .anywhere)
+                    .help("Certified data centers instead of community hosts. With a region, Podlight always uses Secure Cloud, because community hosts report no location.")
                 Picker("Context", selection: $context) {
                     ForEach(GPUSuggestion.contextSteps(upTo: info?.nativeContextTokens), id: \.self) {
                         Text("\(Format.tokens($0)) tokens").tag($0)
@@ -319,21 +408,33 @@ struct AddModelSheet: View {
                 .pickerStyle(.segmented)
             }
             .formStyle(.grouped)
-            .frame(height: 110)
+            .frame(height: 196)
             .scrollDisabled(true)
             .onChange(of: goal) { if let info { recompute(info) } }
             .onChange(of: context) { if let info { recompute(info) } }
+            .onChange(of: region) { if let info { recompute(info) } }
+            .onChange(of: secureOnly) { if let info { recompute(info) } }
+
+            HStack(alignment: .firstTextBaseline) {
+                if let requiredMemoryText { Text(requiredMemoryText) }
+                Spacer()
+                if !loadingCatalog { Text("\(options.count) options").foregroundStyle(.secondary) }
+            }
+            .font(.callout)
+            if let selectionNote {
+                Label(selectionNote, systemImage: "arrow.triangle.2.circlepath").font(.callout).foregroundStyle(.orange)
+            }
 
             if loadingCatalog { ProgressView("Asking RunPod which cards are free…") }
             if let catalogError { Label(catalogError, systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
             if !loadingCatalog && options.isEmpty && catalogError == nil, let info {
-                let feasible = GPUSuggestion.largestFeasibleContext(for: info, catalog: catalog, hosting: model.state.settings.hosting)
+                let feasible = GPUSuggestion.largestFeasibleContext(for: info, catalog: catalog, hosting: hosting)
                 Label(feasible > 0
                       ? String(localized: "No free card combination holds \(Format.tokens(context)) tokens right now. At most \(Format.tokens(feasible)) tokens are possible.")
-                      : String(localized: "No card at RunPod can hold this model right now. Try a 4-bit build, or allow more regions in Settings."),
+                      : String(localized: "No card at RunPod can hold this model right now. Try a 4-bit build, or allow more regions above."),
                       systemImage: "exclamationmark.triangle")
             }
-            Table(options, selection: $chosen) {
+            Table(options, selection: tableSelection) {
                 TableColumn("GPU") { o in
                     HStack {
                         Text(o.label)
@@ -375,7 +476,7 @@ struct AddModelSheet: View {
                                  toolCallParser: info.toolCallParser, reasoningParser: info.reasoningParser,
                                  contextTokens: option.contextTokens, goal: goal, preferredGPU: option.choice,
                                  schedule: schedule, createdAt: editing?.createdAt ?? Date(), kvProfile: info.kvProfile,
-                                 keepDisk: keepDisk)
+                                 keepDisk: keepDisk, hosting: hosting, preferredGPUName: option.label, quant: info.quant)
         item.expectedPricePerHour = option.pricePerHour
         return item
     }
@@ -409,17 +510,20 @@ struct AddModelSheet: View {
             if let draft, let option = selectedOption {
                 Section("Summary") {
                     LabeledContent("GPU", value: option.label)
+                    LabeledContent("Where", value: Describe.hosting(hosting))
                     LabeledContent("Context", value: String(localized: "\(Format.tokens(option.contextTokens)) tokens"))
-                    LabeledContent("Price while running", value: Format.perHour(option.pricePerHour + PodPlan.storagePerHour(for: draft)))
+                    LabeledContent("Price while running", value: Describe.price(gpu: option.pricePerHour, storage: PodPlan.storagePerHour(for: draft)))
                 }
             }
         }
         .formStyle(.grouped)
     }
 
-    private func save() async {
+    private func save(start: Bool) async {
         guard let item = draft else { return }
         await model.save(item)
+        // The start sheet opens once this one is gone; two sheets cannot share a window.
+        if start { model.startAfterAdding = item.id }
         dismiss()
     }
 }
