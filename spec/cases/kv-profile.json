@@ -1,0 +1,163 @@
+{
+  "description": "KV cache per token read from a model's config.json (Podlight 0.2, 2026-11-21). Implemented by the Swift engine; the Node service follows in milestone 2. bytesPerToken is compared with a tolerance of 1e-6.",
+  "cases": [
+    {
+      "id": "kvProfile/hybrid-qwen3.8-27b-matches-the-measurement",
+      "status": "swift",
+      "title": "Qwen3.8-27B (hybrid linear attention) computes to 64 KiB and measured 82.8 KiB on an L40S; hybrids carry a 1.3 factor",
+      "function": "kvProfile",
+      "input": {
+        "config": {
+          "text_config": {
+            "num_hidden_layers": 64,
+            "num_attention_heads": 24,
+            "num_key_value_heads": 4,
+            "head_dim": 256,
+            "hidden_size": 5120,
+            "full_attention_interval": 4,
+            "layer_types": [
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention",
+              "linear_attention",
+              "linear_attention",
+              "linear_attention",
+              "full_attention"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "bytesPerToken": 85196.8,
+        "attentionHeads": 24,
+        "hybrid": true
+      }
+    },
+    {
+      "id": "kvProfile/standard-qwen3-8b",
+      "status": "swift",
+      "title": "standard attention: 2 x layers x KV heads x head_dim x 2 bytes",
+      "function": "kvProfile",
+      "input": {
+        "config": {
+          "num_hidden_layers": 36,
+          "num_attention_heads": 32,
+          "num_key_value_heads": 8,
+          "head_dim": 128
+        }
+      },
+      "expected": {
+        "bytesPerToken": 147456,
+        "attentionHeads": 32,
+        "hybrid": false
+      }
+    },
+    {
+      "id": "kvProfile/head-dim-from-hidden-size",
+      "status": "swift",
+      "title": "without head_dim the head size is hidden_size / attention heads (Qwen2.5-0.5B)",
+      "function": "kvProfile",
+      "input": {
+        "config": {
+          "num_hidden_layers": 24,
+          "num_attention_heads": 14,
+          "num_key_value_heads": 2,
+          "hidden_size": 896
+        }
+      },
+      "expected": {
+        "bytesPerToken": 12288,
+        "attentionHeads": 14,
+        "hybrid": false
+      }
+    },
+    {
+      "id": "kvProfile/latent-attention",
+      "status": "swift",
+      "title": "multi-head latent attention stores one compressed vector per layer",
+      "function": "kvProfile",
+      "input": {
+        "config": {
+          "num_hidden_layers": 61,
+          "num_attention_heads": 128,
+          "kv_lora_rank": 512,
+          "qk_rope_head_dim": 64
+        }
+      },
+      "expected": {
+        "bytesPerToken": 70272,
+        "attentionHeads": 128,
+        "hybrid": false
+      }
+    },
+    {
+      "id": "kvProfile/unknown-without-layers",
+      "status": "swift",
+      "title": "a config without layer count gives no profile; the generic 83 KiB applies",
+      "function": "kvProfile",
+      "input": {
+        "config": {
+          "hidden_size": 4096
+        }
+      },
+      "expected": null
+    }
+  ]
+}

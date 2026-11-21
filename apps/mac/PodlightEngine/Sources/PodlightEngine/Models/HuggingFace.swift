@@ -51,9 +51,13 @@ public struct ModelInfo: Codable, Sendable, Equatable {
     public var toolCallParser: String?
     /// vLLM `--reasoning-parser` for thinking models.
     public var reasoningParser: String?
+    /// KV cache per token, from the model's config. Nil: unknown, the generic estimate applies.
+    public var kvProfile: KVProfile?
 
     public init(repoId: String, access: Access, gated: Bool, format: WeightFormat, weightBytes: Double,
-                nativeContextTokens: Int?, license: String?, toolCallParser: String?, reasoningParser: String?) {
+                nativeContextTokens: Int?, license: String?, toolCallParser: String?, reasoningParser: String?,
+                kvProfile: KVProfile? = nil) {
+        self.kvProfile = kvProfile
         self.repoId = repoId
         self.access = access
         self.gated = gated
@@ -66,6 +70,7 @@ public struct ModelInfo: Codable, Sendable, Equatable {
     }
 
     public var weightsGiB: Double { Capacity.bytesToGiB(weightBytes) }
+    public var kvBytesPerToken: Double { kvProfile?.bytesPerToken ?? Capacity.defaultKVBytesPerToken }
     public var weightsGB: Double { weightBytes / 1_000_000_000 }
 }
 
@@ -143,7 +148,8 @@ public struct HuggingFaceClient: Sendable {
             repoId: repoId, access: .open, gated: gated, format: format, weightBytes: weightBytes,
             nativeContextTokens: Self.context(from: config), license: license,
             toolCallParser: Self.toolCallParser(chatTemplate: template),
-            reasoningParser: Self.reasoningParser(chatTemplate: template)
+            reasoningParser: Self.reasoningParser(chatTemplate: template),
+            kvProfile: KVProfile.from(config: config)
         )
     }
 
@@ -154,6 +160,25 @@ public struct HuggingFaceClient: Sendable {
         let base = name.replacingOccurrences(of: #"[-_](Instruct|Chat|it)$"#, with: "", options: .regularExpression)
         guard let hits = try? await search(base, limit: 40) else { return [] }
         return hits.filter { $0.repoId != repoId && $0.format.isFourBit }
+    }
+
+    public enum TokenCheck: Sendable, Equatable {
+        case valid(user: String)
+        case invalid
+        case unreachable
+    }
+
+    /// Checks the token this client was made with, without changing anything.
+    public func checkToken() async -> TokenCheck {
+        guard token != nil else { return .invalid }
+        guard let (status, data) = try? await get("/api/whoami-v2") else { return .unreachable }
+        switch status {
+        case 200:
+            let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            return .valid(user: json?["name"] as? String ?? "")
+        case 401, 403: return .invalid
+        default: return .unreachable
+        }
     }
 
     // MARK: Rules (pure, tested)

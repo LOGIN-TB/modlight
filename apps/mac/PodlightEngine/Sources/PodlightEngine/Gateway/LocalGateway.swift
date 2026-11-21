@@ -2,20 +2,24 @@ import Foundation
 import Hummingbird
 import NIOCore
 
-/// The OpenAI-compatible endpoint for agents on this Mac, e.g. OpenCode.
+/// The OpenAI-compatible endpoint for agents, e.g. OpenCode.
 ///
-/// Listens on 127.0.0.1 only and always wants Podlight's key: without it any program or web page
-/// on this Mac could wake a pod at the owner's expense. The `model` field picks the model; a
+/// Listens on 127.0.0.1 by default; with "local network" switched on, on every interface so other
+/// computers can use it. Either way it always wants Podlight's key: without it any program, web
+/// page or device could wake a pod at the owner's expense. The `model` field picks the model; a
 /// stopped pod is woken and the request held until it answers (up to the wake wait).
 public struct LocalGateway: Sendable {
     public let port: Int
+    /// `127.0.0.1` for this Mac only, `0.0.0.0` for the local network.
+    public let host: String
     private let manager: PodManager
     private let keyProvider: @Sendable () -> String?
     private let transport: HTTPTransport
 
-    public init(port: Int, manager: PodManager, transport: HTTPTransport = URLSession.shared,
+    public init(port: Int, host: String = "127.0.0.1", manager: PodManager, transport: HTTPTransport = URLSession.shared,
                 key: @escaping @Sendable () -> String?) {
         self.port = port
+        self.host = host
         self.manager = manager
         self.keyProvider = key
         self.transport = transport
@@ -49,7 +53,7 @@ public struct LocalGateway: Sendable {
 
         let app = Application(
             router: router,
-            configuration: .init(address: .hostname("127.0.0.1", port: port), serverName: "Podlight"),
+            configuration: .init(address: .hostname(host, port: port), serverName: "Podlight"),
             onServerRunning: { _ in onReady() })
         try await app.run()
     }
@@ -166,6 +170,8 @@ struct AuthMiddleware<Context: RequestContext>: RouterMiddleware {
         let header = request.headers[.authorization] ?? ""
         let given = header.hasPrefix("Bearer ") ? String(header.dropFirst(7)) : ""
         guard Self.constantTimeEqual(given, expected) else {
+            // A pause on every wrong key makes guessing slow, which matters once the network can reach us.
+            try? await Task.sleep(for: .seconds(1))
             return LocalGateway.error(401, "Wrong or missing API key. Copy it from Podlight → Connection.", code: "invalid_api_key")
         }
         return try await next(request, context)

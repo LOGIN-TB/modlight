@@ -16,6 +16,10 @@ Ein neuer Pod lädt zuerst die Engine (etwa 9 GB) und dann das Modell. Danach st
 
 Manche Hersteller geben ihre Modelle erst nach Zustimmung frei. Öffne die Modellseite auf huggingface.co, stimme den Bedingungen zu und trage unter Einstellungen → Zugänge einen Token mit Leserecht ein.
 
+## „RunPod hat den Pod außerhalb deiner Region platziert“
+
+RunPod behandelt die gewählte Region nur als Vorgabe. Podlight hat den Pod gelöscht, bevor er etwas beantwortet hat. Starte noch einmal; meist klappt es beim nächsten Versuch. Bleibt es dabei, erlaube unter Einstellungen → Hosting „EU und EWR“ oder schalte „Nur Secure Cloud“ aus.
+
 ## OpenCode bekommt keine Antwort
 
 - Prüfe unter „Verbindung“, ob dort „Agenten auf diesem Mac können sich jetzt verbinden“ steht.

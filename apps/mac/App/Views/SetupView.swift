@@ -14,6 +14,7 @@ struct SetupView: View {
                 switch page {
                 case 0: welcome
                 case 1: RunpodKeyStep(onDone: { page = 2 })
+                case 2: HuggingFaceStep(onDone: { page = 3 })
                 default: done
                 }
             }
@@ -21,7 +22,7 @@ struct SetupView: View {
             .padding(24)
         }
         .frame(maxWidth: 600, maxHeight: 520)
-        .onAppear { if model.hasRunpodKey { page = 2 } }
+        .onAppear { if model.hasRunpodKey { page = model.hasHuggingFaceToken ? 3 : 2 } }
     }
 
     private var welcome: some View {
@@ -42,7 +43,7 @@ struct SetupView: View {
             HStack {
                 Button("Later") { dismiss() }.keyboardShortcut(.cancelAction)
                 Spacer()
-                Button("Set Up") { page = 1 }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                Button("Set Up") { page = 1 }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
             }
         }
     }
@@ -64,10 +65,10 @@ struct SetupView: View {
                 Spacer()
                 Button("Add First Model…") {
                     dismiss()
-                    model.selection = .models
+
                     Task { try? await Task.sleep(for: .milliseconds(300)); model.showingAddModel = true }
                 }
-                .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
             }
         }
     }
@@ -101,7 +102,7 @@ struct RunpodKeyStep: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Button("Check and Save") { Task { await check() } }
-                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                    .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
                     .disabled(key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || checking)
             }
         }
@@ -143,6 +144,62 @@ struct RunpodKeyStep: View {
             } catch {
                 result = .unreachable(error.localizedDescription)
             }
+        }
+    }
+}
+
+
+/// Optional, recommended: a Hugging Face token. Pods download over addresses RunPod shares, and
+/// Hugging Face limits anonymous downloads per address more strictly (huggingface.co/docs/hub/rate-limits).
+struct HuggingFaceStep: View {
+    @Environment(AppModel.self) private var model
+    let onDone: () -> Void
+    @State private var token = ""
+    @State private var checking = false
+    @State private var message: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Hugging Face token (recommended)").font(.title.weight(.semibold))
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Pods download models over addresses RunPod shares with other customers. Hugging Face limits downloads without an account more strictly, which can stop a download halfway.", systemImage: "arrow.down.circle")
+                Label("Gated models such as Llama or Gemma need a token, after you accept their licence on the model page.", systemImage: "lock")
+                Label("A token with read access is enough. It is stored in this Mac's keychain and passed to your own pods only.", systemImage: "key")
+            }
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            Link(destination: Links.huggingFaceTokens) { Label("Create a Token at Hugging Face", systemImage: "arrow.up.forward.square") }
+            SecureField("Paste the token (hf_…)", text: $token)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit { Task { await check() } }
+            if checking { ProgressView("Asking Hugging Face…").controlSize(.small) }
+            if let message { Text(message).foregroundStyle(.secondary) }
+            Spacer()
+            HStack {
+                Button("Skip") { onDone() }.keyboardShortcut(.cancelAction)
+                Spacer()
+                Button("Check and Save") { Task { await check() } }
+                    .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                    .disabled(token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || checking)
+            }
+        }
+    }
+
+    private func check() async {
+        let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        checking = true
+        defer { checking = false }
+        switch await HuggingFaceClient(token: trimmed).checkToken() {
+        case .valid(let user):
+            try? model.saveHuggingFaceToken(trimmed)
+            message = user.isEmpty ? String(localized: "Saved.") : String(localized: "Saved for \(user).")
+            try? await Task.sleep(for: .milliseconds(600))
+            onDone()
+        case .invalid:
+            message = String(localized: "Hugging Face does not accept this token.")
+        case .unreachable:
+            message = String(localized: "Hugging Face could not be reached.")
         }
     }
 }

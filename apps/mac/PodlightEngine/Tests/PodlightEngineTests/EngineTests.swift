@@ -137,7 +137,8 @@ struct HuggingFaceRuleTests {
 @Suite("Pod plan")
 struct PodPlanTests {
     @Test func startsTheStockImageWithPodlightsScriptAndAKeptDisk() throws {
-        let m = model(weightsGB: 19)
+        var m = model(weightsGB: 19)
+        m.keepDisk = true
         let request = PodPlan.request(for: m, podKey: "pod-secret", huggingFaceToken: "hf_x",
                                       runUntil: Date(timeIntervalSince1970: 1_000_000), heartbeatMinutes: 15)
         #expect(request.image == PodPlan.image)
@@ -209,5 +210,106 @@ struct EngineImageTests {
         #expect(RunpodGPUType.compare("13.10", "13.2") == 1)
         #expect(RunpodGPUType.compare("12.9", "13.0") == -1)
         #expect(RunpodGPUType.compare("13.0", "13") == 0)
+    }
+}
+
+@Suite("Context, KV cache and several cards")
+struct ContextAndCardsTests {
+    /// The relevant fields of RedHatAI/Qwen3.8-27B-INT4's config.json (read 2026-11-21).
+    nonisolated(unsafe) static let qwen38: [String: Any] = [
+        "text_config": ["num_hidden_layers": 64, "num_attention_heads": 24, "num_key_value_heads": 4, "head_dim": 256,
+                        "hidden_size": 5120, "full_attention_interval": 4,
+                        "layer_types": Array(repeating: ["linear_attention", "linear_attention", "linear_attention", "full_attention"], count: 16).flatMap { $0 }],
+    ]
+
+    @Test func hybridModelsMatchTheMeasurement() throws {
+        // Measured on an L40S: 134,106 tokens in 10.58 GiB = 82.8 KiB per token.
+        let profile = try #require(KVProfile.from(config: Self.qwen38))
+        #expect(profile.hybrid)
+        #expect(abs(profile.bytesPerToken / 1024 - 82.8) < 1.5)
+        #expect(profile.attentionHeads == 24)
+    }
+
+    @Test func standardModelsUseTheExactFormula() throws {
+        // Qwen3-8B: 36 layers × 8 KV heads × 128 × 2 (K, V) × 2 bytes = 144 KiB.
+        let profile = try #require(KVProfile.from(config: ["num_hidden_layers": 36, "num_attention_heads": 32,
+                                                           "num_key_value_heads": 8, "head_dim": 128]))
+        #expect(profile.bytesPerToken == 147_456)
+        #expect(!profile.hybrid)
+        // Qwen2.5-0.5B has no head_dim: hidden_size / heads = 64.
+        let small = try #require(KVProfile.from(config: ["num_hidden_layers": 24, "num_attention_heads": 14,
+                                                         "num_key_value_heads": 2, "hidden_size": 896]))
+        #expect(small.bytesPerToken == 12_288)
+    }
+
+    @Test func latentAttentionIsCompact() throws {
+        let profile = try #require(KVProfile.from(config: ["num_hidden_layers": 61, "num_attention_heads": 128,
+                                                           "kv_lora_rank": 512, "qk_rope_head_dim": 64]))
+        #expect(profile.bytesPerToken == Double(61 * 576 * 2))
+    }
+
+    @Test func contextIsNoLongerCappedAt64k() throws {
+        // A small model with a real KV profile and a 1M-token limit on an 80 GB card.
+        let info = ModelInfo(repoId: "o/m", access: .open, gated: false, format: .awq, weightBytes: 4e9,
+                             nativeContextTokens: 1_048_576, license: nil, toolCallParser: nil, reasoningParser: nil,
+                             kvProfile: KVProfile(bytesPerToken: 12_288, attentionHeads: 16, hybrid: false))
+        let catalog = [try gpu("NVIDIA H100 80GB HBM3", memory: 80, secure: 2.69)]
+        let options = GPUSuggestion.options(for: info, catalog: catalog, goal: .economical, context: 262_144)
+        #expect(options.first?.contextTokens == 262_144)
+        #expect(GPUSuggestion.contextSteps(upTo: 1_048_576).last == 1_048_576)
+    }
+
+    @Test func longContextsAreOfferedOnSeveralCards() throws {
+        let info = ModelInfo(repoId: "o/m", access: .open, gated: false, format: .awq, weightBytes: 19e9,
+                             nativeContextTokens: 262_144, license: nil, toolCallParser: nil, reasoningParser: nil,
+                             kvProfile: KVProfile.from(config: Self.qwen38))
+        var card = try gpu("NVIDIA L40S", memory: 48, secure: 0.86)
+        card.maxCount = .init(community: nil, secure: 8)
+        // 262k tokens at ~83 KiB need about 21 GiB of cache: more than one 48 GB card holds beside 17.7 GiB of weights.
+        let options = GPUSuggestion.options(for: info, catalog: [card], goal: .economical, context: 262_144)
+        let first = try #require(options.first)
+        #expect(first.choice.count == 2)
+        #expect(abs(first.pricePerHour - 1.72) < 0.001)
+        #expect(first.label == "2 × L40S")
+    }
+
+    @Test func cardCountsMustDivideTheAttentionHeads() throws {
+        let info = ModelInfo(repoId: "o/m", access: .open, gated: false, format: .awq, weightBytes: 19e9,
+                             nativeContextTokens: 1_048_576, license: nil, toolCallParser: nil, reasoningParser: nil,
+                             kvProfile: KVProfile(bytesPerToken: 300_000, attentionHeads: 6, hybrid: false))
+        var card = try gpu("NVIDIA L40S", memory: 48, secure: 0.86)
+        card.maxCount = .init(community: nil, secure: 8)
+        let counts = GPUSuggestion.options(for: info, catalog: [card], goal: .economical, context: 131_072).map(\.choice.count)
+        #expect(!counts.contains(4) && !counts.contains(8), "6 heads cannot be split across 4 or 8 cards")
+    }
+
+    @Test func hostingRulesFilterCardsAndPickDataCenters() throws {
+        var card = try gpu("NVIDIA L40S", memory: 48, secure: 0.86, community: 0.79)
+        card.dataCenters = [.init(id: "US-TX-3", name: nil, availability: .low), .init(id: "EUR-IS-2", name: nil, availability: .low)]
+        let model = PodlightModel(name: "m", repoId: "o/m", format: .awq, weightBytes: 10e9, nativeContextTokens: 65_536,
+                                  toolCallParser: nil, reasoningParser: nil, contextTokens: 32_768)
+        let eu = HostingPolicy(region: .eu)
+        #expect(GPUSuggestion.options(for: model.info, catalog: [card], goal: .economical, context: 32_768, hosting: eu).isEmpty,
+                "only offered outside the EU")
+        let eea = HostingPolicy(region: .euEEA, secureOnly: true)
+        let options = GPUSuggestion.options(for: model.info, catalog: [card], goal: .economical, context: 32_768, hosting: eea)
+        #expect(options.map(\.choice.cloud) == [.secure])
+        #expect(eea.dataCenterIds(in: [card]) == ["EUR-IS-2"])
+        #expect(HostingPolicy.anywhere.dataCenterIds(in: [card]) == nil)
+    }
+
+    @Test func storagePricesFollowRunPod() {
+        #expect(abs(StoragePricing.stoppedPerMonth(volumeGB: 30) - 6.0) < 0.0001)
+        #expect(abs(StoragePricing.runningPerHour(containerGB: 30, volumeGB: 30) - 6.0 / 730) < 0.000_001)
+    }
+
+    @Test func settingsFromVersion01KeepTheirValues() throws {
+        let old = #"{"dailyLimitUsd":null,"monthlyLimitUsd":50,"heartbeatMinutes":15,"wakeWaitSeconds":600,"gatewayPort":7635,"deleteStoppedAfterDays":3,"wakeOnRequest":true}"#
+        let settings = try JSONDecoder().decode(PodlightSettings.self, from: Data(old.utf8))
+        #expect(settings.dailyLimitUsd == nil && settings.monthlyLimitUsd == 50)
+        #expect(settings.hostingRegion == .anywhere && !settings.allowLAN)
+        // "No limit" survives a round trip.
+        let again = try JSONDecoder().decode(PodlightSettings.self, from: JSONEncoder().encode(settings))
+        #expect(again.dailyLimitUsd == nil)
     }
 }

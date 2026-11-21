@@ -95,7 +95,7 @@ private func close(_ a: Double, _ b: Double) -> Bool { abs(a - b) < 1e-9 }
 
 @Suite("spec/cases")
 struct SpecCaseTests {
-    static let all = Spec.load(["scheduler.json", "scheduler-podlight.json", "capacity.json"])
+    static let all = Spec.load(["scheduler.json", "scheduler-podlight.json", "capacity.json", "kv-profile.json"])
 
     @Test("every spec file was found and parsed")
     func specIsReadable() {
@@ -150,6 +150,16 @@ struct SpecCaseTests {
             struct I: Decodable { var gpuId: String }
             let i = try d.decode(I.self, from: c.input)
             #expect(Support(fp8: CardSupport.fp8(i.gpuId), nvfp4: CardSupport.nvfp4(i.gpuId)) == (try d.decode(Support.self, from: c.expected)))
+        case "kvProfile":
+            let input = try JSONSerialization.jsonObject(with: c.input) as? [String: Any]
+            let got = KVProfile.from(config: input?["config"] as? [String: Any])
+            if let expected = try d.decode(KVProfile?.self, from: c.expected) {
+                let value = try #require(got)
+                #expect(abs(value.bytesPerToken - expected.bytesPerToken) < 1e-6)
+                #expect(value.attentionHeads == expected.attentionHeads && value.hybrid == expected.hybrid)
+            } else {
+                #expect(got == nil)
+            }
         default:
             Issue.record("unknown function \(c.function) in \(c.file)")
         }

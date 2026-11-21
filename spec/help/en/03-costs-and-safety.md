@@ -30,6 +30,11 @@ With pods still running, Podlight asks before quitting. "Stop and Quit" is the d
 
 Closing the window does not quit Podlight. It keeps running in the menu bar, and your agent stays connected.
 
-## Stopped pods
+## Keep model on disk
 
-A stopped pod keeps its disk so the next start needs no download. RunPod charges a few cents per GB and month for it. Podlight deletes pods left unused for three days, disk included.
+For each model you decide whether it stays on a disk at RunPod between runs:
+
+- **Off (default):** at the end of a run Podlight deletes the pod. Nothing is billed until the next start. Each start downloads the model again, which takes 10 to 25 minutes.
+- **On:** the pod is only stopped and keeps its disk. The next start takes about a minute. RunPod charges 0.20 USD per GB and month for the disk while the pod is stopped, 0.10 USD while it runs. For 30 GB that is about 6 USD a month.
+
+Podlight shows these costs when you add a model, when you start it and under "Costs", and counts them towards your spending limits. Pods with a disk left unused for three days are deleted, disk included. Change the switch under "Edit" while the model is stopped.

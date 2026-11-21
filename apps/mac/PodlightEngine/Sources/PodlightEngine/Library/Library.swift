@@ -22,12 +22,20 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
     /// Optional recurring window plus idle stop and runtime ceiling. Idle stop is never 0.
     public var schedule: Schedule
     public var createdAt: Date
+    /// KV cache per token from the model's config; nil uses the generic estimate.
+    public var kvProfile: KVProfile?
+    /// Keep a volume disk between runs ("Modell zwischenspeichern"): restarts in about a minute,
+    /// but the disk is billed while the pod is stopped. Off: the pod is deleted at its end and
+    /// nothing is billed in between.
+    public var keepDisk: Bool
 
     public init(id: UUID = UUID(), name: String, repoId: String, format: WeightFormat, weightBytes: Double,
                 nativeContextTokens: Int?, toolCallParser: String?, reasoningParser: String?,
                 contextTokens: Int, concurrency: Int = 1, goal: SuggestionGoal = .balanced,
                 preferredGPU: GPUChoice? = nil, schedule: Schedule = PodlightModel.defaultSchedule,
-                createdAt: Date = Date()) {
+                createdAt: Date = Date(), kvProfile: KVProfile? = nil, keepDisk: Bool = false) {
+        self.kvProfile = kvProfile
+        self.keepDisk = keepDisk
         self.id = id
         self.name = name
         self.repoId = repoId
@@ -51,7 +59,35 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
     public var info: ModelInfo {
         ModelInfo(repoId: repoId, access: .open, gated: false, format: format, weightBytes: weightBytes,
                   nativeContextTokens: nativeContextTokens, license: nil,
-                  toolCallParser: toolCallParser, reasoningParser: reasoningParser)
+                  toolCallParser: toolCallParser, reasoningParser: reasoningParser, kvProfile: kvProfile)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, repoId, format, weightBytes, nativeContextTokens, toolCallParser, reasoningParser,
+             contextTokens, concurrency, goal, preferredGPU, expectedPricePerHour, schedule, createdAt,
+             kvProfile, keepDisk
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        repoId = try c.decode(String.self, forKey: .repoId)
+        format = try c.decode(WeightFormat.self, forKey: .format)
+        weightBytes = try c.decode(Double.self, forKey: .weightBytes)
+        nativeContextTokens = try c.decodeIfPresent(Int.self, forKey: .nativeContextTokens)
+        toolCallParser = try c.decodeIfPresent(String.self, forKey: .toolCallParser)
+        reasoningParser = try c.decodeIfPresent(String.self, forKey: .reasoningParser)
+        contextTokens = try c.decode(Int.self, forKey: .contextTokens)
+        concurrency = try c.decodeIfPresent(Int.self, forKey: .concurrency) ?? 1
+        goal = try c.decodeIfPresent(SuggestionGoal.self, forKey: .goal) ?? .balanced
+        preferredGPU = try c.decodeIfPresent(GPUChoice.self, forKey: .preferredGPU)
+        expectedPricePerHour = try c.decodeIfPresent(Double.self, forKey: .expectedPricePerHour)
+        schedule = try c.decodeIfPresent(Schedule.self, forKey: .schedule) ?? Self.defaultSchedule
+        createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        kvProfile = try c.decodeIfPresent(KVProfile.self, forKey: .kvProfile)
+        // Models from 0.1 always had a disk; keep their behaviour until the user changes it.
+        keepDisk = try c.decodeIfPresent(Bool.self, forKey: .keepDisk) ?? true
     }
 
     /// A served name derived from a repo id: `Qwen/Qwen3-8B-AWQ` → `qwen3-8b-awq`.
@@ -105,8 +141,16 @@ public struct ModelRun: Codable, Sendable, Equatable {
     public var fellBackFrom: [String]?
     public var lastHeartbeatAt: Date?
     public var persistentGB: Int?
+    /// Size of the container disk of the current pod, for the storage share of the cost.
+    public var containerGB: Int?
+    /// Storage cost per hour while running (container disk plus kept volume disk).
+    public var storagePerHour: Double?
+    /// Where RunPod placed the pod.
+    public var dataCenterId: String?
     /// Running time up to this moment is already in the spend ledger.
     public var accountedUntil: Date?
+    /// Storage of a stopped pod is booked up to here.
+    public var storageAccountedUntil: Date?
 
     public init() {}
 }
@@ -123,8 +167,52 @@ public struct PodlightSettings: Codable, Sendable, Equatable {
     public var deleteStoppedAfterDays: Int = 3
     /// Wake a stopped pod when an agent sends a request.
     public var wakeOnRequest: Bool = true
+    /// Where pods may run.
+    public var hostingRegion: HostingRegion = .anywhere
+    /// Only RunPod's Secure Cloud (certified data centers).
+    public var secureCloudOnly: Bool = false
+    /// Accept connections from other computers on the local network, not only from this Mac.
+    public var allowLAN: Bool = false
 
     public init() {}
+
+    public var hosting: HostingPolicy { HostingPolicy(region: hostingRegion, secureOnly: secureCloudOnly) }
+
+    private enum CodingKeys: String, CodingKey {
+        case dailyLimitUsd, monthlyLimitUsd, heartbeatMinutes, wakeWaitSeconds, gatewayPort, deleteStoppedAfterDays,
+             wakeOnRequest, hostingRegion, secureCloudOnly, allowLAN
+    }
+
+    // Every field optional on read, so a settings file from an older version keeps its values.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = PodlightSettings()
+        dailyLimitUsd = c.contains(.dailyLimitUsd) ? try c.decodeIfPresent(Double.self, forKey: .dailyLimitUsd) : d.dailyLimitUsd
+        monthlyLimitUsd = c.contains(.monthlyLimitUsd) ? try c.decodeIfPresent(Double.self, forKey: .monthlyLimitUsd) : d.monthlyLimitUsd
+        heartbeatMinutes = try c.decodeIfPresent(Int.self, forKey: .heartbeatMinutes) ?? d.heartbeatMinutes
+        wakeWaitSeconds = try c.decodeIfPresent(Int.self, forKey: .wakeWaitSeconds) ?? d.wakeWaitSeconds
+        gatewayPort = try c.decodeIfPresent(Int.self, forKey: .gatewayPort) ?? d.gatewayPort
+        deleteStoppedAfterDays = try c.decodeIfPresent(Int.self, forKey: .deleteStoppedAfterDays) ?? d.deleteStoppedAfterDays
+        wakeOnRequest = try c.decodeIfPresent(Bool.self, forKey: .wakeOnRequest) ?? d.wakeOnRequest
+        hostingRegion = try c.decodeIfPresent(HostingRegion.self, forKey: .hostingRegion) ?? d.hostingRegion
+        secureCloudOnly = try c.decodeIfPresent(Bool.self, forKey: .secureCloudOnly) ?? d.secureCloudOnly
+        allowLAN = try c.decodeIfPresent(Bool.self, forKey: .allowLAN) ?? d.allowLAN
+    }
+
+    // "No limit" is written as an explicit null: a missing key reads as the default limit.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(dailyLimitUsd, forKey: .dailyLimitUsd)
+        try c.encode(monthlyLimitUsd, forKey: .monthlyLimitUsd)
+        try c.encode(heartbeatMinutes, forKey: .heartbeatMinutes)
+        try c.encode(wakeWaitSeconds, forKey: .wakeWaitSeconds)
+        try c.encode(gatewayPort, forKey: .gatewayPort)
+        try c.encode(deleteStoppedAfterDays, forKey: .deleteStoppedAfterDays)
+        try c.encode(wakeOnRequest, forKey: .wakeOnRequest)
+        try c.encode(hostingRegion, forKey: .hostingRegion)
+        try c.encode(secureCloudOnly, forKey: .secureCloudOnly)
+        try c.encode(allowLAN, forKey: .allowLAN)
+    }
 }
 
 /// Everything Podlight persists, in one file.

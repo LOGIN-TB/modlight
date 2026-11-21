@@ -16,6 +16,10 @@ A new pod first downloads the engine (about 9 GB), then the model. Then vLLM sta
 
 Some publishers release their models only after you agree to their terms. Open the model page on huggingface.co, accept the terms, and add a token with read access under Settings → Access.
 
+## "RunPod placed the pod outside your chosen region"
+
+RunPod treats the chosen region as a preference only. Podlight deleted the pod before it answered anything. Start again; usually the next attempt works. If it keeps happening, allow "EU and EEA" under Settings → Hosting or switch off "Secure Cloud only".
+
 ## OpenCode gets no answer
 
 - Check that "Connection" says "Agents on this Mac can connect now."

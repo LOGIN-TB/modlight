@@ -32,12 +32,16 @@
     "PL-A11Y-003",
     "PL-TXT-001",
     "PL-STATE-001",
-    "PL-PRIV-001"
+    "PL-PRIV-001",
+    "PL-UI-006",
+    "PL-NAV-004",
+    "PL-NET-001",
+    "PL-INS-001"
   ],
   "criteria": [
     {
       "id": "PL-NAV-001",
-      "requirement": "Hauptfenster als NavigationSplitView: Seitenleiste mit „Dieser Mac“ (Modelle, Verbindungen, Kosten) und später „Server“, höchstens zwei Ebenen, standardmäßig sichtbar",
+      "requirement": "Main window as NavigationSplitView: sidebar with the models, then Connection, Costs, Settings; at most two levels, visible by default",
       "origin": "hig",
       "source_ids": [
         154,
@@ -238,9 +242,11 @@
         138,
         68
       ],
-      "status": "fail",
-      "evidence": [],
-      "reason": "Not implemented in 0.1: no notifications yet. The menu bar shows time left instead."
+      "status": "not_tested",
+      "evidence": [
+        "apps/mac/App/Notifier.swift"
+      ],
+      "reason": "Implemented in 0.2 (ready, 10 minutes before the end with Extend, limit, safety stop, outside region); not yet verified with real notifications."
     },
     {
       "id": "PL-COST-001",
@@ -426,6 +432,53 @@
       "status": "not_tested",
       "evidence": [],
       "reason": "Implemented; not yet verified interactively (VoiceOver, keyboard-only, real window states). Open for 0.2."
+    },
+    {
+      "id": "PL-UI-006",
+      "requirement": "Liquid Glass via standard components: NavigationSplitView sidebar and toolbar without custom backgrounds behind bars; glass only on controls (prominent Start/Stop), never on content",
+      "origin": "hig",
+      "source_ids": [
+        70,
+        154,
+        167
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Implemented in 0.2; to be verified in a real window (glass is not visible in offscreen snapshots)."
+    },
+    {
+      "id": "PL-NAV-004",
+      "requirement": "Settings reachable from the sidebar and with ⌘, (same content); limits editable in place from Costs",
+      "origin": "product",
+      "source_ids": [
+        94
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Implemented in 0.2; to be verified in a real window (glass is not visible in offscreen snapshots)."
+    },
+    {
+      "id": "PL-NET-001",
+      "requirement": "Local-network access is opt-in, explains that the connection is unencrypted, and always requires the key",
+      "origin": "product",
+      "source_ids": [
+        87
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Implemented in 0.2; to be verified in a real window (glass is not visible in offscreen snapshots)."
+    },
+    {
+      "id": "PL-INS-001",
+      "requirement": "Install: designed disk image window; in-app offer to move to Applications, animation off with Reduce Motion",
+      "origin": "engineering",
+      "source_ids": [
+        73,
+        59
+      ],
+      "status": "not_tested",
+      "evidence": [],
+      "reason": "Implemented in 0.2; to be verified in a real window (glass is not visible in offscreen snapshots)."
     }
   ]
 }

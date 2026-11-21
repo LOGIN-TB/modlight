@@ -1,10 +1,12 @@
 import PodlightEngine
 import SwiftUI
 
-/// Adding a model in four short steps: find it, check it, choose a card, name it.
+/// Adding a model in four short steps: find it, check it, choose context and card, name it.
+/// Editing an existing model opens at the third step.
 struct AddModelSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    private let editing: PodlightModel?
 
     enum Step: Int { case find, check, card, finish }
     @State private var step: Step = .find
@@ -28,10 +30,23 @@ struct AddModelSheet: View {
     @State private var loadingCatalog = false
     @State private var catalogError: String?
 
-    // Finish
+    // Context and finish
     @State private var name = ""
-    @State private var context = 32_768
+    @State private var context = GPUSuggestion.defaultContext
     @State private var idleMinutes = 30
+    @State private var keepDisk = false
+
+    init(editing: PodlightModel? = nil) {
+        self.editing = editing
+        guard let editing else { return }
+        _step = State(initialValue: .card)
+        _info = State(initialValue: editing.info)
+        _name = State(initialValue: editing.name)
+        _context = State(initialValue: editing.contextTokens)
+        _idleMinutes = State(initialValue: editing.schedule.idleStopMinutes)
+        _keepDisk = State(initialValue: editing.keepDisk)
+        _goal = State(initialValue: editing.goal)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -50,12 +65,13 @@ struct AddModelSheet: View {
             Divider()
             footer
         }
-        .frame(width: 720, height: 560)
+        .frame(width: 760, height: 600)
+        .task { if editing != nil && catalog.isEmpty { await loadCatalog() } }
     }
 
     private var header: some View {
         HStack {
-            Text("Add Model").font(.title2.weight(.semibold))
+            Text(editing == nil ? "Add Model" : "Edit \(editing?.name ?? "")").font(.title2.weight(.semibold))
             Spacer()
             Text(stepTitle).foregroundStyle(.secondary)
         }
@@ -66,30 +82,36 @@ struct AddModelSheet: View {
         switch step {
         case .find: String(localized: "Step 1 of 4: Find")
         case .check: String(localized: "Step 2 of 4: Check")
-        case .card: String(localized: "Step 3 of 4: GPU")
-        case .finish: String(localized: "Step 4 of 4: Name")
+        case .card: String(localized: "Step 3 of 4: Context and GPU")
+        case .finish: String(localized: "Step 4 of 4: Name and disk")
         }
     }
 
     private var footer: some View {
         HStack {
-            if step != .find { Button("Back") { step = Step(rawValue: step.rawValue - 1) ?? .find } }
+            if step != .find && !(editing != nil && step == .card) {
+                Button("Back") { step = Step(rawValue: step.rawValue - 1) ?? .find }
+            }
             Spacer()
             Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
             switch step {
             case .find:
                 EmptyView()
             case .check:
-                Button("Choose GPU") { step = .card; Task { await loadCatalog() } }
-                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                Button("Choose Context and GPU") {
+                    context = min(GPUSuggestion.defaultContext, info?.nativeContextTokens ?? GPUSuggestion.defaultContext)
+                    step = .card
+                    Task { await loadCatalog() }
+                }
+                    .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
                     .disabled(!(info.map(canRun) ?? false))
             case .card:
                 Button("Continue") { prepareFinish(); step = .finish }
-                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                    .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
                     .disabled(chosen == nil)
             case .finish:
-                Button("Add Model") { Task { await save() } }
-                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                Button(editing == nil ? "Add Model" : "Save") { Task { await save() } }
+                    .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
                     .disabled(!nameIsValid)
             }
         }
@@ -195,6 +217,12 @@ struct AddModelSheet: View {
                                 Text("Tool calls").foregroundStyle(.secondary)
                                 Text(info.toolCallParser != nil ? "Yes, for coding agents" : "No: coding agents will not work well")
                             }
+                            if let kv = info.kvProfile {
+                                GridRow {
+                                    Text("Memory per token").foregroundStyle(.secondary)
+                                    Text("\(Int((kv.bytesPerToken / 1024).rounded())) KiB, read from the model")
+                                }
+                            }
                             if let license = info.license {
                                 GridRow { Text("Licence").foregroundStyle(.secondary); Text(license) }
                             }
@@ -239,7 +267,7 @@ struct AddModelSheet: View {
             Label("Hugging Face could not be reached. Check the connection and try again.", systemImage: "wifi.exclamationmark")
         case .open:
             if info.format == .gguf {
-                Label("This is a GGUF build. Podlight 0.1 runs vLLM, which needs safetensors weights. Pick a 4-bit AWQ or GPTQ build instead.", systemImage: "exclamationmark.triangle")
+                Label("This is a GGUF build. Podlight runs vLLM, which needs safetensors weights. Pick a 4-bit AWQ or GPTQ build instead.", systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
             } else if info.format == .mlx {
                 Label("MLX builds run on Apple chips only, not on RunPod's NVIDIA cards.", systemImage: "exclamationmark.triangle")
@@ -266,39 +294,60 @@ struct AddModelSheet: View {
     }
 
     private func recompute(_ info: ModelInfo) {
-        options = GPUSuggestion.options(for: info, catalog: catalog, goal: goal)
-        chosen = options.first?.id
+        options = GPUSuggestion.options(for: info, catalog: catalog, goal: goal, context: context,
+                                        hosting: model.state.settings.hosting)
+        if let preferred = editing?.preferredGPU, let match = options.first(where: { $0.choice == preferred }) {
+            chosen = match.id
+        } else if !options.contains(where: { $0.id == chosen }) {
+            chosen = options.first?.id
+        }
     }
 
     private var cardStep: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Picker("What matters most?", selection: $goal) {
-                Text("Economical").tag(SuggestionGoal.economical)
-                Text("Balanced").tag(SuggestionGoal.balanced)
-                Text("Fast").tag(SuggestionGoal.fast)
+            Form {
+                Picker("Context", selection: $context) {
+                    ForEach(GPUSuggestion.contextSteps(upTo: info?.nativeContextTokens), id: \.self) {
+                        Text("\(Format.tokens($0)) tokens").tag($0)
+                    }
+                }
+                Picker("What matters most?", selection: $goal) {
+                    Text("Economical").tag(SuggestionGoal.economical)
+                    Text("Balanced").tag(SuggestionGoal.balanced)
+                    Text("Fast").tag(SuggestionGoal.fast)
+                }
+                .pickerStyle(.segmented)
             }
-            .pickerStyle(.segmented)
+            .formStyle(.grouped)
+            .frame(height: 110)
+            .scrollDisabled(true)
             .onChange(of: goal) { if let info { recompute(info) } }
+            .onChange(of: context) { if let info { recompute(info) } }
+
             if loadingCatalog { ProgressView("Asking RunPod which cards are free…") }
             if let catalogError { Label(catalogError, systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
-            if !loadingCatalog && options.isEmpty && catalogError == nil {
-                Label("No card at RunPod can hold this model right now. Try a 4-bit build.", systemImage: "exclamationmark.triangle")
+            if !loadingCatalog && options.isEmpty && catalogError == nil, let info {
+                let feasible = GPUSuggestion.largestFeasibleContext(for: info, catalog: catalog, hosting: model.state.settings.hosting)
+                Label(feasible > 0
+                      ? String(localized: "No free card combination holds \(Format.tokens(context)) tokens right now. At most \(Format.tokens(feasible)) tokens are possible.")
+                      : String(localized: "No card at RunPod can hold this model right now. Try a 4-bit build, or allow more regions in Settings."),
+                      systemImage: "exclamationmark.triangle")
             }
             Table(options, selection: $chosen) {
                 TableColumn("GPU") { o in
                     HStack {
-                        Text(o.displayName)
+                        Text(o.label)
                         if o.id == options.first?.id { Text("Suggested").font(.caption).padding(.horizontal, 5).background(.tint.opacity(0.15), in: .capsule) }
                     }
                 }
-                TableColumn("Memory") { o in Text("\(o.memoryGiB) GB") }.width(70)
-                TableColumn("Cloud") { o in Text(o.choice.cloud == .secure ? "Secure" : "Community") }.width(90)
+                TableColumn("Memory") { o in Text("\(o.memoryGiB * o.choice.count) GB") }.width(70)
+                TableColumn("Cloud") { o in Text(o.choice.cloud == .secure ? "Secure" : "Community") }.width(84)
                 TableColumn("Price") { o in Text(Format.perHour(o.pricePerHour)) }.width(80)
-                TableColumn("Speed (est.)") { o in Text(Format.speed(o.estimatedTokensPerSecond)) }.width(110)
-                TableColumn("Context") { o in Text(Format.tokens(o.contextTokens)) }.width(70)
+                TableColumn("Speed (est.)") { o in Text(Format.speed(o.estimatedTokensPerSecond)) }.width(100)
+                TableColumn("Where") { o in Text(o.dataCenters.isEmpty ? "–" : o.dataCenters.prefix(2).joined(separator: ", ")) }.width(110)
             }
-            Text("Speeds are estimates from memory bandwidth. If the chosen card is taken when you start, Podlight tries the next ones in this list.")
-                .font(.caption).foregroundStyle(.secondary)
+            Text("Longer contexts need more memory, so they may need a larger card or several. Speeds are estimates from memory bandwidth. If the chosen card is taken when you start, Podlight tries the next ones in this list.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -306,53 +355,70 @@ struct AddModelSheet: View {
 
     private var selectedOption: GPUOption? { options.first { $0.id == chosen } }
 
-    private func prepareFinish() {
-        guard let info, let option = selectedOption else { return }
-        if name.isEmpty { name = PodlightModel.suggestedName(for: info.repoId) }
-        context = option.contextTokens
-    }
 
-    private var contextChoices: [Int] {
-        let ceiling = selectedOption?.contextTokens ?? 32_768
-        let steps = [8_192, 16_384, 32_768, 65_536, 131_072, 262_144].filter { $0 <= ceiling }
-        return steps.contains(ceiling) ? steps : steps + [ceiling]
+    private func prepareFinish() {
+        guard let info else { return }
+        if name.isEmpty { name = PodlightModel.suggestedName(for: info.repoId) }
     }
 
     private var nameIsValid: Bool {
-        PodlightModel.isValidName(name) && !model.state.models.contains { $0.name == name }
+        PodlightModel.isValidName(name) && !model.state.models.contains { $0.name == name && $0.id != editing?.id }
+    }
+
+    /// The model as it would be saved, for cost previews.
+    private var draft: PodlightModel? {
+        guard let info, let option = selectedOption else { return nil }
+        var schedule = editing?.schedule ?? PodlightModel.defaultSchedule
+        schedule.idleStopMinutes = idleMinutes
+        var item = PodlightModel(id: editing?.id ?? UUID(), name: name, repoId: info.repoId, format: info.format,
+                                 weightBytes: info.weightBytes, nativeContextTokens: info.nativeContextTokens,
+                                 toolCallParser: info.toolCallParser, reasoningParser: info.reasoningParser,
+                                 contextTokens: option.contextTokens, goal: goal, preferredGPU: option.choice,
+                                 schedule: schedule, createdAt: editing?.createdAt ?? Date(), kvProfile: info.kvProfile,
+                                 keepDisk: keepDisk)
+        item.expectedPricePerHour = option.pricePerHour
+        return item
     }
 
     private var finishStep: some View {
         Form {
-            TextField("Name for agents", text: $name)
-            if !name.isEmpty && !nameIsValid {
-                Text(model.state.models.contains { $0.name == name }
-                     ? "Another model already uses this name."
-                     : "Use lowercase letters, digits, dots and dashes.")
-                    .font(.caption).foregroundStyle(.red)
+            Section {
+                TextField("Name for agents", text: $name)
+                    .disabled(editing != nil)
+                if !name.isEmpty && !nameIsValid {
+                    Text(model.state.models.contains { $0.name == name }
+                         ? "Another model already uses this name."
+                         : "Use lowercase letters, digits, dots and dashes.")
+                        .font(.caption).foregroundStyle(.red)
+                }
+                Picker("Stop when idle for", selection: $idleMinutes) {
+                    ForEach([10, 15, 30, 60, 120], id: \.self) { Text("\($0) minutes").tag($0) }
+                }
             }
-            Picker("Context", selection: $context) {
-                ForEach(contextChoices, id: \.self) { Text("\(Format.tokens($0)) tokens").tag($0) }
+            Section {
+                Toggle("Keep model on disk", isOn: $keepDisk)
+                if let draft {
+                    Text(keepDisk
+                         ? "The next start takes about a minute instead of 10–25. The disk (\(PodPlan.persistentGB(for: draft)) GB) costs about \(Format.money(StoragePricing.stoppedPerMonth(volumeGB: PodPlan.persistentGB(for: draft)))) a month while the model is stopped. Podlight deletes it after \(model.state.settings.deleteStoppedAfterDays) days without use."
+                         : "Nothing is billed while the model is stopped. Each start downloads the model again, which takes 10–25 minutes.")
+                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            } header: {
+                Text("Disk")
             }
-            Picker("Stop when idle for", selection: $idleMinutes) {
-                ForEach([10, 15, 30, 60, 120], id: \.self) { Text("\($0) minutes").tag($0) }
-            }
-            if let option = selectedOption {
-                LabeledContent("GPU", value: "\(option.displayName) · \(Format.perHour(option.pricePerHour))")
+            if let draft, let option = selectedOption {
+                Section("Summary") {
+                    LabeledContent("GPU", value: option.label)
+                    LabeledContent("Context", value: String(localized: "\(Format.tokens(option.contextTokens)) tokens"))
+                    LabeledContent("Price while running", value: Format.perHour(option.pricePerHour + PodPlan.storagePerHour(for: draft)))
+                }
             }
         }
         .formStyle(.grouped)
     }
 
     private func save() async {
-        guard let info, let option = selectedOption else { return }
-        var schedule = PodlightModel.defaultSchedule
-        schedule.idleStopMinutes = idleMinutes
-        var item = PodlightModel(name: name, repoId: info.repoId, format: info.format, weightBytes: info.weightBytes,
-                                 nativeContextTokens: info.nativeContextTokens, toolCallParser: info.toolCallParser,
-                                 reasoningParser: info.reasoningParser, contextTokens: context, goal: goal,
-                                 preferredGPU: option.choice, schedule: schedule)
-        item.expectedPricePerHour = option.pricePerHour
+        guard let item = draft else { return }
         await model.save(item)
         dismiss()
     }

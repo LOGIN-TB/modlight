@@ -47,7 +47,8 @@ class WatchdogTest(unittest.TestCase):
         full = dict(os.environ, RUNPOD_POD_ID="pod123", RUNPOD_API_KEY="pod-scoped", PODLIGHT_API_KEY="gw",
                     PODLIGHT_HEARTBEAT_MINUTES="0.05", PODLIGHT_BOOT_GRACE_MINUTES="0", PODLIGHT_CHECK_SECONDS="0.3",
                     PODLIGHT_WATCHDOG_PORT=str(self.port), PODLIGHT_WATCHDOG_HOST="127.0.0.1", PODLIGHT_RUNPOD_API=f"http://127.0.0.1:{self.api.port}",
-                    PODLIGHT_ENGINE_PID_FILE=self.pidfile)
+                    PODLIGHT_ENGINE_PID_FILE=self.pidfile, PODLIGHT_ENGINE_EXIT_FILE=self.pidfile + ".exit",
+                    PODLIGHT_ENGINE_LOG=self.pidfile + ".log", PODLIGHT_ENGINE_EXIT_GRACE="0")
         full.update(env)
         self.output = open(f"/tmp/podlight-test-watchdog-{self.port}.log", "w+")
         self.proc = subprocess.Popen([sys.executable, "-I", WATCHDOG], env=full,
@@ -65,7 +66,8 @@ class WatchdogTest(unittest.TestCase):
         self.proc.kill(); self.proc.wait()
         self.output.close(); os.remove(self.output.name)
         self.api.close()
-        if os.path.exists(self.pidfile): os.remove(self.pidfile)
+        for path in (self.pidfile, self.pidfile + ".exit", self.pidfile + ".log"):
+            if os.path.exists(path): os.remove(path)
 
     def post(self, path, body, key="gw"):
         # http.client directly: urllib consults the system proxy settings on every request, which
@@ -112,6 +114,31 @@ class WatchdogTest(unittest.TestCase):
         dead = subprocess.Popen(["true"]); dead.wait()
         self.start(PODLIGHT_HEARTBEAT_MINUTES="10")
         with open(self.pidfile, "w") as f: f.write(str(dead.pid))
+        self.assertEqual(len(self.wait_for_stop(10)), 1)
+
+    def get(self, path, key="gw"):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            conn.request("GET", path, headers={"Authorization": f"Bearer {key}"})
+            response = conn.getresponse()
+            return response.status, json.loads(response.read() or b"{}")
+        finally:
+            conn.close()
+
+    def test_an_engine_exit_waits_for_the_grace_period_and_serves_the_log(self):
+        # Podlight reads why the engine failed during the grace period; RunPod keeps no output.
+        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_ENGINE_EXIT_GRACE="3")
+        with open(self.pidfile + ".log", "w") as f:
+            f.write("INFO starting\nValueError: The model's max seq len is larger than the KV cache\n")
+        with open(self.pidfile + ".exit", "w") as f:
+            f.write("1")
+        time.sleep(1.5)
+        self.assertEqual(self.api.stops, [], "must not stop before the grace period")
+        status, body = self.get("/")
+        self.assertEqual((status, body["engineAlive"], body["engineExitCode"]), (200, False, 1))
+        status, log = self.get("/log")
+        self.assertIn("KV cache", log["lines"][-1])
+        self.assertEqual(self.get("/log", key="wrong")[0], 401)
         self.assertEqual(len(self.wait_for_stop(10)), 1)
 
     def test_a_past_deadline_from_the_environment_is_ignored(self):

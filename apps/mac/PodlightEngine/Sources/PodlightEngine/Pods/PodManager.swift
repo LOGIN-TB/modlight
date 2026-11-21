@@ -127,20 +127,28 @@ public actor PodManager {
         try await updateRun(id) { $0.phase = .creating; $0.lastReason = nil; $0.lastMessage = nil; $0.fellBackFrom = nil }
         do {
             let catalog = try await client.gpuCatalog()
-            let choices = PodPlan.choices(for: model, catalog: catalog)
+            let hosting = state.settings.hosting
+            let choices = PodPlan.choices(for: model, catalog: catalog, hosting: hosting)
             guard !choices.isEmpty else { throw PodlightError.noSuitableCard }
             let token = try? keychain.read(.huggingFaceToken)
             let request = PodPlan.request(for: model, podKey: podKey, huggingFaceToken: token, runUntil: runUntil,
-                                          heartbeatMinutes: state.settings.heartbeatMinutes)
+                                          heartbeatMinutes: state.settings.heartbeatMinutes,
+                                          dataCenterIds: hosting.dataCenterIds(in: catalog))
             let created = try await client.createPod(request, tryingInOrder: choices, catalog: catalog)
             let names = Dictionary(catalog.map { ($0.id, $0.name) }, uniquingKeysWith: { a, _ in a })
-            let price = created.pod.cost ?? catalog.first { $0.id == created.choice.gpuId }?.pricePerHour(in: created.choice.cloud)
+            let price = created.pod.cost ?? catalog.first { $0.id == created.choice.gpuId }
+                .flatMap { $0.pricePerHour(in: created.choice.cloud) }.map { $0 * Double(created.choice.count) }
+            let storage = PodPlan.storagePerHour(for: model)
+            let name = names[created.choice.gpuId] ?? created.choice.gpuId
             try await updateRun(id) {
                 $0.podId = created.pod.id
                 $0.gpu = created.choice
-                $0.gpuName = names[created.choice.gpuId] ?? created.choice.gpuId
+                $0.gpuName = created.choice.count > 1 ? "\(created.choice.count) × \(name)" : name
                 $0.pricePerHour = price
-                $0.persistentGB = PodPlan.persistentGB(for: model)
+                $0.storagePerHour = storage
+                $0.persistentGB = model.keepDisk ? PodPlan.persistentGB(for: model) : nil
+                $0.containerGB = PodPlan.containerGB(for: model)
+                $0.dataCenterId = created.pod.dataCenterId
                 $0.fellBackFrom = created.attempts.filter { $0.outcome != .created }.map { names[$0.choice.gpuId] ?? $0.choice.gpuId }
             }
             try await markStarted(id, pod: created.pod, runUntil: runUntil, manual: manual)
@@ -182,16 +190,25 @@ public actor PodManager {
         }
     }
 
-    /// Stops a pod (GPU billing ends, the disk stays). `reason` is a schedule reason code or
-    /// `manual` / `app-quit`.
+    /// Ends a run. With a kept disk the pod is stopped (GPU billing ends, the disk stays and is
+    /// billed); without, it is deleted and nothing is billed until the next start.
+    /// `reason` is a schedule reason code or `manual` / `app-quit`.
     public func stop(_ id: UUID, reason: String = "manual") async throws {
-        let run = await store.current().run(id)
+        let state = await store.current()
+        let run = state.run(id)
         guard let podId = run.podId else { return }
         account(id: id, run: run)
         try await updateRun(id) { $0.phase = .stopping }
+        let keepDisk = state.models.first { $0.id == id }?.keepDisk ?? true
         do {
-            let pod = try await client().perform(.stop, onPod: podId)
-            try await markStopped(id, status: pod.status, reason: reason)
+            if keepDisk {
+                let pod = try await client().perform(.stop, onPod: podId)
+                try await markStopped(id, status: pod.status, reason: reason)
+            } else {
+                try await client().deletePod(id: podId)
+                try await markStopped(id, status: nil, reason: reason)
+                try await updateRun(id) { $0.podId = nil; $0.podStatus = nil; $0.persistentGB = nil }
+            }
         } catch let error as RunpodError where error.isNotFound {
             try await updateRun(id) { $0.podId = nil; $0.phase = .stopped; $0.podStatus = nil }
         } catch let error as RunpodError {
@@ -203,6 +220,7 @@ public actor PodManager {
     private func markStopped(_ id: UUID, status: PodState.Status?, reason: String) async throws {
         let t = now()
         try await updateRun(id) {
+            $0.storageAccountedUntil = t
             $0.podStatus = status ?? .exited
             $0.phase = .stopped
             $0.engineReady = false
@@ -289,6 +307,22 @@ public actor PodManager {
             await applyRules(model.id)
         }
         await deleteLongStopped()
+        await accountStoredDisks()
+    }
+
+    /// A stopped pod's kept volume disk is billed (0.20 USD/GB/month); book it as it accrues so
+    /// limits and the cost view include it.
+    private func accountStoredDisks() async {
+        let t = now()
+        try? await store.update { state in
+            for (id, run) in state.runs where run.podId != nil && run.phase == .stopped {
+                guard let gb = run.persistentGB, gb > 0, let since = run.storageAccountedUntil ?? run.stoppedAt else { continue }
+                let hours = max(0, t.timeIntervalSince(since)) / 3600
+                let cost = StoragePricing.stoppedPerMonth(volumeGB: gb) / StoragePricing.hoursPerMonth * hours
+                state.spendByDay[PodlightState.dayKey(t), default: 0] += cost
+                state.runs[id]?.storageAccountedUntil = t
+            }
+        }
     }
 
     /// Brings one model's record in line with RunPod and its engine.
@@ -309,10 +343,34 @@ public actor PodManager {
         }
 
         account(id: id, run: run)
+
+        // RunPod treats requested data centers as a preference. A pod outside the allowed region
+        // is deleted at once, before it serves anything.
+        let hosting = await store.current().settings.hosting
+        // A running pod that reports no data center cannot be confirmed inside the region either.
+        let unverifiable = hosting.needsPlacementCheck && pod.dataCenterId == nil && pod.status == .running
+        if unverifiable || pod.dataCenterId.map({ !hosting.allows(dataCenterId: $0) }) == true {
+            let center = pod.dataCenterId ?? "unknown"
+            try? await client.deletePod(id: podId)
+            try? await updateRun(id) {
+                $0.podId = nil; $0.podStatus = nil; $0.phase = .failed; $0.engineReady = false
+                $0.lastReason = "outside-region"; $0.lastMessage = center; $0.dataCenterId = center
+            }
+            return
+        }
         var ready = run.engineReady
         var heartbeatAt = run.lastHeartbeatAt
         if pod.status == .running {
-            if await heartbeat(podId: podId, modelId: id, runUntil: run.runUntil) { heartbeatAt = now() }
+            let watchdog = await heartbeat(podId: podId, modelId: id, runUntil: run.runUntil)
+            if watchdog != nil { heartbeatAt = now() }
+            // The engine died: say why, then end the pod now instead of after the watchdog's grace.
+            if watchdog?.engineAlive == false {
+                let message = await engineFailure(podId: podId, modelId: id)
+                    ?? "exit code \(watchdog?.engineExitCode.map(String.init) ?? "?")"
+                try? await stop(id, reason: "engine-exited")
+                try? await updateRun(id) { $0.phase = .failed; $0.lastReason = "engine-exited"; $0.lastMessage = message }
+                return
+            }
             if !ready { ready = await engineAnswers(podId: podId, modelId: id) }
         } else {
             ready = false
@@ -326,6 +384,7 @@ public actor PodManager {
             $0.podStatus = pod.status
             $0.engineReady = engineReady
             $0.lastHeartbeatAt = heartbeatTime
+            if let center = pod.dataCenterId { $0.dataCenterId = center }
             if let cost = pod.cost, cost > 0 { $0.pricePerHour = cost }
             switch pod.status {
             case .running: $0.phase = engineReady ? .ready : .loading
@@ -379,7 +438,7 @@ public actor PodManager {
     private func account(id: UUID, run: ModelRun) {
         guard run.podStatus == .running, let price = run.pricePerHour, let since = run.accountedUntil ?? run.startedAt else { return }
         let t = now()
-        let cost = max(0, t.timeIntervalSince(since)) / 3600 * price
+        let cost = max(0, t.timeIntervalSince(since)) / 3600 * (price + (run.storagePerHour ?? 0))
         Task { [store] in
             try? await store.update { state in
                 state.spendByDay[PodlightState.dayKey(t), default: 0] += cost
@@ -390,8 +449,14 @@ public actor PodManager {
 
     // MARK: Pod HTTP
 
-    private func heartbeat(podId: String, modelId: UUID, runUntil: Date?) async -> Bool {
-        guard let key = try? podKey(for: modelId) else { return false }
+    /// What the watchdog reports with each heartbeat.
+    struct WatchdogStatus: Sendable {
+        var engineAlive: Bool?
+        var engineExitCode: Int?
+    }
+
+    private func heartbeat(podId: String, modelId: UUID, runUntil: Date?) async -> WatchdogStatus? {
+        guard let key = try? podKey(for: modelId) else { return nil }
         var request = URLRequest(url: podURL(podId, PodPlan.watchdogPort).appendingPathComponent("heartbeat"))
         request.httpMethod = "POST"
         request.timeoutInterval = 10
@@ -399,8 +464,29 @@ public actor PodManager {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let deadline: Any = runUntil.map { $0.addingTimeInterval(PodPlan.deadlineGrace).timeIntervalSince1970 } ?? NSNull()
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["deadline": deadline])
-        guard let (_, response) = try? await transport.send(request) else { return false }
-        return response.statusCode == 200
+        guard let (data, response) = try? await transport.send(request), response.statusCode == 200 else { return nil }
+        let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        return WatchdogStatus(engineAlive: json?["engineAlive"] as? Bool, engineExitCode: json?["engineExitCode"] as? Int)
+    }
+
+    /// The last lines vLLM wrote, kept by the watchdog because RunPod drops a stopped pod's output.
+    /// Reduced to the lines that say what went wrong.
+    private func engineFailure(podId: String, modelId: UUID) async -> String? {
+        guard let key = try? podKey(for: modelId) else { return nil }
+        var request = URLRequest(url: podURL(podId, PodPlan.watchdogPort).appendingPathComponent("log"))
+        request.timeoutInterval = 10
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await transport.send(request), response.statusCode == 200,
+              let lines = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["lines"] as? [String]
+        else { return nil }
+        return Self.summarizeEngineLog(lines)
+    }
+
+    /// The error lines of an engine log, or its last lines when none says "error".
+    static func summarizeEngineLog(_ lines: [String]) -> String {
+        let errors = lines.filter { $0.range(of: #"(Error|Exception|error:|CUDA|out of memory|Traceback)"#, options: .regularExpression) != nil }
+        let picked = (errors.isEmpty ? lines : errors).suffix(3)
+        return picked.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: "\n")
     }
 
     private func engineAnswers(podId: String, modelId: UUID) async -> Bool {

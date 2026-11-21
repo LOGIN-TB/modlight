@@ -30,13 +30,13 @@ enum Snapshots {
         _ = try? await store.update { $0 = sample }
         let model = AppModel(storeURL: storeURL, keychainService: service)
         await model.reloadState()
-        model.selectedModelID = model.state.models.first?.id
+        model.selection = model.state.models.first.map { .model($0.id) }
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 
         let running = model.state.models[0]
         // Content views without the sidebar: its material does not render offscreen, and the help
         // pages are about the content anyway.
-        render("models", size: CGSize(width: 780, height: 600), into: folder) { ModelsView().environment(model) }
+        render("models", size: CGSize(width: 720, height: 640), into: folder) { NavigationStack { ModelDetailView(item: running) }.environment(model) }
         render("connection", size: CGSize(width: 720, height: 860), into: folder) { ConnectionView().environment(model) }
         render("costs", size: CGSize(width: 720, height: 760), into: folder) { CostsView().environment(model) }
         render("start", size: CGSize(width: 460, height: 520), into: folder) { StartSheet(model: running).environment(model) }
@@ -44,7 +44,9 @@ enum Snapshots {
             RunpodKeyStep(onDone: {}).environment(model).padding(24).frame(width: 600, height: 520)
         }
         render("menubar", size: CGSize(width: 300, height: 240), into: folder) { MenuBarView().environment(model) }
-        render("settings", size: CGSize(width: 560, height: 440), into: folder) { SettingsView().environment(model) }
+        render("settings", size: CGSize(width: 640, height: 900), into: folder) { SettingsContent().environment(model) }
+        render("add-model", size: CGSize(width: 760, height: 600), into: folder) { AddModelSheet(editing: running).environment(model) }
+        render("move", size: CGSize(width: 460, height: 360), into: folder) { MoveToApplicationsView() }
     }
 
     private static func render<V: View>(_ name: String, size: CGSize, into folder: URL, @ViewBuilder _ view: () -> V) {

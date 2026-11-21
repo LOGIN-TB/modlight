@@ -32,7 +32,7 @@ struct PodlightApp: App {
                     .disabled(!model.hasRunpodKey)
             }
             CommandMenu("Model") {
-                let selected = model.state.models.first { $0.id == model.selectedModelID }
+                let selected = model.selectedModel
                 let phase = selected.map { model.state.run($0.id).phase } ?? .stopped
                 Button("Start…") { model.startingModel = selected }
                     .keyboardShortcut("r")
@@ -43,12 +43,15 @@ struct PodlightApp: App {
                 Button("Extend by One Hour") { if let selected { Task { await model.extend(selected, by: 3600) } } }
                     .keyboardShortcut("e")
                     .disabled(selected == nil || phase == .stopped || phase == .failed)
+                Divider()
+                Button("Edit…") { model.editingModel = selected }
+                    .disabled(selected == nil || (phase != .stopped && phase != .failed))
             }
             CommandMenu("Connection") {
-                Button("Copy OpenCode Configuration") { Pasteboard.copy(model.openCodeConfig) }
+                Button("Copy Address") { Pasteboard.copy(model.localBaseURL) }
                     .keyboardShortcut("c", modifiers: [.command, .shift])
                 Button("Copy API Key") { Pasteboard.copy(model.gatewayKey ?? "") }
-                Button("Copy Base URL") { Pasteboard.copy(model.gatewayBaseURL) }
+                Button("Copy OpenCode Configuration") { Pasteboard.copy(model.openCodeConfig(baseURL: model.localBaseURL)) }
             }
             CommandGroup(replacing: .help) {
                 Button("Podlight Help") { openWindow(id: "help") }
@@ -59,6 +62,12 @@ struct PodlightApp: App {
                 Link("Podlight on GitHub", destination: Links.repository)
             }
         }
+
+        Window("Move Podlight", id: "move") {
+            MoveToApplicationsView()
+        }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(.suppressed)
 
         Window("Podlight Help", id: "help") {
             HelpView()
@@ -99,6 +108,7 @@ enum Links {
     static let huggingFace = URL(string: "https://huggingface.co/models?pipeline_tag=text-generation&sort=trending")!
     static let repository = URL(string: "https://github.com/LOGIN-TB/podlight")!
     static let openCode = URL(string: "https://opencode.ai/docs/models")!
+    static let pi = URL(string: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/models.md")!
 }
 
 enum Pasteboard {

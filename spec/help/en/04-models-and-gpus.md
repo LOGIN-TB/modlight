@@ -22,4 +22,10 @@ Free cards are scarce at RunPod and change within seconds. If your card is taken
 
 ## Context
 
-Context is how much text the model sees at once. Coding agents need a lot of it. Podlight works out how much fits on the card beside the model and keeps a margin, so vLLM does not refuse to start after the download.
+Context is how much text the model sees at once. Coding agents need a lot of it. When you add a model you choose it first, up to the model's maximum, including 256,000 or 1 million tokens. Podlight then shows only cards that hold it.
+
+Podlight reads how much memory one token needs from the model's configuration. Small models need much less per token than large ones, so very long contexts fit on smaller cards for them. Podlight keeps a margin, so vLLM does not refuse to start after the download.
+
+## Several cards
+
+If a long context does not fit on one card, Podlight suggests 2, 4 or 8 cards in one pod, for example "2 × L40S". vLLM then spreads the model across all of them. The price covers all cards together. Getting several identical cards free at once is harder at RunPod; if needed, Podlight tries the next suggestions.

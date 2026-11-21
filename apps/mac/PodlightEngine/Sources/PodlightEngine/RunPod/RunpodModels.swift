@@ -141,6 +141,18 @@ public struct RunpodGPUType: Codable, Sendable, Equatable, Identifiable {
         public var secure: Double?
     }
 
+    public struct MaxCount: Codable, Sendable, Equatable {
+        public var community: Int?
+        public var secure: Int?
+    }
+
+    /// One data center that offers this card, with its availability.
+    public struct DataCenterAvailability: Codable, Sendable, Equatable {
+        public var id: String
+        public var name: String?
+        public var availability: Availability?
+    }
+
     /// CUDA versions RunPod's hosts with this card run, and whether any of them is free now.
     public struct CudaVersion: Codable, Sendable, Equatable {
         public var version: String
@@ -157,6 +169,14 @@ public struct RunpodGPUType: Codable, Sendable, Equatable, Identifiable {
     public var price: Price
     public var availability: Availability?
     public var cudaVersions: [CudaVersion]?
+    /// The most cards of this type one pod can have, per cloud (the largest machine).
+    public var maxCount: MaxCount?
+    public var dataCenters: [DataCenterAvailability]?
+
+    public func maxCards(in cloud: RunpodCloud) -> Int {
+        let value = cloud == .secure ? maxCount?.secure : maxCount?.community
+        return value ?? 1
+    }
 
     /// Whether a host with at least `minimum` CUDA may be free. True when RunPod does not say.
     public func mayHaveCuda(atLeast minimum: String) -> Bool {
