@@ -36,7 +36,10 @@
     "PL-UI-006",
     "PL-NAV-004",
     "PL-NET-001",
-    "PL-INS-001"
+    "PL-INS-001",
+    "PL-OVR-001",
+    "PL-ACT-002",
+    "PL-ADD-003"
   ],
   "criteria": [
     {
@@ -479,6 +482,40 @@
       "status": "not_tested",
       "evidence": [],
       "reason": "Implemented in 0.2; to be verified in a real window (glass is not visible in offscreen snapshots)."
+    },
+    {
+      "id": "PL-OVR-001",
+      "requirement": "Overview as the first screen: what runs and costs, next steps with one prominent action, spending, models, connection",
+      "origin": "engineering",
+      "source_ids": [],
+      "status": "partial",
+      "evidence": [
+        "Offscreen snapshot spec/help/screenshots/*/overview.png (2026-11-21)"
+      ],
+      "reason": "Rendered and checked offscreen; VoiceOver and keyboard pass in a real window still open."
+    },
+    {
+      "id": "PL-ACT-002",
+      "requirement": "Main action visible in the content as well as the toolbar: Start… under a stopped model's status; Add and Start… at the end of adding",
+      "origin": "engineering",
+      "source_ids": [],
+      "status": "partial",
+      "evidence": [
+        "Offscreen snapshot model-stopped.png (2026-11-21)"
+      ],
+      "reason": "Prominent style shows grey in inactive offscreen windows; accent colour to be checked in a real window."
+    },
+    {
+      "id": "PL-ADD-003",
+      "requirement": "Adding a model: location per model at the top of the card step; the list, the needed memory and the selection follow context and location; a moved selection is explained",
+      "origin": "engineering",
+      "source_ids": [],
+      "status": "partial",
+      "evidence": [
+        "Unit tests ReselectionTests (2026-11-21)",
+        "Offscreen snapshot add-model.png"
+      ],
+      "reason": "Logic tested; interactive pass with a live catalog in a real window still open."
     }
   ]
 }

@@ -370,6 +370,8 @@ final class AppModel {
             "CLAUDE_CODE_MAX_CONTEXT_TOKENS=\(context)",
             "CLAUDE_CODE_MAX_OUTPUT_TOKENS=\(min(32_000, context / 4))",
             "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+            // Beta request fields only Anthropic's own API knows; open engines may reject them.
+            "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1",
         ]
         return """
         # Once, in a terminal:

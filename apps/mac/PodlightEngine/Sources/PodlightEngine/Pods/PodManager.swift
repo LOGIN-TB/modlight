@@ -495,7 +495,7 @@ public actor PodManager {
 
     /// The error lines of an engine log, or its last lines when none says "error".
     static func summarizeEngineLog(_ lines: [String]) -> String {
-        let errors = lines.filter { $0.range(of: #"(Error|Exception|error:|CUDA|out of memory|Traceback)"#, options: .regularExpression) != nil }
+        let errors = lines.filter { $0.range(of: #"(Error|Exception|error:|CUDA|out of memory|Traceback|failed to|unable to allocate|error loading model)"#, options: .regularExpression) != nil }
         let picked = (errors.isEmpty ? lines : errors).suffix(3)
         return picked.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: "\n")
     }

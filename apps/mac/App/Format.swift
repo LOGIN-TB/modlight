@@ -111,8 +111,9 @@ enum Describe {
     /// "8.99 $/h + 0.02 $/h storage": the card price and the disks, kept apart so the card's
     /// price matches the one in the list.
     static func price(gpu: Double, storage: Double) -> String {
-        storage > 0.0005
-            ? String(localized: "\(Format.perHour(gpu)) + \(Format.perHour(storage)) storage")
-            : Format.perHour(gpu)
+        if storage <= 0.0005 { return Format.perHour(gpu) }
+        // Under a cent the rounded figure would read "0.00", which looks like nothing.
+        let shown = storage < 0.005 ? "< " + Format.perHour(0.01) : Format.perHour(storage)
+        return String(localized: "\(Format.perHour(gpu)) + \(shown) storage")
     }
 }

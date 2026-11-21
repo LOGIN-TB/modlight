@@ -1,0 +1,156 @@
+{
+  "description": "GGUF repositories (Podlight 0.3, 2026-11-21): grouping a repository's files into quantisations, and the KV cache per token from a GGUF header's metadata (f16 cache, llama.cpp's default). Implemented by the Swift engine; the Node service follows in milestone 2.",
+  "cases": [
+    {
+      "id": "ggufQuants/unsloth-layout",
+      "status": "swift",
+      "title": "Shards and quantisation folders are joined, projector files left out, smallest first",
+      "function": "ggufQuants",
+      "input": {
+        "files": [
+          {
+            "path": "Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf",
+            "bytes": 18600000000
+          },
+          {
+            "path": "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf",
+            "bytes": 17700000000
+          },
+          {
+            "path": "Qwen3-Coder-30B-A3B-Instruct-Q8_0.gguf",
+            "bytes": 32500000000
+          },
+          {
+            "path": "BF16/Qwen3-Coder-30B-A3B-Instruct-BF16-00001-of-00002.gguf",
+            "bytes": 49900000000
+          },
+          {
+            "path": "BF16/Qwen3-Coder-30B-A3B-Instruct-BF16-00002-of-00002.gguf",
+            "bytes": 11200000000
+          },
+          {
+            "path": "mmproj-F16.gguf",
+            "bytes": 600000000
+          },
+          {
+            "path": "README.md",
+            "bytes": 1000
+          }
+        ]
+      },
+      "expected": {
+        "names": [
+          "UD-Q4_K_XL",
+          "Q4_K_M",
+          "Q8_0",
+          "BF16"
+        ],
+        "recommended": "Q4_K_M"
+      }
+    },
+    {
+      "id": "ggufQuants/lowercase-official",
+      "status": "swift",
+      "title": "Lower-case file names as in Qwen's own GGUF repositories",
+      "function": "ggufQuants",
+      "input": {
+        "files": [
+          {
+            "path": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+            "bytes": 491400032
+          },
+          {
+            "path": "qwen2.5-0.5b-instruct-q8_0.gguf",
+            "bytes": 675710816
+          },
+          {
+            "path": "qwen2.5-0.5b-instruct-fp16.gguf",
+            "bytes": 1270000000
+          }
+        ]
+      },
+      "expected": {
+        "names": [
+          "Q4_K_M",
+          "Q8_0",
+          "FP16"
+        ],
+        "recommended": "Q4_K_M"
+      }
+    },
+    {
+      "id": "ggufKvProfile/qwen3moe",
+      "status": "swift",
+      "title": "Qwen3-Coder-30B-A3B: 48 layers × 4 KV heads × (128 + 128) × 2 bytes = 96 KiB, as read live from the Q4_K_M header",
+      "function": "ggufKvProfile",
+      "input": {
+        "meta": {
+          "general.architecture": "qwen3moe",
+          "qwen3moe.block_count": 48,
+          "qwen3moe.embedding_length": 2048,
+          "qwen3moe.attention.head_count": 32,
+          "qwen3moe.attention.head_count_kv": 4,
+          "qwen3moe.attention.key_length": 128,
+          "qwen3moe.attention.value_length": 128
+        }
+      },
+      "expected": {
+        "bytesPerToken": 98304,
+        "attentionHeads": 32,
+        "hybrid": false
+      }
+    },
+    {
+      "id": "ggufKvProfile/qwen2-no-key-length",
+      "status": "swift",
+      "title": "Without key_length the head size is embedding_length / head_count (Qwen2.5-0.5B: 896 / 14 = 64)",
+      "function": "ggufKvProfile",
+      "input": {
+        "meta": {
+          "general.architecture": "qwen2",
+          "qwen2.block_count": 24,
+          "qwen2.embedding_length": 896,
+          "qwen2.attention.head_count": 14,
+          "qwen2.attention.head_count_kv": 2
+        }
+      },
+      "expected": {
+        "bytesPerToken": 12288,
+        "attentionHeads": 14,
+        "hybrid": false
+      }
+    },
+    {
+      "id": "ggufKvProfile/latent-attention",
+      "status": "swift",
+      "title": "MLA (DeepSeek): layers × (kv_lora_rank + rope dimension) × 2 bytes",
+      "function": "ggufKvProfile",
+      "input": {
+        "meta": {
+          "general.architecture": "deepseek2",
+          "deepseek2.block_count": 61,
+          "deepseek2.attention.head_count": 128,
+          "deepseek2.attention.kv_lora_rank": 512,
+          "deepseek2.rope.dimension_count": 64
+        }
+      },
+      "expected": {
+        "bytesPerToken": 70272,
+        "attentionHeads": 128,
+        "hybrid": false
+      }
+    },
+    {
+      "id": "ggufKvProfile/missing-architecture",
+      "status": "swift",
+      "title": "No architecture: unknown, the generic estimate applies",
+      "function": "ggufKvProfile",
+      "input": {
+        "meta": {
+          "qwen2.block_count": 24
+        }
+      },
+      "expected": null
+    }
+  ]
+}

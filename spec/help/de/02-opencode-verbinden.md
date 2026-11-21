@@ -20,6 +20,7 @@ Manche Agenten erwarten eine Datei statt einer Eingabemaske. Unter „Konfigurat
 
 - **OpenCode:** `~/.config/opencode/opencode.json`. Das Modell heißt dort `podlight/<Name>` und wird mit `/models` gewählt.
 - **pi:** `~/.pi/agent/models.json`. Das Modell wird mit `/model` gewählt.
+- **Claude Code** und **Codex:** ein Befehl bzw. eine Funktion für das Terminal, siehe „Claude Code und Codex“.
 - **Umgebungsvariablen:** `OPENAI_BASE_URL` und `OPENAI_API_KEY`, etwa für Aider.
 
 Steht in der Datei schon etwas, übernimm nur den Eintrag unter `providers`. Die Dateien enthalten deinen Podlight-Schlüssel. Lege sie deshalb in deinem Benutzerordner ab und nie in einem Projekt-Repository.

@@ -1,7 +1,8 @@
 import Foundation
 
-/// Builds the RunPod request for a model: the stock vLLM image, Podlight's start script as the
-/// container command, the dead-man switch beside the engine, and a disk that survives stop/start.
+/// Builds the RunPod request for a model: a stock engine image (vLLM, or llama.cpp for GGUF),
+/// Podlight's start script as the container command, the dead-man switch beside the engine, and
+/// optionally a disk that survives stop/start.
 public enum PodPlan {
     /// Pinned: `latest` has broken freshly released architectures before. v0.28.0 is the version
     /// RunPod Launcher was measured with (2026-08-30), and its parser names are the ones used here.
@@ -39,11 +40,19 @@ public enum PodPlan {
             "PODLIGHT_WATCHDOG_B64": resource("watchdog", "py").base64EncodedString(),
             "PODLIGHT_BOOT_B64": resource("boot", "sh").base64EncodedString(),
             "PODLIGHT_TP": String(cards),
+            "PODLIGHT_ENGINE": model.engine == .vllm ? "vllm" : "llamacpp",
             // Xet's high-performance mode replaced hf_transfer for fast Hub downloads.
             "HF_XET_HIGH_PERFORMANCE": "1",
         ]
         // With a kept disk, downloads go there so a resumed pod starts without downloading.
-        if model.keepDisk { env["HF_HOME"] = "/workspace/hf" }
+        if model.keepDisk {
+            env["HF_HOME"] = "/workspace/hf"
+            env["LLAMA_CACHE"] = "/workspace/llama-cache"
+        }
+        if model.engine == .llamaCpp {
+            env["PODLIGHT_QUANT"] = model.quant ?? "Q4_K_M"
+            env["PODLIGHT_PARALLEL"] = String(max(1, model.concurrency))
+        }
         if let parser = model.toolCallParser { env["PODLIGHT_TOOL_PARSER"] = parser }
         if let parser = model.reasoningParser { env["PODLIGHT_REASONING_PARSER"] = parser }
         if let token = huggingFaceToken, !token.isEmpty { env["HF_TOKEN"] = token }
@@ -51,9 +60,9 @@ public enum PodPlan {
 
         return CreatePodRequest(
             name: "podlight-\(model.name)".prefix(60).description,
-            image: image,
+            image: image(for: model.engine),
             cloud: model.preferredGPU?.cloud ?? .secure,
-            gpu: .init(id: model.preferredGPU?.gpuId ?? "placeholder", count: cards, minCudaVersion: minCudaVersion),
+            gpu: .init(id: model.preferredGPU?.gpuId ?? "placeholder", count: cards, minCudaVersion: minCudaVersion(for: model.engine)),
             disk: containerGB(for: model),
             ports: ["\(enginePort)/http", "\(watchdogPort)/http"],
             env: env,

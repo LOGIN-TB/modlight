@@ -20,6 +20,7 @@ Some agents want a file instead of a form. Under "Configuration files for expert
 
 - **OpenCode:** `~/.config/opencode/opencode.json`. The model is called `podlight/<name>` there and is picked with `/models`.
 - **pi:** `~/.pi/agent/models.json`. The model is picked with `/model`.
+- **Claude Code** and **Codex:** a command or function for Terminal, see "Claude Code and Codex".
 - **Environment variables:** `OPENAI_BASE_URL` and `OPENAI_API_KEY`, for example for Aider.
 
 If the file already has content, take over only the entry under `providers`. The files contain your Podlight key, so keep them in your home folder, never in a project repository.

@@ -188,7 +188,7 @@ struct AddModelSheet: View {
             .overlay {
                 if hits.isEmpty && !searching {
                     VStack(spacing: 8) {
-                        Text("Tip: 4-bit builds (AWQ, GPTQ, INT4) need half the memory and run faster.")
+                        Text("Tip: 4-bit builds (AWQ, GPTQ, NVFP4, or GGUF Q4) need half the memory and run faster.")
                         Link("Browse popular models on Hugging Face", destination: Links.huggingFace)
                     }
                     .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
@@ -224,7 +224,7 @@ struct AddModelSheet: View {
         do {
             let result = try await model.huggingFace.info(repo)
             info = result
-            if !result.format.isFourBit { variants = await model.huggingFace.fourBitVariants(of: repo) }
+            if !result.format.isFourBit && result.format != .gguf { variants = await model.huggingFace.fourBitVariants(of: repo) }
         } catch {
             info = ModelInfo(repoId: repo, access: .unreachable, gated: false, format: .unknown, weightBytes: 0,
                              nativeContextTokens: nil, license: nil, toolCallParser: nil, reasoningParser: nil)
@@ -232,7 +232,7 @@ struct AddModelSheet: View {
     }
 
     private func canRun(_ info: ModelInfo) -> Bool {
-        info.access == .open && info.format.runsOnVLLM && info.weightBytes > 0
+        info.access == .open && info.format.runsOnAnEngine && info.weightBytes > 0 && (info.format != .gguf || info.quant != nil)
     }
 
     private var checkStep: some View {
@@ -245,7 +245,31 @@ struct AddModelSheet: View {
                     problems(info)
                     if info.access == .open {
                         Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
-                            GridRow { Text("Format").foregroundStyle(.secondary); FormatBadge(format: info.format) }
+                            GridRow {
+                                Text("Format").foregroundStyle(.secondary)
+                                HStack { FormatBadge(format: info.format); if info.format == .gguf { Text("runs with llama.cpp").foregroundStyle(.secondary) } }
+                            }
+                            if let quants = info.quants, !quants.isEmpty {
+                                GridRow {
+                                    Text("Quantisation").foregroundStyle(.secondary)
+                                    Picker("Quantisation", selection: Binding(get: { info.quant ?? "" }, set: { self.info = info.choosing(quant: $0) })) {
+                                        ForEach(quants) { q in
+                                            Text("\(q.name) · \(Format.gigabytes(q.bytes))\(q.name == GGUF.recommended(quants)?.name ? String(localized: " · suggested") : "")").tag(q.name)
+                                        }
+                                    }
+                                    .labelsHidden()
+                                    .fixedSize()
+                                }
+                                if let q = quants.first(where: { $0.name == info.quant }) {
+                                    GridRow {
+                                        Text("")
+                                        Text(q.isVeryLow ? "Below 4 bits models get noticeably worse at code and tool calls."
+                                             : q.isHigh ? "Close to the original, but about twice the memory of 4 bits."
+                                             : "4 bits: half the memory of 8 bits, with little loss. A good default.")
+                                            .font(.caption).foregroundStyle(q.isVeryLow ? Color.orange : Color.secondary)
+                                    }
+                                }
+                            }
                             GridRow { Text("Download").foregroundStyle(.secondary); Text(Format.gigabytes(info.weightBytes)) }
                             if let native = info.nativeContextTokens {
                                 GridRow { Text("Longest context").foregroundStyle(.secondary); Text("\(Format.tokens(native)) tokens") }
@@ -303,9 +327,8 @@ struct AddModelSheet: View {
         case .unreachable:
             Label("Hugging Face could not be reached. Check the connection and try again.", systemImage: "wifi.exclamationmark")
         case .open:
-            if info.format == .gguf {
-                Label("This is a GGUF build. Podlight runs vLLM, which needs safetensors weights. Pick a 4-bit AWQ or GPTQ build instead.", systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.orange)
+            if info.format == .gguf && (info.quants ?? []).isEmpty {
+                Label("No GGUF files found in this repository.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
             } else if info.format == .mlx {
                 Label("MLX builds run on Apple chips only, not on RunPod's NVIDIA cards.", systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
@@ -395,7 +418,7 @@ struct AddModelSheet: View {
             HStack(alignment: .firstTextBaseline) {
                 if let requiredMemoryText { Text(requiredMemoryText) }
                 Spacer()
-                Text("\(options.count) options").foregroundStyle(.secondary)
+                if !loadingCatalog { Text("\(options.count) options").foregroundStyle(.secondary) }
             }
             .font(.callout)
             if let selectionNote {
@@ -453,7 +476,7 @@ struct AddModelSheet: View {
                                  toolCallParser: info.toolCallParser, reasoningParser: info.reasoningParser,
                                  contextTokens: option.contextTokens, goal: goal, preferredGPU: option.choice,
                                  schedule: schedule, createdAt: editing?.createdAt ?? Date(), kvProfile: info.kvProfile,
-                                 keepDisk: keepDisk, hosting: hosting, preferredGPUName: option.label, quant: editing?.quant)
+                                 keepDisk: keepDisk, hosting: hosting, preferredGPUName: option.label, quant: info.quant)
         item.expectedPricePerHour = option.pricePerHour
         return item
     }

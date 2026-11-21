@@ -87,7 +87,9 @@ struct ModelDetailView: View {
                     ProgressView {
                         Text(item.keepDisk && run.persistentGB != nil
                              ? "Resuming takes about a minute."
-                             : "A new pod can take 10–25 minutes: the GPU host first downloads the engine (about 9 GB), then the model. Resuming a stopped pod takes about a minute.")
+                             : item.engine == .vllm
+                                ? "A new pod can take 10–25 minutes: the GPU host first downloads the engine (about 9 GB), then the model. Resuming a stopped pod takes about a minute."
+                                : "A new pod can take 5–20 minutes: the GPU host first downloads the engine (about 4 GB), then the model. Resuming a stopped pod takes about a minute.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .progressViewStyle(.linear)
@@ -128,7 +130,8 @@ struct ModelDetailView: View {
                 LabeledContent("Hugging Face", value: item.repoId)
                 LabeledContent("Name for agents", value: item.name)
                     .textSelection(.enabled)
-                LabeledContent("Weights", value: "\(Format.gigabytes(item.weightBytes)) · \(item.format.rawValue.uppercased())")
+                LabeledContent("Weights", value: "\(Format.gigabytes(item.weightBytes)) · \(item.format.rawValue.uppercased())\(item.quant.map { " \($0)" } ?? "")")
+                LabeledContent("Engine", value: item.engine == .vllm ? "vLLM" : "llama.cpp")
                 LabeledContent("Context", value: String(localized: "\(Format.tokens(item.contextTokens)) tokens"))
                 LabeledContent("Tool calls", value: item.toolCallParser != nil ? String(localized: "Supported") : String(localized: "Not supported by this model"))
             }

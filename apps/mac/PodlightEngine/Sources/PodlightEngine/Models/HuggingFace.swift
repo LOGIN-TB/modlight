@@ -4,7 +4,7 @@ import Foundation
 public enum WeightFormat: String, Codable, Sendable, Equatable {
     case safetensors, awq, gptq, fp8, nvfp4, gguf, mlx, unknown
 
-    /// Podlight 1.0 runs vLLM only. GGUF (llama.cpp) is planned; MLX never runs on NVIDIA.
+    /// Formats vLLM serves. GGUF goes to llama.cpp instead; MLX never runs on NVIDIA.
     public var runsOnVLLM: Bool {
         switch self {
         case .safetensors, .awq, .gptq, .fp8, .nvfp4, .unknown: true
@@ -56,6 +56,10 @@ public struct ModelInfo: Codable, Sendable, Equatable {
     public var reasoningParser: String?
     /// KV cache per token, from the model's config. Nil: unknown, the generic estimate applies.
     public var kvProfile: KVProfile?
+    /// GGUF repositories: the quantisations on offer, smallest first.
+    public var quants: [GGUFQuant]?
+    /// GGUF: the chosen quantisation. `weightBytes` is its size.
+    public var quant: String?
 
     public init(repoId: String, access: Access, gated: Bool, format: WeightFormat, weightBytes: Double,
                 nativeContextTokens: Int?, license: String?, toolCallParser: String?, reasoningParser: String?,
@@ -76,6 +80,15 @@ public struct ModelInfo: Codable, Sendable, Equatable {
     public var kvBytesPerToken: Double { kvProfile?.bytesPerToken ?? Capacity.defaultKVBytesPerToken }
     public var weightsGB: Double { weightBytes / 1_000_000_000 }
     public var engine: InferenceEngine { format == .gguf ? .llamaCpp : .vllm }
+
+    /// The same model with another GGUF quantisation chosen.
+    public func choosing(quant name: String) -> ModelInfo {
+        guard let q = quants?.first(where: { $0.name == name }) else { return self }
+        var copy = self
+        copy.quant = q.name
+        copy.weightBytes = q.bytes
+        return copy
+    }
 }
 
 /// Reads the Hugging Face Hub. A token is optional and only needed for gated models.
@@ -147,6 +160,10 @@ public struct HuggingFaceClient: Sendable {
             return sum + (file["size"] as? Double ?? Double(file["size"] as? Int ?? 0))
         }
 
+        if format == .gguf {
+            return await ggufInfo(repoId, json: json, siblings: siblings, gated: gated, license: license)
+        }
+
         let template = await chatTemplate(repoId, files: files)
         return ModelInfo(
             repoId: repoId, access: .open, gated: gated, format: format, weightBytes: weightBytes,
@@ -155,6 +172,55 @@ public struct HuggingFaceClient: Sendable {
             reasoningParser: Self.reasoningParser(chatTemplate: template),
             kvProfile: KVProfile.from(config: config)
         )
+    }
+
+    /// GGUF repositories hold one file (or set of shards) per quantisation. The architecture comes
+    /// from the recommended file's header, read with range requests: the metadata sits at the start,
+    /// a few MB with the vocabulary, so the weights are never downloaded.
+    private func ggufInfo(_ repoId: String, json: [String: Any], siblings: [[String: Any]], gated: Bool,
+                          license: String?) async -> ModelInfo {
+        let files = siblings.compactMap { file -> (path: String, bytes: Double)? in
+            guard let name = file["rfilename"] as? String else { return nil }
+            return (name, file["size"] as? Double ?? Double(file["size"] as? Int ?? 0))
+        }
+        let quants = GGUF.quants(from: files)
+        let chosen = GGUF.recommended(quants)
+        let summary = json["gguf"] as? [String: Any]
+        var meta: [String: Any] = [:]
+        if let first = chosen?.files.first { meta = await ggufMetadata(repoId, file: first) ?? [:] }
+        let template = summary?["chat_template"] as? String ?? meta["tokenizer.chat_template"] as? String
+        var info = ModelInfo(
+            repoId: repoId, access: .open, gated: gated, format: .gguf, weightBytes: chosen?.bytes ?? 0,
+            nativeContextTokens: GGUF.contextLength(from: meta) ?? summary?["context_length"] as? Int, license: license,
+            // llama.cpp reads tool calls through the model's own template (`--jinja`); the name only
+            // records that the template has tools at all.
+            toolCallParser: Self.toolCallParser(chatTemplate: template) ?? (template?.contains("tool") == true ? "jinja" : nil),
+            reasoningParser: Self.reasoningParser(chatTemplate: template),
+            kvProfile: GGUF.kvProfile(from: meta))
+        info.quants = quants
+        info.quant = chosen?.name
+        return info
+    }
+
+    /// The metadata of a GGUF file, read in growing ranges up to 32 MiB.
+    func ggufMetadata(_ repoId: String, file: String) async -> [String: Any]? {
+        for size in [1, 4, 12, 32].map({ $0 * 1024 * 1024 }) {
+            var request = URLRequest(url: Self.baseURL.appendingPathComponent("\(repoId)/resolve/main/\(file)"))
+            request.timeoutInterval = 60
+            request.setValue("bytes=0-\(size - 1)", forHTTPHeaderField: "Range")
+            if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+            guard let (data, response) = try? await transport.send(request), response.statusCode == 206 || response.statusCode == 200
+            else { return nil }
+            do {
+                return try GGUF.metadata(from: data)
+            } catch GGUF.HeaderError.needMoreData {
+                if data.count < size { return nil } // the whole file was shorter: broken
+                continue
+            } catch {
+                return nil
+            }
+        }
+        return nil
     }
 
     /// 4-bit builds of the same model, smallest download first. Suggested because a 4-bit build

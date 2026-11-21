@@ -36,8 +36,18 @@ enum Snapshots {
         let running = model.state.models[0]
         // Content views without the sidebar: its material does not render offscreen, and the help
         // pages are about the content anyway.
+        render("overview", size: CGSize(width: 720, height: 900), into: folder) { NavigationStack { OverviewView() }.environment(model) }
+        render("model-stopped", size: CGSize(width: 720, height: 640), into: folder) {
+            NavigationStack { ModelDetailView(item: model.state.models[1]) }.environment(model)
+        }
         render("models", size: CGSize(width: 720, height: 640), into: folder) { NavigationStack { ModelDetailView(item: running) }.environment(model) }
         render("connection", size: CGSize(width: 720, height: 860), into: folder) { ConnectionView().environment(model) }
+        render("connection-claude", size: CGSize(width: 720, height: 1100), into: folder) {
+            ConnectionView(agent: .claudeCode, showFiles: true).environment(model)
+        }
+        render("connection-codex", size: CGSize(width: 720, height: 1100), into: folder) {
+            ConnectionView(agent: .codex, showFiles: true).environment(model)
+        }
         render("costs", size: CGSize(width: 720, height: 760), into: folder) { CostsView().environment(model) }
         render("start", size: CGSize(width: 460, height: 520), into: folder) { StartSheet(model: running).environment(model) }
         render("setup-key", size: CGSize(width: 600, height: 520), into: folder) {

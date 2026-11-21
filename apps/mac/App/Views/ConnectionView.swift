@@ -15,6 +15,11 @@ struct ConnectionView: View {
 
     @State private var agentModelId: UUID?
 
+    init(agent: Agent = .openCode, showFiles: Bool = false) {
+        _agent = State(initialValue: agent)
+        _showFiles = State(initialValue: showFiles)
+    }
+
     enum Agent: String, CaseIterable, Identifiable {
         case openCode, pi, claudeCode, codex, environment
         var id: String { rawValue }

@@ -1,6 +1,42 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    " · suggested": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " · empfohlen"
+          }
+        }
+      }
+    },
+    "%@ + %@ storage": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ + %@ Speicher"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ + %2$@ storage"
+          }
+        }
+      }
+    },
     "%@ cost about %@ per hour. Once Podlight has quit, agents on this Mac can no longer reach them.\n\nIf you keep them running, each pod stops itself after %lld minutes without Podlight.": {
       "localizations": {
         "de": {
@@ -27,12 +63,38 @@
         }
       }
     },
+    "%@ has no tool calls, so the agent cannot edit files or run commands with it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kann keine Werkzeugaufrufe, der Agent kann damit also keine Dateien bearbeiten und keine Befehle ausführen."
+          }
+        }
+      }
+    },
     "%@ is ready": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ ist bereit"
+          }
+        }
+      }
+    },
+    "%@ is set to %@ tokens. These agents send long instructions and need at least 128k, better 200k: choose more context under Edit.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist auf %@ Token eingestellt. Diese Agenten schicken lange Anweisungen mit und brauchen mindestens 128k, besser 200k: Stell unter „Bearbeiten“ mehr Kontext ein."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ is set to %2$@ tokens. These agents send long instructions and need at least 128k, better 200k: choose more context under Edit."
           }
         }
       }
@@ -59,6 +121,16 @@
           "stringUnit": {
             "state": "new",
             "value": "%1$@ of %2$@"
+          }
+        }
+      }
+    },
+    "%@ so far": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bisher %@"
           }
         }
       }
@@ -135,6 +207,32 @@
         }
       }
     },
+    "%@ · %@%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@%@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@%3$@"
+          }
+        }
+      }
+    },
+    "%@ · Secure Cloud": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · Secure Cloud"
+          }
+        }
+      }
+    },
     "%@, no limit": {
       "localizations": {
         "de": {
@@ -191,6 +289,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld Minuten"
+          }
+        }
+      }
+    },
+    "%lld options": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Möglichkeiten"
           }
         }
       }
@@ -295,6 +403,16 @@
         }
       }
     },
+    "4 bits: half the memory of 8 bits, with little loss. A good default.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4 Bit: halb so viel Speicher wie 8 Bit, bei wenig Verlust. Eine gute Wahl."
+          }
+        }
+      }
+    },
     "4 hours from now": {
       "localizations": {
         "de": {
@@ -341,6 +459,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein neuer Pod braucht 10 bis 25 Minuten: Der Host lädt zuerst die Engine (etwa 9 GB), dann das Modell. Einen gestoppten Pod fortzusetzen dauert etwa eine Minute."
+          }
+        }
+      }
+    },
+    "A new pod can take 5–20 minutes: the GPU host first downloads the engine (about 4 GB), then the model. Resuming a stopped pod takes about a minute.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein neuer Pod kann 5–20 Minuten brauchen: Der Host lädt zuerst die Engine (etwa 4 GB), dann das Modell. Einen gestoppten Pod fortzusetzen dauert etwa eine Minute."
           }
         }
       }
@@ -425,6 +553,36 @@
         }
       }
     },
+    "Add Only": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur hinzufügen"
+          }
+        }
+      }
+    },
+    "Add a Hugging Face token": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hugging-Face-Token hinzufügen"
+          }
+        }
+      }
+    },
+    "Add a model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell hinzufügen"
+          }
+        }
+      }
+    },
     "Add a model first": {
       "localizations": {
         "de": {
@@ -445,12 +603,42 @@
         }
       }
     },
+    "Add and Start…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen und starten …"
+          }
+        }
+      }
+    },
+    "Add the provider to ~/.codex/config.toml and the function to ~/.zshrc, then start Codex with codex-podlight. Plain codex keeps your normal setup.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge den Anbieter in ~/.codex/config.toml und die Funktion in ~/.zshrc ein und starte Codex dann mit codex-podlight. Der normale Befehl codex bleibt, wie er war."
+          }
+        }
+      }
+    },
     "Add your RunPod API key first (Podlight → Settings → Access).": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Trage zuerst deinen RunPod-API-Key ein (Podlight → Einstellungen → Zugänge)."
+          }
+        }
+      }
+    },
+    "Address": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse"
           }
         }
       }
@@ -565,6 +753,16 @@
         }
       }
     },
+    "Anthropic does not officially support other models in Claude Code. It works through Podlight's Anthropic-compatible route, but web search and some newer features do not.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anthropic unterstützt andere Modelle in Claude Code nicht offiziell. Über Podlights Anthropic-kompatible Schnittstelle funktioniert es, die Websuche und einige neuere Funktionen aber nicht."
+          }
+        }
+      }
+    },
     "Anywhere": {
       "localizations": {
         "de": {
@@ -655,6 +853,16 @@
         }
       }
     },
+    "Below 4 bits models get noticeably worse at code and tool calls.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unter 4 Bit werden Modelle beim Programmieren und bei Werkzeugaufrufen merklich schlechter."
+          }
+        }
+      }
+    },
     "Browse popular models on Hugging Face": {
       "localizations": {
         "de": {
@@ -671,6 +879,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abbrechen"
+          }
+        }
+      }
+    },
+    "Certified data centers instead of community hosts. With a region, Podlight always uses Secure Cloud, because community hosts report no location.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zertifizierte Rechenzentren statt Community-Rechnern. Mit einer Region nutzt Podlight immer Secure Cloud, weil Community-Rechner keinen Standort melden."
           }
         }
       }
@@ -715,12 +933,12 @@
         }
       }
     },
-    "Choose Context and GPU": {
+    "Choose Location and GPU": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kontext und Karte wählen"
+            "value": "Standort und Karte wählen"
           }
         }
       }
@@ -745,6 +963,26 @@
         }
       }
     },
+    "Choose one on Hugging Face; Podlight suggests a GPU and shows the price.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Such eines bei Hugging Face aus; Podlight schlägt eine Karte vor und zeigt den Preis."
+          }
+        }
+      }
+    },
+    "Claude Code": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code"
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "de": {
@@ -755,12 +993,32 @@
         }
       }
     },
+    "Close to the original, but about twice the memory of 4 bits.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nah am Original, braucht aber etwa doppelt so viel Speicher wie 4 Bit."
+          }
+        }
+      }
+    },
     "Cloud": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Cloud"
+          }
+        }
+      }
+    },
+    "Codex": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex"
           }
         }
       }
@@ -791,6 +1049,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Podlight mit RunPod verbinden"
+          }
+        }
+      }
+    },
+    "Connect RunPod": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod verbinden"
+          }
+        }
+      }
+    },
+    "Connect an agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent verbinden"
           }
         }
       }
@@ -1095,12 +1373,32 @@
         }
       }
     },
+    "Done": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erledigt"
+          }
+        }
+      }
+    },
     "Download": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Download"
+          }
+        }
+      }
+    },
+    "EU and EEA": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EU und EWR"
           }
         }
       }
@@ -1121,6 +1419,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nur EU"
+          }
+        }
+      }
+    },
+    "Each model keeps its own location; change it under Edit. Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. With a region chosen, Podlight uses Secure Cloud only, because community hosts report no location. RunPod treats the region as a preference and gives no data residency guarantee, so Podlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jedes Modell behält seinen eigenen Standort; ändern lässt er sich unter „Bearbeiten“. Secure Cloud läuft in zertifizierten Rechenzentren (RunPod nennt SOC 2, ISO 27001, PCI DSS) statt auf Community-Rechnern, meist zu einem höheren Preis. Mit einer gewählten Region nutzt Podlight nur Secure Cloud, weil Community-Rechner keinen Standort melden. RunPod behandelt die Region als Wunsch und garantiert keinen Datenstandort. Podlight prüft deshalb, wo jeder Pod gelandet ist, und löscht ihn sofort, wenn er außerhalb liegt. Mit diesen Einschränkungen gibt es weniger Karten."
           }
         }
       }
@@ -1155,12 +1463,22 @@
         }
       }
     },
-    "Environment variables": {
+    "Engine": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Umgebungsvariablen"
+            "value": "Engine"
+          }
+        }
+      }
+    },
+    "Enter the address, key and model name in your coding agent.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trag Adresse, Schlüssel und Modellnamen in deinem Coding-Agenten ein."
           }
         }
       }
@@ -1231,6 +1549,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Für"
+          }
+        }
+      }
+    },
+    "For %@ tokens the model needs about %lld GB of card memory.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für %@ Token braucht das Modell etwa %lld GB Kartenspeicher."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "For %1$@ tokens the model needs about %2$lld GB of card memory."
           }
         }
       }
@@ -1335,12 +1669,12 @@
         }
       }
     },
-    "Hosting": {
+    "Hosting for new models": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hosting"
+            "value": "Hosting für neue Modelle"
           }
         }
       }
@@ -1421,6 +1755,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wähle in deinem Coding-Agenten (OpenCode, Cline, Aider, pi, …) einen eigenen oder OpenAI-kompatiblen Anbieter und trage diese drei Werte ein. Ein gestopptes Modell startet von selbst, wenn ein Agent es anfragt. Ein neuer Pod braucht dann bis zu 25 Minuten, starte ein neues Modell deshalb zuerst in Podlight."
+          }
+        }
+      }
+    },
+    "Install": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installieren"
           }
         }
       }
@@ -1661,12 +2005,32 @@
         }
       }
     },
+    "Next steps": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Schritte"
+          }
+        }
+      }
+    },
     "Next, add a model. Podlight checks whether it suits a coding agent, suggests a GPU and shows the cost per hour. Nothing is started or charged until you press Start.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Als Nächstes fügst du ein Modell hinzu. Podlight prüft, ob es sich für einen Coding-Agenten eignet, schlägt eine Karte vor und zeigt die Kosten pro Stunde. Gestartet und berechnet wird erst, wenn du auf „Starten“ klickst."
+          }
+        }
+      }
+    },
+    "No GGUF files found in this repository.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In diesem Repository gibt es keine GGUF-Dateien."
           }
         }
       }
@@ -1701,12 +2065,12 @@
         }
       }
     },
-    "No card at RunPod can hold this model right now. Try a 4-bit build, or allow more regions in Settings.": {
+    "No card at RunPod can hold this model right now. Try a 4-bit build, or allow more regions above.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine Karte bei RunPod fasst dieses Modell gerade. Versuche eine 4-Bit-Variante oder erlaube in den Einstellungen mehr Regionen."
+            "value": "Gerade fasst keine Karte bei RunPod dieses Modell. Versuch eine 4-Bit-Variante oder erlaube oben mehr Regionen."
           }
         }
       }
@@ -1827,6 +2191,16 @@
         }
       }
     },
+    "Nothing is running, so nothing is billed for GPUs.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade läuft nichts, für Karten wird also nichts berechnet."
+          }
+        }
+      }
+    },
     "Now": {
       "localizations": {
         "de": {
@@ -1927,6 +2301,16 @@
         }
       }
     },
+    "Open Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen öffnen"
+          }
+        }
+      }
+    },
     "Open the model page": {
       "localizations": {
         "de": {
@@ -1953,6 +2337,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Andere Rechner verbinden sich mit der Adresse unter „Verbindung“ und demselben Schlüssel. Die Verbindung ist nicht verschlüsselt: Nutze das nur in Netzen, denen du vertraust, nicht im öffentlichen WLAN. macOS fragt eventuell einmal, ob Podlight eingehende Verbindungen annehmen darf."
+          }
+        }
+      }
+    },
+    "Overview": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersicht"
           }
         }
       }
@@ -2097,6 +2491,16 @@
         }
       }
     },
+    "Podlight needs your RunPod API key to start pods.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight braucht deinen RunPod-API-Key, um Pods zu starten."
+          }
+        }
+      }
+    },
     "Podlight needs your RunPod API key to start pods. It takes about a minute.": {
       "localizations": {
         "de": {
@@ -2197,6 +2601,16 @@
         }
       }
     },
+    "Quantisation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantisierung"
+          }
+        }
+      }
+    },
     "Quit": {
       "localizations": {
         "de": {
@@ -2247,6 +2661,16 @@
         }
       }
     },
+    "Recommended: downloads are limited more strictly without one, and gated models need it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empfohlen: Ohne Token begrenzt Hugging Face Downloads stärker, und gesperrte Modelle brauchen ihn."
+          }
+        }
+      }
+    },
     "Remove Token": {
       "localizations": {
         "de": {
@@ -2293,6 +2717,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Länger laufen lassen"
+          }
+        }
+      }
+    },
+    "Run the first command in Terminal to use Claude Code with Podlight once, or add the function to ~/.zshrc and start it with claude-podlight. Plain claude keeps your normal login.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Führ den ersten Befehl im Terminal aus, um Claude Code einmal mit Podlight zu nutzen, oder füg die Funktion in ~/.zshrc ein und starte mit claude-podlight. Der normale Befehl claude behält deine übliche Anmeldung."
           }
         }
       }
@@ -2357,12 +2791,12 @@
         }
       }
     },
-    "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions in Settings.": {
+    "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions under Edit.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "RunPod hat den Pod außerhalb deiner Region platziert, deshalb hat Podlight ihn sofort gelöscht. Versuche es noch einmal oder erlaube in den Einstellungen mehr Regionen."
+            "value": "RunPod hat den Pod außerhalb deiner Region angelegt, deshalb hat Podlight ihn sofort gelöscht. Versuch es noch einmal oder erlaube unter „Bearbeiten“ mehr Regionen."
           }
         }
       }
@@ -2527,16 +2961,6 @@
         }
       }
     },
-    "Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. With a region chosen, Podlight uses Secure Cloud only, because community hosts report no location. RunPod treats the region as a preference and gives no data residency guarantee, so Podlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Secure Cloud läuft in zertifizierten Rechenzentren (RunPod nennt SOC 2, ISO 27001, PCI DSS) statt auf Community-Rechnern, meist zu einem höheren Preis. Mit einer gewählten Region nutzt Podlight nur Secure Cloud, weil Community-Rechner keinen Standort melden. RunPod behandelt die Region als Wunsch und garantiert keinen Datenstandort. Podlight prüft deshalb, wo jeder Pod gelandet ist, und löscht ihn sofort, wenn er außerhalb liegt. Mit diesen Einschränkungen gibt es weniger Karten."
-          }
-        }
-      }
-    },
     "Set Up": {
       "localizations": {
         "de": {
@@ -2577,6 +3001,26 @@
         }
       }
     },
+    "Show Connection": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung zeigen"
+          }
+        }
+      }
+    },
+    "Show Model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell zeigen"
+          }
+        }
+      }
+    },
     "Skip": {
       "localizations": {
         "de": {
@@ -2603,6 +3047,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tempo (geschätzt)"
+          }
+        }
+      }
+    },
+    "Spending": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgaben"
           }
         }
       }
@@ -2653,6 +3107,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gestopptes Modell starten, wenn ein Agent es anfragt"
+          }
+        }
+      }
+    },
+    "Start it once in Podlight": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal in Podlight starten"
           }
         }
       }
@@ -2717,12 +3181,12 @@
         }
       }
     },
-    "Step 3 of 4: Context and GPU": {
+    "Step 3 of 4: Location, context and GPU": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schritt 3 von 4: Kontext und Karte"
+            "value": "Schritt 3 von 4: Standort, Kontext und Karte"
           }
         }
       }
@@ -2977,6 +3441,16 @@
         }
       }
     },
+    "The first start takes 10–25 minutes, longer than an agent waits.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der erste Start dauert 10–25 Minuten, länger als ein Agent wartet."
+          }
+        }
+      }
+    },
     "The key is stored in this Mac's keychain and only ever sent to RunPod.": {
       "localizations": {
         "de": {
@@ -3143,16 +3617,6 @@
         }
       }
     },
-    "This is a GGUF build. Podlight runs vLLM, which needs safetensors weights. Pick a 4-bit AWQ or GPTQ build instead.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das ist ein GGUF-Build. Podlight arbeitet mit vLLM, das Gewichte im Safetensors-Format braucht. Wähle stattdessen eine 4-Bit-Variante mit AWQ oder GPTQ."
-          }
-        }
-      }
-    },
     "This model needs a Hugging Face token, and access approved on its page.": {
       "localizations": {
         "de": {
@@ -3173,12 +3637,22 @@
         }
       }
     },
-    "Tip: 4-bit builds (AWQ, GPTQ, INT4) need half the memory and run faster.": {
+    "Tip: 4-bit builds (AWQ, GPTQ, NVFP4, or GGUF Q4) need half the memory and run faster.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tipp: 4-Bit-Varianten (AWQ, GPTQ, INT4) brauchen halb so viel Speicher und laufen schneller."
+            "value": "Tipp: 4-Bit-Varianten (AWQ, GPTQ, NVFP4 oder GGUF Q4) brauchen halb so viel Speicher und laufen schneller."
+          }
+        }
+      }
+    },
+    "To do": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offen"
           }
         }
       }
@@ -3199,6 +3673,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Das Tageslimit ist erreicht. Erhöhe es in den Einstellungen oder starte morgen wieder."
+          }
+        }
+      }
+    },
+    "Together": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusammen"
           }
         }
       }
@@ -3283,6 +3767,16 @@
         }
       }
     },
+    "Variables": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Variablen"
+          }
+        }
+      }
+    },
     "Weights": {
       "localizations": {
         "de": {
@@ -3363,6 +3857,16 @@
         }
       }
     },
+    "You choose how long it runs when you start it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie lange er läuft, legst du beim Start fest."
+          }
+        }
+      }
+    },
     "You need a RunPod account with some credit. Setting up takes about a minute.": {
       "localizations": {
         "de": {
@@ -3389,6 +3893,32 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dein RunPod-API-Key"
+          }
+        }
+      }
+    },
+    "Your card needs %lld of itself for %@ tokens; the selection follows.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Karte wird für %2$@ Token %1$lld-mal gebraucht; die Auswahl folgt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Your card needs %1$lld of itself for %2$@ tokens; the selection follows."
+          }
+        }
+      }
+    },
+    "Your card no longer holds %@ tokens here, so the suggestion is selected.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Karte fasst hier keine %@ Token mehr, deshalb ist die Empfehlung gewählt."
           }
         }
       }
@@ -3453,6 +3983,16 @@
         }
       }
     },
+    "optional": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "optional"
+          }
+        }
+      }
+    },
     "pi": {
       "localizations": {
         "de": {
@@ -3463,12 +4003,32 @@
         }
       }
     },
+    "runs with llama.cpp": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "läuft mit llama.cpp"
+          }
+        }
+      }
+    },
     "the pod is deleted, nothing billed": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "der Pod wird gelöscht, nichts wird berechnet"
+          }
+        }
+      }
+    },
+    "until %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bis %@"
           }
         }
       }

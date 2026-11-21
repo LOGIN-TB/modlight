@@ -78,9 +78,11 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
         startAt: "08:00", stopAt: "18:00", idleStopMinutes: 30, maxRuntimeHours: 12)
 
     public var info: ModelInfo {
-        ModelInfo(repoId: repoId, access: .open, gated: false, format: format, weightBytes: weightBytes,
-                  nativeContextTokens: nativeContextTokens, license: nil,
-                  toolCallParser: toolCallParser, reasoningParser: reasoningParser, kvProfile: kvProfile)
+        var info = ModelInfo(repoId: repoId, access: .open, gated: false, format: format, weightBytes: weightBytes,
+                             nativeContextTokens: nativeContextTokens, license: nil,
+                             toolCallParser: toolCallParser, reasoningParser: reasoningParser, kvProfile: kvProfile)
+        info.quant = quant
+        return info
     }
 
     /// The hosting rules for this model's next start.

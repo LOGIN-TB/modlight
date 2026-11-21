@@ -238,3 +238,128 @@ struct LiveEUTwoCards {
         await cleanUp()
     }
 }
+
+// 0.3 on real hardware: a GGUF model on llama.cpp, and the Anthropic and Responses routes that
+// Claude Code and Codex use, on both engines. Opt-in, about 0.10 USD per engine:
+//   PODLIGHT_LIVE_03=llamacpp|vllm RUNPOD_API_KEY=… swift test --filter Live03
+@Suite("Live 0.3 on RunPod", .serialized,
+       .enabled(if: ProcessInfo.processInfo.environment["PODLIGHT_LIVE_03"] != nil
+                && ProcessInfo.processInfo.environment["RUNPOD_API_KEY"] != nil))
+struct Live03Tests {
+    static let session: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 300
+        configuration.timeoutIntervalForResource = 600
+        return URLSession(configuration: configuration)
+    }()
+
+    @Test(.timeLimit(.minutes(40)))
+    func engineServesAllThreeAPIs() async throws {
+        let engine = ProcessInfo.processInfo.environment["PODLIGHT_LIVE_03"] == "vllm" ? InferenceEngine.vllm : .llamaCpp
+        let apiKey = ProcessInfo.processInfo.environment["RUNPOD_API_KEY"]!
+        let keychain = KeychainStore(service: "app.podlight.live.\(UUID().uuidString)")
+        try keychain.write(apiKey, for: .runpodAPIKey)
+        let stateURL = FileManager.default.temporaryDirectory.appendingPathComponent("podlight-live-\(UUID()).json")
+        let manager = PodManager(store: StateStore(url: stateURL), keychain: keychain)
+        let client = RunpodClient(apiKey: apiKey)
+        var modelId: UUID?
+
+        func cleanUp() async {
+            if let id = modelId {
+                let run = await manager.state().run(id)
+                if run.phase == .failed || run.phase == .loading {
+                    print("[live03] engine log: \(run.lastMessage ?? "-")")
+                }
+                try? await manager.remove(id)
+                if let podId = run.podId {
+                    do {
+                        _ = try await client.pod(id: podId)
+                        print("[live03] WARNING: pod \(podId) still exists; deleting")
+                        try? await client.deletePod(id: podId)
+                    } catch let e as RunpodError where e.isNotFound {
+                        print("[live03] pod \(podId) is gone at RunPod (404)")
+                    } catch { print("[live03] could not confirm deletion: \(error)") }
+                }
+                try? keychain.delete(.podKey(id))
+            }
+            try? keychain.delete(.runpodAPIKey)
+            try? FileManager.default.removeItem(at: stateURL)
+        }
+
+        do {
+            let repo = engine == .llamaCpp ? "Qwen/Qwen2.5-0.5B-Instruct-GGUF" : "Qwen/Qwen2.5-0.5B-Instruct"
+            let info = try await HuggingFaceClient().info(repo)
+            print("[live03] \(engine): \(info.format) \(info.quant ?? "-") \(info.weightBytes / 1e9) GB, kv \(info.kvProfile?.bytesPerToken ?? 0), tools \(info.toolCallParser ?? "-")")
+            var model = PodlightModel(name: "tiny", repoId: info.repoId, format: info.format, weightBytes: info.weightBytes,
+                                      nativeContextTokens: info.nativeContextTokens, toolCallParser: info.toolCallParser,
+                                      reasoningParser: info.reasoningParser, contextTokens: 8_192, goal: .economical,
+                                      kvProfile: info.kvProfile, quant: info.quant)
+            let catalog = try await client.gpuCatalog()
+            let options = GPUSuggestion.options(for: model.info, catalog: catalog, goal: .economical).filter { $0.pricePerHour <= 0.5 }
+            print("[live03] cheapest: " + options.prefix(5).map { "\($0.label) \($0.choice.cloud.rawValue) $\($0.pricePerHour)" }.joined(separator: ", "))
+            model.preferredGPU = options.first?.choice
+            try await manager.save(model)
+            modelId = model.id
+
+            let t0 = Date()
+            try await manager.start(model.id, until: Date().addingTimeInterval(25 * 60))
+            var run = await manager.state().run(model.id)
+            print("[live03] created \(run.podId ?? "?") on \(run.gpuName ?? "?") at $\(run.pricePerHour ?? 0)/h")
+            var lastPhase = run.phase
+            while Date().timeIntervalSince(t0) < 25 * 60 {
+                try await Task.sleep(for: .seconds(15))
+                await manager.refresh(model.id)
+                run = await manager.state().run(model.id)
+                if run.phase != lastPhase { print("[live03] phase \(run.phase) after \(Int(Date().timeIntervalSince(t0)))s"); lastPhase = run.phase }
+                if run.phase == .ready || run.phase == .failed || run.phase == .stopped { break }
+            }
+            print("[live03] \(run.phase) after \(Int(Date().timeIntervalSince(t0)))s; \(run.lastReason ?? "") \(run.lastMessage ?? "")")
+            #expect(run.phase == .ready)
+            guard run.phase == .ready else { await cleanUp(); return }
+
+            let port = Int.random(in: 45_000...48_000)
+            let gateway = Task { try await LocalGateway(port: port, manager: manager, key: { "gw-live" }).run() }
+            defer { gateway.cancel() }
+            try await Task.sleep(for: .seconds(1))
+            let base = "http://127.0.0.1:\(port)"
+
+            func post(_ path: String, _ body: String, headers: [String: String] = ["Authorization": "Bearer gw-live"]) async throws -> (Int, String) {
+                var request = URLRequest(url: URL(string: base + path)!)
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                for (k, v) in headers { request.setValue(v, forHTTPHeaderField: k) }
+                request.httpBody = Data(body.utf8)
+                let (data, response) = try await Self.session.data(for: request)
+                return ((response as? HTTPURLResponse)?.statusCode ?? 0, String(decoding: data, as: UTF8.self))
+            }
+            let tool = #"{"name":"get_weather","description":"Current weather for a city","input_schema":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}"#
+            let openAITool = #"{"type":"function","function":{"name":"get_weather","description":"Current weather for a city","parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}}"#
+
+            let chat = try await post("/v1/chat/completions", #"{"model":"tiny","max_tokens":120,"messages":[{"role":"user","content":"What is the weather in Berlin? Use the tool."}],"tools":[\#(openAITool)]}"#)
+            print("[live03] chat+tools: \(chat.0) \(chat.1.prefix(300))")
+            #expect(chat.0 == 200)
+
+            let anthropicHeaders = ["x-api-key": "gw-live", "anthropic-version": "2023-06-01"]
+            let messages = try await post("/v1/messages?beta=true", #"{"model":"tiny","max_tokens":120,"messages":[{"role":"user","content":"What is the weather in Berlin? Use the tool."}],"tools":[\#(tool)]}"#, headers: anthropicHeaders)
+            print("[live03] messages+tools: \(messages.0) \(messages.1.prefix(400))")
+            #expect(messages.0 == 200)
+            #expect(messages.1.contains(#""type":"message""#) || messages.1.contains(#""type": "message""#))
+
+            let streamed = try await post("/v1/messages", #"{"model":"tiny","max_tokens":30,"stream":true,"messages":[{"role":"user","content":"Say hello."}]}"#, headers: anthropicHeaders)
+            print("[live03] messages stream: \(streamed.0), events: \(streamed.1.components(separatedBy: "event:").count - 1)")
+            #expect(streamed.0 == 200 && streamed.1.contains("message_stop"))
+
+            let count = try await post("/v1/messages/count_tokens", #"{"model":"tiny","messages":[{"role":"user","content":"Hello there"}]}"#, headers: anthropicHeaders)
+            print("[live03] count_tokens: \(count.0) \(count.1.prefix(200))")
+
+            let responses = try await post("/v1/responses", #"{"model":"tiny","max_output_tokens":60,"input":"What is the weather in Berlin? Use the tool.","tools":[{"type":"function","name":"get_weather","description":"Current weather for a city","parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}]}"#)
+            print("[live03] responses+tools: \(responses.0) \(responses.1.prefix(400))")
+            #expect(responses.0 == 200)
+        } catch {
+            print("[live03] FAILED: \(error)")
+            await cleanUp()
+            throw error
+        }
+        await cleanUp()
+    }
+}
