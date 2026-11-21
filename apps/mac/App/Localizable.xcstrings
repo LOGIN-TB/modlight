@@ -27,6 +27,16 @@
         }
       }
     },
+    "%@ is ready": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist bereit"
+          }
+        }
+      }
+    },
     "%@ left": {
       "localizations": {
         "de": {
@@ -53,12 +63,58 @@
         }
       }
     },
+    "%@ stopped at your spending limit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wurde beim Ausgabelimit gestoppt"
+          }
+        }
+      }
+    },
+    "%@ stops in %lld minutes": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ stoppt in %2$lld Minuten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ stops in %2$lld minutes"
+          }
+        }
+      }
+    },
     "%@ tokens": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ Token"
+          }
+        }
+      }
+    },
+    "%@ was not started": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wurde nicht gestartet"
+          }
+        }
+      }
+    },
+    "%@ was stopped by its safety stop": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wurde von der Notbremse gestoppt"
           }
         }
       }
@@ -105,6 +161,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld GB"
+          }
+        }
+      }
+    },
+    "%lld KiB, read from the model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld KiB, aus dem Modell gelesen"
           }
         }
       }
@@ -169,16 +235,6 @@
         }
       }
     },
-    "1. Open (or create) the file ~/.config/opencode/opencode.json.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1. Öffne die Datei ~/.config/opencode/opencode.json oder lege sie an."
-          }
-        }
-      }
-    },
     "1. Open RunPod's settings and sign in.": {
       "localizations": {
         "de": {
@@ -209,16 +265,6 @@
         }
       }
     },
-    "2. Paste this configuration. If the file already has content, merge the \"providers\" entry.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "2. Füge diese Konfiguration ein. Steht schon etwas in der Datei, übernimm nur den Eintrag „providers“."
-          }
-        }
-      }
-    },
     "2. Under \"API Keys\", click \"Create API Key\" and name it \"Podlight\".": {
       "localizations": {
         "de": {
@@ -235,16 +281,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "3. Wähle die Berechtigung „All“ oder „Restricted“ mit Lese- und Schreibrecht für Pods."
-          }
-        }
-      }
-    },
-    "3. In OpenCode, choose the model with /models: it appears as \"podlight/<name>\".": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3. Wähle das Modell in OpenCode mit /models aus. Es heißt „podlight/<Name>“."
           }
         }
       }
@@ -289,6 +325,16 @@
         }
       }
     },
+    "A Hugging Face token is recommended: pods download over addresses RunPod shares with others, and Hugging Face limits anonymous downloads more strictly. It is required for gated models. After a new Podlight key, paste it into your agents' configuration.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Hugging-Face-Token ist empfohlen: Pods laden über Adressen, die RunPod mit anderen teilt, und Hugging Face begrenzt Downloads ohne Konto stärker. Für gesperrte Modelle ist er Pflicht. Nach einem neuen Podlight-Schlüssel trägst du ihn in die Konfiguration deiner Agenten ein."
+          }
+        }
+      }
+    },
     "A new pod can take 10–25 minutes: the GPU host first downloads the engine (about 9 GB), then the model. Resuming a stopped pod takes about a minute.": {
       "localizations": {
         "de": {
@@ -305,6 +351,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bis zu einer Uhrzeit …"
+          }
+        }
+      }
+    },
+    "A token with read access is enough. It is stored in this Mac's keychain and passed to your own pods only.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Token mit Leserecht genügt. Er liegt im Schlüsselbund dieses Macs und geht nur an deine eigenen Pods."
           }
         }
       }
@@ -369,12 +425,12 @@
         }
       }
     },
-    "Add a model from Hugging Face": {
+    "Add a model first": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ein Modell von Hugging Face hinzufügen"
+            "value": "Füge zuerst ein Modell hinzu"
           }
         }
       }
@@ -399,12 +455,72 @@
         }
       }
     },
-    "Advanced": {
+    "Address in the network": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erweitert"
+            "value": "Adresse im Netzwerk"
+          }
+        }
+      }
+    },
+    "Address on this Mac": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse auf diesem Mac"
+          }
+        }
+      }
+    },
+    "Afterwards": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danach"
+          }
+        }
+      }
+    },
+    "Afterwards, while stopped": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danach, solange gestoppt"
+          }
+        }
+      }
+    },
+    "Agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent"
+          }
+        }
+      }
+    },
+    "Agents can use it now.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten können es jetzt nutzen."
+          }
+        }
+      }
+    },
+    "Agents on this Mac and in the local network can connect now.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten auf diesem Mac und im lokalen Netzwerk können sich jetzt verbinden."
           }
         }
       }
@@ -419,22 +535,12 @@
         }
       }
     },
-    "Agents use http://127.0.0.1:<port>/v1. After a change, update their configuration.": {
+    "Another computer": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Agenten nutzen http://127.0.0.1:<Port>/v1. Nach einer Änderung musst du ihre Konfiguration anpassen."
-          }
-        }
-      }
-    },
-    "Agents using the old key stop working until you paste the new one into their configuration.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Agenten mit dem alten Schlüssel funktionieren erst wieder, wenn du den neuen in ihre Konfiguration einträgst."
+            "value": "Anderer Rechner"
           }
         }
       }
@@ -459,12 +565,32 @@
         }
       }
     },
-    "Apply and Restart Connection": {
+    "Anywhere": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Übernehmen und Verbindung neu starten"
+            "value": "Überall"
+          }
+        }
+      }
+    },
+    "Apply": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übernehmen"
+          }
+        }
+      }
+    },
+    "Asking Hugging Face…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frage Hugging Face …"
           }
         }
       }
@@ -499,6 +625,16 @@
         }
       }
     },
+    "At a limit, Podlight stops this Mac's pods and starts them again only the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ist ein Limit erreicht, stoppt Podlight die Pods dieses Macs und startet sie erst am nächsten Tag oder im nächsten Monat wieder. Außerdem stoppt sich jeder Pod selbst, wenn er die eingestellte Zeit nichts von Podlight hört, etwa während dieser Mac schläft."
+          }
+        }
+      }
+    },
     "Back": {
       "localizations": {
         "de": {
@@ -515,16 +651,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ausgewogen"
-          }
-        }
-      }
-    },
-    "Base URL": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Basis-URL"
           }
         }
       }
@@ -549,7 +675,7 @@
         }
       }
     },
-    "Change limits…": {
+    "Change Limits…": {
       "localizations": {
         "de": {
           "stringUnit": {
@@ -569,6 +695,16 @@
         }
       }
     },
+    "Check and Save Token": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token prüfen und speichern"
+          }
+        }
+      }
+    },
     "Check for Updates…": {
       "localizations": {
         "de": {
@@ -579,12 +715,12 @@
         }
       }
     },
-    "Choose GPU": {
+    "Choose Context and GPU": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Karte wählen"
+            "value": "Kontext und Karte wählen"
           }
         }
       }
@@ -639,12 +775,12 @@
         }
       }
     },
-    "Connect OpenCode": {
+    "Configuration files for experts": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "OpenCode verbinden"
+            "value": "Konfigurationsdateien für Fortgeschrittene"
           }
         }
       }
@@ -655,6 +791,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Podlight mit RunPod verbinden"
+          }
+        }
+      }
+    },
+    "Connect your agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent verbinden"
           }
         }
       }
@@ -729,12 +875,12 @@
         }
       }
     },
-    "Copy Base URL": {
+    "Copy Address": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Basis-URL kopieren"
+            "value": "Adresse kopieren"
           }
         }
       }
@@ -769,12 +915,32 @@
         }
       }
     },
+    "Costs and safety": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosten und Sicherheit"
+          }
+        }
+      }
+    },
     "Costs at most": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Kostet höchstens"
+          }
+        }
+      }
+    },
+    "Costs while stopped": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosten im gestoppten Zustand"
           }
         }
       }
@@ -789,12 +955,22 @@
         }
       }
     },
-    "Create New Key…": {
+    "Create New Podlight Key…": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neuen Schlüssel erstellen …"
+            "value": "Neuen Podlight-Schlüssel erstellen …"
+          }
+        }
+      }
+    },
+    "Create a Token at Hugging Face": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token bei Hugging Face anlegen"
           }
         }
       }
@@ -805,6 +981,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Token bei Hugging Face anlegen (Leserecht genügt)"
+          }
+        }
+      }
+    },
+    "Data center": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechenzentrum"
           }
         }
       }
@@ -869,12 +1055,22 @@
         }
       }
     },
-    "Deleting also deletes its pod and disk at RunPod.": {
+    "Deleting also deletes a kept disk at RunPod.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beim Löschen werden auch der Pod und seine Festplatte bei RunPod gelöscht."
+            "value": "Beim Löschen wird auch eine behaltene Festplatte bei RunPod gelöscht."
+          }
+        }
+      }
+    },
+    "Disk": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Festplatte"
           }
         }
       }
@@ -889,12 +1085,42 @@
         }
       }
     },
+    "Documentation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokumentation"
+          }
+        }
+      }
+    },
     "Download": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Download"
+          }
+        }
+      }
+    },
+    "EU and EEA (incl. Iceland, Norway)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EU und EWR (mit Island, Norwegen)"
+          }
+        }
+      }
+    },
+    "EU only": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur EU"
           }
         }
       }
@@ -909,12 +1135,32 @@
         }
       }
     },
-    "Every pod stops itself when it has not heard from Podlight for this long, for example while this Mac sleeps. The new value applies to pods started from now on.": {
+    "Edit %@": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jeder Pod stoppt sich selbst, wenn er so lange nichts von Podlight gehört hat, etwa während dieser Mac schläft. Der neue Wert gilt für Pods, die ab jetzt starten."
+            "value": "%@ bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearbeiten …"
+          }
+        }
+      }
+    },
+    "Environment variables": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umgebungsvariablen"
           }
         }
       }
@@ -949,6 +1195,16 @@
         }
       }
     },
+    "Extend it if you are still working.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängere, wenn du noch arbeitest."
+          }
+        }
+      }
+    },
     "Fast": {
       "localizations": {
         "de": {
@@ -965,6 +1221,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suche eine Karte"
+          }
+        }
+      }
+    },
+    "For": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für"
+          }
+        }
+      }
+    },
+    "For tools that read OpenAI's environment variables, such as Aider: add these lines to ~/.zshrc or run them before the tool.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Programme, die die OpenAI-Umgebungsvariablen lesen, etwa Aider: Trage diese Zeilen in ~/.zshrc ein oder führe sie vor dem Programm aus."
           }
         }
       }
@@ -995,6 +1271,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Karte"
+          }
+        }
+      }
+    },
+    "GPU and costs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karte und Kosten"
+          }
+        }
+      }
+    },
+    "Gated models such as Llama or Gemma need a token, after you accept their licence on the model page.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesperrte Modelle wie Llama oder Gemma brauchen einen Token, nachdem du auf der Modellseite deren Lizenz zugestimmt hast."
           }
         }
       }
@@ -1039,22 +1335,22 @@
         }
       }
     },
+    "Hosting": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hosting"
+          }
+        }
+      }
+    },
     "Hugging Face": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Hugging Face"
-          }
-        }
-      }
-    },
-    "Hugging Face (optional)": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hugging Face (optional)"
           }
         }
       }
@@ -1079,12 +1375,52 @@
         }
       }
     },
+    "Hugging Face does not accept this token.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hugging Face akzeptiert diesen Token nicht."
+          }
+        }
+      }
+    },
+    "Hugging Face token": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hugging-Face-Token"
+          }
+        }
+      }
+    },
+    "Hugging Face token (recommended)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hugging-Face-Token (empfohlen)"
+          }
+        }
+      }
+    },
     "If this Mac sleeps or Podlight quits, pods stop after a few minutes.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Schläft dieser Mac oder wird Podlight beendet, stoppen die Pods nach wenigen Minuten."
+          }
+        }
+      }
+    },
+    "In your coding agent (OpenCode, Cline, Aider, pi, …) choose a custom or OpenAI-compatible provider and enter these three values. A stopped model starts by itself when an agent asks for it; a new pod then needs up to 25 minutes, so start a new model in Podlight first.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle in deinem Coding-Agenten (OpenCode, Cline, Aider, pi, …) einen eigenen oder OpenAI-kompatiblen Anbieter und trage diese drei Werte ein. Ein gestopptes Modell startet von selbst, wenn ein Agent es anfragt. Ein neuer Pod braucht dann bis zu 25 Minuten, starte ein neues Modell deshalb zuerst in Podlight."
           }
         }
       }
@@ -1101,6 +1437,26 @@
           "stringUnit": {
             "state": "new",
             "value": "It stops earlier when no requests come in for %1$lld minutes, and by itself if this Mac sleeps or Podlight quits for more than %2$lld minutes. You can extend it while it runs."
+          }
+        }
+      }
+    },
+    "Keep model on disk": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell zwischenspeichern"
+          }
+        }
+      }
+    },
+    "Kept disks": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behaltene Festplatten"
           }
         }
       }
@@ -1125,22 +1481,22 @@
         }
       }
     },
+    "Leave a field empty for no limit.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer lassen bedeutet kein Limit."
+          }
+        }
+      }
+    },
     "Licence": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Lizenz"
-          }
-        }
-      }
-    },
-    "Listening on port %@": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erreichbar auf Port %@"
           }
         }
       }
@@ -1155,12 +1511,12 @@
         }
       }
     },
-    "Local connection": {
+    "Longer contexts need more memory, so they may need a larger card or several. Speeds are estimates from memory bandwidth. If the chosen card is taken when you start, Podlight tries the next ones in this list.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lokale Verbindung"
+            "value": "Mehr Kontext braucht mehr Speicher, also eine größere Karte oder mehrere. Das Tempo ist aus der Speicherbandbreite geschätzt. Ist die gewählte Karte beim Start vergeben, probiert Podlight die nächsten aus dieser Liste."
           }
         }
       }
@@ -1195,6 +1551,16 @@
         }
       }
     },
+    "Memory per token": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicher pro Token"
+          }
+        }
+      }
+    },
     "Model": {
       "localizations": {
         "de": {
@@ -1215,6 +1581,46 @@
         }
       }
     },
+    "Models with \"Keep model on disk\" switched on keep their disk while stopped, so the next start skips the download. RunPod charges 0.20 USD per GB and month for it; it is included in the figures above. Podlight deletes pods left unused for %lld days.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelle mit eingeschaltetem „Modell zwischenspeichern“ behalten ihre Festplatte im gestoppten Zustand, damit der nächste Start ohne Download auskommt. RunPod berechnet dafür 0,20 USD pro GB und Monat; das ist in den Zahlen oben enthalten. Podlight löscht Pods, die %lld Tage unbenutzt waren."
+          }
+        }
+      }
+    },
+    "Move Podlight": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight verschieben"
+          }
+        }
+      }
+    },
+    "Move Podlight to Applications?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight in den Programme-Ordner verschieben?"
+          }
+        }
+      }
+    },
+    "Move to Applications": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Programme verschieben"
+          }
+        }
+      }
+    },
     "Name for agents": {
       "localizations": {
         "de": {
@@ -1231,6 +1637,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Braucht einen Hugging-Face-Token"
+          }
+        }
+      }
+    },
+    "Network": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netzwerk"
           }
         }
       }
@@ -1285,12 +1701,12 @@
         }
       }
     },
-    "No card at RunPod can hold this model right now. Try a 4-bit build.": {
+    "No card at RunPod can hold this model right now. Try a 4-bit build, or allow more regions in Settings.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine Karte bei RunPod fasst dieses Modell gerade. Versuche eine 4-Bit-Variante."
+            "value": "Keine Karte bei RunPod fasst dieses Modell gerade. Versuche eine 4-Bit-Variante oder erlaube in den Einstellungen mehr Regionen."
           }
         }
       }
@@ -1315,6 +1731,22 @@
         }
       }
     },
+    "No free card combination holds %@ tokens right now. At most %@ tokens are possible.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade fasst keine freie Kartenkombination %1$@ Token. Möglich sind höchstens %2$@ Token."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "No free card combination holds %1$@ tokens right now. At most %2$@ tokens are possible."
+          }
+        }
+      }
+    },
     "No weight files found in this repository.": {
       "localizations": {
         "de": {
@@ -1331,6 +1763,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nein, Coding-Agenten funktionieren damit schlecht"
+          }
+        }
+      }
+    },
+    "Not Now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht jetzt"
           }
         }
       }
@@ -1365,6 +1807,16 @@
         }
       }
     },
+    "Nothing is billed while the model is stopped. Each start downloads the model again, which takes 10–25 minutes.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solange das Modell gestoppt ist, wird nichts berechnet. Jeder Start lädt das Modell neu herunter, das dauert 10 bis 25 Minuten."
+          }
+        }
+      }
+    },
     "Nothing is running": {
       "localizations": {
         "de": {
@@ -1385,22 +1837,42 @@
         }
       }
     },
-    "Only needed for gated models such as Llama or Gemma, after you have accepted their licence on the model page.": {
+    "Off · nothing billed while stopped": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nur nötig für gesperrte Modelle wie Llama oder Gemma, nachdem du auf der Modellseite deren Lizenz zugestimmt hast."
+            "value": "Aus · im gestoppten Zustand kostenlos"
           }
         }
       }
     },
-    "Only programs on this Mac can connect, and only with this key. A stopped model starts by itself when an agent asks for it; the first answer then takes a few minutes.": {
+    "On · about %@ a month while stopped": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nur Programme auf diesem Mac können sich verbinden, und nur mit diesem Schlüssel. Ein gestopptes Modell startet von selbst, wenn ein Agent es anfragt. Die erste Antwort dauert dann einige Minuten."
+            "value": "An · etwa %@ pro Monat im gestoppten Zustand"
+          }
+        }
+      }
+    },
+    "Only programs on this Mac can connect. Switch on the local network to use your models from a second computer.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Programme auf diesem Mac können sich verbinden. Gib das lokale Netzwerk frei, um deine Modelle von einem zweiten Rechner aus zu nutzen."
+          }
+        }
+      }
+    },
+    "Only this Mac": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur dieser Mac"
           }
         }
       }
@@ -1465,32 +1937,22 @@
         }
       }
     },
-    "OpenAI-compatible endpoint": {
+    "OpenCode": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "OpenAI-kompatible Schnittstelle"
+            "value": "OpenCode"
           }
         }
       }
     },
-    "OpenCode documentation": {
+    "Other computers connect with the address under Connection and the same key. The connection is not encrypted: use this only in networks you trust, not in public Wi-Fi. macOS may ask once whether Podlight may accept incoming connections.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "OpenCode-Dokumentation"
-          }
-        }
-      }
-    },
-    "Other clients": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Andere Programme"
+            "value": "Andere Rechner verbinden sich mit der Adresse unter „Verbindung“ und demselben Schlüssel. Die Verbindung ist nicht verschlüsselt: Nutze das nur in Netzen, denen du vertraust, nicht im öffentlichen WLAN. macOS fragt eventuell einmal, ob Podlight eingehende Verbindungen annehmen darf."
           }
         }
       }
@@ -1505,12 +1967,42 @@
         }
       }
     },
+    "Paste into ~/.config/opencode/opencode.json (if the file has content, merge the \"providers\" entry), then pick podlight/<name> with /models.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In ~/.config/opencode/opencode.json einfügen (steht schon etwas darin, nur den Eintrag „providers“ übernehmen), dann podlight/<Name> mit /models wählen."
+          }
+        }
+      }
+    },
+    "Paste into ~/.pi/agent/models.json (if the file has content, merge the \"providers\" entry), then pick the model with /model.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In ~/.pi/agent/models.json einfügen (steht schon etwas darin, nur den Eintrag „providers“ übernehmen), dann das Modell mit /model wählen."
+          }
+        }
+      }
+    },
     "Paste the API key": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "API-Key einfügen"
+          }
+        }
+      }
+    },
+    "Paste the token (hf_…)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token einfügen (hf_…)"
           }
         }
       }
@@ -1555,6 +2047,16 @@
         }
       }
     },
+    "Podlight could not be moved (%@). Drag it into Applications in the Finder instead.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight konnte nicht verschoben werden (%@). Zieh es stattdessen im Finder in den Programme-Ordner."
+          }
+        }
+      }
+    },
     "Podlight could not use the keychain: %@": {
       "localizations": {
         "de": {
@@ -1575,12 +2077,22 @@
         }
       }
     },
-    "Podlight key for agents": {
+    "Podlight is running from the disk image or your Downloads folder. In Applications it starts reliably at login and updates itself.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podlight-Schlüssel für Agenten"
+            "value": "Podlight läuft aus dem Disk-Image oder deinem Download-Ordner. Im Programme-Ordner startet es zuverlässig bei der Anmeldung und aktualisiert sich selbst."
+          }
+        }
+      }
+    },
+    "Podlight moves into the Applications folder": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight wandert in den Programme-Ordner"
           }
         }
       }
@@ -1635,6 +2147,16 @@
         }
       }
     },
+    "Pods download models over addresses RunPod shares with other customers. Hugging Face limits downloads without an account more strictly, which can stop a download halfway.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pods laden Modelle über Adressen, die RunPod mit anderen Kunden teilt. Hugging Face begrenzt Downloads ohne Konto stärker, das kann einen Download mittendrin abbrechen."
+          }
+        }
+      }
+    },
     "Port": {
       "localizations": {
         "de": {
@@ -1645,12 +2167,12 @@
         }
       }
     },
-    "Port %@ is not available. Another program may be using it; choose a different port in Settings → Advanced.": {
+    "Port %@ is not available. Another program may be using it; choose a different port in Settings.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Port %@ ist nicht verfügbar. Vielleicht nutzt ihn ein anderes Programm. Wähle unter Einstellungen → Erweitert einen anderen."
+            "value": "Port %@ ist nicht verfügbar. Vielleicht nutzt ihn ein anderes Programm. Wähle in den Einstellungen einen anderen."
           }
         }
       }
@@ -1661,6 +2183,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preis"
+          }
+        }
+      }
+    },
+    "Price while running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preis im Betrieb"
           }
         }
       }
@@ -1681,6 +2213,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Beenden, Pods weiterlaufen lassen"
+          }
+        }
+      }
+    },
+    "Reachable on the local network": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im lokalen Netzwerk erreichbar"
+          }
+        }
+      }
+    },
+    "Reachable on this Mac": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem Mac erreichbar"
           }
         }
       }
@@ -1715,6 +2267,16 @@
         }
       }
     },
+    "Resuming takes about a minute.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Fortsetzen dauert etwa eine Minute."
+          }
+        }
+      }
+    },
     "Run Setup Again…": {
       "localizations": {
         "de": {
@@ -1725,12 +2287,22 @@
         }
       }
     },
-    "RunPod": {
+    "Run longer before it stops": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "RunPod"
+            "value": "Länger laufen lassen"
+          }
+        }
+      }
+    },
+    "RunPod API key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod-API-Key"
           }
         }
       }
@@ -1785,6 +2357,16 @@
         }
       }
     },
+    "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions in Settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod hat den Pod außerhalb deiner Region platziert, deshalb hat Podlight ihn sofort gelöscht. Versuche es noch einmal oder erlaube in den Einstellungen mehr Regionen."
+          }
+        }
+      }
+    },
     "RunPod refused (%lld).": {
       "localizations": {
         "de": {
@@ -1835,16 +2417,6 @@
         }
       }
     },
-    "Running since": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Läuft seit"
-          }
-        }
-      }
-    },
     "Running · %@ left": {
       "localizations": {
         "de": {
@@ -1875,22 +2447,22 @@
         }
       }
     },
-    "Safety": {
+    "Save": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sicherheit"
+            "value": "Sichern"
           }
         }
       }
     },
-    "Save Token": {
+    "Saved for %@.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Token speichern"
+            "value": "Gespeichert für %@."
           }
         }
       }
@@ -1945,12 +2517,22 @@
         }
       }
     },
-    "Select a Model": {
+    "Secure Cloud only": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähle ein Modell"
+            "value": "Nur Secure Cloud"
+          }
+        }
+      }
+    },
+    "Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. RunPod treats the chosen region as a preference and gives no data residency guarantee, so Podlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secure Cloud läuft in zertifizierten Rechenzentren (RunPod nennt SOC 2, ISO 27001, PCI DSS) statt auf Community-Rechnern, meist zu einem höheren Preis. RunPod behandelt die gewählte Region als Wunsch und garantiert keinen Datenstandort. Podlight prüft deshalb, wo jeder Pod gelandet ist, und löscht ihn sofort, wenn er außerhalb liegt. Mit diesen Einschränkungen gibt es weniger Karten."
           }
         }
       }
@@ -1975,12 +2557,32 @@
         }
       }
     },
+    "Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen"
+          }
+        }
+      }
+    },
     "Show": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Einblenden"
+          }
+        }
+      }
+    },
+    "Skip": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringen"
           }
         }
       }
@@ -2001,16 +2603,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tempo (geschätzt)"
-          }
-        }
-      }
-    },
-    "Speeds are estimates from memory bandwidth. If the chosen card is taken when you start, Podlight tries the next ones in this list.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das Tempo ist aus der Speicherbandbreite geschätzt. Ist die gewählte Karte beim Start vergeben, probiert Podlight die nächsten aus dieser Liste."
           }
         }
       }
@@ -2065,6 +2657,16 @@
         }
       }
     },
+    "Start this model for a set time": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Modell für eine feste Zeit starten"
+          }
+        }
+      }
+    },
     "Starting connection…": {
       "localizations": {
         "de": {
@@ -2115,22 +2717,22 @@
         }
       }
     },
-    "Step 3 of 4: GPU": {
+    "Step 3 of 4: Context and GPU": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schritt 3 von 4: Karte"
+            "value": "Schritt 3 von 4: Kontext und Karte"
           }
         }
       }
     },
-    "Step 4 of 4: Name": {
+    "Step 4 of 4: Name and disk": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schritt 4 von 4: Name"
+            "value": "Schritt 4 von 4: Name und Festplatte"
           }
         }
       }
@@ -2155,12 +2757,32 @@
         }
       }
     },
+    "Stop now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt stoppen"
+          }
+        }
+      }
+    },
     "Stop pods without contact after": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Pods ohne Kontakt stoppen nach"
+          }
+        }
+      }
+    },
+    "Stop the model to edit it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppe das Modell, um es zu bearbeiten."
           }
         }
       }
@@ -2255,26 +2877,6 @@
         }
       }
     },
-    "Stopped pods": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gestoppte Pods"
-          }
-        }
-      }
-    },
-    "Stopped pods keep their disk so the next start skips the download. RunPod charges a few cents per GB and month for it. Podlight deletes pods left unused for %lld days.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gestoppte Pods behalten ihre Festplatte, damit der nächste Start ohne Download auskommt. RunPod berechnet dafür wenige Cent pro GB und Monat. Podlight löscht Pods, die %lld Tage unbenutzt waren."
-          }
-        }
-      }
-    },
     "Stopped when Podlight quit.": {
       "localizations": {
         "de": {
@@ -2335,6 +2937,16 @@
         }
       }
     },
+    "Summary": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusammenfassung"
+          }
+        }
+      }
+    },
     "Supported": {
       "localizations": {
         "de": {
@@ -2351,16 +2963,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verbindung testen"
-          }
-        }
-      }
-    },
-    "The configuration contains your Podlight key. Keep it in your home folder, never in a project repository.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Konfiguration enthält deinen Podlight-Schlüssel. Lege sie in deinem Benutzerordner ab, nie in einem Projekt-Repository."
           }
         }
       }
@@ -2435,6 +3037,22 @@
         }
       }
     },
+    "The next start takes about a minute instead of 10–25. The disk (%lld GB) costs about %@ a month while the model is stopped. Podlight deletes it after %lld days without use.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der nächste Start dauert etwa eine Minute statt 10 bis 25. Die Festplatte (%1$lld GB) kostet etwa %2$@ pro Monat, solange das Modell gestoppt ist. Podlight löscht sie nach %3$lld Tagen ohne Nutzung."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "The next start takes about a minute instead of 10–25. The disk (%1$lld GB) costs about %2$@ a month while the model is stopped. Podlight deletes it after %3$lld days without use."
+          }
+        }
+      }
+    },
     "The pod is in an error state at RunPod.": {
       "localizations": {
         "de": {
@@ -2485,6 +3103,16 @@
         }
       }
     },
+    "These files contain your Podlight key. Keep them in your home folder, never in a project repository.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Dateien enthalten deinen Podlight-Schlüssel. Lege sie in deinem Benutzerordner ab, nie in einem Projekt-Repository."
+          }
+        }
+      }
+    },
     "This Mac": {
       "localizations": {
         "de": {
@@ -2495,12 +3123,22 @@
         }
       }
     },
-    "This is a GGUF build. Podlight 0.1 runs vLLM, which needs safetensors weights. Pick a 4-bit AWQ or GPTQ build instead.": {
+    "This Mac and the local network": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das ist ein GGUF-Build. Podlight 0.1 arbeitet mit vLLM, das Gewichte im Safetensors-Format braucht. Wähle stattdessen eine 4-Bit-Variante mit AWQ oder GPTQ."
+            "value": "Dieser Mac und das lokale Netzwerk"
+          }
+        }
+      }
+    },
+    "This is a GGUF build. Podlight runs vLLM, which needs safetensors weights. Pick a 4-bit AWQ or GPTQ build instead.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist ein GGUF-Build. Podlight arbeitet mit vLLM, das Gewichte im Safetensors-Format braucht. Wähle stattdessen eine 4-Bit-Variante mit AWQ oder GPTQ."
           }
         }
       }
@@ -2521,16 +3159,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieser Monat"
-          }
-        }
-      }
-    },
-    "This run": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieser Lauf"
           }
         }
       }
@@ -2561,16 +3189,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Das Tageslimit ist erreicht. Erhöhe es in den Einstellungen oder starte morgen wieder."
-          }
-        }
-      }
-    },
-    "Token": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token"
           }
         }
       }
@@ -2685,6 +3303,36 @@
         }
       }
     },
+    "Where": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo"
+          }
+        }
+      }
+    },
+    "Where pods may run": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo Pods laufen dürfen"
+          }
+        }
+      }
+    },
+    "Who may connect": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer sich verbinden darf"
+          }
+        }
+      }
+    },
     "Works.": {
       "localizations": {
         "de": {
@@ -2745,6 +3393,26 @@
         }
       }
     },
+    "about %@ a month": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "etwa %@ pro Monat"
+          }
+        }
+      }
+    },
+    "about %@ a month for the disk": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "etwa %@ pro Monat für die Festplatte"
+          }
+        }
+      }
+    },
     "about %lld tok/s": {
       "localizations": {
         "de": {
@@ -2771,6 +3439,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "kein Limit"
+          }
+        }
+      }
+    },
+    "pi": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pi"
+          }
+        }
+      }
+    },
+    "the pod is deleted, nothing billed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "der Pod wird gelöscht, nichts wird berechnet"
           }
         }
       }

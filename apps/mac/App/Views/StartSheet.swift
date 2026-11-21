@@ -22,9 +22,6 @@ struct StartSheet: View {
         }
     }
 
-    private var price: Double? {
-        model.state.run(model_.id).pricePerHour ?? model_.expectedPricePerHour
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -42,8 +39,13 @@ struct StartSheet: View {
                     DatePicker("Until", selection: $untilTime, displayedComponents: .hourAndMinute)
                 }
                 LabeledContent("Stops at", value: Format.time(end))
-                if let price {
-                    LabeledContent("Costs at most", value: Format.money(GPUSuggestion.cost(pricePerHour: price, from: .now, until: end)))
+                if let cost = model.maximumCost(of: model_, until: end) {
+                    LabeledContent("Costs at most", value: Format.money(cost))
+                }
+                if let monthly = model.keptDiskPerMonth(model_) {
+                    LabeledContent("Afterwards, while stopped", value: String(localized: "about \(Format.money(monthly)) a month for the disk"))
+                } else {
+                    LabeledContent("Afterwards", value: String(localized: "the pod is deleted, nothing billed"))
                 }
             }
             .formStyle(.grouped)
@@ -63,7 +65,7 @@ struct StartSheet: View {
                     }
                 }
                 .keyboardShortcut(.defaultAction)
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .disabled(starting)
             }
         }

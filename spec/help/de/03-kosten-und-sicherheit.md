@@ -30,6 +30,11 @@ Laufen noch Pods, fragt Podlight vor dem Beenden nach. „Stoppen und beenden“
 
 Das Fenster zu schließen beendet Podlight nicht. Die App läuft in der Menüleiste weiter, und dein Agent bleibt verbunden.
 
-## Angehaltene Pods
+## Modell zwischenspeichern
 
-Ein gestoppter Pod behält seine Festplatte, damit der nächste Start ohne Download auskommt. RunPod berechnet dafür wenige Cent pro GB und Monat. Pods, die drei Tage nicht benutzt wurden, löscht Podlight samt Festplatte.
+Pro Modell entscheidest du, ob es zwischen zwei Läufen auf einer Festplatte bei RunPod bleibt:
+
+- **Aus (Standard):** Am Ende eines Laufs löscht Podlight den Pod. Bis zum nächsten Start kostet nichts. Dafür lädt jeder Start das Modell neu, das dauert 10 bis 25 Minuten.
+- **An:** Der Pod wird nur gestoppt und behält seine Festplatte. Der nächste Start dauert etwa eine Minute. RunPod berechnet die Festplatte mit 0,20 USD pro GB und Monat, solange der Pod gestoppt ist, im Betrieb mit 0,10 USD. Bei 30 GB sind das etwa 6 USD im Monat.
+
+Podlight zeigt diese Kosten beim Anlegen, beim Start und unter „Kosten“ und rechnet sie in die Ausgabelimits ein. Pods mit Festplatte, die drei Tage nicht benutzt wurden, löscht Podlight samt Festplatte. Den Schalter änderst du unter „Bearbeiten“, solange das Modell gestoppt ist.

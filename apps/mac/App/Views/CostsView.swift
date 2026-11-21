@@ -5,6 +5,7 @@ import SwiftUI
 /// What this Mac's pods cost, against the limits that stop them.
 struct CostsView: View {
     @Environment(AppModel.self) private var model
+    @State private var editingLimits = false
 
     private struct Day: Identifiable {
         var id: Date { date }
@@ -36,7 +37,16 @@ struct CostsView: View {
             Section {
                 LimitRow(title: "Today", spent: spend.todayUsd, limit: spend.dailyLimitUsd)
                 LimitRow(title: "This month", spent: spend.monthUsd, limit: spend.monthlyLimitUsd)
-                SettingsLink { Text("Change limits…") }
+                Button("Change Limits…") { editingLimits = true }
+                    .popover(isPresented: $editingLimits, arrowEdge: .bottom) {
+                        Form {
+                            LimitField(title: "Per day", value: model.state.settings.dailyLimitUsd) { v in await model.updateSettings { $0.dailyLimitUsd = v } }
+                            LimitField(title: "Per month", value: model.state.settings.monthlyLimitUsd) { v in await model.updateSettings { $0.monthlyLimitUsd = v } }
+                            Text("Leave a field empty for no limit.").font(.caption).foregroundStyle(.secondary)
+                        }
+                        .formStyle(.grouped)
+                        .frame(width: 320)
+                    }
             } header: {
                 Text("Spending limits")
             } footer: {
@@ -53,9 +63,10 @@ struct CostsView: View {
                 .accessibilityValue(Text("Total \(Format.money(lastThirtyDays.map(\.usd).reduce(0, +)))"))
             }
             if stoppedDiskGB > 0 {
-                Section("Stopped pods") {
+                Section("Kept disks") {
                     LabeledContent("Disk kept", value: "\(stoppedDiskGB) GB")
-                    Text("Stopped pods keep their disk so the next start skips the download. RunPod charges a few cents per GB and month for it. Podlight deletes pods left unused for \(model.state.settings.deleteStoppedAfterDays) days.")
+                    LabeledContent("Costs while stopped", value: String(localized: "about \(Format.money(StoragePricing.stoppedPerMonth(volumeGB: stoppedDiskGB))) a month"))
+                    Text("Models with \"Keep model on disk\" switched on keep their disk while stopped, so the next start skips the download. RunPod charges 0.20 USD per GB and month for it; it is included in the figures above. Podlight deletes pods left unused for \(model.state.settings.deleteStoppedAfterDays) days.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }

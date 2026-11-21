@@ -4,12 +4,21 @@ import Observation
 import PodlightEngine
 import ServiceManagement
 
+/// What the sidebar shows: each model, then the app's own areas.
+enum SidebarItem: Hashable {
+    case model(UUID)
+    case connection
+    case costs
+    case settings
+}
+
 /// The app's state and actions, shared by every window and the menu bar.
 @MainActor
 @Observable
 final class AppModel {
     let keychain: KeychainStore
     let manager: PodManager
+    let notifier = Notifier()
 
     private(set) var state = PodlightState()
     private(set) var hasRunpodKey = false
@@ -17,13 +26,15 @@ final class AppModel {
     private(set) var gatewayKey: String?
     enum GatewayStatus: Equatable { case starting, running, failed(String) }
     private(set) var gatewayStatus: GatewayStatus = .starting
+    /// The address the gateway listens on right now (127.0.0.1 or 0.0.0.0).
+    private(set) var gatewayHost = "127.0.0.1"
     /// One-line message about the last action that went wrong, shown where it happened.
     var actionError: String?
     var showingSetup = false
     var showingAddModel = false
+    var editingModel: PodlightModel?
     var startingModel: PodlightModel?
-    var selection: SidebarItem? = .models
-    var selectedModelID: UUID?
+    var selection: SidebarItem?
     /// Set by any view that has SwiftUI's openWindow action, so the Dock and the menu bar can
     /// bring the main window back after it was closed.
     var openMainWindow: (() -> Void)?
@@ -47,8 +58,13 @@ final class AppModel {
     /// a slower one that asks RunPod and applies the rules.
     func launch() {
         guard loops.isEmpty else { return }
-        startGateway()
+        notifier.onExtend = { [weak self] id in
+            guard let self, let model = self.state.models.first(where: { $0.id == id }) else { return }
+            Task { await self.extend(model, by: 3600) }
+        }
         loops.append(Task { [weak self] in
+            await self?.reloadState()
+            self?.startGateway()
             while !Task.isCancelled {
                 await self?.reloadState()
                 try? await Task.sleep(for: .seconds(1))
@@ -65,7 +81,20 @@ final class AppModel {
     }
 
     func reloadState() async {
+        let previous = state
         state = await manager.state()
+        notifier.compare(previous: previous, current: state)
+        if selection == nil || !isValid(selection) { selection = state.models.first.map { .model($0.id) } ?? .connection }
+    }
+
+    private func isValid(_ item: SidebarItem?) -> Bool {
+        guard case .model(let id) = item else { return item != nil }
+        return state.models.contains { $0.id == id }
+    }
+
+    var selectedModel: PodlightModel? {
+        guard case .model(let id) = selection else { return nil }
+        return state.models.first { $0.id == id }
     }
 
     private func refreshSecrets() {
@@ -77,7 +106,14 @@ final class AppModel {
     // MARK: Gateway
 
     var gatewayPort: Int { state.settings.gatewayPort }
-    var gatewayBaseURL: String { "http://127.0.0.1:\(gatewayPort)/v1" }
+    var localBaseURL: String { "http://127.0.0.1:\(gatewayPort)/v1" }
+
+    /// Addresses for other computers, when the local network may connect.
+    var networkBaseURLs: [String] {
+        guard state.settings.allowLAN else { return [] }
+        let names = [NetworkAddresses.bonjourName()].compactMap { $0 } + NetworkAddresses.lanIPv4()
+        return names.map { "http://\($0):\(gatewayPort)/v1" }
+    }
 
     func startGateway() {
         gatewayTask?.cancel()
@@ -85,15 +121,25 @@ final class AppModel {
         let manager = manager
         let keychain = keychain
         let port = state.settings.gatewayPort
+        let host = state.settings.allowLAN ? "0.0.0.0" : "127.0.0.1"
+        gatewayHost = host
         gatewayTask = Task { [weak self] in
-            do {
-                let gateway = LocalGateway(port: port, manager: manager, key: { try? keychain.read(.gatewayKey) })
-                try await gateway.run(onReady: {
-                    Task { @MainActor in self?.gatewayStatus = .running }
-                })
-            } catch is CancellationError {
-            } catch {
-                await MainActor.run { self?.gatewayStatus = .failed(error.localizedDescription) }
+            // A cancelled server, or the copy that just relaunched us, may still hold the port for a
+            // moment: try a few times before reporting it as taken.
+            for attempt in 1...5 {
+                try? await Task.sleep(for: .milliseconds(attempt == 1 ? 300 : 1000))
+                if Task.isCancelled { return }
+                do {
+                    let gateway = LocalGateway(port: port, host: host, manager: manager, key: { try? keychain.read(.gatewayKey) })
+                    try await gateway.run(onReady: {
+                        Task { @MainActor in self?.gatewayStatus = .running }
+                    })
+                    return
+                } catch is CancellationError {
+                    return
+                } catch {
+                    if attempt == 5 { await MainActor.run { self?.gatewayStatus = .failed(error.localizedDescription) } }
+                }
             }
         }
     }
@@ -138,7 +184,7 @@ final class AppModel {
         do {
             try await manager.save(model)
             await reloadState()
-            selectedModelID = model.id
+            selection = .model(model.id)
         } catch {
             actionError = error.localizedDescription
         }
@@ -148,7 +194,7 @@ final class AppModel {
         do {
             try await manager.remove(model.id)
             await reloadState()
-            if selectedModelID == model.id { selectedModelID = state.models.first?.id }
+            if selection == .model(model.id) { selection = state.models.first.map { .model($0.id) } ?? .connection }
         } catch {
             actionError = Describe.error(error)
         }
@@ -156,6 +202,7 @@ final class AppModel {
 
     func start(_ model: PodlightModel, until: Date) async {
         actionError = nil
+        notifier.requestPermissionOnce()
         do {
             try await manager.start(model.id, until: until, manual: true)
         } catch {
@@ -184,6 +231,21 @@ final class AppModel {
         await reloadState()
     }
 
+    // MARK: Costs
+
+    /// What a run of `model` until `end` costs at most: cards plus storage.
+    func maximumCost(of model: PodlightModel, until end: Date) -> Double? {
+        let run = state.run(model.id)
+        guard let price = run.pricePerHour ?? model.expectedPricePerHour else { return nil }
+        let storage = run.storagePerHour ?? PodPlan.storagePerHour(for: model)
+        return GPUSuggestion.cost(pricePerHour: price + storage, from: .now, until: end)
+    }
+
+    /// Monthly cost of a kept disk while the pod is stopped, if the model keeps one.
+    func keptDiskPerMonth(_ model: PodlightModel) -> Double? {
+        model.keepDisk ? StoragePricing.stoppedPerMonth(volumeGB: PodPlan.persistentGB(for: model)) : nil
+    }
+
     // MARK: Quit
 
     var runningLocalPods: [(PodlightModel, ModelRun)] { state.activeRuns }
@@ -208,11 +270,11 @@ final class AppModel {
         }
     }
 
-    // MARK: Connection snippets
+    // MARK: Configuration files for agents
 
-    /// OpenCode's current config format (opencode.ai/docs/models, "Compatible"). Meant for the
-    /// global ~/.config/opencode/opencode.json, never for a repository: it contains the key.
-    var openCodeConfig: String {
+    /// OpenCode, current format (opencode.ai/docs/models, "Compatible"), for the global
+    /// ~/.config/opencode/opencode.json. Contains the key, so never for a repository.
+    func openCodeConfig(baseURL: String) -> String {
         let first = state.models.first?.name ?? "model"
         let models = state.models.map { model in
             """
@@ -232,7 +294,7 @@ final class AppModel {
               "name": "Podlight",
               "package": "@opencode/ai/providers/openai-compatible",
               "settings": {
-                "baseURL": "\(gatewayBaseURL)",
+                "baseURL": "\(baseURL)",
                 "apiKey": "\(gatewayKey ?? "")",
                 "headerTimeout": 600000
               },
@@ -245,16 +307,35 @@ final class AppModel {
         """
     }
 
-    /// For any other OpenAI-compatible client.
-    var genericConfig: String {
-        """
-        Base URL:  \(gatewayBaseURL)
-        API key:   \(gatewayKey ?? "")
-        Model:     \(state.models.map(\.name).joined(separator: " | "))
+    /// pi, ~/.pi/agent/models.json (github.com/earendil-works/pi, docs/models.md).
+    func piConfig(baseURL: String) -> String {
+        let models = state.models.map { model in
+            "        { \"id\": \"\(model.name)\", \"contextWindow\": \(model.contextTokens), \"maxTokens\": \(min(16_384, model.contextTokens / 4)) }"
+        }.joined(separator: ",\n")
+        return """
+        {
+          "$schema": "https://pi.dev/schemas/models.schema.json",
+          "providers": {
+            "podlight": {
+              "baseUrl": "\(baseURL)",
+              "api": "openai-completions",
+              "apiKey": "\(gatewayKey ?? "")",
+              "models": [
+        \(models)
+              ]
+            }
+          }
+        }
         """
     }
-}
 
-enum SidebarItem: Hashable {
-    case models, connection, costs
+    /// Environment variables most OpenAI-compatible tools read (Aider, scripts, SDKs).
+    func environmentConfig(baseURL: String) -> String {
+        """
+        export OPENAI_BASE_URL="\(baseURL)"
+        export OPENAI_API_BASE="\(baseURL)"
+        export OPENAI_API_KEY="\(gatewayKey ?? "")"
+        # Model: \(state.models.map(\.name).joined(separator: " | "))
+        """
+    }
 }

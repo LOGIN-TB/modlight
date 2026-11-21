@@ -1,71 +1,18 @@
 import PodlightEngine
 import SwiftUI
 
-/// The models the user has set up, and the selected one's state and controls.
-struct ModelsView: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        @Bindable var model = model
-        if !model.hasRunpodKey {
-            ContentUnavailableView {
-                Label("Connect Podlight to RunPod", systemImage: "key")
-            } description: {
-                Text("Podlight needs your RunPod API key to start pods. It takes about a minute.")
-            } actions: {
-                Button("Set Up…") { model.showingSetup = true }.buttonStyle(.borderedProminent)
-            }
-        } else if model.state.models.isEmpty {
-            ContentUnavailableView {
-                Label("No Models Yet", systemImage: "cpu")
-            } description: {
-                Text("Choose a model from Hugging Face. Podlight suggests a GPU and shows what it costs.")
-            } actions: {
-                Button("Add Model…") { model.showingAddModel = true }.buttonStyle(.borderedProminent)
-            }
-        } else {
-            HSplitView {
-                List(selection: $model.selectedModelID) {
-                    ForEach(model.state.models) { item in
-                        ModelRow(item: item, run: model.state.run(item.id)).tag(item.id)
-                    }
-                }
-                .frame(minWidth: 240, idealWidth: 280, maxWidth: 360)
-                Group {
-                    if let selected = model.state.models.first(where: { $0.id == model.selectedModelID }) {
-                        ModelDetailView(item: selected)
-                    } else {
-                        ContentUnavailableView("Select a Model", systemImage: "cpu")
-                    }
-                }
-                .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .toolbar {
-                ToolbarItem {
-                    Button { model.showingAddModel = true } label: { Label("Add Model", systemImage: "plus") }
-                        .help("Add a model from Hugging Face")
-                }
-            }
-            .onAppear {
-                if model.selectedModelID == nil { model.selectedModelID = model.state.models.first?.id }
-            }
-        }
-    }
-}
-
 struct ModelRow: View {
     let item: PodlightModel
     let run: ModelRun
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             PhaseIcon(phase: run.phase)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.name).font(.body.weight(.medium))
-                Text(PhaseText.summary(run)).font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(item.name).lineLimit(1)
+                Text(PhaseText.summary(run)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
         }
-        .padding(.vertical, 3)
         .accessibilityElement(children: .combine)
     }
 }
@@ -85,8 +32,7 @@ struct PhaseIcon: View {
             case .stopped: Image(systemName: "lightbulb").foregroundStyle(.secondary)
             }
         }
-        .imageScale(.large)
-        .frame(width: 22)
+        .frame(width: 20)
         .accessibilityHidden(true)
     }
 }
@@ -114,12 +60,14 @@ enum PhaseText {
     }
 }
 
+/// One model: its state, what it costs, what it is, and the actions for it in the toolbar.
 struct ModelDetailView: View {
     @Environment(AppModel.self) private var model
     let item: PodlightModel
     @State private var confirmingDelete = false
 
     private var run: ModelRun { model.state.run(item.id) }
+    private var isIdle: Bool { run.phase == .stopped || run.phase == .failed }
 
     var body: some View {
         Form {
@@ -128,17 +76,17 @@ struct ModelDetailView: View {
                     PhaseIcon(phase: run.phase).imageScale(.large)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(PhaseText.title(run.phase)).font(.title3.weight(.semibold))
-                        if let detail = statusDetail { Text(detail).foregroundStyle(.secondary) }
+                        if let detail = statusDetail {
+                            Text(detail).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
                     }
-                    Spacer(minLength: 8)
-                    controls
-                        .fixedSize()
-                        .layoutPriority(1)
                 }
                 .padding(.vertical, 4)
                 if run.phase == .loading || run.phase == .creating {
                     ProgressView {
-                        Text("A new pod can take 10–25 minutes: the GPU host first downloads the engine (about 9 GB), then the model. Resuming a stopped pod takes about a minute.")
+                        Text(item.keepDisk && run.persistentGB != nil
+                             ? "Resuming takes about a minute."
+                             : "A new pod can take 10–25 minutes: the GPU host first downloads the engine (about 9 GB), then the model. Resuming a stopped pod takes about a minute.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .progressViewStyle(.linear)
@@ -146,22 +94,31 @@ struct ModelDetailView: View {
                 if let error = model.actionError {
                     Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
                 }
-                if let fallback = run.fellBackFrom, !fallback.isEmpty, run.phase != .stopped {
+                if let fallback = run.fellBackFrom, !fallback.isEmpty, !isIdle {
                     Label("\(fallback.joined(separator: ", ")) was taken; Podlight used \(run.gpuName ?? "another card").",
                           systemImage: "arrow.triangle.branch")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
 
-            Section("This run") {
-                LabeledContent("GPU", value: run.gpuName ?? item.preferredGPU?.gpuId.replacingOccurrences(of: "NVIDIA ", with: "") ?? "–")
-                if let price = run.pricePerHour { LabeledContent("Price", value: Format.perHour(price)) }
-                if let end = run.runUntil, run.phase != .stopped {
+            Section("GPU and costs") {
+                LabeledContent("GPU", value: run.gpuName ?? gpuLabel)
+                if let price = run.pricePerHour ?? item.expectedPricePerHour {
+                    LabeledContent("Price", value: Format.perHour(price + (run.storagePerHour ?? PodPlan.storagePerHour(for: item))))
+                }
+                if let end = run.runUntil, !isIdle {
                     LabeledContent("Runs until", value: Format.time(end))
                 }
+                if let center = run.dataCenterId, !isIdle {
+                    LabeledContent("Data center", value: center)
+                }
                 LabeledContent("Stops when idle for", value: "\(item.schedule.idleStopMinutes) min")
-                if let start = run.startedAt, run.phase != .stopped {
-                    LabeledContent("Running since", value: Format.time(start))
+                LabeledContent("Keep model on disk") {
+                    if let monthly = model.keptDiskPerMonth(item) {
+                        Text("On · about \(Format.money(monthly)) a month while stopped")
+                    } else {
+                        Text("Off · nothing billed while stopped")
+                    }
                 }
             }
 
@@ -175,18 +132,30 @@ struct ModelDetailView: View {
             }
 
             Section {
-                Button("Delete Model…", role: .destructive) { confirmingDelete = true }
+                HStack {
+                    Button("Edit…") { model.editingModel = item }.disabled(!isIdle)
+                    Spacer()
+                    Button("Delete Model…", role: .destructive) { confirmingDelete = true }
+                }
             } footer: {
-                Text("Deleting also deletes its pod and disk at RunPod.").font(.caption).foregroundStyle(.secondary)
+                Text(isIdle ? "Deleting also deletes a kept disk at RunPod." : "Stop the model to edit it.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
         .navigationTitle(item.name)
+        .toolbar { toolbar }
         .confirmationDialog("Delete \(item.name)?", isPresented: $confirmingDelete) {
             Button("Delete", role: .destructive) { Task { await model.remove(item) } }
         } message: {
             Text("The model's pod and its disk at RunPod are deleted too. This cannot be undone.")
         }
+    }
+
+    private var gpuLabel: String {
+        guard let gpu = item.preferredGPU else { return "–" }
+        let name = gpu.gpuId.replacingOccurrences(of: "NVIDIA ", with: "").replacingOccurrences(of: "GeForce ", with: "")
+        return gpu.count > 1 ? "\(gpu.count) × \(name)" : name
     }
 
     private var statusDetail: String? {
@@ -204,24 +173,33 @@ struct ModelDetailView: View {
         }
     }
 
-    @ViewBuilder private var controls: some View {
-        switch run.phase {
-        case .stopped, .failed:
-            Button("Start…") { model.startingModel = item }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut("r")
-        case .creating, .stopping:
-            ProgressView().controlSize(.small)
-        case .loading, .ready:
-            HStack {
-                Menu("Extend") {
+    /// One prominent action at the trailing end, as the HIG asks: Start, or Stop while running.
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        if run.phase == .loading || run.phase == .ready {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
                     Button("1 Hour") { Task { await model.extend(item, by: 3600) } }
                     Button("2 Hours") { Task { await model.extend(item, by: 7200) } }
                     Button("4 Hours") { Task { await model.extend(item, by: 4 * 3600) } }
+                } label: {
+                    Label("Extend", systemImage: "clock.arrow.circlepath")
                 }
-                .fixedSize()
                 .disabled(run.runUntil == nil)
-                Button("Stop") { Task { await model.stop(item) } }
+                .help("Run longer before it stops")
+            }
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+            ToolbarItem(placement: .primaryAction) {
+                Button { Task { await model.stop(item) } } label: { Label("Stop", systemImage: "stop.fill") }
+                    .buttonStyle(.glassProminent)
+                    .help("Stop now")
+            }
+        } else if run.phase == .creating || run.phase == .stopping {
+            ToolbarItem(placement: .primaryAction) { ProgressView().controlSize(.small) }
+        } else {
+            ToolbarItem(placement: .primaryAction) {
+                Button { model.startingModel = item } label: { Label("Start…", systemImage: "play.fill") }
+                    .buttonStyle(.glassProminent)
+                    .help("Start this model for a set time")
             }
         }
     }

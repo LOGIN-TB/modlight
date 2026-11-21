@@ -18,13 +18,18 @@ Podlight runs a language model of your choice on a rented GPU at RunPod. Your co
 
 ![The API key step in Podlight](screenshots/en/setup-key.png)
 
+## Hugging Face token (recommended)
+
+Setup offers a Hugging Face token as its second step. It is optional but recommended: pods download models over addresses RunPod shares with other customers, and Hugging Face limits downloads without an account more strictly. Gated models such as Llama or Gemma require one. A token with read access is enough.
+
 ## Your first model
 
 - Under "Models", click "Add Model".
 - Search by name, or paste a link from huggingface.co.
 - Podlight checks the format, the size, and whether the model can make tool calls, which coding agents need. If there is a smaller 4-bit build, Podlight suggests it.
-- Choose what matters to you: economical, balanced or fast. Podlight shows suitable cards with their price per hour and an estimated speed.
+- Choose the context and what matters to you: economical, balanced or fast. Podlight shows suitable cards with their price per hour, an estimated speed and where they are.
 - Give it a name. Your agent asks for the model by this name.
+- Decide whether to keep the model on disk (fast restarts, but billed while stopped) or not (the default).
 
 None of this costs anything. Only "Start" rents a card.
 

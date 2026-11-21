@@ -22,4 +22,10 @@ Freie Karten sind bei RunPod knapp und wechseln innerhalb von Sekunden. Ist dein
 
 ## Kontext
 
-Der Kontext ist die Textmenge, die das Modell auf einmal sieht. Coding-Agenten brauchen viel davon. Podlight rechnet aus, wie viel neben dem Modell auf die Karte passt, und hält einen Sicherheitsabstand ein, damit vLLM nicht erst nach dem Download die Arbeit verweigert.
+Der Kontext ist die Textmenge, die das Modell auf einmal sieht. Coding-Agenten brauchen viel davon. Beim Anlegen wählst du ihn zuerst, bis zum Maximum des Modells, also auch 256.000 oder 1 Million Token. Danach zeigt Podlight nur Karten, die ihn fassen.
+
+Wie viel Speicher ein Token braucht, liest Podlight aus der Konfiguration des Modells. Kleine Modelle brauchen pro Token deutlich weniger als große, darum passen bei ihnen sehr lange Kontexte auch auf kleinere Karten. Podlight hält einen Sicherheitsabstand ein, damit vLLM nicht erst nach dem Download die Arbeit verweigert.
+
+## Mehrere Karten
+
+Passt ein langer Kontext nicht auf eine einzelne Karte, schlägt Podlight 2, 4 oder 8 Karten in einem Pod vor, etwa „2 × L40S“. vLLM verteilt das Modell dann auf alle Karten. Der Preis gilt für alle Karten zusammen. Mehrere gleiche Karten gleichzeitig frei zu bekommen ist bei RunPod schwerer; Podlight probiert notfalls die nächsten Vorschläge.

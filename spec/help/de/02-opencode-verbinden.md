@@ -1,28 +1,31 @@
-# OpenCode verbinden
+# Agent verbinden
 
-Podlight stellt auf diesem Mac eine OpenAI-kompatible Adresse bereit: `http://127.0.0.1:7635/v1`. Nur Programme auf diesem Mac erreichen sie, und nur mit dem Podlight-Schlüssel.
+Podlight stellt eine OpenAI-kompatible Adresse bereit. Jeder Coding-Agent, der einen eigenen oder OpenAI-kompatiblen Anbieter erlaubt, kann sie nutzen: OpenCode, Cline, Aider, pi und andere.
 
-## So geht es
+## Drei Werte
 
-- Öffne in Podlight „Verbindung“ und klicke auf „OpenCode-Konfiguration kopieren“.
-- Öffne die Datei `~/.config/opencode/opencode.json`. Gibt es sie noch nicht, legst du sie an. „Ordner im Finder öffnen“ bringt dich hin.
-- Füge die Konfiguration ein. Steht schon etwas in der Datei, übernimm nur den Eintrag unter `providers`.
-- Starte OpenCode und wähle mit `/models` das Modell aus. Es heißt `podlight/<Name>`.
+Unter „Verbindung“ stehen die drei Werte, die jeder Agent braucht, jeweils mit „Kopieren“:
+
+- **Adresse:** auf diesem Mac `http://127.0.0.1:7635/v1`. Ist das lokale Netzwerk freigegeben, steht dort zusätzlich die Adresse für andere Rechner.
+- **API-Key:** dein Podlight-Schlüssel. Ohne ihn lehnt Podlight jede Anfrage ab.
+- **Modell:** der Name, den du beim Anlegen vergeben hast.
 
 ![Die Ansicht „Verbindung“](screenshots/de/connection.png)
 
-Die Konfiguration enthält deinen Podlight-Schlüssel. Lege sie deshalb in deinem Benutzerordner ab und nie in einem Projekt-Repository.
+Wähle im Agenten einen eigenen bzw. OpenAI-kompatiblen Anbieter und trage die drei Werte ein. „Verbindung testen“ zeigt, ob Podlight antwortet.
 
-## Was passiert bei der ersten Anfrage
+## Konfigurationsdateien für Fortgeschrittene
 
-Läuft das Modell gerade nicht, startet Podlight es von selbst und hält die Anfrage fest, bis es antwortet. Ein gestoppter Pod ist nach etwa einer Minute wieder da. Ein ganz neuer Pod braucht bis zu 25 Minuten. Die Konfiguration lässt OpenCode bis zu 10 Minuten warten, starte ein neues Modell deshalb beim ersten Mal in Podlight selbst.
+Manche Agenten erwarten eine Datei statt einer Eingabemaske. Unter „Konfigurationsdateien für Fortgeschrittene“ erzeugt Podlight sie fertig:
+
+- **OpenCode:** `~/.config/opencode/opencode.json`. Das Modell heißt dort `podlight/<Name>` und wird mit `/models` gewählt.
+- **pi:** `~/.pi/agent/models.json`. Das Modell wird mit `/model` gewählt.
+- **Umgebungsvariablen:** `OPENAI_BASE_URL` und `OPENAI_API_KEY`, etwa für Aider.
+
+Steht in der Datei schon etwas, übernimm nur den Eintrag unter `providers`. Die Dateien enthalten deinen Podlight-Schlüssel. Lege sie deshalb in deinem Benutzerordner ab und nie in einem Projekt-Repository.
+
+## Was bei der ersten Anfrage passiert
+
+Läuft das Modell gerade nicht, startet Podlight es von selbst und hält die Anfrage fest, bis es antwortet. Ein gestoppter Pod mit zwischengespeichertem Modell ist nach etwa einer Minute wieder da. Ein ganz neuer Pod braucht bis zu 25 Minuten. Starte ein neues Modell deshalb beim ersten Mal in Podlight selbst.
 
 Ein so geweckter Pod hat kein festes Ende. Er stoppt, wenn keine Anfragen mehr kommen (Leerlauf-Stopp), spätestens nach der Höchstlaufzeit von 12 Stunden.
-
-## Andere Programme
-
-Jedes Programm, das eine OpenAI-kompatible Schnittstelle kann, funktioniert ebenso. Unter „Verbindung → Andere Programme“ stehen Adresse, Schlüssel und Modellnamen zum Kopieren.
-
-## Verbindung prüfen
-
-„Verbindung testen“ fragt die Modellliste ab. Kommt „Funktioniert“, ist alles eingerichtet. Ist der Port belegt, wählst du unter Einstellungen → Erweitert einen anderen und trägst ihn in OpenCode nach.
