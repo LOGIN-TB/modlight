@@ -227,7 +227,7 @@ struct LiveEUTwoCards {
                 chat.setValue("application/json", forHTTPHeaderField: "Content-Type")
                 chat.httpBody = Data(#"{"model":"qwen-tiny-tp2","max_tokens":20,"messages":[{"role":"user","content":"Hallo"}]}"#.utf8)
                 let (_, response) = try await Self.session.data(for: chat)
-                print("[live] chat on two cards: HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+                print("[live] chat on \(created.choice.count) card(s): HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
                 #expect((response as? HTTPURLResponse)?.statusCode == 200)
             }
         } catch {

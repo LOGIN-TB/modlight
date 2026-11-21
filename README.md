@@ -67,11 +67,14 @@ Until server mode lands, the container of the predecessor
 - **Watchdog** (`tools/test_watchdog.py`): stops without heartbeat, at its deadline, when the
   engine dies; ignores a stale deadline; rejects a heartbeat without the key.
 - **Real hardware**: [docs/measurements-2026-11-20-e2e.md](docs/measurements-2026-11-20-e2e.md) (0.1) and
-  [docs/measurements-2026-11-21-0.2.md](docs/measurements-2026-11-21-0.2.md) (EU only, no disk, two cards).
+  [docs/measurements-2026-11-21-0.2.md](docs/measurements-2026-11-21-0.2.md) (EU only, no disk; two cards in one pod
+  not yet verified live, RunPod had no two-card capacity in the EU).
 
 ## Known limits
 
 - vLLM only: GGUF (llama.cpp) and MLX builds are recognised and declined.
+- Several cards in one pod (tensor parallel) are covered by tests but not yet verified on real
+  hardware: RunPod had no two-card capacity in the EU during the measurement.
 - On the local network the connection is plain HTTP (key required); use it only in trusted networks.
 - Server mode and the Windows app are not part of 0.2.
 - The interface audit against Apple's HIG ([`docs/hig-audit.json`](docs/hig-audit.json)) is not
