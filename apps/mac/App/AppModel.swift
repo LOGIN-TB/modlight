@@ -353,13 +353,12 @@ final class AppModel {
     static let claudeCodeMinimumContext = 131_072
 
     /// Claude Code in the terminal, pointed at Podlight through its Anthropic-compatible route
-    /// (code.claude.com/docs/en/llm-gateway, env-vars). As a one-off command and as a shell function,
-    /// so the normal Claude Code login stays untouched.
-    func claudeCodeCommand(baseURL: String, model item: PodlightModel?) -> String {
+    /// (code.claude.com/docs/en/llm-gateway, env-vars). The normal Claude Code login stays untouched.
+    private func claudeCodeVariables(baseURL: String, model item: PodlightModel?) -> [String] {
         let name = item?.name ?? "model"
         let context = item?.contextTokens ?? 131_072
         let root = baseURL.hasSuffix("/v1") ? String(baseURL.dropLast(3)) : baseURL
-        let variables = [
+        return [
             "ANTHROPIC_BASE_URL='\(root)'",
             "ANTHROPIC_AUTH_TOKEN='\(gatewayKey ?? "")'",
             "ANTHROPIC_API_KEY=''",
@@ -373,35 +372,42 @@ final class AppModel {
             // Beta request fields only Anthropic's own API knows; open engines may reject them.
             "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1",
         ]
-        return """
-        # Once, in a terminal:
-        \(variables.joined(separator: " \\\n  ")) \\
-          claude
+    }
 
-        # Or permanently as "claude-podlight": add to ~/.zshrc, then open a new terminal.
+    /// Claude Code once, for this terminal.
+    func claudeCodeOnce(baseURL: String, model item: PodlightModel?) -> String {
+        claudeCodeVariables(baseURL: baseURL, model: item).joined(separator: " \\\n  ") + " \\\n  claude"
+    }
+
+    /// Claude Code permanently as `claude-podlight`, for ~/.zshrc.
+    func claudeCodeFunction(baseURL: String, model item: PodlightModel?) -> String {
+        """
         claude-podlight() {
-          \(variables.joined(separator: " \\\n  ")) \\
+          \(claudeCodeVariables(baseURL: baseURL, model: item).joined(separator: " \\\n  ")) \\
             claude "$@"
         }
         """
     }
 
-    /// Codex CLI: a provider for ~/.codex/config.toml that leaves the user's default untouched,
-    /// and a shell function that selects it (learn.chatgpt.com/docs/config-file/config-reference;
-    /// `wire_api = "responses"` is the only value Codex still accepts).
-    func codexConfig(baseURL: String, model item: PodlightModel?) -> String {
-        let name = item?.name ?? "model"
-        let context = item?.contextTokens ?? 131_072
-        return """
-        # 1. Add to ~/.codex/config.toml:
+    /// Codex CLI: a provider for ~/.codex/config.toml that leaves the user's default untouched
+    /// (learn.chatgpt.com/docs/config-file/config-reference; `wire_api = "responses"` is the only
+    /// value Codex still accepts).
+    func codexProvider(baseURL: String) -> String {
+        """
         [model_providers.podlight]
         name = "Podlight"
         base_url = "\(baseURL)"
         env_key = "PODLIGHT_API_KEY"
         wire_api = "responses"
         stream_idle_timeout_ms = 900000
+        """
+    }
 
-        # 2. Add to ~/.zshrc, open a new terminal, then run "codex-podlight":
+    /// The shell function that selects the provider, for ~/.zshrc.
+    func codexFunction(model item: PodlightModel?) -> String {
+        let name = item?.name ?? "model"
+        let context = item?.contextTokens ?? 131_072
+        return """
         codex-podlight() {
           PODLIGHT_API_KEY='\(gatewayKey ?? "")' codex \\
             -c model_provider=podlight -m '\(name)' \\

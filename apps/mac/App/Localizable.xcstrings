@@ -353,6 +353,16 @@
         }
       }
     },
+    "1. Provider for ~/.codex/config.toml": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Anbieter für ~/.codex/config.toml"
+          }
+        }
+      }
+    },
     "2 Hours": {
       "localizations": {
         "de": {
@@ -369,6 +379,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "2 Stunden ab jetzt"
+          }
+        }
+      }
+    },
+    "2. Function codex-podlight for ~/.zshrc": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Funktion codex-podlight für ~/.zshrc"
           }
         }
       }
@@ -613,12 +633,32 @@
         }
       }
     },
-    "Add the provider to ~/.codex/config.toml and the function to ~/.zshrc, then start Codex with codex-podlight. Plain codex keeps your normal setup.": {
+    "Add at the end of the file. Your default provider stays as it is.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Füge den Anbieter in ~/.codex/config.toml und die Funktion in ~/.zshrc ein und starte Codex dann mit codex-podlight. Der normale Befehl codex bleibt, wie er war."
+            "value": "Am Ende der Datei einfügen. Dein Standardanbieter bleibt, wie er ist."
+          }
+        }
+      }
+    },
+    "Add to ~/.zshrc and open a new terminal, then start Codex with codex-podlight. Plain codex keeps your normal setup.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In ~/.zshrc einfügen, ein neues Terminal öffnen und Codex mit codex-podlight starten. Der normale Befehl codex bleibt, wie er war."
+          }
+        }
+      }
+    },
+    "Add to ~/.zshrc and open a new terminal; from then on claude-podlight starts Claude Code with Podlight.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In ~/.zshrc einfügen und ein neues Terminal öffnen. Danach startet claude-podlight Claude Code mit Podlight."
           }
         }
       }
@@ -1173,6 +1213,16 @@
         }
       }
     },
+    "Copy: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopieren: %@"
+          }
+        }
+      }
+    },
     "Cost per hour": {
       "localizations": {
         "de": {
@@ -1483,6 +1533,16 @@
         }
       }
     },
+    "Environment variables": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umgebungsvariablen"
+          }
+        }
+      }
+    },
     "Every start has an end. Idle pods stop by themselves.": {
       "localizations": {
         "de": {
@@ -1575,6 +1635,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Für Programme, die die OpenAI-Umgebungsvariablen lesen, etwa Aider: Trage diese Zeilen in ~/.zshrc ein oder führe sie vor dem Programm aus."
+          }
+        }
+      }
+    },
+    "For ~/.config/opencode/opencode.json": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für ~/.config/opencode/opencode.json"
+          }
+        }
+      }
+    },
+    "For ~/.pi/agent/models.json": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für ~/.pi/agent/models.json"
           }
         }
       }
@@ -1735,6 +1815,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hugging-Face-Token (empfohlen)"
+          }
+        }
+      }
+    },
+    "If the file has content, merge the \"providers\" entry. Then pick podlight/<name> with /models.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hat die Datei schon Inhalt, ergänze nur den Eintrag „providers“. Wähle dann mit /models podlight/<name>."
+          }
+        }
+      }
+    },
+    "If the file has content, merge the \"providers\" entry. Then pick the model with /model.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hat die Datei schon Inhalt, ergänze nur den Eintrag „providers“. Wähle dann mit /model das Modell."
           }
         }
       }
@@ -2231,6 +2331,16 @@
         }
       }
     },
+    "Once, in a terminal": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmalig im Terminal"
+          }
+        }
+      }
+    },
     "Only programs on this Mac can connect. Switch on the local network to use your models from a second computer.": {
       "localizations": {
         "de": {
@@ -2361,26 +2471,6 @@
         }
       }
     },
-    "Paste into ~/.config/opencode/opencode.json (if the file has content, merge the \"providers\" entry), then pick podlight/<name> with /models.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In ~/.config/opencode/opencode.json einfügen (steht schon etwas darin, nur den Eintrag „providers“ übernehmen), dann podlight/<Name> mit /models wählen."
-          }
-        }
-      }
-    },
-    "Paste into ~/.pi/agent/models.json (if the file has content, merge the \"providers\" entry), then pick the model with /model.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In ~/.pi/agent/models.json einfügen (steht schon etwas darin, nur den Eintrag „providers“ übernehmen), dann das Modell mit /model wählen."
-          }
-        }
-      }
-    },
     "Paste the API key": {
       "localizations": {
         "de": {
@@ -2417,6 +2507,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pro Monat"
+          }
+        }
+      }
+    },
+    "Permanently as claude-podlight": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dauerhaft als claude-podlight"
           }
         }
       }
@@ -2717,16 +2817,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Länger laufen lassen"
-          }
-        }
-      }
-    },
-    "Run the first command in Terminal to use Claude Code with Podlight once, or add the function to ~/.zshrc and start it with claude-podlight. Plain claude keeps your normal login.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Führ den ersten Befehl im Terminal aus, um Claude Code einmal mit Podlight zu nutzen, oder füg die Funktion in ~/.zshrc ein und starte mit claude-podlight. Der normale Befehl claude behält deine übliche Anmeldung."
           }
         }
       }
@@ -3147,6 +3237,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Startet …"
+          }
+        }
+      }
+    },
+    "Starts Claude Code with Podlight in this terminal. Plain claude keeps your normal login.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startet Claude Code in diesem Terminal mit Podlight. Der normale Befehl claude behält deine übliche Anmeldung."
           }
         }
       }
