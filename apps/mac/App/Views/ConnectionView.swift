@@ -103,23 +103,16 @@ struct ConnectionView: View {
                             }
                             .pickerStyle(.segmented)
                         }
-                        Text(fileHint).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                        ScrollView([.horizontal, .vertical]) {
-                            Text(fileContent)
-                                .font(.caption.monospaced())
-                                .textSelection(.enabled)
-                                .padding(8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .frame(height: 220)
-                        .background(.quaternary.opacity(0.4), in: .rect(cornerRadius: 6))
-                        HStack {
-                            Button(copied == "file" ? "Copied" : "Copy") { Pasteboard.copy(fileContent); copied = "file" }
-                            if let folder = fileFolder {
-                                Button("Open Folder in Finder") { open(folder) }
+                        ForEach(snippets) { snippet in
+                            SnippetBox(snippet: snippet, copied: $copied) {
+                                if let folder = snippet.folder {
+                                    Button("Open Folder in Finder") { open(folder) }
+                                }
                             }
-                            Spacer()
-                            if let documentation {
+                        }
+                        if let documentation {
+                            HStack {
+                                Spacer()
                                 Link("Documentation", destination: documentation)
                             }
                         }
@@ -192,37 +185,35 @@ struct ConnectionView: View {
         return warnings
     }
 
-    private var fileContent: String {
-        switch agent {
-        case .openCode: model.openCodeConfig(baseURL: baseURL)
-        case .pi: model.piConfig(baseURL: baseURL)
-        case .claudeCode: model.claudeCodeCommand(baseURL: baseURL, model: agentModel)
-        case .codex: model.codexConfig(baseURL: baseURL, model: agentModel)
-        case .environment: model.environmentConfig(baseURL: baseURL)
-        }
-    }
-
-    private var fileHint: String {
+    /// What to copy for the chosen agent, one box per place it goes, so each copies on its own.
+    private var snippets: [ConfigSnippet] {
         switch agent {
         case .openCode:
-            String(localized: "Paste into ~/.config/opencode/opencode.json (if the file has content, merge the \"providers\" entry), then pick podlight/<name> with /models.")
+            [ConfigSnippet(id: "opencode", title: String(localized: "For ~/.config/opencode/opencode.json"),
+                           hint: String(localized: "If the file has content, merge the \"providers\" entry. Then pick podlight/<name> with /models."),
+                           content: model.openCodeConfig(baseURL: baseURL), folder: ".config/opencode")]
         case .pi:
-            String(localized: "Paste into ~/.pi/agent/models.json (if the file has content, merge the \"providers\" entry), then pick the model with /model.")
+            [ConfigSnippet(id: "pi", title: String(localized: "For ~/.pi/agent/models.json"),
+                           hint: String(localized: "If the file has content, merge the \"providers\" entry. Then pick the model with /model."),
+                           content: model.piConfig(baseURL: baseURL), folder: ".pi/agent")]
         case .claudeCode:
-            String(localized: "Run the first command in Terminal to use Claude Code with Podlight once, or add the function to ~/.zshrc and start it with claude-podlight. Plain claude keeps your normal login.")
+            [ConfigSnippet(id: "claude-once", title: String(localized: "Once, in a terminal"),
+                           hint: String(localized: "Starts Claude Code with Podlight in this terminal. Plain claude keeps your normal login."),
+                           content: model.claudeCodeOnce(baseURL: baseURL, model: agentModel)),
+             ConfigSnippet(id: "claude-function", title: String(localized: "Permanently as claude-podlight"),
+                           hint: String(localized: "Add to ~/.zshrc and open a new terminal; from then on claude-podlight starts Claude Code with Podlight."),
+                           content: model.claudeCodeFunction(baseURL: baseURL, model: agentModel))]
         case .codex:
-            String(localized: "Add the provider to ~/.codex/config.toml and the function to ~/.zshrc, then start Codex with codex-podlight. Plain codex keeps your normal setup.")
+            [ConfigSnippet(id: "codex-provider", title: String(localized: "1. Provider for ~/.codex/config.toml"),
+                           hint: String(localized: "Add at the end of the file. Your default provider stays as it is."),
+                           content: model.codexProvider(baseURL: baseURL), folder: ".codex"),
+             ConfigSnippet(id: "codex-function", title: String(localized: "2. Function codex-podlight for ~/.zshrc"),
+                           hint: String(localized: "Add to ~/.zshrc and open a new terminal, then start Codex with codex-podlight. Plain codex keeps your normal setup."),
+                           content: model.codexFunction(model: agentModel))]
         case .environment:
-            String(localized: "For tools that read OpenAI's environment variables, such as Aider: add these lines to ~/.zshrc or run them before the tool.")
-        }
-    }
-
-    private var fileFolder: String? {
-        switch agent {
-        case .openCode: ".config/opencode"
-        case .pi: ".pi/agent"
-        case .codex: ".codex"
-        case .claudeCode, .environment: nil
+            [ConfigSnippet(id: "environment", title: String(localized: "Environment variables"),
+                           hint: String(localized: "For tools that read OpenAI's environment variables, such as Aider: add these lines to ~/.zshrc or run them before the tool."),
+                           content: model.environmentConfig(baseURL: baseURL))]
         }
     }
 
@@ -245,6 +236,49 @@ struct ConnectionView: View {
         } catch {
             testResult = String(localized: "No answer: \(error.localizedDescription)")
         }
+    }
+}
+
+/// One piece of configuration and where it goes.
+struct ConfigSnippet: Identifiable {
+    var id: String
+    var title: String
+    var hint: String
+    var content: String
+    /// A folder under the home folder to open in Finder, for snippets that go into a file.
+    var folder: String? = nil
+}
+
+/// A snippet in its own box with its own Copy button, which copies exactly this box.
+struct SnippetBox<Extra: View>: View {
+    let snippet: ConfigSnippet
+    @Binding var copied: String?
+    @ViewBuilder var extra: () -> Extra
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(snippet.title).font(.headline)
+                Spacer()
+                extra()
+                Button(copied == snippet.id ? "Copied" : "Copy") {
+                    Pasteboard.copy(snippet.content)
+                    copied = snippet.id
+                }
+                .accessibilityLabel(Text("Copy: \(snippet.title)"))
+            }
+            Text(snippet.hint).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            ScrollView(.horizontal) {
+                Text(snippet.content)
+                    .font(.caption.monospaced())
+                    .textSelection(.enabled)
+                    .fixedSize()
+                    .padding(8)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.quaternary.opacity(0.4), in: .rect(cornerRadius: 6))
+        }
+        .padding(.top, 4)
     }
 }
 

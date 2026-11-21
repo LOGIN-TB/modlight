@@ -42,10 +42,10 @@ enum Snapshots {
         }
         render("models", size: CGSize(width: 720, height: 640), into: folder) { NavigationStack { ModelDetailView(item: running) }.environment(model) }
         render("connection", size: CGSize(width: 720, height: 860), into: folder) { ConnectionView().environment(model) }
-        render("connection-claude", size: CGSize(width: 720, height: 1100), into: folder) {
+        render("connection-claude", size: CGSize(width: 720, height: 1240), into: folder) {
             ConnectionView(agent: .claudeCode, showFiles: true).environment(model)
         }
-        render("connection-codex", size: CGSize(width: 720, height: 1100), into: folder) {
+        render("connection-codex", size: CGSize(width: 720, height: 1000), into: folder) {
             ConnectionView(agent: .codex, showFiles: true).environment(model)
         }
         render("costs", size: CGSize(width: 720, height: 760), into: folder) { CostsView().environment(model) }
