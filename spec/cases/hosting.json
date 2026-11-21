@@ -1,0 +1,1200 @@
+{
+  "cases" : [
+    {
+      "expected" : [
+        "SECURE",
+        "COMMUNITY"
+      ],
+      "function" : "hostingClouds",
+      "id" : "clouds-anywhere",
+      "input" : {
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "Clouds for anywhere"
+    },
+    {
+      "expected" : false,
+      "function" : "needsPlacementCheck",
+      "id" : "placement-check-anywhere",
+      "input" : {
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "Placement check for anywhere"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-anywhere-EU-RO-1",
+      "input" : {
+        "dataCenterId" : "EU-RO-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "anywhere allows EU-RO-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-anywhere-EU-SE-1",
+      "input" : {
+        "dataCenterId" : "EU-SE-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "anywhere allows EU-SE-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-anywhere-EUR-IS-1",
+      "input" : {
+        "dataCenterId" : "EUR-IS-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "anywhere allows EUR-IS-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-anywhere-EUR-NO-2",
+      "input" : {
+        "dataCenterId" : "EUR-NO-2",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "anywhere allows EUR-NO-2?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-anywhere-US-TX-3",
+      "input" : {
+        "dataCenterId" : "US-TX-3",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "anywhere allows US-TX-3?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-anywhere-CA-MTL-1",
+      "input" : {
+        "dataCenterId" : "CA-MTL-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "anywhere allows CA-MTL-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-anywhere-EUROPE-1",
+      "input" : {
+        "dataCenterId" : "EUROPE-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "anywhere allows EUROPE-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-anywhere-none",
+      "input" : {
+        "dataCenterId" : null,
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "anywhere allows no data center?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-NVIDIA GeForce RTX 4090",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA GeForce RTX 4090",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "NVIDIA GeForce RTX 4090 may be free under anywhere?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-NVIDIA GeForce RTX 3090",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA GeForce RTX 3090",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "NVIDIA GeForce RTX 3090 may be free under anywhere?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-NVIDIA RTX A6000",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA RTX A6000",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "NVIDIA RTX A6000 may be free under anywhere?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-NVIDIA A40",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA A40",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "NVIDIA A40 may be free under anywhere?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-NVIDIA L40S",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA L40S",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "NVIDIA L40S may be free under anywhere?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-NVIDIA A100 80GB PCIe",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA A100 80GB PCIe",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "NVIDIA A100 80GB PCIe may be free under anywhere?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-NVIDIA H100 80GB HBM3",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA H100 80GB HBM3",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "NVIDIA H100 80GB HBM3 may be free under anywhere?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-NVIDIA H200",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA H200",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "NVIDIA H200 may be free under anywhere?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-Tesla V100-SXM2-32GB",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "Tesla V100-SXM2-32GB",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "Tesla V100-SXM2-32GB may be free under anywhere?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-anywhere-AMD Instinct MI300X OAM",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "AMD Instinct MI300X OAM",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "AMD Instinct MI300X OAM may be free under anywhere?"
+    },
+    {
+      "expected" : null,
+      "function" : "dataCenterIds",
+      "id" : "data-centers-anywhere",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        }
+      },
+      "title" : "Data centers requested under anywhere"
+    },
+    {
+      "expected" : [
+        "SECURE"
+      ],
+      "function" : "hostingClouds",
+      "id" : "clouds-secure",
+      "input" : {
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Clouds for secure"
+    },
+    {
+      "expected" : false,
+      "function" : "needsPlacementCheck",
+      "id" : "placement-check-secure",
+      "input" : {
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Placement check for secure"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-secure-EU-RO-1",
+      "input" : {
+        "dataCenterId" : "EU-RO-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "secure allows EU-RO-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-secure-EU-SE-1",
+      "input" : {
+        "dataCenterId" : "EU-SE-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "secure allows EU-SE-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-secure-EUR-IS-1",
+      "input" : {
+        "dataCenterId" : "EUR-IS-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "secure allows EUR-IS-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-secure-EUR-NO-2",
+      "input" : {
+        "dataCenterId" : "EUR-NO-2",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "secure allows EUR-NO-2?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-secure-US-TX-3",
+      "input" : {
+        "dataCenterId" : "US-TX-3",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "secure allows US-TX-3?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-secure-CA-MTL-1",
+      "input" : {
+        "dataCenterId" : "CA-MTL-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "secure allows CA-MTL-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-secure-EUROPE-1",
+      "input" : {
+        "dataCenterId" : "EUROPE-1",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "secure allows EUROPE-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-secure-none",
+      "input" : {
+        "dataCenterId" : null,
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "secure allows no data center?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-NVIDIA GeForce RTX 4090",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA GeForce RTX 4090",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA GeForce RTX 4090 may be free under secure?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-NVIDIA GeForce RTX 3090",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA GeForce RTX 3090",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA GeForce RTX 3090 may be free under secure?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-NVIDIA RTX A6000",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA RTX A6000",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA RTX A6000 may be free under secure?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-NVIDIA A40",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA A40",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA A40 may be free under secure?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-NVIDIA L40S",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA L40S",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA L40S may be free under secure?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-NVIDIA A100 80GB PCIe",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA A100 80GB PCIe",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA A100 80GB PCIe may be free under secure?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-NVIDIA H100 80GB HBM3",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA H100 80GB HBM3",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA H100 80GB HBM3 may be free under secure?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-NVIDIA H200",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA H200",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA H200 may be free under secure?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-Tesla V100-SXM2-32GB",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "Tesla V100-SXM2-32GB",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Tesla V100-SXM2-32GB may be free under secure?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-secure-AMD Instinct MI300X OAM",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "AMD Instinct MI300X OAM",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "AMD Instinct MI300X OAM may be free under secure?"
+    },
+    {
+      "expected" : null,
+      "function" : "dataCenterIds",
+      "id" : "data-centers-secure",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Data centers requested under secure"
+    },
+    {
+      "expected" : [
+        "SECURE"
+      ],
+      "function" : "hostingClouds",
+      "id" : "clouds-eu",
+      "input" : {
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Clouds for eu"
+    },
+    {
+      "expected" : true,
+      "function" : "needsPlacementCheck",
+      "id" : "placement-check-eu",
+      "input" : {
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Placement check for eu"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-eu-EU-RO-1",
+      "input" : {
+        "dataCenterId" : "EU-RO-1",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "eu allows EU-RO-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-eu-EU-SE-1",
+      "input" : {
+        "dataCenterId" : "EU-SE-1",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "eu allows EU-SE-1?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-eu-EUR-IS-1",
+      "input" : {
+        "dataCenterId" : "EUR-IS-1",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "eu allows EUR-IS-1?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-eu-EUR-NO-2",
+      "input" : {
+        "dataCenterId" : "EUR-NO-2",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "eu allows EUR-NO-2?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-eu-US-TX-3",
+      "input" : {
+        "dataCenterId" : "US-TX-3",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "eu allows US-TX-3?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-eu-CA-MTL-1",
+      "input" : {
+        "dataCenterId" : "CA-MTL-1",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "eu allows CA-MTL-1?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-eu-EUROPE-1",
+      "input" : {
+        "dataCenterId" : "EUROPE-1",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "eu allows EUROPE-1?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-eu-none",
+      "input" : {
+        "dataCenterId" : null,
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "eu allows no data center?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-NVIDIA GeForce RTX 4090",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA GeForce RTX 4090",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA GeForce RTX 4090 may be free under eu?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-NVIDIA GeForce RTX 3090",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA GeForce RTX 3090",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA GeForce RTX 3090 may be free under eu?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-NVIDIA RTX A6000",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA RTX A6000",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA RTX A6000 may be free under eu?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-NVIDIA A40",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA A40",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA A40 may be free under eu?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-NVIDIA L40S",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA L40S",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA L40S may be free under eu?"
+    },
+    {
+      "expected" : false,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-NVIDIA A100 80GB PCIe",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA A100 80GB PCIe",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA A100 80GB PCIe may be free under eu?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-NVIDIA H100 80GB HBM3",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA H100 80GB HBM3",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA H100 80GB HBM3 may be free under eu?"
+    },
+    {
+      "expected" : false,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-NVIDIA H200",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA H200",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA H200 may be free under eu?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-Tesla V100-SXM2-32GB",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "Tesla V100-SXM2-32GB",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Tesla V100-SXM2-32GB may be free under eu?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-eu-AMD Instinct MI300X OAM",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "AMD Instinct MI300X OAM",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "AMD Instinct MI300X OAM may be free under eu?"
+    },
+    {
+      "expected" : [
+        "EU-NL-1",
+        "EU-RO-1",
+        "EU-SE-1"
+      ],
+      "function" : "dataCenterIds",
+      "id" : "data-centers-eu",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Data centers requested under eu"
+    },
+    {
+      "expected" : [
+        "SECURE"
+      ],
+      "function" : "hostingClouds",
+      "id" : "clouds-euEEA",
+      "input" : {
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Clouds for euEEA"
+    },
+    {
+      "expected" : true,
+      "function" : "needsPlacementCheck",
+      "id" : "placement-check-euEEA",
+      "input" : {
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Placement check for euEEA"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-euEEA-EU-RO-1",
+      "input" : {
+        "dataCenterId" : "EU-RO-1",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "euEEA allows EU-RO-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-euEEA-EU-SE-1",
+      "input" : {
+        "dataCenterId" : "EU-SE-1",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "euEEA allows EU-SE-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-euEEA-EUR-IS-1",
+      "input" : {
+        "dataCenterId" : "EUR-IS-1",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "euEEA allows EUR-IS-1?"
+    },
+    {
+      "expected" : true,
+      "function" : "hostingAllows",
+      "id" : "allows-euEEA-EUR-NO-2",
+      "input" : {
+        "dataCenterId" : "EUR-NO-2",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "euEEA allows EUR-NO-2?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-euEEA-US-TX-3",
+      "input" : {
+        "dataCenterId" : "US-TX-3",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "euEEA allows US-TX-3?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-euEEA-CA-MTL-1",
+      "input" : {
+        "dataCenterId" : "CA-MTL-1",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "euEEA allows CA-MTL-1?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-euEEA-EUROPE-1",
+      "input" : {
+        "dataCenterId" : "EUROPE-1",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "euEEA allows EUROPE-1?"
+    },
+    {
+      "expected" : false,
+      "function" : "hostingAllows",
+      "id" : "allows-euEEA-none",
+      "input" : {
+        "dataCenterId" : null,
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "euEEA allows no data center?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-NVIDIA GeForce RTX 4090",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA GeForce RTX 4090",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA GeForce RTX 4090 may be free under euEEA?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-NVIDIA GeForce RTX 3090",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA GeForce RTX 3090",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA GeForce RTX 3090 may be free under euEEA?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-NVIDIA RTX A6000",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA RTX A6000",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA RTX A6000 may be free under euEEA?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-NVIDIA A40",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA A40",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA A40 may be free under euEEA?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-NVIDIA L40S",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA L40S",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA L40S may be free under euEEA?"
+    },
+    {
+      "expected" : false,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-NVIDIA A100 80GB PCIe",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA A100 80GB PCIe",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA A100 80GB PCIe may be free under euEEA?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-NVIDIA H100 80GB HBM3",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA H100 80GB HBM3",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA H100 80GB HBM3 may be free under euEEA?"
+    },
+    {
+      "expected" : false,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-NVIDIA H200",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "NVIDIA H200",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "NVIDIA H200 may be free under euEEA?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-Tesla V100-SXM2-32GB",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "Tesla V100-SXM2-32GB",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Tesla V100-SXM2-32GB may be free under euEEA?"
+    },
+    {
+      "expected" : true,
+      "function" : "mayHaveCapacity",
+      "id" : "capacity-euEEA-AMD Instinct MI300X OAM",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "gpuId" : "AMD Instinct MI300X OAM",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "AMD Instinct MI300X OAM may be free under euEEA?"
+    },
+    {
+      "expected" : [
+        "EU-NL-1",
+        "EU-RO-1",
+        "EU-SE-1",
+        "EUR-IS-1"
+      ],
+      "function" : "dataCenterIds",
+      "id" : "data-centers-euEEA",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        }
+      },
+      "title" : "Data centers requested under euEEA"
+    },
+    {
+      "expected" : {
+        "runningPerHour" : 0.00410958904109589,
+        "stoppedPerMonth" : 0
+      },
+      "function" : "storagePricing",
+      "id" : "storage-30-0",
+      "input" : {
+        "containerGB" : 30,
+        "volumeGB" : 0
+      },
+      "title" : "Storage for 30 GB container, 0 GB volume"
+    },
+    {
+      "expected" : {
+        "runningPerHour" : 0.0057534246575342467,
+        "stoppedPerMonth" : 0
+      },
+      "function" : "storagePricing",
+      "id" : "storage-42-0",
+      "input" : {
+        "containerGB" : 42,
+        "volumeGB" : 0
+      },
+      "title" : "Storage for 42 GB container, 0 GB volume"
+    },
+    {
+      "expected" : {
+        "runningPerHour" : 0.008493150684931507,
+        "stoppedPerMonth" : 6.4000000000000004
+      },
+      "function" : "storagePricing",
+      "id" : "storage-30-32",
+      "input" : {
+        "containerGB" : 30,
+        "volumeGB" : 32
+      },
+      "title" : "Storage for 30 GB container, 32 GB volume"
+    },
+    {
+      "expected" : {
+        "runningPerHour" : 0.047945205479452052,
+        "stoppedPerMonth" : 50
+      },
+      "function" : "storagePricing",
+      "id" : "storage-100-250",
+      "input" : {
+        "containerGB" : 100,
+        "volumeGB" : 250
+      },
+      "title" : "Storage for 100 GB container, 250 GB volume"
+    }
+  ],
+  "description" : "Where a pod may run (spec/data/regions.json) and what its disks cost. A region always means Secure Cloud, because community pods report no data center.",
+  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+}

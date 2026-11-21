@@ -66,7 +66,8 @@ struct ModelDetailView: View {
     let item: PodlightModel
     @State private var confirmingDelete = false
 
-    private var run: ModelRun { model.state.run(item.id) }
+    private var run: ModelRun { model.run(item.id) }
+    private var source: Source { model.source(of: item.id) }
     private var isIdle: Bool { run.phase == .stopped || run.phase == .failed }
 
     var body: some View {
@@ -109,7 +110,10 @@ struct ModelDetailView: View {
                 if let price = run.pricePerHour ?? item.expectedPricePerHour {
                     LabeledContent("Price", value: Describe.price(gpu: price, storage: run.storagePerHour ?? PodPlan.storagePerHour(for: item)))
                 }
-                LabeledContent("Where", value: Describe.hosting(item.hosting(default: model.state.settings.hosting)))
+                if case .server = source {
+                    LabeledContent("Runs on", value: model.name(of: source))
+                }
+                LabeledContent("Where", value: Describe.hosting(item.hosting(default: model.defaultHosting(in: source))))
                 if let end = run.runUntil, !isIdle {
                     LabeledContent("Runs until", value: Format.time(end))
                 }
@@ -226,7 +230,7 @@ struct ModelActions: View {
                 Button { model.startingModel = item } label: { Label("Start…", systemImage: "play.fill") }
                     .buttonStyle(.borderedProminent)
                     .controlSize(prominent ? .large : .regular)
-                    .disabled(!model.hasRunpodKey)
+                    .disabled(!model.canStart(item))
                 if prominent {
                     Text("You choose how long it runs when you start it.")
                         .font(.callout).foregroundStyle(.secondary)

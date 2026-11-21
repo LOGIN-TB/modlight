@@ -15,6 +15,7 @@ struct OverviewView: View {
             if !steps.allSatisfy(\.done) { nextSteps }
             spendingSection
             modelsSection
+            ForEach(model.servers) { server in ServerOverviewSection(server: server) }
             connectSection
         }
         .formStyle(.grouped)
@@ -25,18 +26,21 @@ struct OverviewView: View {
 
     @ViewBuilder private var nowSection: some View {
         Section("Now") {
-            let active = model.state.activeRuns
+            let active = model.allActiveRuns
             if active.isEmpty {
                 Label("Nothing is running, so nothing is billed for GPUs.", systemImage: "moon.zzz")
                 if let disks = keptDisksPerMonth {
                     LabeledContent("Kept disks", value: String(localized: "about \(Format.money(disks)) a month"))
                 }
             } else {
-                ForEach(active, id: \.0.id) { item, run in
+                ForEach(active, id: \.1.id) { source, item, run in
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
                             PhaseIcon(phase: run.phase)
                             Text(item.name).font(.headline)
+                            if case .server = source {
+                                Label(model.name(of: source), systemImage: "server.rack").font(.caption).foregroundStyle(.secondary)
+                            }
                             Spacer()
                             Text(PhaseText.summary(run)).foregroundStyle(.secondary)
                         }
@@ -52,13 +56,14 @@ struct OverviewView: View {
                     }
                     .padding(.vertical, 2)
                 }
-                LabeledContent("Together", value: Format.perHour(model.state.costPerHour))
+                LabeledContent("Together", value: Format.perHour(model.totalCostPerHour))
             }
         }
     }
 
     private var keptDisksPerMonth: Double? {
-        let total = model.state.models.compactMap { model.keptDiskPerMonth($0) }.reduce(0, +)
+        let all = model.state.models + model.servers.flatMap(\.models)
+        let total = all.compactMap { model.keptDiskPerMonth($0) }.reduce(0, +)
         return total > 0 ? total : nil
     }
 
@@ -82,7 +87,7 @@ struct OverviewView: View {
             Step(id: "hf", title: "Add a Hugging Face token", detail: "Recommended: downloads are limited more strictly without one, and gated models need it.",
                  done: model.hasHuggingFaceToken, optional: true, action: "Open Settings") { model.selection = .settings },
             Step(id: "model", title: "Add a model", detail: "Choose one on Hugging Face; Podlight suggests a GPU and shows the price.",
-                 done: !model.state.models.isEmpty, optional: false, action: "Add Model…") { model.showingAddModel = true },
+                 done: !model.state.models.isEmpty, optional: false, action: "Add Model…") { model.addModel(to: .local) },
             Step(id: "start", title: "Start it once in Podlight", detail: "The first start takes 10–25 minutes, longer than an agent waits.",
                  done: started, optional: false, action: "Show Model") {
                      if let first = model.state.models.first { model.selection = .model(first.id) }
@@ -133,7 +138,7 @@ struct OverviewView: View {
             LimitRow(title: "This month", spent: spend.monthUsd, limit: spend.monthlyLimitUsd)
         } header: {
             HStack {
-                Text("Spending")
+                Text(model.servers.isEmpty ? "Spending" : "Spending on this Mac")
                 Spacer()
                 Button("Costs") { model.selection = .costs }.buttonStyle(.link).font(.callout)
             }
@@ -162,11 +167,11 @@ struct OverviewView: View {
                         }
                     }
                 }
-                Button { model.showingAddModel = true } label: { Label("Add Model…", systemImage: "plus") }
+                Button { model.addModel(to: .local) } label: { Label("Add Model…", systemImage: "plus") }
                     .buttonStyle(.borderless)
                     .disabled(!model.hasRunpodKey)
             } header: {
-                Text("Models")
+                Text(model.servers.isEmpty ? "Models" : "Models on this Mac")
             }
         }
     }
@@ -186,6 +191,53 @@ struct OverviewView: View {
                 Text("Connect an agent")
                 Spacer()
                 Button("Connection") { model.selection = .connection }.buttonStyle(.link).font(.callout)
+            }
+        }
+    }
+}
+
+/// One server on the overview: whether it answers, its spending against its limits, its models.
+private struct ServerOverviewSection: View {
+    @Environment(AppModel.self) private var model
+    let server: ServerMirror
+
+    var body: some View {
+        Section {
+            if server.status != .online { ServerStatusLine(server: server) }
+            if let spend = server.snapshot?.spend {
+                LimitRow(title: "Today", spent: spend.todayUsd, limit: spend.dailyLimitUsd)
+                LimitRow(title: "This month", spent: spend.monthUsd, limit: spend.monthlyLimitUsd)
+            }
+            ForEach(server.models) { item in
+                let run = server.run(item.id)
+                HStack {
+                    Button { model.selection = .model(item.id) } label: {
+                        ModelRow(item: item, run: run).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    Spacer()
+                    if run.phase == .stopped || run.phase == .failed {
+                        Button("Start…") { model.startingModel = item }.disabled(!server.canStart)
+                    } else if run.phase == .ready || run.phase == .loading {
+                        Button("Stop") { Task { await model.stop(item) } }
+                    } else {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+            }
+            if server.models.isEmpty && server.status == .online {
+                if server.snapshot?.settings.hasRunpodKey == false {
+                    Button("Add the Server's RunPod Key…") { model.selection = .serverSettings(server.id) }
+                } else {
+                    Button { model.addModel(to: .server(server.id)) } label: { Label("Add Model…", systemImage: "plus") }
+                        .buttonStyle(.borderless)
+                }
+            }
+        } header: {
+            HStack {
+                Label(server.entry.name, systemImage: "server.rack")
+                Spacer()
+                Button("Connection") { model.selection = .serverConnection(server.id) }.buttonStyle(.link).font(.callout)
             }
         }
     }

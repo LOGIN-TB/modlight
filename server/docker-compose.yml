@@ -1,0 +1,25 @@
+# Podlight server, e.g. as a Coolify "Docker Compose" resource.
+#
+# The container speaks plain HTTP on port 8080. Put it behind a reverse proxy with a certificate
+# (Coolify does this when you give the service a domain) before it is reachable from the internet:
+# the Podlight app only connects to https:// addresses, except localhost and private LAN addresses.
+#
+# First start: the pairing code is printed in the log. In the Podlight app: Add Server…
+services:
+  podlight:
+    image: ghcr.io/login-tb/podlight-server:latest
+    restart: unless-stopped
+    environment:
+      # Optional: a fixed pairing code instead of the generated one, e.g. from Coolify's
+      # generated secrets (SERVICE_PASSWORD_PAIRING). Single use, 30 minutes.
+      - PAIRING_CODE=${PAIRING_CODE:-}
+      # Coolify: makes the service reachable under the domain you set for it.
+      - SERVICE_FQDN_PODLIGHT_8080
+    volumes:
+      # Database and master key. Back it up; losing it means pairing again and re-adding models.
+      - podlight-data:/data
+    ports:
+      # Remove this line when a reverse proxy on the same host forwards to the container.
+      - "8080:8080"
+volumes:
+  podlight-data:

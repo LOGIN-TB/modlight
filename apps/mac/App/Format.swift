@@ -68,8 +68,32 @@ enum Describe {
             }
         case let e as RunpodError:
             return String(localized: "RunPod refused (\(e.status)).")
+        case let e as ServerError:
+            return serverError(e)
+        case let e as ServerAddress.Problem:
+            return address(e)
         default:
             return error.localizedDescription
+        }
+    }
+
+    static func serverError(_ error: ServerError) -> String {
+        switch error {
+        case .unreachable(let message):
+            String(localized: "The server does not answer: \(message)")
+        case .notPaired:
+            String(localized: "The server no longer accepts this Mac. Pair it again under Server Settings.")
+        case .refused(_, let message, _):
+            message
+        case .unexpected(let message):
+            String(localized: "The server sent an answer Podlight does not understand. Is it a Podlight server of the same version? (\(message))")
+        }
+    }
+
+    static func address(_ problem: ServerAddress.Problem) -> String {
+        switch problem {
+        case .invalid: String(localized: "Enter the server's address, e.g. podlight.example.com.")
+        case .insecure: String(localized: "Use an https:// address. Plain http is allowed only for this Mac and your local network, because the keys would travel unencrypted.")
         }
     }
 

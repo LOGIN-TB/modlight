@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/LOGIN-TB/podlight/spec/schema/model.json",
+  "title": "PodlightModel",
+  "description": "A model as the Podlight app sets it up and the server stores it. Mirrors PodlightModel in apps/mac/PodlightEngine. Generated from server/src/model.ts.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,62}$"
+    },
+    "repoId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "safetensors",
+        "awq",
+        "gptq",
+        "fp8",
+        "nvfp4",
+        "gguf",
+        "mlx",
+        "unknown"
+      ]
+    },
+    "weightBytes": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "nativeContextTokens": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "toolCallParser": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reasoningParser": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "contextTokens": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "concurrency": {
+      "default": 1,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "goal": {
+      "default": "balanced",
+      "type": "string",
+      "enum": [
+        "economical",
+        "balanced",
+        "fast"
+      ]
+    },
+    "preferredGPU": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "gpuId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "cloud": {
+              "type": "string",
+              "enum": [
+                "SECURE",
+                "COMMUNITY"
+              ]
+            },
+            "count": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "gpuId",
+            "cloud"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "expectedPricePerHour": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "schedule": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "weekdays": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          }
+        },
+        "startAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{1,2}:\\d{2}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stopAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{1,2}:\\d{2}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "idleStopMinutes": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "maxRuntimeHours": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled",
+        "timezone",
+        "weekdays",
+        "idleStopMinutes",
+        "maxRuntimeHours"
+      ]
+    },
+    "createdAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "kvProfile": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "bytesPerToken": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "attentionHeads": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "hybrid": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "bytesPerToken"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "keepDisk": {
+      "type": "boolean"
+    },
+    "hosting": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "region": {
+              "type": "string",
+              "enum": [
+                "anywhere",
+                "eu",
+                "euEEA"
+              ]
+            },
+            "secureOnly": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "region",
+            "secureOnly"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "preferredGPUName": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "quant": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "repoId",
+    "format",
+    "weightBytes",
+    "contextTokens",
+    "schedule",
+    "keepDisk"
+  ]
+}

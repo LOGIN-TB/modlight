@@ -57,6 +57,68 @@ enum Snapshots {
         render("settings", size: CGSize(width: 640, height: 900), into: folder) { SettingsContent().environment(model) }
         render("add-model", size: CGSize(width: 760, height: 600), into: folder) { AddModelSheet(editing: running).environment(model) }
         render("move", size: CGSize(width: 460, height: 360), into: folder) { MoveToApplicationsView() }
+
+        // Server mode, with a sample server that is never contacted.
+        let entry = ServerEntry(name: "Office", baseURL: URL(string: "https://podlight.example.com")!)
+        _ = try? await model.manager.store.update { $0.servers = [entry] }
+        await model.reloadState()
+        if let server = model.server(entry.id), let sample = sampleServer() {
+            server.showForSnapshots(sample.0, tokens: sample.1)
+            render("server-add", size: CGSize(width: 560, height: 640), into: folder) { AddServerSheet(expandedHelp: true).environment(model) }
+            render("server-connection", size: CGSize(width: 720, height: 860), into: folder) {
+                ServerConnectionView(serverID: entry.id).environment(model)
+            }
+            render("server-settings", size: CGSize(width: 720, height: 1040), into: folder) {
+                ServerSettingsView(serverID: entry.id).environment(model)
+            }
+            render("overview-server", size: CGSize(width: 720, height: 1180), into: folder) { NavigationStack { OverviewView() }.environment(model) }
+            render("server-costs", size: CGSize(width: 720, height: 700), into: folder) { CostsView(source: .server(entry.id)).environment(model) }
+            if let remote = sample.0.models.first {
+                render("server-model", size: CGSize(width: 720, height: 680), into: folder) {
+                    NavigationStack { ModelDetailView(item: remote) }.environment(model)
+                }
+                render("server-start", size: CGSize(width: 460, height: 560), into: folder) { StartSheet(model: remote).environment(model) }
+            }
+        }
+    }
+
+    /// A server with one running model, as `/admin/state` reports it.
+    private static func sampleServer() -> (ServerSnapshot, [ClientToken])? {
+        let started = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-25 * 60))
+        let until = ISO8601DateFormatter().string(from: Date().addingTimeInterval(3 * 3600))
+        let last = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-90))
+        let today = PodlightState.dayKey(.now)
+        let json = """
+        {"version":"0.4.0","serverTime":"\(started)",
+         "models":[{"id":"6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0001","name":"coder-office","repoId":"Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ",
+           "format":"awq","weightBytes":17400000000,"nativeContextTokens":262144,"toolCallParser":"qwen3_xml","contextTokens":131072,
+           "concurrency":2,"goal":"balanced","preferredGPU":{"gpuId":"NVIDIA RTX A6000","cloud":"SECURE","count":2},"preferredGPUName":"2 × RTX A6000",
+           "expectedPricePerHour":0.98,"schedule":{"enabled":false,"timezone":"Europe/Berlin","weekdays":[1,2,3,4,5],"startAt":"08:00","stopAt":"18:00","idleStopMinutes":30,"maxRuntimeHours":12},
+           "createdAt":"2026-11-21T10:00:00Z","keepDisk":true,"hosting":{"region":"eu","secureOnly":true}},
+          {"id":"6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0002","name":"small-office","repoId":"Qwen/Qwen3-8B-AWQ","format":"awq","weightBytes":6100000000,
+           "nativeContextTokens":131072,"toolCallParser":"hermes","contextTokens":32768,"goal":"economical",
+           "preferredGPU":{"gpuId":"NVIDIA RTX A6000","cloud":"SECURE","count":1},"expectedPricePerHour":0.49,
+           "schedule":{"enabled":false,"timezone":"Europe/Berlin","weekdays":[1,2,3,4,5],"startAt":"08:00","stopAt":"18:00","idleStopMinutes":30,"maxRuntimeHours":12},
+           "keepDisk":false}],
+         "runs":{"6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0001":{"podId":"srv1","gpuName":"2 × RTX A6000","pricePerHour":0.98,"podStatus":"RUNNING",
+           "phase":"ready","engineReady":true,"startedManually":true,"startedAt":"\(started)","runUntil":"\(until)","lastRequestAt":"\(last)",
+           "dataCenterId":"EU-SE-1","storagePerHour":0.0137},
+          "6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0002":{"phase":"stopped","engineReady":false,"startedManually":false,"lastReason":"idle-timeout"}},
+         "settings":{"dailyLimitUsd":15,"monthlyLimitUsd":200,"heartbeatMinutes":15,"wakeWaitSeconds":600,"deleteStoppedAfterDays":3,
+           "wakeOnRequest":true,"hostingRegion":"eu","secureCloudOnly":true,"timezone":"Europe/Berlin","hasRunpodKey":true,"hasHuggingFaceToken":true},
+         "spendByDay":{"\(today)":3.4},"spend":{"todayUsd":3.4,"monthUsd":41.2,"dailyLimitUsd":15,"monthlyLimitUsd":200},
+         "costPerHour":0.98,"lastClientRequestAt":"\(last)"}
+        """
+        let tokensJSON = """
+        [{"id":"t1","name":"OpenCode on the laptop","createdAt":"2026-11-21T10:05:00Z","lastUsedAt":"\(last)","revokedAt":null,"models":null},
+         {"id":"t2","name":"n8n","createdAt":"2026-11-21T10:06:00Z","lastUsedAt":null,"revokedAt":null,
+          "models":["6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0002"]}]
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let snapshot = try? decoder.decode(ServerSnapshot.self, from: Data(json.utf8)),
+              let tokens = try? decoder.decode([ClientToken].self, from: Data(tokensJSON.utf8)) else { return nil }
+        return (snapshot, tokens)
     }
 
     private static func render<V: View>(_ name: String, size: CGSize, into folder: URL, @ViewBuilder _ view: () -> V) {

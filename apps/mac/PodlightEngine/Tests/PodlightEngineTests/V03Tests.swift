@@ -235,3 +235,18 @@ struct SystemReminderTests {
         #expect(LocalGateway.systemMessagesAsReminders(json) == nil)
     }
 }
+
+@Suite("RunPod proxy before it routes")
+struct ProxyNotReadyTests {
+    private func response(_ status: Int, _ type: String?) -> HTTPURLResponse {
+        HTTPURLResponse(url: URL(string: "https://x-8000.proxy.runpod.net/v1/chat/completions")!, statusCode: status,
+                        httpVersion: nil, headerFields: type.map { ["Content-Type": $0] })!
+    }
+
+    @Test func aBare404IsTheProxyNotTheEngine() {
+        #expect(LocalGateway.isProxyNotReady(response(404, nil)))
+        #expect(LocalGateway.isProxyNotReady(response(404, "text/plain")))
+        #expect(!LocalGateway.isProxyNotReady(response(404, "application/json")), "the engine's own 404 is passed on")
+        #expect(!LocalGateway.isProxyNotReady(response(200, "text/event-stream")))
+    }
+}

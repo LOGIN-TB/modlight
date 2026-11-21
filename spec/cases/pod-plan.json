@@ -1,0 +1,1210 @@
+{
+  "cases" : [
+    {
+      "expected" : {
+        "containerGB" : 42,
+        "persistentGB" : 32,
+        "request" : {
+          "cloud" : "SECURE",
+          "cmd" : [
+            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+          ],
+          "disk" : 42,
+          "entrypoint" : [
+            "/bin/bash",
+            "-c"
+          ],
+          "env" : {
+            "HF_XET_HIGH_PERFORMANCE" : "1",
+            "PODLIGHT_API_KEY" : "POD_KEY",
+            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "PODLIGHT_ENGINE" : "vllm",
+            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "PODLIGHT_MAX_LEN" : "65536",
+            "PODLIGHT_MAX_SEQS" : "4",
+            "PODLIGHT_MODEL" : "QuantTrio/Qwen3.8-27B-AWQ",
+            "PODLIGHT_REASONING_PARSER" : "qwen3",
+            "PODLIGHT_SERVED_NAME" : "qwen-27b-awq",
+            "PODLIGHT_TOOL_PARSER" : "qwen3_xml",
+            "PODLIGHT_TP" : "1",
+            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+          },
+          "gpu" : {
+            "count" : 1,
+            "id" : "placeholder",
+            "minCudaVersion" : "13.0"
+          },
+          "image" : "vllm/vllm-openai:v0.28.0",
+          "name" : "podlight-qwen-27b-awq",
+          "ports" : [
+            "8000/http",
+            "8001/http"
+          ]
+        },
+        "storagePerHour" : 0.0057534246575342467
+      },
+      "function" : "podRequest",
+      "id" : "awq-plain",
+      "input" : {
+        "dataCenterIds" : null,
+        "heartbeatMinutes" : 15,
+        "huggingFaceToken" : null,
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        },
+        "podKey" : "POD_KEY",
+        "runUntil" : null
+      },
+      "title" : "Pod request for awq-plain"
+    },
+    {
+      "expected" : {
+        "containerGB" : 42,
+        "persistentGB" : 32,
+        "request" : {
+          "cloud" : "SECURE",
+          "cmd" : [
+            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+          ],
+          "disk" : 42,
+          "entrypoint" : [
+            "/bin/bash",
+            "-c"
+          ],
+          "env" : {
+            "HF_TOKEN" : "hf_test",
+            "HF_XET_HIGH_PERFORMANCE" : "1",
+            "PODLIGHT_API_KEY" : "POD_KEY",
+            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "PODLIGHT_DEADLINE" : "1795284600",
+            "PODLIGHT_ENGINE" : "vllm",
+            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "PODLIGHT_MAX_LEN" : "65536",
+            "PODLIGHT_MAX_SEQS" : "4",
+            "PODLIGHT_MODEL" : "QuantTrio/Qwen3.8-27B-AWQ",
+            "PODLIGHT_REASONING_PARSER" : "qwen3",
+            "PODLIGHT_SERVED_NAME" : "qwen-27b-awq",
+            "PODLIGHT_TOOL_PARSER" : "qwen3_xml",
+            "PODLIGHT_TP" : "1",
+            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+          },
+          "gpu" : {
+            "count" : 1,
+            "id" : "placeholder",
+            "minCudaVersion" : "13.0"
+          },
+          "image" : "vllm/vllm-openai:v0.28.0",
+          "name" : "podlight-qwen-27b-awq",
+          "ports" : [
+            "8000/http",
+            "8001/http"
+          ]
+        },
+        "storagePerHour" : 0.0057534246575342467
+      },
+      "function" : "podRequest",
+      "id" : "awq-until-token",
+      "input" : {
+        "dataCenterIds" : null,
+        "heartbeatMinutes" : 15,
+        "huggingFaceToken" : "hf_test",
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        },
+        "podKey" : "POD_KEY",
+        "runUntil" : "2026-11-21T18:00:00Z"
+      },
+      "title" : "Pod request for awq-until-token"
+    },
+    {
+      "expected" : {
+        "containerGB" : 30,
+        "persistentGB" : 46,
+        "request" : {
+          "cloud" : "SECURE",
+          "cmd" : [
+            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+          ],
+          "disk" : 30,
+          "entrypoint" : [
+            "/bin/bash",
+            "-c"
+          ],
+          "env" : {
+            "HF_HOME" : "/workspace/hf",
+            "HF_XET_HIGH_PERFORMANCE" : "1",
+            "LLAMA_CACHE" : "/workspace/llama-cache",
+            "PODLIGHT_API_KEY" : "POD_KEY",
+            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "PODLIGHT_DEADLINE" : "1795284600",
+            "PODLIGHT_ENGINE" : "vllm",
+            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "PODLIGHT_MAX_LEN" : "32768",
+            "PODLIGHT_MAX_SEQS" : "4",
+            "PODLIGHT_MODEL" : "Qwen/Qwen3.8-27B-FP8",
+            "PODLIGHT_REASONING_PARSER" : "qwen3",
+            "PODLIGHT_SERVED_NAME" : "qwen-27b-fp8",
+            "PODLIGHT_TOOL_PARSER" : "qwen3_xml",
+            "PODLIGHT_TP" : "1",
+            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+          },
+          "gpu" : {
+            "count" : 1,
+            "id" : "NVIDIA L40S",
+            "minCudaVersion" : "13.0"
+          },
+          "image" : "vllm/vllm-openai:v0.28.0",
+          "mounts" : {
+            "persistent" : {
+              "path" : "/workspace",
+              "size" : 46
+            }
+          },
+          "name" : "podlight-qwen-27b-fp8",
+          "ports" : [
+            "8000/http",
+            "8001/http"
+          ]
+        },
+        "storagePerHour" : 0.010410958904109589
+      },
+      "function" : "podRequest",
+      "id" : "fp8-keep-disk",
+      "input" : {
+        "dataCenterIds" : null,
+        "heartbeatMinutes" : 15,
+        "huggingFaceToken" : null,
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 32768,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "fp8",
+          "goal" : "fast",
+          "id" : "00000000-0000-4000-8000-000000000002",
+          "keepDisk" : true,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-fp8",
+          "nativeContextTokens" : 262144,
+          "preferredGPU" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "reasoningParser" : "qwen3",
+          "repoId" : "Qwen/Qwen3.8-27B-FP8",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 30600000000
+        },
+        "podKey" : "POD_KEY",
+        "runUntil" : "2026-11-21T18:00:00Z"
+      },
+      "title" : "Pod request for fp8-keep-disk"
+    },
+    {
+      "expected" : {
+        "containerGB" : 42,
+        "persistentGB" : 32,
+        "request" : {
+          "cloud" : "COMMUNITY",
+          "cmd" : [
+            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+          ],
+          "disk" : 42,
+          "entrypoint" : [
+            "/bin/bash",
+            "-c"
+          ],
+          "env" : {
+            "HF_XET_HIGH_PERFORMANCE" : "1",
+            "PODLIGHT_API_KEY" : "POD_KEY",
+            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "PODLIGHT_ENGINE" : "llamacpp",
+            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "PODLIGHT_MAX_LEN" : "131072",
+            "PODLIGHT_MAX_SEQS" : "4",
+            "PODLIGHT_MODEL" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+            "PODLIGHT_PARALLEL" : "2",
+            "PODLIGHT_QUANT" : "Q4_K_M",
+            "PODLIGHT_SERVED_NAME" : "coder-30b-gguf",
+            "PODLIGHT_TP" : "2",
+            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+          },
+          "gpu" : {
+            "count" : 2,
+            "id" : "NVIDIA RTX A6000",
+            "minCudaVersion" : "12.8"
+          },
+          "image" : "ghcr.io/ggml-org/llama.cpp:full-cuda12-b12602",
+          "name" : "podlight-coder-30b-gguf",
+          "ports" : [
+            "8000/http",
+            "8001/http"
+          ]
+        },
+        "storagePerHour" : 0.0057534246575342467
+      },
+      "function" : "podRequest",
+      "id" : "gguf-two-slots",
+      "input" : {
+        "dataCenterIds" : null,
+        "heartbeatMinutes" : 15,
+        "huggingFaceToken" : null,
+        "model" : {
+          "concurrency" : 2,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "gguf",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 32,
+            "bytesPerToken" : 98304,
+            "hybrid" : false
+          },
+          "name" : "coder-30b-gguf",
+          "nativeContextTokens" : 262144,
+          "preferredGPU" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "quant" : "Q4_K_M",
+          "repoId" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 18600000000
+        },
+        "podKey" : "POD_KEY",
+        "runUntil" : null
+      },
+      "title" : "Pod request for gguf-two-slots"
+    },
+    {
+      "expected" : {
+        "containerGB" : 30,
+        "persistentGB" : 32,
+        "request" : {
+          "cloud" : "SECURE",
+          "cmd" : [
+            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+          ],
+          "dataCenterIds" : [
+            "EU-RO-1",
+            "EU-SE-1"
+          ],
+          "disk" : 30,
+          "entrypoint" : [
+            "/bin/bash",
+            "-c"
+          ],
+          "env" : {
+            "HF_HOME" : "/workspace/hf",
+            "HF_TOKEN" : "hf_test",
+            "HF_XET_HIGH_PERFORMANCE" : "1",
+            "LLAMA_CACHE" : "/workspace/llama-cache",
+            "PODLIGHT_API_KEY" : "POD_KEY",
+            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "PODLIGHT_DEADLINE" : "1795284600",
+            "PODLIGHT_ENGINE" : "llamacpp",
+            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "PODLIGHT_MAX_LEN" : "131072",
+            "PODLIGHT_MAX_SEQS" : "4",
+            "PODLIGHT_MODEL" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+            "PODLIGHT_PARALLEL" : "2",
+            "PODLIGHT_QUANT" : "Q4_K_M",
+            "PODLIGHT_SERVED_NAME" : "coder-30b-gguf",
+            "PODLIGHT_TP" : "1",
+            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+          },
+          "gpu" : {
+            "count" : 1,
+            "id" : "placeholder",
+            "minCudaVersion" : "12.8"
+          },
+          "image" : "ghcr.io/ggml-org/llama.cpp:full-cuda12-b12602",
+          "mounts" : {
+            "persistent" : {
+              "path" : "/workspace",
+              "size" : 32
+            }
+          },
+          "name" : "podlight-coder-30b-gguf",
+          "ports" : [
+            "8000/http",
+            "8001/http"
+          ]
+        },
+        "storagePerHour" : 0.008493150684931507
+      },
+      "function" : "podRequest",
+      "id" : "gguf-keep-disk-eu",
+      "input" : {
+        "dataCenterIds" : [
+          "EU-RO-1",
+          "EU-SE-1"
+        ],
+        "heartbeatMinutes" : 15,
+        "huggingFaceToken" : "hf_test",
+        "model" : {
+          "concurrency" : 2,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "gguf",
+          "goal" : "balanced",
+          "hosting" : {
+            "region" : "eu",
+            "secureOnly" : true
+          },
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "keepDisk" : true,
+          "kvProfile" : {
+            "attentionHeads" : 32,
+            "bytesPerToken" : 98304,
+            "hybrid" : false
+          },
+          "name" : "coder-30b-gguf",
+          "nativeContextTokens" : 262144,
+          "quant" : "Q4_K_M",
+          "repoId" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 18600000000
+        },
+        "podKey" : "POD_KEY",
+        "runUntil" : "2026-11-21T18:00:00Z"
+      },
+      "title" : "Pod request for gguf-keep-disk-eu"
+    },
+    {
+      "expected" : {
+        "containerGB" : 66,
+        "persistentGB" : 56,
+        "request" : {
+          "cloud" : "SECURE",
+          "cmd" : [
+            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+          ],
+          "disk" : 66,
+          "entrypoint" : [
+            "/bin/bash",
+            "-c"
+          ],
+          "env" : {
+            "HF_XET_HIGH_PERFORMANCE" : "1",
+            "PODLIGHT_API_KEY" : "POD_KEY",
+            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "PODLIGHT_ENGINE" : "vllm",
+            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "PODLIGHT_MAX_LEN" : "131072",
+            "PODLIGHT_MAX_SEQS" : "4",
+            "PODLIGHT_MODEL" : "casperhansen/llama-3.3-70b-instruct-awq",
+            "PODLIGHT_SERVED_NAME" : "llama-70b-awq",
+            "PODLIGHT_TOOL_PARSER" : "hermes",
+            "PODLIGHT_TP" : "4",
+            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+          },
+          "gpu" : {
+            "count" : 4,
+            "id" : "NVIDIA L40S",
+            "minCudaVersion" : "13.0"
+          },
+          "image" : "vllm/vllm-openai:v0.28.0",
+          "name" : "podlight-llama-70b-awq",
+          "ports" : [
+            "8000/http",
+            "8001/http"
+          ]
+        },
+        "storagePerHour" : 0.0090410958904109592
+      },
+      "function" : "podRequest",
+      "id" : "70b-four-cards",
+      "input" : {
+        "dataCenterIds" : null,
+        "heartbeatMinutes" : 15,
+        "huggingFaceToken" : null,
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000005",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 64,
+            "bytesPerToken" : 327680,
+            "hybrid" : false
+          },
+          "name" : "llama-70b-awq",
+          "nativeContextTokens" : 131072,
+          "preferredGPU" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "repoId" : "casperhansen/llama-3.3-70b-instruct-awq",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 39800000000
+        },
+        "podKey" : "POD_KEY",
+        "runUntil" : null
+      },
+      "title" : "Pod request for 70b-four-cards"
+    },
+    {
+      "expected" : [
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 2,
+          "gpuId" : "NVIDIA GeForce RTX 4090"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA A100 80GB PCIe"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        }
+      ],
+      "function" : "podChoices",
+      "id" : "no-preference",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "Cards tried for no-preference"
+    },
+    {
+      "expected" : [
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 2,
+          "gpuId" : "NVIDIA GeForce RTX 4090"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA A100 80GB PCIe"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        }
+      ],
+      "function" : "podChoices",
+      "id" : "preferred-first",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "preferredGPU" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "Cards tried for preferred-first"
+    },
+    {
+      "expected" : [
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA H200"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 2,
+          "gpuId" : "NVIDIA GeForce RTX 4090"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA A100 80GB PCIe"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        }
+      ],
+      "function" : "podChoices",
+      "id" : "preferred-not-in-suggestions",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "preferredGPU" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H200"
+          },
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "Cards tried for preferred-not-in-suggestions"
+    },
+    {
+      "expected" : [
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 2,
+          "gpuId" : "NVIDIA GeForce RTX 4090"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA L40S"
+        }
+      ],
+      "function" : "podChoices",
+      "id" : "community-preference-under-eu",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "preferredGPU" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "Cards tried for community-preference-under-eu"
+    },
+    {
+      "expected" : [
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 2,
+          "gpuId" : "Tesla V100-SXM2-32GB"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 2,
+          "gpuId" : "NVIDIA GeForce RTX 3090"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA A100 80GB PCIe"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA A40"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        }
+      ],
+      "function" : "podChoices",
+      "id" : "gguf-anywhere",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 2,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "gguf",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 32,
+            "bytesPerToken" : 98304,
+            "hybrid" : false
+          },
+          "name" : "coder-30b-gguf",
+          "nativeContextTokens" : 262144,
+          "quant" : "Q4_K_M",
+          "repoId" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 18600000000
+        }
+      },
+      "title" : "Cards tried for gguf-anywhere"
+    },
+    {
+      "expected" : [
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 8,
+          "gpuId" : "NVIDIA GeForce RTX 4090"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 4,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 2,
+          "gpuId" : "NVIDIA A100 80GB PCIe"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 2,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 4,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 2,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        }
+      ],
+      "function" : "podChoices",
+      "id" : "70b-anywhere",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000005",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 64,
+            "bytesPerToken" : 327680,
+            "hybrid" : false
+          },
+          "name" : "llama-70b-awq",
+          "nativeContextTokens" : 131072,
+          "repoId" : "casperhansen/llama-3.3-70b-instruct-awq",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 39800000000
+        }
+      },
+      "title" : "Cards tried for 70b-anywhere"
+    },
+    {
+      "expected" : [
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 4,
+          "gpuId" : "NVIDIA GeForce RTX 4090"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 2,
+          "gpuId" : "NVIDIA A100 80GB PCIe"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 2,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 4,
+          "gpuId" : "NVIDIA GeForce RTX 4090"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 2,
+          "gpuId" : "NVIDIA H100 80GB HBM3"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 2,
+          "gpuId" : "NVIDIA A100 80GB PCIe"
+        }
+      ],
+      "function" : "podChoices",
+      "id" : "odd-heads",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000006",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 28,
+            "bytesPerToken" : 131072,
+            "hybrid" : true
+          },
+          "name" : "odd-heads",
+          "nativeContextTokens" : 131072,
+          "repoId" : "example/odd-heads-32b",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 64000000000
+        }
+      },
+      "title" : "Cards tried for odd-heads"
+    },
+    {
+      "expected" : [
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA GeForce RTX 4090"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA RTX A6000"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA GeForce RTX 4090"
+        },
+        {
+          "cloud" : "COMMUNITY",
+          "count" : 1,
+          "gpuId" : "NVIDIA L40S"
+        },
+        {
+          "cloud" : "SECURE",
+          "count" : 1,
+          "gpuId" : "NVIDIA L40S"
+        }
+      ],
+      "function" : "podChoices",
+      "id" : "tiny-limit-six",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 8192,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "economical",
+          "id" : "00000000-0000-4000-8000-000000000004",
+          "keepDisk" : false,
+          "name" : "tiny",
+          "nativeContextTokens" : 32768,
+          "repoId" : "Qwen/Qwen2.5-0.5B-Instruct",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 990000000
+        }
+      },
+      "title" : "Cards tried for tiny-limit-six"
+    }
+  ],
+  "description" : "The pod Podlight asks RunPod for, and the order of cards it tries. `podRequest` expects the request body (CreatePodRequest; absent optional fields are left out) with the two base64 pod scripts replaced by markers, plus disk sizes and the storage cost per hour. `podChoices` expects the cards tried in order.",
+  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+}

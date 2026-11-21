@@ -1,4 +1,4 @@
-"""Tests for the pod's dead-man switch (apps/mac/PodlightEngine/Sources/PodlightEngine/Resources/watchdog.py).
+"""Tests for the pod's dead-man switch (spec/pod/watchdog.py).
 
 Runs the real watchdog against a fake RunPod API on localhost, with the timings shortened, and
 checks that it stops the pod in each case it must, and only then. Standard library only:
@@ -8,8 +8,7 @@ checks that it stops the pod in each case it must, and only then. Standard libra
 import http.client, json, os, socket, subprocess, sys, threading, time, unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-WATCHDOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "apps", "mac", "PodlightEngine",
-                        "Sources", "PodlightEngine", "Resources", "watchdog.py")
+WATCHDOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "spec", "pod", "watchdog.py")
 
 
 def free_port():

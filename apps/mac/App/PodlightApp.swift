@@ -27,13 +27,14 @@ struct PodlightApp: App {
                     .disabled(Bundle.main.isUnconfiguredForUpdates)
             }
             CommandGroup(replacing: .newItem) {
-                Button("New Model…") { model.showingAddModel = true }
+                Button("New Model…") { model.addModel(to: .local) }
                     .keyboardShortcut("n")
                     .disabled(!model.hasRunpodKey)
+                Button("Add Server…") { model.showingAddServer = true }
             }
             CommandMenu("Model") {
                 let selected = model.selectedModel
-                let phase = selected.map { model.state.run($0.id).phase } ?? .stopped
+                let phase = selected.map { model.run($0.id).phase } ?? .stopped
                 Button("Start…") { model.startingModel = selected }
                     .keyboardShortcut("r")
                     .disabled(selected == nil || phase != .stopped && phase != .failed)
@@ -111,6 +112,8 @@ enum Links {
     static let claudeCodeGateway = URL(string: "https://code.claude.com/docs/en/llm-gateway")!
     static let codexConfig = URL(string: "https://learn.chatgpt.com/docs/config-file/config-reference")!
     static let pi = URL(string: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/models.md")!
+    static let serverCompose = URL(string: "https://github.com/LOGIN-TB/podlight/blob/main/server/docker-compose.yml")!
+    static let serverDocs = URL(string: "https://github.com/LOGIN-TB/podlight/blob/main/server/README.md")!
 }
 
 enum Pasteboard {

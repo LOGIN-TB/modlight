@@ -23,8 +23,9 @@ struct RootView: View {
                 } detail: {
                     Detail()
                 }
-                .sheet(isPresented: $model.showingAddModel, onDismiss: { model.addSheetDismissed() }) { AddModelSheet() }
-                .sheet(item: $model.editingModel) { AddModelSheet(editing: $0) }
+                .sheet(isPresented: $model.showingAddModel, onDismiss: { model.addSheetDismissed() }) { AddModelSheet(target: model.addingTo) }
+                .sheet(item: $model.editingModel) { AddModelSheet(editing: $0, target: model.source(of: $0.id)) }
+                .sheet(isPresented: $model.showingAddServer) { AddServerSheet() }
                 .sheet(item: $model.startingModel) { StartSheet(model: $0) }
             }
         }
@@ -42,31 +43,72 @@ private struct Sidebar: View {
         @Bindable var model = model
         List(selection: $model.selection) {
             Label("Overview", systemImage: "house").tag(SidebarItem.overview)
-            Section("Models") {
-                ForEach(model.state.models) { item in
-                    ModelRow(item: item, run: model.state.run(item.id))
-                        .tag(SidebarItem.model(item.id))
-                        .contextMenu {
-                            Button("Edit…") { model.editingModel = item }
-                                .disabled(model.state.run(item.id).phase != .stopped && model.state.run(item.id).phase != .failed)
-                        }
-                }
-                Button {
-                    model.showingAddModel = true
-                } label: {
-                    Label("Add Model…", systemImage: "plus")
-                }
-                .buttonStyle(.borderless)
-                .disabled(!model.hasRunpodKey)
-            }
-            Section("Podlight") {
+            Section(model.servers.isEmpty ? "Models" : "This Mac") {
+                ModelRows(source: .local)
                 Label("Connection", systemImage: "point.3.connected.trianglepath.dotted").tag(SidebarItem.connection)
                 Label("Costs", systemImage: "dollarsign.circle").tag(SidebarItem.costs)
+            }
+            ForEach(model.servers) { server in
+                Section {
+                    if server.status != .online { ServerStatusRow(server: server) }
+                    ModelRows(source: .server(server.id))
+                    Label("Connection", systemImage: "point.3.connected.trianglepath.dotted").tag(SidebarItem.serverConnection(server.id))
+                    Label("Costs", systemImage: "dollarsign.circle").tag(SidebarItem.serverCosts(server.id))
+                    Label("Server Settings", systemImage: "gearshape").tag(SidebarItem.serverSettings(server.id))
+                } header: {
+                    Label(server.entry.name, systemImage: "server.rack")
+                }
+            }
+            Section("Podlight") {
                 Label("Settings", systemImage: "gearshape").tag(SidebarItem.settings)
+                Button { model.showingAddServer = true } label: { Label("Add Server…", systemImage: "plus.circle") }
+                    .buttonStyle(.borderless)
+                    .help("Run models on a Podlight server, so agents can use them while this Mac is off")
             }
         }
         .listStyle(.sidebar)
         .safeAreaBar(edge: .bottom) { GatewayStatusBadge().padding(.horizontal, 12).padding(.vertical, 8) }
+    }
+}
+
+/// The models of one source, then its Add Model button.
+private struct ModelRows: View {
+    @Environment(AppModel.self) private var model
+    let source: Source
+
+    var body: some View {
+        ForEach(model.models(in: source)) { item in
+            ModelRow(item: item, run: model.run(item.id))
+                .tag(SidebarItem.model(item.id))
+                .contextMenu {
+                    Button("Edit…") { model.editingModel = item }
+                        .disabled(model.run(item.id).phase != .stopped && model.run(item.id).phase != .failed)
+                }
+        }
+        Button {
+            model.addModel(to: source)
+        } label: {
+            Label("Add Model…", systemImage: "plus")
+        }
+        .buttonStyle(.borderless)
+        .disabled(!model.canStart(in: source))
+    }
+}
+
+/// A server that does not answer, or no longer accepts this app, says so at the top of its section.
+struct ServerStatusRow: View {
+    let server: ServerMirror
+
+    var body: some View {
+        switch server.status {
+        case .online: EmptyView()
+        case .connecting:
+            Label("Connecting…", systemImage: "hourglass").font(.caption).foregroundStyle(.secondary)
+        case .unreachable:
+            Label("Not reachable", systemImage: "wifi.exclamationmark").font(.caption).foregroundStyle(.orange)
+        case .notPaired:
+            Label("Pairing revoked", systemImage: "key.slash").font(.caption).foregroundStyle(.red)
+        }
     }
 }
 
@@ -81,6 +123,9 @@ private struct Detail: View {
         case .connection: ConnectionView()
         case .costs: CostsView()
         case .settings: SettingsContent().navigationTitle("Settings")
+        case .serverConnection(let id): ServerConnectionView(serverID: id)
+        case .serverCosts(let id): CostsView(source: .server(id))
+        case .serverSettings(let id): ServerSettingsView(serverID: id)
         case nil: NoModelView()
         }
     }

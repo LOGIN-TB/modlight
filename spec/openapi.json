@@ -1,0 +1,2631 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Podlight server",
+    "version": "0.4.0",
+    "description": "Gateway for agents (/v1, client tokens) and control API for Podlight apps (/admin, device tokens from pairing). Plain HTTP; run it behind a reverse proxy with TLS.",
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "device": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Device token (pld-…) from POST /pair."
+      },
+      "client": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Client token (pl-…) created in the app."
+      },
+      "clientApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Client token, as Claude Code sends ANTHROPIC_API_KEY."
+      }
+    },
+    "schemas": {
+      "PodlightModel": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,62}$"
+          },
+          "repoId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "safetensors",
+              "awq",
+              "gptq",
+              "fp8",
+              "nvfp4",
+              "gguf",
+              "mlx",
+              "unknown"
+            ]
+          },
+          "weightBytes": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "nativeContextTokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "toolCallParser": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reasoningParser": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contextTokens": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "concurrency": {
+            "default": 1,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "goal": {
+            "default": "balanced",
+            "type": "string",
+            "enum": [
+              "economical",
+              "balanced",
+              "fast"
+            ]
+          },
+          "preferredGPU": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "gpuId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cloud": {
+                    "type": "string",
+                    "enum": [
+                      "SECURE",
+                      "COMMUNITY"
+                    ]
+                  },
+                  "count": {
+                    "default": 1,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "gpuId",
+                  "cloud"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expectedPricePerHour": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "schedule": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "timezone": {
+                "type": "string",
+                "minLength": 1
+              },
+              "weekdays": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 6
+                }
+              },
+              "startAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{1,2}:\\d{2}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "stopAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{1,2}:\\d{2}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "idleStopMinutes": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "maxRuntimeHours": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "enabled",
+              "timezone",
+              "weekdays",
+              "idleStopMinutes",
+              "maxRuntimeHours"
+            ]
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kvProfile": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "bytesPerToken": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "attentionHeads": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "hybrid": {
+                    "default": false,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "bytesPerToken"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "keepDisk": {
+            "type": "boolean"
+          },
+          "hosting": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "region": {
+                    "type": "string",
+                    "enum": [
+                      "anywhere",
+                      "eu",
+                      "euEEA"
+                    ]
+                  },
+                  "secureOnly": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "region",
+                  "secureOnly"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preferredGPUName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quant": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "repoId",
+          "format",
+          "weightBytes",
+          "contextTokens",
+          "schedule",
+          "keepDisk"
+        ]
+      },
+      "ModelRun": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "podId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "gpu": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "gpuId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cloud": {
+                    "type": "string",
+                    "enum": [
+                      "SECURE",
+                      "COMMUNITY"
+                    ]
+                  },
+                  "count": {
+                    "default": 1,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "gpuId",
+                  "cloud"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gpuName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pricePerHour": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "podStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "RUNNING",
+                  "STARTING",
+                  "PROVISIONING",
+                  "EXITED",
+                  "ERROR",
+                  "TERMINATED"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "phase": {
+            "default": "stopped",
+            "type": "string",
+            "enum": [
+              "stopped",
+              "creating",
+              "loading",
+              "ready",
+              "stopping",
+              "failed"
+            ]
+          },
+          "startedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastRequestAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "idleStoppedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stoppedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "engineReady": {
+            "default": false,
+            "type": "boolean"
+          },
+          "startedManually": {
+            "default": false,
+            "type": "boolean"
+          },
+          "runUntil": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastMessage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fellBackFrom": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastHeartbeatAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "persistentGB": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "containerGB": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "storagePerHour": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "dataCenterId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "accountedUntil": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "storageAccountedUntil": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hosting": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "region": {
+                    "type": "string",
+                    "enum": [
+                      "anywhere",
+                      "eu",
+                      "euEEA"
+                    ]
+                  },
+                  "secureOnly": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "region",
+                  "secureOnly"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Schedule": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1
+          },
+          "weekdays": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            }
+          },
+          "startAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{1,2}:\\d{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stopAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{1,2}:\\d{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "idleStopMinutes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "maxRuntimeHours": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "enabled",
+          "timezone",
+          "weekdays",
+          "idleStopMinutes",
+          "maxRuntimeHours"
+        ]
+      },
+      "HostingPolicy": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "region": {
+            "type": "string",
+            "enum": [
+              "anywhere",
+              "eu",
+              "euEEA"
+            ]
+          },
+          "secureOnly": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "region",
+          "secureOnly"
+        ]
+      },
+      "GPUChoice": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "gpuId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cloud": {
+            "type": "string",
+            "enum": [
+              "SECURE",
+              "COMMUNITY"
+            ]
+          },
+          "count": {
+            "default": 1,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "gpuId",
+          "cloud"
+        ]
+      },
+      "Settings": {
+        "allOf": [
+          {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "dailyLimitUsd": {
+                "default": 10,
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "monthlyLimitUsd": {
+                "default": 100,
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "heartbeatMinutes": {
+                "default": 15,
+                "type": "integer",
+                "minimum": 5,
+                "maximum": 60
+              },
+              "wakeWaitSeconds": {
+                "default": 600,
+                "type": "integer",
+                "minimum": 30,
+                "maximum": 900
+              },
+              "deleteStoppedAfterDays": {
+                "default": 3,
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 30
+              },
+              "wakeOnRequest": {
+                "default": true,
+                "type": "boolean"
+              },
+              "hostingRegion": {
+                "default": "anywhere",
+                "type": "string",
+                "enum": [
+                  "anywhere",
+                  "eu",
+                  "euEEA"
+                ]
+              },
+              "secureCloudOnly": {
+                "default": false,
+                "type": "boolean"
+              },
+              "timezone": {
+                "default": "UTC",
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "hasRunpodKey": {
+                "type": "boolean"
+              },
+              "hasHuggingFaceToken": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "SettingsPatch": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "dailyLimitUsd": {
+            "default": 10,
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "monthlyLimitUsd": {
+            "default": 100,
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "heartbeatMinutes": {
+            "default": 15,
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 60
+          },
+          "wakeWaitSeconds": {
+            "default": 600,
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 900
+          },
+          "deleteStoppedAfterDays": {
+            "default": 3,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "wakeOnRequest": {
+            "default": true,
+            "type": "boolean"
+          },
+          "hostingRegion": {
+            "default": "anywhere",
+            "type": "string",
+            "enum": [
+              "anywhere",
+              "eu",
+              "euEEA"
+            ]
+          },
+          "secureCloudOnly": {
+            "default": false,
+            "type": "boolean"
+          },
+          "timezone": {
+            "default": "UTC",
+            "type": "string"
+          },
+          "runpodApiKey": {
+            "type": "string"
+          },
+          "huggingFaceToken": {
+            "type": "string"
+          }
+        }
+      },
+      "Spend": {
+        "type": "object",
+        "properties": {
+          "todayUsd": {
+            "type": "number"
+          },
+          "monthUsd": {
+            "type": "number"
+          },
+          "dailyLimitUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "monthlyLimitUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "State": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PodlightModel"
+            }
+          },
+          "runs": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ModelRun"
+            },
+            "description": "Keyed by model id."
+          },
+          "settings": {
+            "$ref": "#/components/schemas/Settings"
+          },
+          "spendByDay": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "spend": {
+            "$ref": "#/components/schemas/Spend"
+          },
+          "costPerHour": {
+            "type": "number"
+          },
+          "lastClientRequestAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ClientToken": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "lastUsedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revokedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "models": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "token": {
+            "type": "string",
+            "description": "Only in the answer to POST /admin/client-tokens."
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "server"
+        ],
+        "summary": "Liveness, version, whether any app is paired",
+        "responses": {
+          "200": {
+            "description": "Status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pair": {
+      "post": {
+        "tags": [
+          "server"
+        ],
+        "summary": "Exchange the pairing code from the log for a device token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "deviceName": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/models": {
+      "get": {
+        "tags": [
+          "gateway"
+        ],
+        "security": [
+          {
+            "client": []
+          },
+          {
+            "clientApiKey": []
+          }
+        ],
+        "summary": "Models this key may use (OpenAI and Anthropic fields)",
+        "responses": {
+          "200": {
+            "description": "List",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chat/completions": {
+      "post": {
+        "tags": [
+          "gateway"
+        ],
+        "security": [
+          {
+            "client": []
+          },
+          {
+            "clientApiKey": []
+          }
+        ],
+        "summary": "OpenAI API, passed to the engine",
+        "description": "The `model` field picks the model. A stopped model is woken (spend limits are checked first) and the request held until it answers. Request and response are passed through unchanged, streaming included; on /v1/messages, `role: \"system\"` entries inside `messages` become user text in `<system-reminder>`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The engine's answer (JSON or text/event-stream)"
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/completions": {
+      "post": {
+        "tags": [
+          "gateway"
+        ],
+        "security": [
+          {
+            "client": []
+          },
+          {
+            "clientApiKey": []
+          }
+        ],
+        "summary": "OpenAI API, passed to the engine",
+        "description": "The `model` field picks the model. A stopped model is woken (spend limits are checked first) and the request held until it answers. Request and response are passed through unchanged, streaming included; on /v1/messages, `role: \"system\"` entries inside `messages` become user text in `<system-reminder>`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The engine's answer (JSON or text/event-stream)"
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/embeddings": {
+      "post": {
+        "tags": [
+          "gateway"
+        ],
+        "security": [
+          {
+            "client": []
+          },
+          {
+            "clientApiKey": []
+          }
+        ],
+        "summary": "OpenAI API, passed to the engine",
+        "description": "The `model` field picks the model. A stopped model is woken (spend limits are checked first) and the request held until it answers. Request and response are passed through unchanged, streaming included; on /v1/messages, `role: \"system\"` entries inside `messages` become user text in `<system-reminder>`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The engine's answer (JSON or text/event-stream)"
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/responses": {
+      "post": {
+        "tags": [
+          "gateway"
+        ],
+        "security": [
+          {
+            "client": []
+          },
+          {
+            "clientApiKey": []
+          }
+        ],
+        "summary": "OpenAI Responses API, passed to the engine",
+        "description": "The `model` field picks the model. A stopped model is woken (spend limits are checked first) and the request held until it answers. Request and response are passed through unchanged, streaming included; on /v1/messages, `role: \"system\"` entries inside `messages` become user text in `<system-reminder>`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The engine's answer (JSON or text/event-stream)"
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/responses/input_tokens": {
+      "post": {
+        "tags": [
+          "gateway"
+        ],
+        "security": [
+          {
+            "client": []
+          },
+          {
+            "clientApiKey": []
+          }
+        ],
+        "summary": "OpenAI Responses API, passed to the engine",
+        "description": "The `model` field picks the model. A stopped model is woken (spend limits are checked first) and the request held until it answers. Request and response are passed through unchanged, streaming included; on /v1/messages, `role: \"system\"` entries inside `messages` become user text in `<system-reminder>`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The engine's answer (JSON or text/event-stream)"
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages": {
+      "post": {
+        "tags": [
+          "gateway"
+        ],
+        "security": [
+          {
+            "client": []
+          },
+          {
+            "clientApiKey": []
+          }
+        ],
+        "summary": "Anthropic Messages API, passed to the engine",
+        "description": "The `model` field picks the model. A stopped model is woken (spend limits are checked first) and the request held until it answers. Request and response are passed through unchanged, streaming included; on /v1/messages, `role: \"system\"` entries inside `messages` become user text in `<system-reminder>`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The engine's answer (JSON or text/event-stream)"
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/count_tokens": {
+      "post": {
+        "tags": [
+          "gateway"
+        ],
+        "security": [
+          {
+            "client": []
+          },
+          {
+            "clientApiKey": []
+          }
+        ],
+        "summary": "Anthropic Messages API, passed to the engine",
+        "description": "The `model` field picks the model. A stopped model is woken (spend limits are checked first) and the request held until it answers. Request and response are passed through unchanged, streaming included; on /v1/messages, `role: \"system\"` entries inside `messages` become user text in `<system-reminder>`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The engine's answer (JSON or text/event-stream)"
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/state": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Everything the app shows: models, runs, settings, spend",
+        "responses": {
+          "200": {
+            "description": "State",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/State"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/settings": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Settings (secrets only as has… flags)",
+        "responses": {
+          "200": {
+            "description": "Settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Change settings; secrets are write-only, \"\" removes one",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/settings/verify-runpod": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Check a RunPod key (the given one, or the stored one)",
+        "responses": {
+          "200": {
+            "description": "Result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "enum": [
+                        "valid",
+                        "invalid",
+                        "missingPermission",
+                        "unreachable"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/catalog/gpus": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "RunPod's GPU catalog with availability, through the server's key",
+        "responses": {
+          "200": {
+            "description": "Catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/models": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Models",
+        "responses": {
+          "200": {
+            "description": "Models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PodlightModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/models/{id}": {
+      "put": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Add or replace a model",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PodlightModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PodlightModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Remove a model, deleting its pod and disk",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed"
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/models/{id}/start": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Start until a time (\"Läuft bis\"); without one, idle stop ends it",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "until": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelRun"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/models/{id}/stop": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Stop (kept disk) or delete the pod",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelRun"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/models/{id}/extend": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Move \"Läuft bis\"",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "until"
+                ],
+                "properties": {
+                  "until": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelRun"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/models/{id}/log": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "The engine's last log lines",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lines",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/client-tokens": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Access keys for agents",
+        "responses": {
+          "200": {
+            "description": "Keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClientToken"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Create an access key, optionally limited to models; the key is shown once",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "models": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientToken"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/client-tokens/{id}": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Rename or change the models of an access key",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientToken"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Delete a revoked access key",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/client-tokens/{id}/revoke": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Revoke an access key",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked"
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/devices": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Paired apps",
+        "responses": {
+          "200": {
+            "description": "Devices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/devices/{id}/revoke": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Unpair an app",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked"
+          }
+        }
+      }
+    },
+    "/admin/pair/new-code": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "A new pairing code for another device",
+        "responses": {
+          "200": {
+            "description": "Code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/activity": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "The last 50 control actions",
+        "responses": {
+          "200": {
+            "description": "Entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5540 @@
+{
+  "cases" : [
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.252631578947366,
+          "pricePerHour" : 0.33000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.252631578947366,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 50.930526315789479,
+          "pricePerHour" : 0.68000000000000005
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.284210526315789,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.284210526315789,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 61.105263157894733,
+          "pricePerHour" : 1.1899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 50.930526315789479,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 61.105263157894733,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 105.78947368421053,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 105.78947368421053,
+          "pricePerHour" : 2.6899999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-awq-anywhere-economical",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "economical",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "qwen-27b-awq, anywhere, goal economical"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 50.930526315789479,
+          "pricePerHour" : 0.68000000000000005
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.252631578947366,
+          "pricePerHour" : 0.33000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 61.105263157894733,
+          "pricePerHour" : 1.1899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.252631578947366,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 105.78947368421053,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 105.78947368421053,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 61.105263157894733,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 50.930526315789479,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.284210526315789,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.284210526315789,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-awq-anywhere-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "qwen-27b-awq, anywhere, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 105.78947368421053,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 105.78947368421053,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 61.105263157894733,
+          "pricePerHour" : 1.1899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 61.105263157894733,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 50.930526315789479,
+          "pricePerHour" : 0.68000000000000005
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 50.930526315789479,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.284210526315789,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.284210526315789,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.252631578947366,
+          "pricePerHour" : 0.33000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.252631578947366,
+          "pricePerHour" : 0.48999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-awq-anywhere-fast",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "fast",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "qwen-27b-awq, anywhere, goal fast"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.252631578947366,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 105.78947368421053,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 61.105263157894733,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 50.930526315789479,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.284210526315789,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-awq-secure-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "qwen-27b-awq, secure, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 24.252631578947366,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 105.78947368421053,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 50.930526315789479,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 27.284210526315789,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-awq-eu-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "qwen-27b-awq, eu, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 24.252631578947366,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 105.78947368421053,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 50.930526315789479,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 27.284210526315789,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-awq-euEEA-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000001",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-awq",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "QuantTrio/Qwen3.8-27B-AWQ",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 19000000000
+        }
+      },
+      "title" : "qwen-27b-awq, euEEA, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 31.623529411764704,
+          "pricePerHour" : 0.68000000000000005
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 16.941176470588236,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 16.941176470588236,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 31.623529411764704,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 65.686274509803923,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 65.686274509803923,
+          "pricePerHour" : 2.6899999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-fp8-anywhere-economical",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 32768,
+        "goal" : "economical",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 32768,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "fp8",
+          "goal" : "fast",
+          "id" : "00000000-0000-4000-8000-000000000002",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-fp8",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "Qwen/Qwen3.8-27B-FP8",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 30600000000
+        }
+      },
+      "title" : "qwen-27b-fp8, anywhere, goal economical"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 31.623529411764704,
+          "pricePerHour" : 0.68000000000000005
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 65.686274509803923,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 65.686274509803923,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 31.623529411764704,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 16.941176470588236,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 16.941176470588236,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-fp8-anywhere-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 32768,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 32768,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "fp8",
+          "goal" : "fast",
+          "id" : "00000000-0000-4000-8000-000000000002",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-fp8",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "Qwen/Qwen3.8-27B-FP8",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 30600000000
+        }
+      },
+      "title" : "qwen-27b-fp8, anywhere, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 65.686274509803923,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 65.686274509803923,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 31.623529411764704,
+          "pricePerHour" : 0.68000000000000005
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 31.623529411764704,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 16.941176470588236,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 16.941176470588236,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-fp8-anywhere-fast",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 32768,
+        "goal" : "fast",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 32768,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "fp8",
+          "goal" : "fast",
+          "id" : "00000000-0000-4000-8000-000000000002",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-fp8",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "Qwen/Qwen3.8-27B-FP8",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 30600000000
+        }
+      },
+      "title" : "qwen-27b-fp8, anywhere, goal fast"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 65.686274509803923,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 31.623529411764704,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 16.941176470588236,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-fp8-secure-fast",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 32768,
+        "goal" : "fast",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 32768,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "fp8",
+          "goal" : "fast",
+          "id" : "00000000-0000-4000-8000-000000000002",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-fp8",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "Qwen/Qwen3.8-27B-FP8",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 30600000000
+        }
+      },
+      "title" : "qwen-27b-fp8, secure, goal fast"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 65.686274509803923,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 31.623529411764704,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 16.941176470588236,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-fp8-eu-fast",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 32768,
+        "goal" : "fast",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 32768,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "fp8",
+          "goal" : "fast",
+          "id" : "00000000-0000-4000-8000-000000000002",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-fp8",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "Qwen/Qwen3.8-27B-FP8",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 30600000000
+        }
+      },
+      "title" : "qwen-27b-fp8, eu, goal fast"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 65.686274509803923,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 31.623529411764704,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 164864,
+          "contextTokens" : 32768,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 16.941176470588236,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "qwen-27b-fp8-euEEA-fast",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 32768,
+        "goal" : "fast",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 32768,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "fp8",
+          "goal" : "fast",
+          "id" : "00000000-0000-4000-8000-000000000002",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 24,
+            "bytesPerToken" : 65536,
+            "hybrid" : false
+          },
+          "name" : "qwen-27b-fp8",
+          "nativeContextTokens" : 262144,
+          "reasoningParser" : "qwen3",
+          "repoId" : "Qwen/Qwen3.8-27B-FP8",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "qwen3_xml",
+          "weightBytes" : 30600000000
+        }
+      },
+      "title" : "qwen-27b-fp8, euEEA, goal fast"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.774193548387096,
+          "pricePerHour" : 0.33000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "Tesla V100-SXM2-32GB"
+          },
+          "contextCeiling" : 214016,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+
+          ],
+          "estimatedTokensPerSecond" : 29.032258064516125,
+          "pricePerHour" : 0.38
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 3090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+
+          ],
+          "estimatedTokensPerSecond" : 30.193548387096772,
+          "pricePerHour" : 0.44
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A40"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "EUR-IS-1"
+          ],
+          "estimatedTokensPerSecond" : 22.451612903225804,
+          "pricePerHour" : 0.44
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.774193548387096,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 32.516129032258057,
+          "pricePerHour" : 0.68000000000000005
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.87096774193548,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.87096774193548,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 62.419354838709673,
+          "pricePerHour" : 1.1899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 32.516129032258057,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 62.419354838709673,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 108.06451612903224,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 108.06451612903224,
+          "pricePerHour" : 2.6899999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "coder-30b-gguf-anywhere-economical",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 2,
+        "context" : 131072,
+        "goal" : "economical",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 2,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "gguf",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 32,
+            "bytesPerToken" : 98304,
+            "hybrid" : false
+          },
+          "name" : "coder-30b-gguf",
+          "nativeContextTokens" : 262144,
+          "quant" : "Q4_K_M",
+          "repoId" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 18600000000
+        }
+      },
+      "title" : "coder-30b-gguf, anywhere, goal economical"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "Tesla V100-SXM2-32GB"
+          },
+          "contextCeiling" : 214016,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+
+          ],
+          "estimatedTokensPerSecond" : 29.032258064516125,
+          "pricePerHour" : 0.38
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.774193548387096,
+          "pricePerHour" : 0.33000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 3090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+
+          ],
+          "estimatedTokensPerSecond" : 30.193548387096772,
+          "pricePerHour" : 0.44
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 62.419354838709673,
+          "pricePerHour" : 1.1899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A40"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "EUR-IS-1"
+          ],
+          "estimatedTokensPerSecond" : 22.451612903225804,
+          "pricePerHour" : 0.44
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.774193548387096,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 32.516129032258057,
+          "pricePerHour" : 0.68000000000000005
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 108.06451612903224,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 108.06451612903224,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 62.419354838709673,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.87096774193548,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.87096774193548,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 32.516129032258057,
+          "pricePerHour" : 1.3799999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "coder-30b-gguf-anywhere-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 2,
+        "context" : 131072,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 2,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "gguf",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 32,
+            "bytesPerToken" : 98304,
+            "hybrid" : false
+          },
+          "name" : "coder-30b-gguf",
+          "nativeContextTokens" : 262144,
+          "quant" : "Q4_K_M",
+          "repoId" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 18600000000
+        }
+      },
+      "title" : "coder-30b-gguf, anywhere, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 108.06451612903224,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 108.06451612903224,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 62.419354838709673,
+          "pricePerHour" : 1.1899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 62.419354838709673,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 32.516129032258057,
+          "pricePerHour" : 0.68000000000000005
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 32.516129032258057,
+          "pricePerHour" : 1.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 3090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+
+          ],
+          "estimatedTokensPerSecond" : 30.193548387096772,
+          "pricePerHour" : 0.44
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "Tesla V100-SXM2-32GB"
+          },
+          "contextCeiling" : 214016,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+
+          ],
+          "estimatedTokensPerSecond" : 29.032258064516125,
+          "pricePerHour" : 0.38
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.87096774193548,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.87096774193548,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.774193548387096,
+          "pricePerHour" : 0.33000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.774193548387096,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A40"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "EUR-IS-1"
+          ],
+          "estimatedTokensPerSecond" : 22.451612903225804,
+          "pricePerHour" : 0.44
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "coder-30b-gguf-anywhere-fast",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 2,
+        "context" : 131072,
+        "goal" : "fast",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 2,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "gguf",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 32,
+            "bytesPerToken" : 98304,
+            "hybrid" : false
+          },
+          "name" : "coder-30b-gguf",
+          "nativeContextTokens" : 262144,
+          "quant" : "Q4_K_M",
+          "repoId" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 18600000000
+        }
+      },
+      "title" : "coder-30b-gguf, anywhere, goal fast"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A40"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "EUR-IS-1"
+          ],
+          "estimatedTokensPerSecond" : 22.451612903225804,
+          "pricePerHour" : 0.44
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 24.774193548387096,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 108.06451612903224,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 62.419354838709673,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 27.87096774193548,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 32.516129032258057,
+          "pricePerHour" : 1.3799999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "coder-30b-gguf-secure-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 2,
+        "context" : 131072,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 2,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "gguf",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 32,
+            "bytesPerToken" : 98304,
+            "hybrid" : false
+          },
+          "name" : "coder-30b-gguf",
+          "nativeContextTokens" : 262144,
+          "quant" : "Q4_K_M",
+          "repoId" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 18600000000
+        }
+      },
+      "title" : "coder-30b-gguf, secure, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A40"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 22.451612903225804,
+          "pricePerHour" : 0.44
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 24.774193548387096,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 108.06451612903224,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 27.87096774193548,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 32.516129032258057,
+          "pricePerHour" : 1.3799999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "coder-30b-gguf-eu-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 2,
+        "context" : 131072,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 2,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "gguf",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 32,
+            "bytesPerToken" : 98304,
+            "hybrid" : false
+          },
+          "name" : "coder-30b-gguf",
+          "nativeContextTokens" : 262144,
+          "quant" : "Q4_K_M",
+          "repoId" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 18600000000
+        }
+      },
+      "title" : "coder-30b-gguf, eu, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A40"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "EUR-IS-1"
+          ],
+          "estimatedTokensPerSecond" : 22.451612903225804,
+          "pricePerHour" : 0.44
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 24.774193548387096,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 262144,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 108.06451612903224,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 140288,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 27.87096774193548,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 135168,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 32.516129032258057,
+          "pricePerHour" : 1.3799999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "coder-30b-gguf-euEEA-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 2,
+        "context" : 131072,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 2,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "gguf",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 32,
+            "bytesPerToken" : 98304,
+            "hybrid" : false
+          },
+          "name" : "coder-30b-gguf",
+          "nativeContextTokens" : 262144,
+          "quant" : "Q4_K_M",
+          "repoId" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 18600000000
+        }
+      },
+      "title" : "coder-30b-gguf, euEEA, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 465.45454545454544,
+          "pricePerHour" : 0.33000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 610.90909090909088,
+          "pricePerHour" : 0.34000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 465.45454545454544,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 610.90909090909088,
+          "pricePerHour" : 0.68999999999999995
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 523.63636363636363,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 523.63636363636363,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 1172.7272727272727,
+          "pricePerHour" : 1.1899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 1172.7272727272727,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 2030.3030303030303,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 2030.3030303030303,
+          "pricePerHour" : 2.6899999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "tiny-anywhere-economical",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 8192,
+        "goal" : "economical",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 8192,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "economical",
+          "id" : "00000000-0000-4000-8000-000000000004",
+          "keepDisk" : false,
+          "name" : "tiny",
+          "nativeContextTokens" : 32768,
+          "repoId" : "Qwen/Qwen2.5-0.5B-Instruct",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 990000000
+        }
+      },
+      "title" : "tiny, anywhere, goal economical"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 610.90909090909088,
+          "pricePerHour" : 0.34000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 465.45454545454544,
+          "pricePerHour" : 0.33000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 1172.7272727272727,
+          "pricePerHour" : 1.1899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 465.45454545454544,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 610.90909090909088,
+          "pricePerHour" : 0.68999999999999995
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 2030.3030303030303,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 2030.3030303030303,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 1172.7272727272727,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 523.63636363636363,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 523.63636363636363,
+          "pricePerHour" : 0.85999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "tiny-anywhere-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 8192,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 8192,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "economical",
+          "id" : "00000000-0000-4000-8000-000000000004",
+          "keepDisk" : false,
+          "name" : "tiny",
+          "nativeContextTokens" : 32768,
+          "repoId" : "Qwen/Qwen2.5-0.5B-Instruct",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 990000000
+        }
+      },
+      "title" : "tiny, anywhere, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 2030.3030303030303,
+          "pricePerHour" : 2.3900000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 2030.3030303030303,
+          "pricePerHour" : 2.6899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 1172.7272727272727,
+          "pricePerHour" : 1.1899999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 1172.7272727272727,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 610.90909090909088,
+          "pricePerHour" : 0.34000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 610.90909090909088,
+          "pricePerHour" : 0.68999999999999995
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 523.63636363636363,
+          "pricePerHour" : 0.79000000000000004
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 523.63636363636363,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 465.45454545454544,
+          "pricePerHour" : 0.33000000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 465.45454545454544,
+          "pricePerHour" : 0.48999999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "tiny-anywhere-fast",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 8192,
+        "goal" : "fast",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 8192,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "economical",
+          "id" : "00000000-0000-4000-8000-000000000004",
+          "keepDisk" : false,
+          "name" : "tiny",
+          "nativeContextTokens" : 32768,
+          "repoId" : "Qwen/Qwen2.5-0.5B-Instruct",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 990000000
+        }
+      },
+      "title" : "tiny, anywhere, goal fast"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 465.45454545454544,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 610.90909090909088,
+          "pricePerHour" : 0.68999999999999995
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 523.63636363636363,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 1172.7272727272727,
+          "pricePerHour" : 1.6399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 2030.3030303030303,
+          "pricePerHour" : 2.6899999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "tiny-secure-economical",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 8192,
+        "goal" : "economical",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 8192,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "economical",
+          "id" : "00000000-0000-4000-8000-000000000004",
+          "keepDisk" : false,
+          "name" : "tiny",
+          "nativeContextTokens" : 32768,
+          "repoId" : "Qwen/Qwen2.5-0.5B-Instruct",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 990000000
+        }
+      },
+      "title" : "tiny, secure, goal economical"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 465.45454545454544,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 610.90909090909088,
+          "pricePerHour" : 0.68999999999999995
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 523.63636363636363,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 2030.3030303030303,
+          "pricePerHour" : 2.6899999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "tiny-eu-economical",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 8192,
+        "goal" : "economical",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 8192,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "economical",
+          "id" : "00000000-0000-4000-8000-000000000004",
+          "keepDisk" : false,
+          "name" : "tiny",
+          "nativeContextTokens" : 32768,
+          "repoId" : "Qwen/Qwen2.5-0.5B-Instruct",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 990000000
+        }
+      },
+      "title" : "tiny, eu, goal economical"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 465.45454545454544,
+          "pricePerHour" : 0.48999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 610.90909090909088,
+          "pricePerHour" : 0.68999999999999995
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 523.63636363636363,
+          "pricePerHour" : 0.85999999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 32768,
+          "contextTokens" : 8192,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 2030.3030303030303,
+          "pricePerHour" : 2.6899999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "tiny-euEEA-economical",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 8192,
+        "goal" : "economical",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 8192,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "economical",
+          "id" : "00000000-0000-4000-8000-000000000004",
+          "keepDisk" : false,
+          "name" : "tiny",
+          "nativeContextTokens" : 32768,
+          "repoId" : "Qwen/Qwen2.5-0.5B-Instruct",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 990000000
+        }
+      },
+      "title" : "tiny, euEEA, goal economical"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 32.418090452261303,
+          "pricePerHour" : 1.3200000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 32.418090452261303,
+          "pricePerHour" : 1.96
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 46.673366834170864,
+          "pricePerHour" : 2.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 79.019095477386941,
+          "pricePerHour" : 2.7200000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 36.470351758793974,
+          "pricePerHour" : 3.1600000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 46.673366834170864,
+          "pricePerHour" : 3.2799999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 36.470351758793974,
+          "pricePerHour" : 3.4399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 80.804020100502512,
+          "pricePerHour" : 4.7800000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 80.804020100502512,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 79.019095477386941,
+          "pricePerHour" : 5.5199999999999996
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "llama-70b-awq-anywhere-economical",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 131072,
+        "goal" : "economical",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000005",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 64,
+            "bytesPerToken" : 327680,
+            "hybrid" : false
+          },
+          "name" : "llama-70b-awq",
+          "nativeContextTokens" : 131072,
+          "repoId" : "casperhansen/llama-3.3-70b-instruct-awq",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 39800000000
+        }
+      },
+      "title" : "llama-70b-awq, anywhere, goal economical"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 79.019095477386941,
+          "pricePerHour" : 2.7200000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 32.418090452261303,
+          "pricePerHour" : 1.3200000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 46.673366834170864,
+          "pricePerHour" : 2.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 80.804020100502512,
+          "pricePerHour" : 4.7800000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 32.418090452261303,
+          "pricePerHour" : 1.96
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 80.804020100502512,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 79.019095477386941,
+          "pricePerHour" : 5.5199999999999996
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 46.673366834170864,
+          "pricePerHour" : 3.2799999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 36.470351758793974,
+          "pricePerHour" : 3.1600000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 36.470351758793974,
+          "pricePerHour" : 3.4399999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "llama-70b-awq-anywhere-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 131072,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000005",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 64,
+            "bytesPerToken" : 327680,
+            "hybrid" : false
+          },
+          "name" : "llama-70b-awq",
+          "nativeContextTokens" : 131072,
+          "repoId" : "casperhansen/llama-3.3-70b-instruct-awq",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 39800000000
+        }
+      },
+      "title" : "llama-70b-awq, anywhere, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 80.804020100502512,
+          "pricePerHour" : 4.7800000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 80.804020100502512,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 79.019095477386941,
+          "pricePerHour" : 2.7200000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 79.019095477386941,
+          "pricePerHour" : 5.5199999999999996
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 46.673366834170864,
+          "pricePerHour" : 2.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 46.673366834170864,
+          "pricePerHour" : 3.2799999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 36.470351758793974,
+          "pricePerHour" : 3.1600000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 36.470351758793974,
+          "pricePerHour" : 3.4399999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 32.418090452261303,
+          "pricePerHour" : 1.3200000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 32.418090452261303,
+          "pricePerHour" : 1.96
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "llama-70b-awq-anywhere-fast",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 131072,
+        "goal" : "fast",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000005",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 64,
+            "bytesPerToken" : 327680,
+            "hybrid" : false
+          },
+          "name" : "llama-70b-awq",
+          "nativeContextTokens" : 131072,
+          "repoId" : "casperhansen/llama-3.3-70b-instruct-awq",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 39800000000
+        }
+      },
+      "title" : "llama-70b-awq, anywhere, goal fast"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 32.418090452261303,
+          "pricePerHour" : 1.96
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 80.804020100502512,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 79.019095477386941,
+          "pricePerHour" : 5.5199999999999996
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 46.673366834170864,
+          "pricePerHour" : 3.2799999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 36.470351758793974,
+          "pricePerHour" : 3.4399999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "llama-70b-awq-secure-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 131072,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000005",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 64,
+            "bytesPerToken" : 327680,
+            "hybrid" : false
+          },
+          "name" : "llama-70b-awq",
+          "nativeContextTokens" : 131072,
+          "repoId" : "casperhansen/llama-3.3-70b-instruct-awq",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 39800000000
+        }
+      },
+      "title" : "llama-70b-awq, secure, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 32.418090452261303,
+          "pricePerHour" : 1.96
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 80.804020100502512,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 79.019095477386941,
+          "pricePerHour" : 5.5199999999999996
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 36.470351758793974,
+          "pricePerHour" : 3.4399999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "llama-70b-awq-eu-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 131072,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000005",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 64,
+            "bytesPerToken" : 327680,
+            "hybrid" : false
+          },
+          "name" : "llama-70b-awq",
+          "nativeContextTokens" : 131072,
+          "repoId" : "casperhansen/llama-3.3-70b-instruct-awq",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 39800000000
+        }
+      },
+      "title" : "llama-70b-awq, eu, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 32.418090452261303,
+          "pricePerHour" : 1.96
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 80.804020100502512,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 79.019095477386941,
+          "pricePerHour" : 5.5199999999999996
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 131072,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 36.470351758793974,
+          "pricePerHour" : 3.4399999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "llama-70b-awq-euEEA-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 131072,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 131072,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "awq",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000005",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 64,
+            "bytesPerToken" : 327680,
+            "hybrid" : false
+          },
+          "name" : "llama-70b-awq",
+          "nativeContextTokens" : 131072,
+          "repoId" : "casperhansen/llama-3.3-70b-instruct-awq",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "toolCallParser" : "hermes",
+          "weightBytes" : 39800000000
+        }
+      },
+      "title" : "llama-70b-awq, euEEA, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 11.52,
+          "pricePerHour" : 0.66000000000000003
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 11.52,
+          "pricePerHour" : 0.97999999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 26.459999999999997,
+          "pricePerHour" : 1.3600000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 12.960000000000001,
+          "pricePerHour" : 1.5800000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 12.960000000000001,
+          "pricePerHour" : 1.72
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 29.025000000000002,
+          "pricePerHour" : 2.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 26.459999999999997,
+          "pricePerHour" : 2.7599999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 29.025000000000002,
+          "pricePerHour" : 3.2799999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 50.25,
+          "pricePerHour" : 4.7800000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 50.25,
+          "pricePerHour" : 5.3799999999999999
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "odd-heads-anywhere-economical",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "economical",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000006",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 28,
+            "bytesPerToken" : 131072,
+            "hybrid" : true
+          },
+          "name" : "odd-heads",
+          "nativeContextTokens" : 131072,
+          "repoId" : "example/odd-heads-32b",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 64000000000
+        }
+      },
+      "title" : "odd-heads, anywhere, goal economical"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 26.459999999999997,
+          "pricePerHour" : 1.3600000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 29.025000000000002,
+          "pricePerHour" : 2.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 50.25,
+          "pricePerHour" : 4.7800000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 26.459999999999997,
+          "pricePerHour" : 2.7599999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 50.25,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 29.025000000000002,
+          "pricePerHour" : 3.2799999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 12.960000000000001,
+          "pricePerHour" : 1.5800000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 12.960000000000001,
+          "pricePerHour" : 1.72
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 11.52,
+          "pricePerHour" : 0.66000000000000003
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 11.52,
+          "pricePerHour" : 0.97999999999999998
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "odd-heads-anywhere-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000006",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 28,
+            "bytesPerToken" : 131072,
+            "hybrid" : true
+          },
+          "name" : "odd-heads",
+          "nativeContextTokens" : 131072,
+          "repoId" : "example/odd-heads-32b",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 64000000000
+        }
+      },
+      "title" : "odd-heads, anywhere, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 50.25,
+          "pricePerHour" : 4.7800000000000002
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 50.25,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 29.025000000000002,
+          "pricePerHour" : 2.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 29.025000000000002,
+          "pricePerHour" : 3.2799999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 26.459999999999997,
+          "pricePerHour" : 1.3600000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 26.459999999999997,
+          "pricePerHour" : 2.7599999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 12.960000000000001,
+          "pricePerHour" : 1.5800000000000001
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 12.960000000000001,
+          "pricePerHour" : 1.72
+        },
+        {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 11.52,
+          "pricePerHour" : 0.66000000000000003
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 11.52,
+          "pricePerHour" : 0.97999999999999998
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "odd-heads-anywhere-fast",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "fast",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : false
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000006",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 28,
+            "bytesPerToken" : 131072,
+            "hybrid" : true
+          },
+          "name" : "odd-heads",
+          "nativeContextTokens" : 131072,
+          "repoId" : "example/odd-heads-32b",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 64000000000
+        }
+      },
+      "title" : "odd-heads, anywhere, goal fast"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 26.459999999999997,
+          "pricePerHour" : 2.7599999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1",
+            "US-GA-1"
+          ],
+          "estimatedTokensPerSecond" : 50.25,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 29.025000000000002,
+          "pricePerHour" : 3.2799999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1",
+            "US-TX-3"
+          ],
+          "estimatedTokensPerSecond" : 12.960000000000001,
+          "pricePerHour" : 1.72
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1",
+            "US-KS-2"
+          ],
+          "estimatedTokensPerSecond" : 11.52,
+          "pricePerHour" : 0.97999999999999998
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "odd-heads-secure-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "anywhere",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000006",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 28,
+            "bytesPerToken" : 131072,
+            "hybrid" : true
+          },
+          "name" : "odd-heads",
+          "nativeContextTokens" : 131072,
+          "repoId" : "example/odd-heads-32b",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 64000000000
+        }
+      },
+      "title" : "odd-heads, secure, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 26.459999999999997,
+          "pricePerHour" : 2.7599999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 50.25,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 12.960000000000001,
+          "pricePerHour" : 1.72
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 11.52,
+          "pricePerHour" : 0.97999999999999998
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "odd-heads-eu-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "eu",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000006",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 28,
+            "bytesPerToken" : 131072,
+            "hybrid" : true
+          },
+          "name" : "odd-heads",
+          "nativeContextTokens" : 131072,
+          "repoId" : "example/odd-heads-32b",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 64000000000
+        }
+      },
+      "title" : "odd-heads, eu, goal balanced"
+    },
+    {
+      "expected" : [
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 26.459999999999997,
+          "pricePerHour" : 2.7599999999999998
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-NL-1"
+          ],
+          "estimatedTokensPerSecond" : 50.25,
+          "pricePerHour" : 5.3799999999999999
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA L40S"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-RO-1"
+          ],
+          "estimatedTokensPerSecond" : 12.960000000000001,
+          "pricePerHour" : 1.72
+        },
+        {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          "contextCeiling" : 131072,
+          "contextTokens" : 65536,
+          "dataCenters" : [
+            "EU-SE-1"
+          ],
+          "estimatedTokensPerSecond" : 11.52,
+          "pricePerHour" : 0.97999999999999998
+        }
+      ],
+      "function" : "gpuOptions",
+      "id" : "odd-heads-euEEA-balanced",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "concurrency" : 1,
+        "context" : 65536,
+        "goal" : "balanced",
+        "hosting" : {
+          "region" : "euEEA",
+          "secureOnly" : true
+        },
+        "model" : {
+          "concurrency" : 1,
+          "contextTokens" : 65536,
+          "createdAt" : "2025-11-21T00:00:00Z",
+          "format" : "safetensors",
+          "goal" : "balanced",
+          "id" : "00000000-0000-4000-8000-000000000006",
+          "keepDisk" : false,
+          "kvProfile" : {
+            "attentionHeads" : 28,
+            "bytesPerToken" : 131072,
+            "hybrid" : true
+          },
+          "name" : "odd-heads",
+          "nativeContextTokens" : 131072,
+          "repoId" : "example/odd-heads-32b",
+          "schedule" : {
+            "enabled" : false,
+            "idleStopMinutes" : 30,
+            "maxRuntimeHours" : 12,
+            "startAt" : "08:00",
+            "stopAt" : "18:00",
+            "timezone" : "Europe/Berlin",
+            "weekdays" : [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          },
+          "weightBytes" : 64000000000
+        }
+      },
+      "title" : "odd-heads, euEEA, goal balanced"
+    }
+  ],
+  "description" : "Which cards Podlight offers for a model, best first for the model's goal; also the fallback order when a pod is created. Input: a model (spec/schema/model.json), the catalog fixture, a hosting policy. Expected: the options in order. Compare numbers with a relative tolerance of 1e-9.",
+  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+}

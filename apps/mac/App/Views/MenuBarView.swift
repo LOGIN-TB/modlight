@@ -9,16 +9,16 @@ struct MenuBarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if model.state.activeRuns.isEmpty {
+            if model.allActiveRuns.isEmpty {
                 Label("Nothing is running", systemImage: "lightbulb")
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(model.state.activeRuns, id: \.0.id) { item, run in
+                ForEach(model.allActiveRuns, id: \.1.id) { source, item, run in
                     HStack(spacing: 8) {
                         PhaseIcon(phase: run.phase)
                         VStack(alignment: .leading, spacing: 1) {
                             Text(item.name).font(.body.weight(.medium))
-                            Text(line(run)).font(.caption).foregroundStyle(.secondary)
+                            Text(line(source, run)).font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
                         Button("Stop") { Task { await model.stop(item) } }
@@ -27,7 +27,7 @@ struct MenuBarView: View {
                     .accessibilityElement(children: .combine)
                 }
                 Divider()
-                LabeledContent("Total", value: Format.perHour(model.state.costPerHour)).font(.callout)
+                LabeledContent("Total", value: Format.perHour(model.totalCostPerHour)).font(.callout)
             }
             let spend = model.state.spend(on: .now)
             LabeledContent("Today", value: Format.money(spend.todayUsd)).font(.callout).foregroundStyle(.secondary)
@@ -46,8 +46,9 @@ struct MenuBarView: View {
         .onAppear { if model.openMainWindow == nil { model.openMainWindow = { openWindow(id: "main") } } ; if Snapshots.requestedDirectory == nil { model.launch() } }
     }
 
-    private func line(_ run: ModelRun) -> String {
+    private func line(_ source: Source, _ run: ModelRun) -> String {
         var parts = [PhaseText.title(run.phase)]
+        if case .server = source { parts.insert(model.name(of: source), at: 0) }
         if let end = run.runUntil { parts.append(String(localized: "\(Format.remaining(until: end)) left")) }
         if let price = run.pricePerHour { parts.append(Format.perHour(price)) }
         return parts.joined(separator: " · ")
