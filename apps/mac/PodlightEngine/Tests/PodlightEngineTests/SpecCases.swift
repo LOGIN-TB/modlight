@@ -182,7 +182,7 @@ struct SpecCaseTests {
             }
         case "gpuOptions", "podChoices", "podRequest", "hostingClouds", "needsPlacementCheck", "hostingAllows",
              "mayHaveCapacity", "dataCenterIds", "storagePricing", "systemMessagesAsReminders", "gatewayError",
-             "isValidName", "summarizeEngineLog":
+             "isValidName", "summarizeEngineLog", "looksDegenerate":
             try SpecRuntime.check(c)
         default:
             Issue.record("unknown function \(c.function) in \(c.file)")
