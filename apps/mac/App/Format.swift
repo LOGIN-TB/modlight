@@ -11,6 +11,23 @@ enum Format {
         String(localized: "\(money(usd))/h")
     }
 
+    /// Storage costs fractions of a cent per hour, so it gets a third decimal place.
+    static func storagePerHour(_ usd: Double) -> String {
+        if usd <= 0 { return String(localized: "nothing") }
+        if usd < 0.0005 { return "< " + String(localized: "\(0.001.formatted(.currency(code: "USD").precision(.fractionLength(3))))/h") }
+        let digits = usd < 0.1 ? 3 : 2
+        return String(localized: "\(usd.formatted(.currency(code: "USD").precision(.fractionLength(digits))))/h")
+    }
+
+    /// A kept disk while its pod is stopped: per hour, as RunPod bills it, and per month.
+    static func keptDisk(gb: Int) -> String {
+        keptDisk(perHour: StoragePricing.stoppedPerHour(volumeGB: gb), perMonth: StoragePricing.stoppedPerMonth(volumeGB: gb))
+    }
+
+    static func keptDisk(perHour: Double, perMonth: Double) -> String {
+        String(localized: "\(storagePerHour(perHour)) · about \(money(perMonth)) a month")
+    }
+
     static func tokens(_ count: Int) -> String {
         count >= 1024 ? "\(count / 1024)k" : "\(count)"
     }
@@ -135,9 +152,7 @@ enum Describe {
     /// "8.99 $/h + 0.02 $/h storage": the card price and the disks, kept apart so the card's
     /// price matches the one in the list.
     static func price(gpu: Double, storage: Double) -> String {
-        if storage <= 0.0005 { return Format.perHour(gpu) }
-        // Under a cent the rounded figure would read "0.00", which looks like nothing.
-        let shown = storage < 0.005 ? "< " + Format.perHour(0.01) : Format.perHour(storage)
-        return String(localized: "\(Format.perHour(gpu)) + \(shown) storage")
+        if storage <= 0 { return Format.perHour(gpu) }
+        return String(localized: "\(Format.perHour(gpu)) + \(Format.storagePerHour(storage)) storage")
     }
 }

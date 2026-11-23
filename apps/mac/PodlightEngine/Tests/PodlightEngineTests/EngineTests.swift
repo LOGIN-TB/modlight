@@ -301,6 +301,20 @@ struct ContextAndCardsTests {
     @Test func storagePricesFollowRunPod() {
         #expect(abs(StoragePricing.stoppedPerMonth(volumeGB: 30) - 6.0) < 0.0001)
         #expect(abs(StoragePricing.runningPerHour(containerGB: 30, volumeGB: 30) - 6.0 / 730) < 0.000_001)
+        #expect(abs(StoragePricing.stoppedPerHour(volumeGB: 40) - 8.0 / 730) < 0.000_001)
+    }
+
+    @Test func costPerHourCountsTheStorageOfRunningPods() {
+        var state = PodlightState()
+        var running = ModelRun()
+        running.phase = .ready
+        running.pricePerHour = 0.40
+        running.storagePerHour = 0.01
+        var stopped = ModelRun()
+        stopped.pricePerHour = 0.30
+        stopped.storagePerHour = 0.02
+        state.runs = [UUID(): running, UUID(): stopped]
+        #expect(abs(state.costPerHour - 0.41) < 0.000_001)
     }
 
     @Test func settingsFromVersion01KeepTheirValues() throws {

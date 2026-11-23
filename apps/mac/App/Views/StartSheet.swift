@@ -55,8 +55,8 @@ struct StartSheet: View {
                 if let cost = model.maximumCost(of: model_, until: end) {
                     LabeledContent("Costs at most", value: Format.money(cost))
                 }
-                if let monthly = model.keptDiskPerMonth(model_) {
-                    LabeledContent("Afterwards, while stopped", value: String(localized: "about \(Format.money(monthly)) a month for the disk"))
+                if let gb = model.keptDiskGB(model_) {
+                    LabeledContent("Afterwards, while stopped", value: String(localized: "\(Format.keptDisk(gb: gb)) for the disk"))
                 } else {
                     LabeledContent("Afterwards", value: String(localized: "the pod is deleted, nothing billed"))
                 }

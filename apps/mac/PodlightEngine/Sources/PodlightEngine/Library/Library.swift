@@ -295,9 +295,10 @@ public struct PodlightState: Codable, Sendable, Equatable {
     }
 
     /// Current hourly cost of everything running.
+    /// What everything running costs per hour: the GPU and the pod's storage.
     public var costPerHour: Double {
         runs.values.filter { $0.podStatus == .running || $0.phase == .loading || $0.phase == .ready }
-            .compactMap(\.pricePerHour).reduce(0, +)
+            .map { ($0.pricePerHour ?? 0) + ($0.pricePerHour == nil ? 0 : $0.storagePerHour ?? 0) }.reduce(0, +)
     }
 
     public var activeRuns: [(PodlightModel, ModelRun)] {

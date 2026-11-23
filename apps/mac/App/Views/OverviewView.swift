@@ -29,9 +29,6 @@ struct OverviewView: View {
             let active = model.allActiveRuns
             if active.isEmpty {
                 Label("Nothing is running, so nothing is billed for GPUs.", systemImage: "moon.zzz")
-                if let disks = keptDisksPerMonth {
-                    LabeledContent("Kept disks", value: String(localized: "about \(Format.money(disks)) a month"))
-                }
             } else {
                 ForEach(active, id: \.1.id) { source, item, run in
                     VStack(alignment: .leading, spacing: 6) {
@@ -59,13 +56,16 @@ struct OverviewView: View {
                 }
                 LabeledContent("Together", value: Format.perHour(model.totalCostPerHour))
             }
+            let disks = model.allKeptDisks
+            if !disks.isEmpty {
+                LabeledContent {
+                    Text(Format.keptDisk(perHour: disks.perHour, perMonth: disks.perMonth))
+                } label: {
+                    Text("Kept disks of stopped models")
+                    Text(disks.map(\.model.name).joined(separator: ", "))
+                }
+            }
         }
-    }
-
-    private var keptDisksPerMonth: Double? {
-        let all = model.state.models + model.servers.flatMap(\.models)
-        let total = all.compactMap { model.keptDiskPerMonth($0) }.reduce(0, +)
-        return total > 0 ? total : nil
     }
 
     // MARK: Next steps

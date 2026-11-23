@@ -71,4 +71,9 @@ public enum StoragePricing {
     public static func stoppedPerMonth(volumeGB: Int) -> Double {
         Double(volumeGB) * volumeDiskStopped
     }
+
+    /// Storage cost per hour while the pod is stopped; RunPod bills it by the hour.
+    public static func stoppedPerHour(volumeGB: Int) -> Double {
+        stoppedPerMonth(volumeGB: volumeGB) / hoursPerMonth
+    }
 }

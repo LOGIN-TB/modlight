@@ -73,6 +73,16 @@
         }
       }
     },
+    "%@ for the disk": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ für die Festplatte"
+          }
+        }
+      }
+    },
     "%@ has no tool calls, so the agent cannot edit files or run commands with it.": {
       "localizations": {
         "de": {
@@ -249,6 +259,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ · Secure Cloud"
+          }
+        }
+      }
+    },
+    "%@ · about %@ a month": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · etwa %@ pro Monat"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · about %2$@ a month"
+          }
+        }
+      }
+    },
+    "%@ · disk %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · Festplatte %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · disk %2$@"
           }
         }
       }
@@ -1541,16 +1583,6 @@
         }
       }
     },
-    "Costs while stopped": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kosten im gestoppten Zustand"
-          }
-        }
-      }
-    },
     "Costs · %@": {
       "localizations": {
         "de": {
@@ -1747,16 +1779,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Festplatte"
-          }
-        }
-      }
-    },
-    "Disk kept": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Behaltene Festplatten"
           }
         }
       }
@@ -2319,12 +2341,22 @@
         }
       }
     },
-    "Kept disks": {
+    "Kept disks (%lld GB)": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Behaltene Festplatten"
+            "value": "Behaltene Festplatten (%lld GB)"
+          }
+        }
+      }
+    },
+    "Kept disks of stopped models": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behaltene Festplatten gestoppter Modelle"
           }
         }
       }
@@ -2505,16 +2537,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modelle auf deinen Podlight-Servern sind davon nicht betroffen und laufen nach den Regeln der Server weiter."
-          }
-        }
-      }
-    },
-    "Models with \"Keep model on disk\" switched on keep their disk while stopped, so the next start skips the download. RunPod charges 0.20 USD per GB and month for it; it is included in the figures above. Podlight deletes pods left unused for %lld days.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Modelle mit eingeschaltetem „Modell zwischenspeichern“ behalten ihre Festplatte im gestoppten Zustand, damit der nächste Start ohne Download auskommt. RunPod berechnet dafür 0,20 USD pro GB und Monat; das ist in den Zahlen oben enthalten. Podlight löscht Pods, die %lld Tage unbenutzt waren."
           }
         }
       }
@@ -2855,12 +2877,12 @@
         }
       }
     },
-    "Nothing is billed while the model is stopped. Each start downloads the model again, which takes 10–25 minutes.": {
+    "Nothing is billed while the model is stopped. Each start downloads the model again, which takes 10–25 minutes. Keeping it on disk would cost %@ while stopped.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solange das Modell gestoppt ist, wird nichts berechnet. Jeder Start lädt das Modell neu herunter, das dauert 10 bis 25 Minuten."
+            "value": "Im gestoppten Zustand fallen keine Kosten an. Jeder Start lädt das Modell neu herunter, das dauert 10–25 Minuten. Auf der Festplatte behalten würde im gestoppten Zustand %@ kosten."
           }
         }
       }
@@ -2915,12 +2937,12 @@
         }
       }
     },
-    "On · about %@ a month while stopped": {
+    "On · %@ while stopped": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "An · etwa %@ pro Monat im gestoppten Zustand"
+            "value": "An · %@ im gestoppten Zustand"
           }
         }
       }
@@ -3765,12 +3787,38 @@
         }
       }
     },
+    "Running models are billed for the GPU and their storage. A stopped model costs nothing unless it keeps its disk: RunPod bills that disk by the hour (0.20 USD per GB and month) until Podlight deletes it after %lld days without use. These costs are included in the figures below.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laufende Modelle kosten GPU und Speicher. Ein gestopptes Modell kostet nichts, außer es behält seine Festplatte: Die berechnet RunPod stundenweise (0,20 USD pro GB und Monat), bis Podlight sie nach %lld Tagen ohne Nutzung löscht. Diese Kosten sind in den Zahlen unten enthalten."
+          }
+        }
+      }
+    },
     "Running pods": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Laufende Pods"
+          }
+        }
+      }
+    },
+    "Running · %@ GPU + %@ storage": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Läuft · %@ GPU + %@ Speicher"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Running · %1$@ GPU + %2$@ storage"
           }
         }
       }
@@ -4415,6 +4463,36 @@
         }
       }
     },
+    "Stopped · disk kept (%lld GB)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestoppt · Festplatte behalten (%lld GB)"
+          }
+        }
+      }
+    },
+    "Stopped · disk not kept": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestoppt · Festplatte nicht behalten"
+          }
+        }
+      }
+    },
+    "Stopped · nothing on disk right now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestoppt · derzeit nichts auf der Festplatte"
+          }
+        }
+      }
+    },
     "Stopping": {
       "localizations": {
         "de": {
@@ -4441,6 +4519,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stoppt bei Leerlauf nach"
+          }
+        }
+      }
+    },
+    "Storage while running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicher im Betrieb"
+          }
+        }
+      }
+    },
+    "Storage while stopped": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicher im gestoppten Zustand"
           }
         }
       }
@@ -4595,18 +4693,18 @@
         }
       }
     },
-    "The next start takes about a minute instead of 10–25. The disk (%lld GB) costs about %@ a month while the model is stopped. Podlight deletes it after %lld days without use.": {
+    "The next start takes about a minute instead of 10–25. RunPod bills the disk (%lld GB) by the hour, also while the model is stopped, until Podlight deletes it after %lld days without use.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der nächste Start dauert etwa eine Minute statt 10 bis 25. Die Festplatte (%1$lld GB) kostet etwa %2$@ pro Monat, solange das Modell gestoppt ist. Podlight löscht sie nach %3$lld Tagen ohne Nutzung."
+            "value": "Der nächste Start dauert etwa eine Minute statt 10–25. RunPod berechnet die Festplatte (%lld GB) stundenweise, auch im gestoppten Zustand, bis Podlight sie nach %lld Tagen ohne Nutzung löscht."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "The next start takes about a minute instead of 10–25. The disk (%1$lld GB) costs about %2$@ a month while the model is stopped. Podlight deletes it after %3$lld days without use."
+            "value": "The next start takes about a minute instead of 10–25. RunPod bills the disk (%1$lld GB) by the hour, also while the model is stopped, until Podlight deletes it after %2$lld days without use."
           }
         }
       }
@@ -5207,26 +5305,6 @@
         }
       }
     },
-    "about %@ a month": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "etwa %@ pro Monat"
-          }
-        }
-      }
-    },
-    "about %@ a month for the disk": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "etwa %@ pro Monat für die Festplatte"
-          }
-        }
-      }
-    },
     "about %lld tok/s": {
       "localizations": {
         "de": {
@@ -5283,6 +5361,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "kein Limit"
+          }
+        }
+      }
+    },
+    "nothing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nichts"
           }
         }
       }

@@ -585,11 +585,11 @@ export class PodManager {
     return new GatewayFailure({ kind: 'runpod', status: 0, message: String(error) })
   }
 
-  /** Current cost per hour of everything running. */
+  /** Current cost per hour of everything running: the GPU and the pod's storage. */
   costPerHour(): number {
     return Object.values(this.store.runs())
       .filter((r) => r.podStatus === 'RUNNING' || r.phase === 'loading' || r.phase === 'ready')
-      .reduce((sum, r) => sum + (r.pricePerHour ?? 0), 0)
+      .reduce((sum, r) => sum + (r.pricePerHour == null ? 0 : r.pricePerHour + (r.storagePerHour ?? 0)), 0)
   }
 
   settingsSnapshot(): ServerSettings {

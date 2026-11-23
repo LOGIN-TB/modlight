@@ -508,9 +508,12 @@ struct AddModelSheet: View {
             Section {
                 Toggle("Keep model on disk", isOn: $keepDisk)
                 if let draft {
+                    let gb = PodPlan.persistentGB(for: draft)
+                    LabeledContent("Storage while running", value: Format.storagePerHour(PodPlan.storagePerHour(for: draft)))
+                    LabeledContent("Storage while stopped", value: keepDisk ? Format.keptDisk(gb: gb) : String(localized: "nothing"))
                     Text(keepDisk
-                         ? "The next start takes about a minute instead of 10–25. The disk (\(PodPlan.persistentGB(for: draft)) GB) costs about \(Format.money(StoragePricing.stoppedPerMonth(volumeGB: PodPlan.persistentGB(for: draft)))) a month while the model is stopped. Podlight deletes it after \(model.deleteStoppedAfterDays(in: target)) days without use."
-                         : "Nothing is billed while the model is stopped. Each start downloads the model again, which takes 10–25 minutes.")
+                         ? "The next start takes about a minute instead of 10–25. RunPod bills the disk (\(gb) GB) by the hour, also while the model is stopped, until Podlight deletes it after \(model.deleteStoppedAfterDays(in: target)) days without use."
+                         : "Nothing is billed while the model is stopped. Each start downloads the model again, which takes 10–25 minutes. Keeping it on disk would cost \(Format.keptDisk(gb: gb)) while stopped.")
                         .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
             } header: {
