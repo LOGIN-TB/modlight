@@ -619,3 +619,64 @@ struct LiveTakeOverTests {
         await cleanUp()
     }
 }
+
+/// Two Macs and the real RunPod account, without any pod: A's stopped model is kept as a record,
+/// B sees and takes it over, A lets go, A takes it back, A deletes it. Costs nothing.
+/// Opt-in: `PODLIGHT_LIVE_RECORDS=1 RUNPOD_API_KEY=… swift test --filter LiveRecords`.
+@Suite("Live model records between two Macs", .serialized,
+       .enabled(if: ProcessInfo.processInfo.environment["PODLIGHT_LIVE_RECORDS"] == "1"))
+struct LiveRecordsTests {
+    @Test func aStoppedModelMovesBetweenMacs() async throws {
+        let apiKey = ProcessInfo.processInfo.environment["RUNPOD_API_KEY"]!
+        let client = RunpodClient(apiKey: apiKey)
+        func log(_ s: String) { print("[records] \(s)") }
+        let a = try await LiveTakeOverTests.mac(apiKey, tag: "live-a-\(String(format: "%04x", UInt16.random(in: 0...0xffff)))")
+        let b = try await LiveTakeOverTests.mac(apiKey, tag: "live-b-\(String(format: "%04x", UInt16.random(in: 0...0xffff)))")
+        let model = PodlightModel(name: "records-test-\(Int.random(in: 1000...9999))", repoId: "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+                                  format: .gguf, weightBytes: 4.9e8, nativeContextTokens: 32_768, toolCallParser: "hermes",
+                                  reasoningParser: nil, contextTokens: 8_192, quant: "Q4_K_M")
+        func cleanUp() async {
+            for t in (try? await client.listTemplates()) ?? [] where t.name.contains(model.name) {
+                try? await client.deleteTemplate(id: t.id); log("cleaned up record \(t.name)")
+            }
+            for mac in [a, b] {
+                try? mac.keychain.delete(.podKey(model.id)); try? mac.keychain.delete(.runpodAPIKey)
+                try? FileManager.default.removeItem(at: mac.stateURL)
+            }
+        }
+        do {
+            try await a.manager.save(model)
+            await a.manager.syncRecords(force: true)
+            let names = try await client.listTemplates().map(\.name).filter { $0.contains(model.name) }
+            log("record at RunPod: \(names)")
+
+            let found = try await b.manager.podsFromOtherMacs().filter { $0.servedName == model.name }
+            log("B sees: " + found.map { "\($0.servedName) from \($0.owner ?? "-"), pod: \($0.hasPod)" }.joined(separator: ", "))
+            let foreign = try #require(found.first)
+            let id = try await b.manager.takeOver(foreign)
+            #expect(id == model.id)
+            #expect(try b.keychain.read(.podKey(id)) == a.keychain.read(.podKey(id)))
+
+            await a.manager.syncRecords(force: true)
+            let released = await a.manager.state().run(id).managedBy
+            log("A after check: managedBy \(released ?? "-")")
+            #expect(released != nil)
+
+            let back = try #require(try await a.manager.podsFromOtherMacs().first { $0.servedName == model.name })
+            #expect(try await a.manager.takeOver(back) == id)
+            await b.manager.syncRecords(force: true)
+            log("B after check: managedBy \(await b.manager.state().run(id).managedBy ?? "-")")
+            #expect(await b.manager.state().run(id).managedBy != nil)
+
+            try await a.manager.remove(id)
+            let left = try await client.listTemplates().filter { $0.name.contains(model.name) }
+            log("records left after A deleted the model: \(left.count)")
+            #expect(left.isEmpty)
+        } catch {
+            log("error: \(error)")
+            await cleanUp()
+            throw error
+        }
+        await cleanUp()
+    }
+}

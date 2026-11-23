@@ -2623,12 +2623,12 @@
         }
       }
     },
-    "Models another Mac set up with the same RunPod key, checked every minute. Taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Only models whose pod exists (running, or stopped with its disk kept) are listed.": {
+    "Models another Mac set up with the same RunPod key, running or stopped, checked every minute. Starting or taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Models of a Mac with Podlight before 0.7 appear only while they have a pod.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modelle, die ein anderer Mac mit demselben RunPod-Key eingerichtet hat, jede Minute neu geprüft. Übernehmen holt eines auf diesen Mac: Ab dann startet, stoppt und berechnet es dieser Mac, und der andere gibt es ab. Aufgeführt sind nur Modelle, deren Pod existiert (läuft oder gestoppt mit behaltener Festplatte)."
+            "value": "Modelle, die ein anderer Mac mit demselben RunPod-Key angelegt hat, laufend oder gestoppt, jede Minute neu geprüft. Starten oder Übernehmen holt ein Modell auf diesen Mac: Ab dann startet, stoppt und berechnet es dieser Mac, und der andere gibt es ab. Modelle eines Macs mit Podlight vor 0.7 erscheinen nur, solange sie einen Pod haben."
           }
         }
       }
@@ -4325,6 +4325,16 @@
         }
       }
     },
+    "Start %@ on this Mac?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ auf diesem Mac starten?"
+          }
+        }
+      }
+    },
     "Start a stopped model when an agent asks": {
       "localizations": {
         "de": {
@@ -4645,6 +4655,26 @@
         }
       }
     },
+    "Stopped: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestoppt: %@"
+          }
+        }
+      }
+    },
+    "Stopped: nothing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestoppt: kostenlos"
+          }
+        }
+      }
+    },
     "Stopping": {
       "localizations": {
         "de": {
@@ -4741,6 +4771,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Übernehmen"
+          }
+        }
+      }
+    },
+    "Take Over and Start…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übernehmen und starten …"
           }
         }
       }
@@ -4911,6 +4951,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Das Modell ist gestoppt. Starte es in Podlight."
+          }
+        }
+      }
+    },
+    "The model moves to this Mac: from now on this Mac starts, stops and bills it, and your agents use it here. %@ lets go within a minute, or the next time it runs.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Modell zieht auf diesen Mac um: Ab jetzt startet, stoppt und berechnet es dieser Mac, und deine Agenten nutzen es hier. %@ gibt es innerhalb einer Minute ab, oder sobald er das nächste Mal läuft."
           }
         }
       }
@@ -5117,22 +5167,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieser Mac und das lokale Netzwerk"
-          }
-        }
-      }
-    },
-    "This Mac manages %@ from now on, including its kept disk (%@). %@ lets go the next time it checks.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieser Mac verwaltet %@ ab jetzt, samt behaltener Festplatte (%@). %@ gibt es bei der nächsten Prüfung ab."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "This Mac manages %1$@ from now on, including its kept disk (%2$@). %3$@ lets go the next time it checks."
           }
         }
       }

@@ -51,8 +51,10 @@ Pods, die eine frühere Podlight-Version angelegt hat, melden keine Auslastung, 
 
 ## Auf mehreren Macs
 
-Ein Modell gehört dem Mac, auf dem du es angelegt hast. Ein zweiter Mac mit demselben RunPod-Key zeigt in der Übersicht unter „Von anderen Macs“ die Modelle, deren Pod existiert, also laufende und gestoppte mit behaltener Festplatte. Er sucht jede Minute danach, sofort mit dem Pfeil neben der Überschrift. Mit „Übernehmen …“ holst du eines auf diesen Mac. Er startet, stoppt und berechnet es ab dann, und deine Agenten verbinden sich mit ihm.
+Ein Modell gehört dem Mac, auf dem du es angelegt hast. Podlight legt jedes Modell zusätzlich in deinem RunPod-Konto ab, unsichtbar und kostenlos. Ein zweiter Mac mit demselben RunPod-Key zeigt deshalb in der Übersicht unter „Von anderen Macs“ alle Modelle des ersten, laufende und gestoppte. Er sucht jede Minute danach, sofort mit dem Pfeil neben der Überschrift.
 
-Der erste Mac gibt das Modell innerhalb einer Minute ab, oder sobald er das nächste Mal läuft. Bei ihm steht dann „Verwaltet von …“. Er lässt den Pod in Ruhe, und Anfragen seiner Agenten an dieses Modell bekommen den Hinweis, den anderen Mac zu nutzen. Mit „Zurückholen“ holst du das Modell wieder zu ihm. Löschen entfernt ein abgegebenes Modell nur von diesem Mac, der Pod bleibt.
+„Starten …“ holt ein gestopptes Modell auf diesen Mac und fragt dann, wie lange es laufen soll. „Übernehmen“ holt es, ohne es zu starten. Ab dann startet, stoppt und berechnet es dieser Mac, und deine Agenten verbinden sich mit ihm.
 
-Welcher Mac ein Modell verwaltet, steht bei RunPod im Namen des Pods, etwa `podlight-coder@studio-mac-7c1e`. Beide Macs brauchen Podlight 0.6 oder neuer. Ein Modell ohne Pod (gelöscht, ohne behaltene Festplatte) legst du auf dem zweiten Mac neu an. Sollen mehrere Rechner dieselben Modelle gleichzeitig nutzen, ist ein Podlight-Server der passende Weg.
+Der erste Mac gibt das Modell innerhalb einer Minute ab, oder sobald er das nächste Mal läuft. Bei ihm steht dann „Verwaltet von …“. Er lässt das Modell in Ruhe, und Anfragen seiner Agenten an dieses Modell bekommen den Hinweis, den anderen Mac zu nutzen. Mit „Zurückholen“ holst du es wieder zu ihm. Löschen entfernt ein abgegebenes Modell nur von diesem Mac.
+
+Beide Macs brauchen Podlight 0.7 oder neuer. Modelle eines Macs mit einer älteren Version erscheinen nur, solange sie einen Pod haben. Sollen mehrere Rechner dieselben Modelle gleichzeitig nutzen, ist ein Podlight-Server der passende Weg.

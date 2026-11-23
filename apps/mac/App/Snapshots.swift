@@ -42,7 +42,7 @@ enum Snapshots {
         render("model-stopped", size: CGSize(width: 720, height: 640), into: folder) {
             NavigationStack { ModelDetailView(item: model.state.models[1]) }.environment(model)
         }
-        render("other-macs", size: CGSize(width: 720, height: 520), into: folder) {
+        render("other-macs", size: CGSize(width: 720, height: 560), into: folder) {
             Form { OtherMacsSection() }.formStyle(.grouped).environment(model)
         }
         render("models", size: CGSize(width: 720, height: 1180), into: folder) { NavigationStack { ModelDetailView(item: running) }.environment(model) }
@@ -185,8 +185,17 @@ enum Snapshots {
             """
             return (try? JSONDecoder().decode(RunpodPod.self, from: Data(json.utf8))).flatMap(ForeignPod.init)
         }
+        // A model the other Mac has set up but not running: no pod, only its record.
+        var stopped = PodlightModel(name: "huihui-qwen3.8-27b", repoId: "huihui-ai/Qwen3.8-27B-GGUF", format: .gguf,
+                                    weightBytes: 17e9, nativeContextTokens: 262_144, toolCallParser: "qwen3_coder",
+                                    reasoningParser: nil, contextTokens: 131_072,
+                                    preferredGPU: GPUChoice(gpuId: "NVIDIA A40", cloud: .secure))
+        stopped.expectedPricePerHour = 0.44
+        let record = RunpodTemplate(id: "t1", name: ModelRecord.name(model: stopped.name, owner: "studio-mac-7c1e"),
+                                    env: ModelRecord.env(model: stopped, podKey: "sample", podId: nil))
         return [pod("s1", "qwen3-32b", "RUNNING", gpu: "NVIDIA A40", cost: 0.44, disk: 30),
-                pod("s2", "gemma3-27b", "EXITED", gpu: "NVIDIA RTX A6000", cost: 0.49, disk: 26)].compactMap { $0 }
+                pod("s2", "gemma3-27b", "EXITED", gpu: "NVIDIA RTX A6000", cost: 0.49, disk: 26),
+                ForeignPod(record: record, pod: nil)].compactMap { $0 }
     }
 
     nonisolated static func sampleState() -> PodlightState {

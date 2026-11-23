@@ -87,13 +87,17 @@ enum TakeOverFixture {
 /// renamed, listed, stopped, resumed and deleted. Heartbeats and engine probes answer 200.
 actor SharedRunPod: HTTPTransport {
     struct Pod { var name: String; var status: String; var env: [String: String] }
+    struct Template { var name: String; var env: [String: String] }
     var pods: [String: Pod] = [:]
+    var templates: [String: Template] = [:]
     var deleted: [String] = []
     var renames: [String] = []
     private var next = 0
 
     func add(id: String, name: String, status: String, env: [String: String]) { pods[id] = Pod(name: name, status: status, env: env) }
     func name(of id: String) -> String? { pods[id]?.name }
+    func recordNames() -> [String] { templates.values.map(\.name).sorted() }
+    func recordPodId() -> String? { templates.values.first?.env["PODLIGHT_POD_ID"] }
 
     private func json(_ id: String, _ pod: Pod) -> String {
         let env = String(decoding: try! JSONSerialization.data(withJSONObject: pod.env), as: UTF8.self)
@@ -111,6 +115,33 @@ actor SharedRunPod: HTTPTransport {
         if url.host == "127.0.0.1" { return reply(200, #"{"engineAlive":true}"#) }
         let parts = url.path.split(separator: "/").map(String.init) // v2, pods, id, action
         let body = (request.httpBody.flatMap { try? JSONSerialization.jsonObject(with: $0) }) as? [String: Any]
+        if parts.count >= 2, parts[1] == "templates" {
+            func tjson(_ id: String, _ t: Template) -> String {
+                let env = String(decoding: try! JSONSerialization.data(withJSONObject: t.env), as: UTF8.self)
+                return #"{"id":"\#(id)","name":"\#(t.name)","env":\#(env),"public":false}"#
+            }
+            switch (request.httpMethod ?? "GET", parts.count) {
+            case ("GET", 2):
+                return reply(200, #"{"templates":[\#(templates.map { tjson($0.key, $0.value) }.joined(separator: ","))]}"#)
+            case ("POST", 2):
+                let name = body?["name"] as? String ?? "?"
+                if templates.values.contains(where: { $0.name == name }) { return reply(400, #"{"detail":"Template name must be unique."}"#) }
+                next += 1
+                let id = "tpl\(next)"
+                templates[id] = Template(name: name, env: body?["env"] as? [String: String] ?? [:])
+                return reply(201, tjson(id, templates[id]!))
+            case ("PATCH", 3):
+                guard templates[parts[2]] != nil else { return reply(404, #"{"detail":"not found"}"#) }
+                if let name = body?["name"] as? String { templates[parts[2]]!.name = name }
+                if let env = body?["env"] as? [String: String] { templates[parts[2]]!.env = env }
+                return reply(200, tjson(parts[2], templates[parts[2]]!))
+            case ("DELETE", 3):
+                templates[parts[2]] = nil
+                return reply(204, "")
+            default:
+                return reply(404, #"{"detail":"not found"}"#)
+            }
+        }
         switch (request.httpMethod ?? "GET", parts.count) {
         case ("GET", 3) where parts[1] == "catalog":
             return reply(200, #"{"gpus":[{"id":"NVIDIA RTX A4000","name":"RTX A4000","manufacturer":"NVIDIA","memory":16,"secure":true,"community":true,"price":{"secure":0.25,"community":0.17},"availability":"HIGH"}]}"#)
@@ -259,5 +290,63 @@ struct TakeOverFlowTests {
         let found = try #require(try await b.manager.podsFromOtherMacs().first)
         await #expect(throws: PodlightError.nameTaken("coder")) { try await b.manager.takeOver(found, lookup: Self.info) }
         #expect(await runpod.name(of: "old") == "podlight-coder@mac-a-aaaa")
+    }
+
+    @Test func aStoppedModelWithoutAPodIsSeenTakenOverStartedAndTakenBack() async throws {
+        let runpod = SharedRunPod()
+        let a = try await Self.mac(runpod, tag: "mac-a-aaaa")
+        let b = try await Self.mac(runpod, tag: "mac-b-bbbb")
+        // A has a model it never started (no kept disk, so no pod between runs).
+        let model = PodlightModel(name: "coder", repoId: "Org/Coder-AWQ", format: .awq, weightBytes: 6e9,
+                                  nativeContextTokens: 131_072, toolCallParser: "hermes", reasoningParser: nil,
+                                  contextTokens: 16_384, preferredGPU: GPUChoice(gpuId: "NVIDIA RTX A4000", cloud: .community))
+        try await a.manager.save(model)
+        await a.manager.syncRecords(force: true)
+        defer { a.cleanUp(models: [model.id]); b.cleanUp(models: [model.id]) }
+        #expect(await runpod.recordNames() == ["podlight-model-coder@mac-a-aaaa"])
+        #expect(await runpod.pods.isEmpty)
+
+        // B sees it although it has no pod, and takes it over exactly (same id, no Hugging Face).
+        let found = try await b.manager.podsFromOtherMacs()
+        let foreign = try #require(found.first)
+        #expect(found.count == 1 && foreign.servedName == "coder" && !foreign.hasPod && foreign.owner == "mac-a-aaaa")
+        #expect(try await a.manager.podsFromOtherMacs().isEmpty, "A does not offer its own model")
+        let id = try await b.manager.takeOver(foreign)
+        #expect(id == model.id)
+        let taken = try #require(await b.manager.state().models.first)
+        // Dates go through JSON with whole seconds, as in the state file.
+        #expect(taken.name == model.name && taken.repoId == model.repoId && taken.contextTokens == model.contextTokens
+                && taken.toolCallParser == model.toolCallParser && taken.preferredGPU == model.preferredGPU && taken.keepDisk == model.keepDisk)
+        #expect(try b.keychain.read(.podKey(id)) == a.keychain.read(.podKey(id)))
+        #expect(await runpod.recordNames() == ["podlight-model-coder@mac-b-bbbb"])
+
+        // A lets go at its next check, and does not grab it back.
+        await a.manager.syncRecords(force: true)
+        #expect(await a.manager.state().run(id).managedBy == "mac-b-bbbb")
+        await a.manager.syncRecords(force: true)
+        #expect(await runpod.recordNames() == ["podlight-model-coder@mac-b-bbbb"])
+
+        // B starts it; the record learns the new pod.
+        try await b.manager.start(id, until: nil)
+        let podId = try #require(await b.manager.state().run(id).podId)
+        #expect(await runpod.name(of: podId) == "podlight-coder@mac-b-bbbb")
+        await b.manager.syncRecords(force: true)
+        #expect(await runpod.recordPodId() == podId)
+
+        // A takes it back, pod included; B lets go.
+        let again = try #require(try await a.manager.podsFromOtherMacs().first)
+        #expect(again.podId == podId && again.isRunning)
+        #expect(try await a.manager.takeOver(again) == id)
+        #expect(await a.manager.state().run(id).podId == podId)
+        #expect(await a.manager.state().run(id).managedBy == nil)
+        #expect(await runpod.name(of: podId) == "podlight-coder@mac-a-aaaa")
+        #expect(await runpod.recordNames() == ["podlight-model-coder@mac-a-aaaa"])
+        await b.manager.tick()
+        #expect(await b.manager.state().run(id).managedBy == "mac-a-aaaa")
+
+        // Deleting it on A, which manages it, removes pod and record.
+        try await a.manager.remove(id)
+        #expect(await runpod.pods.isEmpty)
+        #expect(await runpod.recordNames().isEmpty)
     }
 }
