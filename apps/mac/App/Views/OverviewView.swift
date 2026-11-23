@@ -50,6 +50,7 @@ struct OverviewView: View {
                                 Text("\(Format.money(GPUSuggestion.cost(pricePerHour: price, from: started, until: .now))) so far")
                             }
                             if let end = run.runUntil { Text("until \(Format.time(end))") }
+                            if run.phase == .ready, let gpu = UsageText.gpu(model.telemetry(item.id)) { Text(gpu) }
                         }
                         .font(.callout).foregroundStyle(.secondary)
                         ModelActions(item: item, run: run)

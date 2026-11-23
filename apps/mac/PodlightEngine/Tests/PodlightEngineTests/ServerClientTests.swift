@@ -152,3 +152,20 @@ final class NodeServer: @unchecked Sendable {
         try? FileManager.default.removeItem(at: dataDir)
     }
 }
+
+@Suite("Pod telemetry")
+struct TelemetryDecodingTests {
+    @Test("a snapshot carries telemetry per model, and a broken sample does not cost the snapshot")
+    func snapshotTelemetry() throws {
+        let id = UUID()
+        func json(_ telemetry: String) -> Data {
+            Data(#"{"version":"0.5.0","models":[],"runs":{},"settings":{"dailyLimitUsd":10,"monthlyLimitUsd":100,"heartbeatMinutes":15,"wakeWaitSeconds":600,"deleteStoppedAfterDays":3,"wakeOnRequest":true,"hostingRegion":"anywhere","secureCloudOnly":false,"timezone":"UTC","hasRunpodKey":true,"hasHuggingFaceToken":false},"spendByDay":{},"spend":{"todayUsd":0,"monthUsd":0,"dailyLimitUsd":10,"monthlyLimitUsd":100},"costPerHour":0,"telemetry":\#(telemetry)}"#.utf8)
+        }
+        let good = try ServerClient.decoder.decode(ServerSnapshot.self, from: json(#"{"\#(id.uuidString.lowercased())":{"time":1800000000,"gpus":[{"utilPercent":87,"memoryUsedBytes":4.5e10,"memoryTotalBytes":4.8e10}],"engine":{"generationTokensPerSecond":58}}}"#))
+        #expect(good.telemetry[id]?.averageGPUPercent == 87)
+        #expect(good.telemetry[id]?.gpuMemoryFraction == 0.9375)
+        #expect(good.telemetry[id]?.engine?.generationTokensPerSecond == 58)
+        let broken = try ServerClient.decoder.decode(ServerSnapshot.self, from: json(#"{"x":{"time":"soon"}}"#))
+        #expect(broken.telemetry.isEmpty)
+    }
+}

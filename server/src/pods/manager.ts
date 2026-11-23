@@ -1,5 +1,5 @@
 import { generateToken } from '../crypto.ts'
-import { hostingOf, iso, type ModelRun, parseDate, type PodlightModel, type ServerSettings } from '../model.ts'
+import { hostingOf, iso, type ModelRun, parseDate, type PodlightModel, type PodTelemetry, podTelemetry, type ServerSettings } from '../model.ts'
 import { allows, dataCenterIds, needsPlacementCheck, StoragePricing } from '../rules/hosting.ts'
 import * as podPlan from '../rules/podPlan.ts'
 import { admitWake, decide, type Spend } from '../rules/scheduler.ts'
@@ -36,6 +36,8 @@ export interface ManagerOptions {
 }
 
 const ACTIVE = new Set(['creating', 'loading', 'ready', 'stopping'])
+/** 30 minutes of samples at the 10-second tick. */
+export const TELEMETRY_SAMPLES = 180
 
 export class PodManager {
   private readonly store: StateStore
@@ -48,6 +50,8 @@ export class PodManager {
   private readonly log: (message: string) => void
   private readonly inFlight = new Map<string, number>()
   private readonly starts = new Map<string, Promise<void>>()
+  /** Telemetry per model while its pod runs, the last 30 minutes. In memory only. */
+  private readonly samples = new Map<string, PodTelemetry[]>()
   private ticking = false
 
   constructor(o: ManagerOptions) {
@@ -80,6 +84,7 @@ export class PodManager {
 
   /** Removes a model, deleting its pod and disk at RunPod first. */
   async remove(id: string): Promise<void> {
+    this.samples.delete(id)
     const run = this.store.run(id)
     const client = this.clientOrNull()
     if (run.podId && client) {
@@ -248,6 +253,7 @@ export class PodManager {
   }
 
   private markStopped(id: string, status: Pod['status'] | null, reason: string): void {
+    this.samples.delete(id)
     const t = iso(this.now())
     this.store.updateRun(id, (r) => {
       r.storageAccountedUntil = t
@@ -404,6 +410,7 @@ export class PodManager {
     if (pod.status === 'RUNNING') {
       const watchdog = await this.heartbeat(podId, id, parseDate(run.runUntil))
       if (watchdog) heartbeatAt = iso(this.now())
+      if (watchdog?.telemetry) this.record(id, watchdog.telemetry)
       // The engine died: say why, then end the pod now instead of after the watchdog's grace.
       if (watchdog?.engineAlive === false) {
         const message = (await this.engineFailure(podId, id)) ?? `exit code ${watchdog.engineExitCode ?? '?'}`
@@ -414,6 +421,7 @@ export class PodManager {
       if (!ready) ready = await this.engineAnswers(podId, id)
     } else {
       ready = false
+      this.samples.delete(id)
     }
 
     const wasRunning = run.podStatus === 'RUNNING'
@@ -497,13 +505,38 @@ export class PodManager {
     }
   }
 
-  private async heartbeat(podId: string, modelId: string, runUntil: Date | null): Promise<{ engineAlive?: boolean; engineExitCode?: number } | null> {
+  private record(id: string, raw: unknown): void {
+    const parsed = podTelemetry.safeParse(raw)
+    if (!parsed.success) return
+    const list = this.samples.get(id) ?? []
+    if (list.at(-1)?.time === parsed.data.time) return
+    list.push(parsed.data)
+    if (list.length > TELEMETRY_SAMPLES) list.splice(0, list.length - TELEMETRY_SAMPLES)
+    this.samples.set(id, list)
+  }
+
+  /** The latest sample per model whose pod runs. */
+  latestTelemetry(): Record<string, PodTelemetry> {
+    const latest: Record<string, PodTelemetry> = {}
+    for (const [id, list] of this.samples) {
+      const last = list.at(-1)
+      if (last) latest[id] = last
+    }
+    return latest
+  }
+
+  /** The last 30 minutes of one model's pod, oldest first. */
+  telemetry(id: string): PodTelemetry[] {
+    return [...(this.samples.get(id) ?? [])]
+  }
+
+  private async heartbeat(podId: string, modelId: string, runUntil: Date | null): Promise<{ engineAlive?: boolean; engineExitCode?: number; telemetry?: unknown } | null> {
     const deadline = runUntil ? (runUntil.getTime() + podPlan.DEADLINE_GRACE_MS) / 1000 : null
     const response = await this.podFetch(podId, modelId, podPlan.WATCHDOG_PORT, '/heartbeat', {
       method: 'POST', body: JSON.stringify({ deadline }),
     })
     if (!response || response.status !== 200) return null
-    const json = (await response.json().catch(() => ({}))) as { engineAlive?: boolean; engineExitCode?: number }
+    const json = (await response.json().catch(() => ({}))) as { engineAlive?: boolean; engineExitCode?: number; telemetry?: unknown }
     return json
   }
 

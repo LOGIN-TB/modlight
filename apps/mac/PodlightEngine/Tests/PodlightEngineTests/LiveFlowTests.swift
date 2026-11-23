@@ -363,3 +363,129 @@ struct Live03Tests {
         await cleanUp()
     }
 }
+
+// 0.5 on real hardware: the watchdog's telemetry (nvidia-smi, cgroup, disk, the engine's /metrics)
+// reaches PodManager with each heartbeat, idle and under load. Opt-in, about 0.05 USD per engine:
+//   PODLIGHT_LIVE_TELEMETRY=vllm|llamacpp RUNPOD_API_KEY=… swift test --filter LiveTelemetry
+@Suite("Live telemetry on RunPod", .serialized,
+       .enabled(if: ProcessInfo.processInfo.environment["PODLIGHT_LIVE_TELEMETRY"] != nil
+                && ProcessInfo.processInfo.environment["RUNPOD_API_KEY"] != nil))
+struct LiveTelemetryTests {
+    static let session: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 300
+        configuration.timeoutIntervalForResource = 600
+        return URLSession(configuration: configuration)
+    }()
+
+    static func describe(_ t: PodTelemetry?) -> String {
+        guard let t, let data = try? JSONEncoder().encode(t) else { return "none" }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    @Test(.timeLimit(.minutes(40)))
+    func telemetryArrivesWithHeartbeats() async throws {
+        let engine = ProcessInfo.processInfo.environment["PODLIGHT_LIVE_TELEMETRY"] == "llamacpp" ? InferenceEngine.llamaCpp : .vllm
+        let apiKey = ProcessInfo.processInfo.environment["RUNPOD_API_KEY"]!
+        let keychain = KeychainStore(service: "app.podlight.live.\(UUID().uuidString)")
+        try keychain.write(apiKey, for: .runpodAPIKey)
+        let stateURL = FileManager.default.temporaryDirectory.appendingPathComponent("podlight-live-\(UUID()).json")
+        let manager = PodManager(store: StateStore(url: stateURL), keychain: keychain)
+        let client = RunpodClient(apiKey: apiKey)
+        var modelId: UUID?
+
+        func cleanUp() async {
+            if let id = modelId {
+                let run = await manager.state().run(id)
+                if run.phase == .failed { print("[telemetry] engine log: \(run.lastMessage ?? "-")") }
+                try? await manager.remove(id)
+                if let podId = run.podId {
+                    do {
+                        _ = try await client.pod(id: podId)
+                        print("[telemetry] WARNING: pod \(podId) still exists; deleting")
+                        try? await client.deletePod(id: podId)
+                    } catch let e as RunpodError where e.isNotFound {
+                        print("[telemetry] pod \(podId) is gone at RunPod (404)")
+                    } catch { print("[telemetry] could not confirm deletion: \(error)") }
+                }
+                try? keychain.delete(.podKey(id))
+            }
+            try? keychain.delete(.runpodAPIKey)
+            try? FileManager.default.removeItem(at: stateURL)
+        }
+
+        do {
+            let repo = engine == .llamaCpp ? "Qwen/Qwen2.5-0.5B-Instruct-GGUF" : "Qwen/Qwen2.5-0.5B-Instruct"
+            let info = try await HuggingFaceClient().info(repo)
+            var model = PodlightModel(name: "tiny", repoId: info.repoId, format: info.format, weightBytes: info.weightBytes,
+                                      nativeContextTokens: info.nativeContextTokens, toolCallParser: info.toolCallParser,
+                                      reasoningParser: info.reasoningParser, contextTokens: 8_192, goal: .economical,
+                                      kvProfile: info.kvProfile, quant: info.quant)
+            let catalog = try await client.gpuCatalog()
+            let options = GPUSuggestion.options(for: model.info, catalog: catalog, goal: .economical).filter { $0.pricePerHour <= 0.5 }
+            print("[telemetry] \(engine), cheapest: " + options.prefix(4).map { "\($0.label) \($0.choice.cloud.rawValue) $\($0.pricePerHour)" }.joined(separator: ", "))
+            model.preferredGPU = options.first?.choice
+            try await manager.save(model)
+            modelId = model.id
+
+            let t0 = Date()
+            try await manager.start(model.id, until: Date().addingTimeInterval(25 * 60))
+            var run = await manager.state().run(model.id)
+            print("[telemetry] created \(run.podId ?? "?") on \(run.gpuName ?? "?") at $\(run.pricePerHour ?? 0)/h")
+            var firstSampleAt: Int?
+            while Date().timeIntervalSince(t0) < 25 * 60 {
+                try await Task.sleep(for: .seconds(10))
+                await manager.refresh(model.id)
+                run = await manager.state().run(model.id)
+                if firstSampleAt == nil, let t = await manager.latestTelemetry()[model.id] {
+                    firstSampleAt = Int(Date().timeIntervalSince(t0))
+                    print("[telemetry] first sample after \(firstSampleAt!)s (phase \(run.phase)): \(Self.describe(t))")
+                }
+                if run.phase == .ready || run.phase == .failed || run.phase == .stopped { break }
+            }
+            print("[telemetry] \(run.phase) after \(Int(Date().timeIntervalSince(t0)))s")
+            #expect(run.phase == .ready)
+            guard run.phase == .ready else { await cleanUp(); return }
+
+            let idle = await manager.latestTelemetry()[model.id]
+            print("[telemetry] idle: \(Self.describe(idle))")
+            #expect(idle?.gpus?.isEmpty == false, "no nvidia-smi figures")
+            #expect((idle?.gpus?.first?.memoryUsedBytes ?? 0) > 0, "no GPU memory in use reported")
+            #expect(idle?.memoryTotalBytes != nil && idle?.diskTotalBytes != nil)
+            #expect(idle?.engine != nil, "no figures from the engine's /metrics")
+
+            // Under load: a long answer while the heartbeats keep going.
+            let port = Int.random(in: 45_000...48_000)
+            let gateway = Task { try await LocalGateway(port: port, manager: manager, key: { "gw-live" }).run() }
+            defer { gateway.cancel() }
+            try await Task.sleep(for: .seconds(1))
+            let load = Task {
+                for _ in 0..<12 {
+                    var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/v1/chat/completions")!)
+                    request.httpMethod = "POST"
+                    request.setValue("Bearer gw-live", forHTTPHeaderField: "Authorization")
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.httpBody = Data(#"{"model":"tiny","max_tokens":1500,"temperature":0.9,"messages":[{"role":"user","content":"Write a long story about a lighthouse keeper, at least 1000 words."}]}"#.utf8)
+                    _ = try? await Self.session.data(for: request)
+                }
+            }
+            var busiest: PodTelemetry?
+            for _ in 0..<9 {
+                try await Task.sleep(for: .seconds(6))
+                await manager.refresh(model.id)
+                if let t = await manager.latestTelemetry()[model.id],
+                   (t.engine?.generationTokensPerSecond ?? 0) > (busiest?.engine?.generationTokensPerSecond ?? 0) { busiest = t }
+            }
+            load.cancel()
+            print("[telemetry] busiest: \(Self.describe(busiest))")
+            #expect((busiest?.engine?.generationTokensPerSecond ?? 0) > 0, "no token rate under load")
+            let history = await manager.telemetry(for: model.id)
+            print("[telemetry] history: \(history.count) samples, GPU load \(history.compactMap { $0.averageGPUPercent.map { Int($0) } })")
+        } catch {
+            print("[telemetry] FAILED: \(error)")
+            await cleanUp()
+            throw error
+        }
+        await cleanUp()
+    }
+}

@@ -2,15 +2,22 @@ import PodlightEngine
 import SwiftUI
 
 struct ModelRow: View {
+    @Environment(AppModel.self) private var model
     let item: PodlightModel
     let run: ModelRun
+
+    private var summary: String {
+        let text = PhaseText.summary(run)
+        guard run.phase == .ready, let gpu = UsageText.gpu(model.telemetry(item.id)) else { return text }
+        return "\(text) · \(gpu)"
+    }
 
     var body: some View {
         HStack(spacing: 8) {
             PhaseIcon(phase: run.phase)
             VStack(alignment: .leading, spacing: 1) {
                 Text(item.name).lineLimit(1)
-                Text(PhaseText.summary(run)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Text(summary).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
         }
         .accessibilityElement(children: .combine)
@@ -103,6 +110,10 @@ struct ModelDetailView: View {
                           systemImage: "arrow.triangle.branch")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+            }
+
+            if run.podStatus == .running, run.phase == .ready || run.phase == .loading {
+                UsageSection(item: item, run: run)
             }
 
             Section("GPU and costs") {

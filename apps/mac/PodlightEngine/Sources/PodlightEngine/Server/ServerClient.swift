@@ -119,6 +119,8 @@ public struct ServerSnapshot: Sendable, Equatable {
     public var spend: Spend
     public var costPerHour: Double
     public var lastClientRequestAt: Date?
+    /// The latest telemetry per model whose pod runs. Empty from a server before 0.5.
+    public var telemetry: [UUID: PodTelemetry] = [:]
 
     public func run(_ id: UUID) -> ModelRun { runs[id] ?? ModelRun() }
 
@@ -132,7 +134,7 @@ public struct ServerSnapshot: Sendable, Equatable {
 
 extension ServerSnapshot: Decodable {
     private enum Keys: String, CodingKey {
-        case version, serverTime, models, runs, settings, spendByDay, spend, costPerHour, lastClientRequestAt
+        case version, serverTime, models, runs, settings, spendByDay, spend, costPerHour, lastClientRequestAt, telemetry
     }
 
     public init(from decoder: Decoder) throws {
@@ -148,6 +150,9 @@ extension ServerSnapshot: Decodable {
         spend = try c.decode(Spend.self, forKey: .spend)
         costPerHour = try c.decode(Double.self, forKey: .costPerHour)
         lastClientRequestAt = try c.decodeIfPresent(Date.self, forKey: .lastClientRequestAt)
+        // A sample that does not decode must not cost the whole snapshot.
+        let samples = (try? c.decodeIfPresent([String: PodTelemetry].self, forKey: .telemetry)) ?? [:]
+        telemetry = Dictionary(uniqueKeysWithValues: samples.compactMap { key, t in UUID(uuidString: key).map { ($0, t) } })
     }
 }
 
@@ -290,6 +295,12 @@ public struct ServerClient: Sendable {
     public func engineLog(_ id: UUID) async throws(ServerError) -> [String] {
         struct Answer: Decodable { var lines: [String] }
         return try decode(Answer.self, from: try await call("GET", "/admin/models/\(id.uuidString)/log", timeout: 20)).lines
+    }
+
+    /// What one model's pod has been doing in the last 30 minutes, oldest first.
+    public func telemetry(_ id: UUID) async throws(ServerError) -> [PodTelemetry] {
+        struct Answer: Decodable { var samples: [PodTelemetry] }
+        return try decode(Answer.self, from: try await call("GET", "/admin/models/\(id.uuidString)/telemetry")).samples
     }
 
     // MARK: Access keys and devices

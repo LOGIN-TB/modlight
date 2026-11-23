@@ -181,6 +181,16 @@
         }
       }
     },
+    "%@ tokens/s": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Token/s"
+          }
+        }
+      }
+    },
     "%@ was not started": {
       "localizations": {
         "de": {
@@ -269,6 +279,16 @@
         }
       }
     },
+    "%@, last 30 minutes": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, letzte 30 Minuten"
+          }
+        }
+      }
+    },
     "%@, no limit": {
       "localizations": {
         "de": {
@@ -329,6 +349,22 @@
         }
       }
     },
+    "%lld of %lld W": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld von %lld W"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld of %2$lld W"
+          }
+        }
+      }
+    },
     "%lld options": {
       "localizations": {
         "de": {
@@ -345,6 +381,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld Pods laufen noch"
+          }
+        }
+      }
+    },
+    "%lld running · %lld waiting": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld laufend · %lld wartend"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld running · %2$lld waiting"
           }
         }
       }
@@ -1069,6 +1121,16 @@
         }
       }
     },
+    "CPU": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPU"
+          }
+        }
+      }
+    },
     "Cancel": {
       "localizations": {
         "de": {
@@ -1345,6 +1407,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kontext"
+          }
+        }
+      }
+    },
+    "Context cache in use": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontext-Cache belegt"
           }
         }
       }
@@ -1975,12 +2047,42 @@
         }
       }
     },
+    "GPU %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GPU %@"
+          }
+        }
+      }
+    },
     "GPU and costs": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Karte und Kosten"
+          }
+        }
+      }
+    },
+    "GPU load": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GPU-Last"
+          }
+        }
+      }
+    },
+    "GPU%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GPU%@"
           }
         }
       }
@@ -2327,6 +2429,16 @@
         }
       }
     },
+    "Measured inside the pod %@. Updated about every 10 seconds.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Pod gemessen %@. Wird etwa alle 10 Sekunden aktualisiert."
+          }
+        }
+      }
+    },
     "Memory": {
       "localizations": {
         "de": {
@@ -2603,6 +2715,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keine Karte fasst dieses Modell."
+          }
+        }
+      }
+    },
+    "No figures from the engine": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Werte von der Engine"
           }
         }
       }
@@ -2943,6 +3065,26 @@
         }
       }
     },
+    "Output": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgabe"
+          }
+        }
+      }
+    },
+    "Output tokens/s": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgabe in Token/s"
+          }
+        }
+      }
+    },
     "Overview": {
       "localizations": {
         "de": {
@@ -3253,6 +3395,16 @@
         }
       }
     },
+    "Prompt processing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prompt-Verarbeitung"
+          }
+        }
+      }
+    },
     "Quantisation": {
       "localizations": {
         "de": {
@@ -3279,6 +3431,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Beenden, Pods weiterlaufen lassen"
+          }
+        }
+      }
+    },
+    "RAM": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RAM"
           }
         }
       }
@@ -3389,6 +3551,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Schlüssel ersetzen"
+          }
+        }
+      }
+    },
+    "Requests": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anfragen"
           }
         }
       }
@@ -4303,6 +4475,26 @@
         }
       }
     },
+    "Temperature and power": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperatur und Leistung"
+          }
+        }
+      }
+    },
+    "Temperature and power, card %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperatur und Leistung, Karte %lld"
+          }
+        }
+      }
+    },
     "Test Connection": {
       "localizations": {
         "de": {
@@ -4609,6 +4801,26 @@
         }
       }
     },
+    "This pod was created by an earlier Podlight version and reports no usage. It will after the model is started on a new pod.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Pod stammt aus einer früheren Podlight-Version und meldet keine Auslastung. Das ändert sich, sobald das Modell auf einem neuen Pod startet."
+          }
+        }
+      }
+    },
+    "Time": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeit"
+          }
+        }
+      }
+    },
     "Tip: 4-bit builds (AWQ, GPTQ, NVFP4, or GGUF Q4) need half the memory and run faster.": {
       "localizations": {
         "de": {
@@ -4749,6 +4961,26 @@
         }
       }
     },
+    "Usage": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auslastung"
+          }
+        }
+      }
+    },
+    "Usage appears once the pod answers.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Auslastung erscheint, sobald der Pod antwortet."
+          }
+        }
+      }
+    },
     "Use This Instead": {
       "localizations": {
         "de": {
@@ -4779,6 +5011,16 @@
         }
       }
     },
+    "VRAM%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VRAM%@"
+          }
+        }
+      }
+    },
     "Valid once, until %@. Enter it on the other Mac under Add Server.": {
       "localizations": {
         "de": {
@@ -4795,6 +5037,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Variablen"
+          }
+        }
+      }
+    },
+    "Volume": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volume"
           }
         }
       }

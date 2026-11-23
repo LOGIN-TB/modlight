@@ -15,6 +15,7 @@ against each other.
 | `cases/hosting.json` | Regions, Secure Cloud, placement check, data centers to request, storage prices. | Recorded from Swift; Swift and the server |
 | `cases/gateway.json` | System entries rewritten for the Messages API, error status and codes, the served-name rule, the engine-log summary. | Recorded from Swift; Swift and the server |
 | `cases/kv-profile.json`, `cases/gguf.json` | KV cache per token from `config.json` or a GGUF header; GGUF quantisations. | Planning, done in the app only (`status: swift`) |
+| `cases/telemetry.json` | What the pod's watchdog reads from `nvidia-smi` and the engine's `/metrics` (requests, KV cache, token rates). | Parsed in the pod only (`status: pod`), run by `tools/test_watchdog.py`; the app and the server store and show the result |
 | `fixtures/catalog.json` | A RunPod GPU catalog the card cases are computed against. | |
 | `data/gpus.json` | Memory bandwidth per card for the speed estimate. | Swift bundles a byte-identical copy (tested) |
 | `data/regions.json` | Region prefixes and RunPod storage prices. | The server reads it; Swift's constants are tested against it |

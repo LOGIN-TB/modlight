@@ -26,6 +26,10 @@ final class AppModel {
     let notifier = Notifier()
 
     private(set) var state = PodlightState()
+    /// The latest telemetry per model on this Mac whose pod runs, from the pod's watchdog.
+    private(set) var localTelemetry: [UUID: PodTelemetry] = [:]
+    /// Telemetry for the screenshots, instead of live pods.
+    var sampleTelemetry: [UUID: [PodTelemetry]]?
     private(set) var hasRunpodKey = false
     private(set) var hasHuggingFaceToken = false
     private(set) var gatewayKey: String?
@@ -103,6 +107,8 @@ final class AppModel {
     func reloadState() async {
         let previous = state
         state = await manager.state()
+        let telemetry = await manager.latestTelemetry()
+        if telemetry != localTelemetry { localTelemetry = telemetry }
         syncServers()
         notifier.compare(previous: previous, current: state)
         if selection == nil || !isValid(selection) { selection = .overview }

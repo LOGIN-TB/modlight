@@ -35,3 +35,16 @@ Wie viel Speicher ein Token braucht, liest Podlight aus der Konfiguration des Mo
 ## Mehrere Karten
 
 Passt ein langer Kontext nicht auf eine einzelne Karte, schlägt Podlight 2, 4 oder 8 Karten in einem Pod vor, etwa „2 × L40S“. vLLM verteilt das Modell dann auf alle Karten und wird dadurch auch schneller. llama.cpp verteilt die Schichten des Modells auf die Karten: Das bringt mehr Platz, bei einer einzelnen Anfrage aber kein höheres Tempo. Der Preis gilt für alle Karten zusammen. Mehrere gleiche Karten gleichzeitig frei zu bekommen ist bei RunPod schwerer; Podlight probiert notfalls die nächsten Vorschläge.
+
+## Auslastung
+
+Solange ein Modell läuft, zeigt seine Seite unter „Auslastung“, was der Pod gerade tut:
+- **Ringe** für GPU-Last, belegten Grafikspeicher (VRAM), CPU, Arbeitsspeicher und Festplatte, bei mehreren Karten für jede einzeln.
+- **Werte der Engine:** laufende und wartende Anfragen, Token pro Sekunde und wie voll der Kontext-Cache ist.
+- **Verlauf** der letzten 30 Minuten.
+
+In der Modellliste, der Übersicht und der Menüleiste steht die GPU-Last neben jedem laufenden Modell.
+
+Gemessen wird im Pod selbst, etwa alle 10 Sekunden, weil RunPods Schnittstelle den belegten Grafikspeicher nicht meldet. Dass vLLM fast den ganzen Grafikspeicher belegt, ist normal: Es reserviert ihn beim Start für den Kontext-Cache. Ob das Modell arbeitet, zeigen GPU-Last und Token pro Sekunde.
+
+Pods, die eine frühere Podlight-Version angelegt hat, melden keine Auslastung, auch wenn sie mit „Modell zwischenspeichern“ fortgesetzt werden. Die Werte erscheinen, sobald das Modell auf einem neuen Pod startet.

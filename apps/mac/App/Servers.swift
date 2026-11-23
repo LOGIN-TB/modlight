@@ -88,6 +88,26 @@ extension AppModel {
         }
     }
 
+    /// The latest sample from a model's pod, on this Mac or a server.
+    func telemetry(_ modelId: UUID) -> PodTelemetry? {
+        if let sample = sampleTelemetry?[modelId]?.last { return sample }
+        switch source(of: modelId) {
+        case .local: return localTelemetry[modelId]
+        case .server(let id): return server(id)?.snapshot?.telemetry[modelId]
+        }
+    }
+
+    /// The last 30 minutes of a model's pod, oldest first.
+    func telemetryHistory(_ modelId: UUID) async -> [PodTelemetry] {
+        if let samples = sampleTelemetry?[modelId] { return samples }
+        switch source(of: modelId) {
+        case .local: return await manager.telemetry(for: modelId)
+        case .server(let id):
+            guard let server = server(id) else { return [] }
+            return (try? await server.client(keychain).telemetry(modelId)) ?? []
+        }
+    }
+
     func model(_ id: UUID) -> PodlightModel? {
         state.models.first { $0.id == id } ?? servers.lazy.compactMap { $0.models.first { $0.id == id } }.first
     }

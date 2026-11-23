@@ -131,6 +131,46 @@ export const modelRun = z.object({
 export type ModelRun = z.infer<typeof modelRun>
 export const emptyRun = (): ModelRun => modelRun.parse({})
 
+/** One GPU in a pod, as the pod's watchdog reads it from nvidia-smi. Unknown values are null. */
+export const gpuTelemetry = z.object({
+  index: optional(z.number()),
+  name: optional(z.string()),
+  utilPercent: optional(z.number()),
+  memoryUsedBytes: optional(z.number()),
+  memoryTotalBytes: optional(z.number()),
+  temperatureC: optional(z.number()),
+  powerW: optional(z.number()),
+  powerLimitW: optional(z.number()),
+})
+
+/** What the engine is doing, from its /metrics. Rates cover the seconds since the last sample. */
+export const engineTelemetry = z.object({
+  running: optional(z.number()),
+  waiting: optional(z.number()),
+  kvCachePercent: optional(z.number()),
+  promptTokensPerSecond: optional(z.number()),
+  generationTokensPerSecond: optional(z.number()),
+})
+
+/**
+ * One sample of what a pod is doing, measured by its watchdog (spec/pod/watchdog.py) and sent back
+ * with each heartbeat. RunPod's API reports no GPU memory in use and no disk, so the pod measures
+ * itself. `time` is Unix seconds. A missing source leaves out its fields.
+ */
+export const podTelemetry = z.object({
+  time: z.number(),
+  cpuPercent: optional(z.number()),
+  memoryUsedBytes: optional(z.number()),
+  memoryTotalBytes: optional(z.number()),
+  diskUsedBytes: optional(z.number()),
+  diskTotalBytes: optional(z.number()),
+  volumeUsedBytes: optional(z.number()),
+  volumeTotalBytes: optional(z.number()),
+  gpus: optional(z.array(gpuTelemetry)),
+  engine: optional(engineTelemetry),
+})
+export type PodTelemetry = z.infer<typeof podTelemetry>
+
 /** Server settings an app may read and change. Secrets are separate and write-only. */
 export const serverSettings = z.object({
   dailyLimitUsd: z.number().positive().nullable().default(10),

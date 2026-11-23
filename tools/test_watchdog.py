@@ -5,7 +5,7 @@ checks that it stops the pod in each case it must, and only then. Standard libra
 
     python3 -I tools/test_watchdog.py
 """
-import http.client, json, os, socket, subprocess, sys, threading, time, unittest
+import http.client, importlib.util, json, os, shutil, socket, stat, subprocess, sys, tempfile, threading, time, unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 WATCHDOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "spec", "pod", "watchdog.py")
@@ -145,6 +145,126 @@ class WatchdogTest(unittest.TestCase):
         self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_DEADLINE=str(int(time.time()) - 3600))
         time.sleep(2)
         self.assertEqual(self.api.stops, [])
+
+
+    def test_reports_telemetry_with_each_heartbeat(self):
+        fake = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, fake)
+        smi = os.path.join(fake, "nvidia-smi")
+        with open(smi, "w") as f:
+            # In loop mode it keeps printing (55 %); a single call says 87 %. The watchdog must use the loop.
+            # Readings alternate 30 % and 80 %: the sample reports their average, 55 %.
+            f.write("#!/bin/sh\ncase \"$*\" in *--loop-ms*) while true; do echo '0, NVIDIA A40, 30, 43210, 46068, 55, 250.31, 300.00'; sleep 0.05;"
+                    " echo '0, NVIDIA A40, 80, 43210, 46068, 55, 250.31, 300.00'; sleep 0.05; done;;\n"
+                    "*) echo '0, NVIDIA A40, 87, 43210, 46068, 55, 250.31, 300.00';; esac\n")
+        os.chmod(smi, os.stat(smi).st_mode | stat.S_IEXEC)
+        cgroup = os.path.join(fake, "cgroup")
+        os.mkdir(cgroup)
+        files = {"cpu.stat": "usage_usec 1000000\n", "cpu.max": "200000 100000\n",
+                 "memory.current": "3000000000\n", "memory.max": "50000000000\n", "memory.stat": "inactive_file 1000000000\n"}
+        for name, text in files.items():
+            with open(os.path.join(cgroup, name), "w") as f: f.write(text)
+        engine = FakeEngine()
+        self.addCleanup(engine.close)
+        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_TELEMETRY_SECONDS="0.3", PODLIGHT_NVIDIA_SMI=smi,
+                   PODLIGHT_CGROUP=cgroup, PODLIGHT_ENGINE_URL=f"http://127.0.0.1:{engine.port}")
+        time.sleep(0.5)
+        # One second of CPU time later, on a container allowed two CPUs.
+        with open(os.path.join(cgroup, "cpu.stat"), "w") as f: f.write("usage_usec 2000000\n")
+        engine.generated = 1500
+        time.sleep(0.8)
+        status, body = self.get("/")
+        self.assertEqual(status, 200)
+        t = body["telemetry"]
+        self.assertAlmostEqual(t["gpus"][0]["utilPercent"], 55, delta=8, msg="averaged readings of the long-running nvidia-smi")
+        self.assertEqual(t["gpus"][0]["memoryUsedBytes"], 43210 * 1024 * 1024)
+        self.assertEqual(t["memoryUsedBytes"], 2_000_000_000)  # without the file cache
+        self.assertEqual(t["memoryTotalBytes"], 50_000_000_000)
+        self.assertIn("diskTotalBytes", t)
+        self.assertEqual(t["engine"]["running"], 2)
+        self.assertEqual(t["engine"]["kvCachePercent"], 41.0)
+        self.assertEqual(engine.auth, "Bearer gw")
+        # The rates covered the change once; later samples see no new tokens.
+        status, beat = self.post_json("/heartbeat", {"deadline": None})
+        self.assertEqual(status, 200)
+        self.assertIn("telemetry", beat)
+
+    def test_missing_sources_leave_a_working_heartbeat(self):
+        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_TELEMETRY_SECONDS="0.2", PODLIGHT_NVIDIA_SMI="/nonexistent",
+                   PODLIGHT_CGROUP="/nonexistent", PODLIGHT_PROC="/nonexistent", PODLIGHT_ENGINE_URL="http://127.0.0.1:9")
+        time.sleep(0.6)
+        status, body = self.post_json("/heartbeat", {"deadline": None})
+        self.assertEqual(status, 200)
+        t = body["telemetry"]
+        self.assertNotIn("gpus", t)
+        self.assertNotIn("engine", t)
+        self.assertNotIn("cpuPercent", t)
+
+    def post_json(self, path, body, key="gw"):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            conn.request("POST", path, body=json.dumps(body),
+                         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+            response = conn.getresponse()
+            return response.status, json.loads(response.read() or b"{}")
+        finally:
+            conn.close()
+
+
+class FakeEngine:
+    """A /metrics endpoint as vLLM serves it."""
+    def __init__(self):
+        self.generated, self.auth = 1000, None
+        outer = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                outer.auth = self.headers.get("Authorization")
+                text = ("# HELP vllm:num_requests_running Number of requests in model execution batches.\n"
+                        "# TYPE vllm:num_requests_running gauge\n"
+                        'vllm:num_requests_running{engine="0",model_name="m"} 2.0\n'
+                        'vllm:num_requests_waiting{engine="0",model_name="m"} 0.0\n'
+                        'vllm:kv_cache_usage_perc{engine="0",model_name="m"} 0.41\n'
+                        f'vllm:generation_tokens_total{{engine="0",model_name="m"}} {outer.generated}.0\n'
+                        'vllm:generation_tokens_created{engine="0",model_name="m"} 1.7e9\n').encode()
+                self.send_response(200); self.send_header("Content-Length", str(len(text))); self.end_headers()
+                self.wfile.write(text)
+
+            def log_message(self, *a): pass
+
+        self.port = free_port()
+        self.server = ThreadingHTTPServer(("127.0.0.1", self.port), Handler)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def close(self):
+        self.server.shutdown()
+
+
+def load_watchdog():
+    spec = importlib.util.spec_from_file_location("watchdog", WATCHDOG)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class TelemetryParsingTest(unittest.TestCase):
+    """The parsers on their own, with the shapes the cases in spec/cases/telemetry.json name."""
+    w = load_watchdog()
+
+    def test_cases(self):
+        path = os.path.join(os.path.dirname(WATCHDOG), "..", "cases", "telemetry.json")
+        with open(path) as f:
+            cases = json.load(f)["cases"]
+        for case in cases:
+            with self.subTest(case["id"]):
+                given = case["input"]
+                if case["function"] == "nvidiaSmi":
+                    got = self.w.parse_nvidia_smi(given["csv"])
+                else:
+                    values = self.w.engine_values(self.w.parse_prometheus(given["metrics"]))
+                    previous = self.w.engine_values(self.w.parse_prometheus(given["previousMetrics"])) if "previousMetrics" in given else None
+                    got = self.w.engine_telemetry(values, previous, given.get("seconds"))
+                self.assertEqual(got, case["expected"])
 
 
 if __name__ == "__main__":

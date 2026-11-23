@@ -34,13 +34,14 @@ enum Snapshots {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 
         let running = model.state.models[0]
+        model.sampleTelemetry = [running.id: sampleTelemetry(gpu: "NVIDIA L40S", memoryGB: 48)]
         // Content views without the sidebar: its material does not render offscreen, and the help
         // pages are about the content anyway.
         render("overview", size: CGSize(width: 720, height: 900), into: folder) { NavigationStack { OverviewView() }.environment(model) }
         render("model-stopped", size: CGSize(width: 720, height: 640), into: folder) {
             NavigationStack { ModelDetailView(item: model.state.models[1]) }.environment(model)
         }
-        render("models", size: CGSize(width: 720, height: 640), into: folder) { NavigationStack { ModelDetailView(item: running) }.environment(model) }
+        render("models", size: CGSize(width: 720, height: 1180), into: folder) { NavigationStack { ModelDetailView(item: running) }.environment(model) }
         render("connection", size: CGSize(width: 720, height: 860), into: folder) { ConnectionView().environment(model) }
         render("connection-claude", size: CGSize(width: 720, height: 1240), into: folder) {
             ConnectionView(agent: .claudeCode, showFiles: true).environment(model)
@@ -74,7 +75,8 @@ enum Snapshots {
             render("overview-server", size: CGSize(width: 720, height: 1180), into: folder) { NavigationStack { OverviewView() }.environment(model) }
             render("server-costs", size: CGSize(width: 720, height: 700), into: folder) { CostsView(source: .server(entry.id)).environment(model) }
             if let remote = sample.0.models.first {
-                render("server-model", size: CGSize(width: 720, height: 680), into: folder) {
+                model.sampleTelemetry?[remote.id] = sampleTelemetry(gpu: "NVIDIA RTX A6000", memoryGB: 48, cards: 2)
+                render("server-model", size: CGSize(width: 720, height: 1180), into: folder) {
                     NavigationStack { ModelDetailView(item: remote) }.environment(model)
                 }
                 render("server-start", size: CGSize(width: 460, height: 560), into: folder) { StartSheet(model: remote).environment(model) }
@@ -135,6 +137,29 @@ enum Snapshots {
         host.cacheDisplay(in: host.bounds, to: rep)
         try? rep.representation(using: .png, properties: [:])?.write(to: folder.appendingPathComponent("\(name).png"))
         window.orderOut(nil)
+    }
+
+    /// 30 minutes of a pod at work: bursts of requests with idle gaps, as an agent session looks.
+    nonisolated static func sampleTelemetry(gpu: String, memoryGB: Double, cards: Int = 1) -> [PodTelemetry] {
+        let now = Date().timeIntervalSince1970
+        return (0..<PodTelemetry.historyLimit).map { i in
+            // Counted from the end, so the latest sample is in the middle of work.
+            let busy = ((PodTelemetry.historyLimit - 1 - i) / 12) % 3 != 2
+            let wave = (sin(Double(i) / 2.3) + 1) / 2
+            let load = busy ? 55 + 40 * wave : 2
+            return PodTelemetry(
+                time: now - Double(PodTelemetry.historyLimit - 1 - i) * 10,
+                cpuPercent: busy ? 9 + 6 * wave : 1.5,
+                memoryUsedBytes: 11.2e9, memoryTotalBytes: 62e9,
+                diskUsedBytes: 21.4e9, diskTotalBytes: 40e9,
+                gpus: (0..<cards).map { card in
+                    PodTelemetry.GPU(index: card, name: gpu, utilPercent: (load - Double(card) * 6).rounded(),
+                                     memoryUsedBytes: memoryGB * (0.93 - Double(card) * 0.02) * 1e9, memoryTotalBytes: memoryGB * 1e9,
+                                     temperatureC: busy ? 61 - Double(card) * 3 : 38, powerW: busy ? 210 + 80 * wave : 32, powerLimitW: 300)
+                },
+                engine: PodTelemetry.Engine(running: busy ? 1 + Int(wave * 2) : 0, waiting: 0, kvCachePercent: busy ? 18 + 30 * wave : 0,
+                                            promptTokensPerSecond: busy ? 900 * wave : 0, generationTokensPerSecond: busy ? 48 + 14 * wave : 0))
+        }
     }
 
     nonisolated static func sampleState() -> PodlightState {
