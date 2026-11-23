@@ -527,6 +527,178 @@
                 "type": "null"
               }
             ]
+          },
+          "waitingForCard": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "until": {
+                    "type": "string"
+                  },
+                  "runUntil": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "manual": {
+                    "type": "boolean"
+                  },
+                  "lastTryAt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "until",
+                  "manual"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "replacing": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "podId": {
+                    "type": "string"
+                  },
+                  "gpu": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "gpuId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "cloud": {
+                            "type": "string",
+                            "enum": [
+                              "SECURE",
+                              "COMMUNITY"
+                            ]
+                          },
+                          "count": {
+                            "default": 1,
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "gpuId",
+                          "cloud"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "gpuName": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "pricePerHour": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "persistentGB": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "containerGB": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "storagePerHour": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "dataCenterId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "hosting": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "region": {
+                            "type": "string",
+                            "enum": [
+                              "anywhere",
+                              "eu",
+                              "euEEA"
+                            ]
+                          },
+                          "secureOnly": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "region",
+                          "secureOnly"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "podId"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "oldPodToDelete": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resumed": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       },

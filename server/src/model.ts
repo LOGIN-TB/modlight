@@ -127,6 +127,29 @@ export const modelRun = z.object({
   accountedUntil: optional(z.string()),
   storageAccountedUntil: optional(z.string()),
   hosting: optional(hostingPolicy),
+  /** The pod's machine had no free card at the last start; the server keeps trying to resume it. */
+  waitingForCard: optional(z.object({
+    until: z.string(),
+    runUntil: optional(z.string()),
+    manual: z.boolean(),
+    lastTryAt: optional(z.string()),
+  })),
+  /** "Start on a New Card": the old pod, kept until the new one answers, put back if it fails. */
+  replacing: optional(z.object({
+    podId: z.string(),
+    gpu: optional(gpuChoice),
+    gpuName: optional(z.string()),
+    pricePerHour: optional(z.number()),
+    persistentGB: optional(z.number().int()),
+    containerGB: optional(z.number().int()),
+    storagePerHour: optional(z.number()),
+    dataCenterId: optional(z.string()),
+    hosting: optional(hostingPolicy),
+  })),
+  /** An old pod to delete once its replacement answered. */
+  oldPodToDelete: optional(z.string()),
+  /** The current run resumed a kept disk rather than building a new pod. */
+  resumed: optional(z.boolean()),
 })
 export type ModelRun = z.infer<typeof modelRun>
 export const emptyRun = (): ModelRun => modelRun.parse({})

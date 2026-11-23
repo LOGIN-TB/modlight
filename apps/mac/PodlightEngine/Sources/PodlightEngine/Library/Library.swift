@@ -189,8 +189,58 @@ public struct ModelRun: Codable, Sendable, Equatable {
     public var recordId: String?
     /// The engine's last log lines when it failed, for "Show Engine Log".
     public var engineLog: [String]?
+    /// The pod's machine had no free card at the last start. Podlight keeps trying to resume the
+    /// pod with its disk instead of giving it up.
+    public var waitingForCard: WaitingForCard?
+    /// "Start on a New Card": the old pod and its disk, kept until the new pod answers, and put
+    /// back if the new one fails.
+    public var replacing: ReplacedPod?
+    /// An old pod to delete once its replacement answered (tried again each tick until it is gone).
+    public var oldPodToDelete: String?
+    /// The current run resumed a kept disk (about a minute) rather than building a new pod.
+    public var resumed: Bool?
 
     public init() {}
+}
+
+/// A start waiting for the card on a stopped pod's machine.
+public struct WaitingForCard: Codable, Sendable, Equatable {
+    /// Podlight stops trying then: the run's end, or half an hour for a run a request woke.
+    public var until: Date
+    public var runUntil: Date?
+    public var manual: Bool
+    public var lastTryAt: Date?
+
+    public init(until: Date, runUntil: Date?, manual: Bool, lastTryAt: Date? = nil) {
+        self.until = until; self.runUntil = runUntil; self.manual = manual; self.lastTryAt = lastTryAt
+    }
+}
+
+/// The parts of a run that belong to its pod, so a replaced pod can be put back.
+public struct ReplacedPod: Codable, Sendable, Equatable {
+    public var podId: String
+    public var gpu: GPUChoice?
+    public var gpuName: String?
+    public var pricePerHour: Double?
+    public var persistentGB: Int?
+    public var containerGB: Int?
+    public var storagePerHour: Double?
+    public var dataCenterId: String?
+    public var hosting: HostingPolicy?
+
+    public init(of run: ModelRun, podId: String) {
+        self.podId = podId; gpu = run.gpu; gpuName = run.gpuName; pricePerHour = run.pricePerHour
+        persistentGB = run.persistentGB; containerGB = run.containerGB; storagePerHour = run.storagePerHour
+        dataCenterId = run.dataCenterId; hosting = run.hosting
+    }
+
+    /// Puts this pod back as the run's pod, stopped.
+    public func restore(into run: inout ModelRun) {
+        run.podId = podId; run.gpu = gpu; run.gpuName = gpuName; run.pricePerHour = pricePerHour
+        run.persistentGB = persistentGB; run.containerGB = containerGB; run.storagePerHour = storagePerHour
+        run.dataCenterId = dataCenterId; run.hosting = hosting
+        run.podStatus = .exited; run.engineReady = false; run.replacing = nil
+    }
 }
 
 public struct PodlightSettings: Codable, Sendable, Equatable {

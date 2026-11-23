@@ -97,6 +97,13 @@ def engine_log_tail(lines=250):
         return []
 
 
+def engine_log_bytes():
+    try:
+        return os.path.getsize(ENGINE_LOG)
+    except OSError:
+        return None
+
+
 def engine_alive():
     if engine_exit_code() is not None:
         return False
@@ -394,6 +401,9 @@ class Handler(BaseHTTPRequestHandler):
                 "engineAlive": engine_alive(),
                 "engineExitCode": engine_exit_code(),
                 "uptimeSeconds": int(time.time() - state["started"]),
+                # Grows while the engine works; Podlight takes a loading engine whose log, disks,
+                # GPU memory and CPU all stand still for ten minutes as hung.
+                "engineLogBytes": engine_log_bytes(),
                 "telemetry": telemetry_state["latest"],
             }
 

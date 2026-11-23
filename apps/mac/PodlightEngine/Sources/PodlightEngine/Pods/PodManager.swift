@@ -56,13 +56,22 @@ public actor PodManager {
     /// card. RunPod often frees it within seconds (measured: 10 s after a stop).
     private let hostBusyTries: Int
     private let hostBusyDelay: Duration
+    /// While the machine stays busy, the resume is tried again this often, in the background.
+    private let cardRetryInterval: TimeInterval
+    /// A loading engine with no sign of progress for this long is taken as hung.
+    private let loadStallLimit: TimeInterval
+    /// What a loading pod last showed of its progress, and since when, per model. In memory only.
+    private var loadProgress: [UUID: (signature: LoadSignature, since: Date)] = [:]
 
     public init(store: StateStore, keychain: KeychainStore = KeychainStore(),
                 transport: HTTPTransport = URLSession.shared, now: @escaping @Sendable () -> Date = Date.init,
                 podURL: @escaping @Sendable (_ podId: String, _ port: Int) -> URL = PodPlan.proxyURL,
-                hostBusyTries: Int = 5, hostBusyDelay: Duration = .seconds(15)) {
+                hostBusyTries: Int = 5, hostBusyDelay: Duration = .seconds(15),
+                cardRetryInterval: TimeInterval = 30, loadStallLimit: TimeInterval = 600) {
         self.hostBusyTries = max(1, hostBusyTries)
         self.hostBusyDelay = hostBusyDelay
+        self.cardRetryInterval = cardRetryInterval
+        self.loadStallLimit = loadStallLimit
         self.store = store
         self.keychain = keychain
         self.transport = transport
@@ -130,13 +139,20 @@ public actor PodManager {
         let podKey = try podKey(for: id)
         let owner = await ownTag()
         var run = state.run(id)
+        // A new start ends any waiting for the old machine's card.
+        if run.waitingForCard != nil { try await updateRun(id) { $0.waitingForCard = nil } }
 
         if newPod, let podId = run.podId {
-            do { try await client.deletePod(id: podId) } catch let e as RunpodError where e.isNotFound {} catch let e as RunpodError {
-                throw PodlightError.runpod(status: e.status, message: e.body)
+            // The old pod and its disk stay until the new pod answers; if the new one fails, the
+            // old one is put back. A failed earlier replacement is deleted, its original kept.
+            if run.replacing != nil {
+                do { try await client.deletePod(id: podId) } catch let e as RunpodError where e.isNotFound {} catch let e as RunpodError {
+                    throw PodlightError.runpod(status: e.status, message: e.body)
+                }
             }
+            let replaced = run.replacing ?? ReplacedPod(of: run, podId: podId)
             run.podId = nil
-            try await updateRun(id) { $0.podId = nil; $0.podStatus = nil; $0.persistentGB = nil }
+            try await updateRun(id) { $0.replacing = replaced; $0.podId = nil; $0.podStatus = nil; $0.persistentGB = nil }
         }
 
         if let podId = run.podId {
@@ -155,13 +171,17 @@ public actor PodManager {
                     try? await client.updateEnv(pod: podId, to: fresh)
                 }
                 let resumed = try await resumeWaitingForHost(client, podId)
-                try await markStarted(id, pod: resumed, runUntil: runUntil, manual: manual)
+                try await markStarted(id, pod: resumed, runUntil: runUntil, manual: manual, resumed: true)
                 return
             } catch let error as RunpodError where error.isHostGPUUnavailable {
                 // Its machine gave the card away. The pod and its disk stay: deleting them would
-                // throw away the downloaded model long before its deletion date. The user decides
-                // whether to try again later or to start on a new card.
-                try await updateRun(id) { $0.phase = .stopped; $0.lastReason = "host-busy"; $0.lastMessage = nil }
+                // throw away the downloaded model long before its deletion date. Podlight keeps
+                // trying in the background until the run's end; the user may start on a new card.
+                let waiting = WaitingForCard(until: runUntil ?? now().addingTimeInterval(Self.wokenWaitForCard),
+                                             runUntil: runUntil, manual: manual, lastTryAt: now())
+                try await updateRun(id) {
+                    $0.phase = .stopped; $0.lastReason = "host-busy"; $0.lastMessage = nil; $0.waitingForCard = waiting
+                }
                 throw PodlightError.hostBusy
             } catch let error as RunpodError where error.isNotFound {
                 // Gone: build a new one from the same model.
@@ -173,6 +193,21 @@ public actor PodManager {
             }
         }
 
+        do {
+            try await createPod(id, model: model, state: state, client: client, podKey: podKey, owner: owner,
+                                runUntil: runUntil, manual: manual)
+        } catch {
+            // No new pod came of it: a replaced pod is the model's pod again.
+            try? await putBackReplacedPod(id)
+            throw error
+        }
+    }
+
+    /// How long a start that a request woke waits for a busy machine's card.
+    static let wokenWaitForCard: TimeInterval = 1800
+
+    private func createPod(_ id: UUID, model: PodlightModel, state: PodlightState, client: RunpodClient, podKey: String,
+                           owner: String?, runUntil: Date?, manual: Bool) async throws {
         try await updateRun(id) { $0.phase = .creating; $0.lastReason = nil; $0.lastMessage = nil; $0.fellBackFrom = nil }
         do {
             let catalog = try await client.gpuCatalog()
@@ -201,7 +236,7 @@ public actor PodManager {
                 $0.hosting = hosting
                 $0.fellBackFrom = created.attempts.filter { $0.outcome != .created }.map { names[$0.choice.gpuId] ?? $0.choice.gpuId }
             }
-            try await markStarted(id, pod: created.pod, runUntil: runUntil, manual: manual)
+            try await markStarted(id, pod: created.pod, runUntil: runUntil, manual: manual, resumed: false)
         } catch let error as NoCapacityError {
             let tried = error.attempts.map(\.choice.gpuId)
             try await updateRun(id) { $0.phase = .failed; $0.lastReason = "no-capacity"; $0.lastMessage = tried.joined(separator: ", ") }
@@ -228,9 +263,12 @@ public actor PodManager {
         }
     }
 
-    private func markStarted(_ id: UUID, pod: RunpodPod, runUntil: Date?, manual: Bool) async throws {
+    private func markStarted(_ id: UUID, pod: RunpodPod, runUntil: Date?, manual: Bool, resumed: Bool) async throws {
         let t = now()
+        loadProgress[id] = nil
         try await updateRun(id) {
+            $0.resumed = resumed
+            $0.waitingForCard = nil
             $0.podStatus = pod.status
             $0.phase = .loading
             $0.engineLog = nil
@@ -260,8 +298,26 @@ public actor PodManager {
     public func stop(_ id: UUID, reason: String = "manual") async throws {
         let state = await store.current()
         let run = state.run(id)
+        // Stopping a start that waits for its machine's card just ends the waiting.
+        if run.waitingForCard != nil {
+            try await updateRun(id) { $0.waitingForCard = nil }
+            if run.phase == .stopped || run.phase == .failed { return }
+        }
         guard let podId = run.podId else { return }
         account(id: id, run: run)
+        loadProgress[id] = nil
+        if run.replacing != nil {
+            // A new pod that never answered ends by being deleted; the old pod with the
+            // downloaded model is the model's pod again.
+            try await updateRun(id) { $0.phase = .stopping }
+            do { try await client().deletePod(id: podId) } catch let e as RunpodError where e.isNotFound {} catch let e as RunpodError {
+                try await fail(id, e)
+                throw PodlightError.runpod(status: e.status, message: e.body)
+            }
+            try await putBackReplacedPod(id)
+            try await markStopped(id, status: .exited, reason: reason)
+            return
+        }
         try await updateRun(id) { $0.phase = .stopping }
         let keepDisk = state.models.first { $0.id == id }?.keepDisk ?? true
         do {
@@ -659,9 +715,57 @@ public actor PodManager {
             await refresh(model.id)
             await applyRules(model.id)
         }
+        await retryWaitingStarts()
+        await deleteReplacedPods()
         await deleteLongStopped()
         await accountStoredDisks()
         await syncRecords()
+    }
+
+    /// The old pod of a "Start on a New Card" whose new pod answered, and its disk, are deleted.
+    private func deleteReplacedPods() async {
+        for (id, run) in await store.current().runs {
+            guard let old = run.oldPodToDelete, let client = try? client() else { continue }
+            do { try await client.deletePod(id: old) } catch let e as RunpodError where e.isNotFound {} catch { continue }
+            try? await updateRun(id) { $0.oldPodToDelete = nil }
+        }
+    }
+
+    /// Puts the pod a "Start on a New Card" replaced back as the model's pod.
+    private func putBackReplacedPod(_ id: UUID) async throws {
+        guard let replaced = await store.current().run(id).replacing else { return }
+        try await updateRun(id) { replaced.restore(into: &$0) }
+    }
+
+    /// Tries again to resume the pods whose machine had no free card, until each run's end.
+    private func retryWaitingStarts() async {
+        let state = await store.current()
+        let t = now()
+        for (id, run) in state.runs {
+            guard let waiting = run.waitingForCard else { continue }
+            guard let podId = run.podId, run.managedBy == nil, run.phase == .stopped || run.phase == .failed,
+                  t < waiting.until, Scheduler.admitWake(spend: state.spend(on: t)).admit else {
+                try? await updateRun(id) { $0.waitingForCard = nil }
+                continue
+            }
+            if let last = waiting.lastTryAt, t.timeIntervalSince(last) < cardRetryInterval { continue }
+            guard let client = try? client() else { return }
+            do {
+                let pod = try await client.perform(.start, onPod: podId)
+                try? await updateRun(id) { $0.lastReason = nil }
+                try? await markStarted(id, pod: pod, runUntil: waiting.runUntil, manual: waiting.manual, resumed: true)
+            } catch let error as RunpodError where error.isHostGPUUnavailable {
+                try? await updateRun(id) { $0.waitingForCard?.lastTryAt = t }
+            } catch let error as RunpodError where error.isNotFound {
+                try? await updateRun(id) { $0.waitingForCard = nil; $0.podId = nil; $0.podStatus = nil; $0.lastReason = "pod-gone" }
+            } catch let error as RunpodError {
+                try? await updateRun(id) { $0.waitingForCard = nil }
+                try? await fail(id, error)
+            } catch {
+                // RunPod unreachable: try again next time.
+                try? await updateRun(id) { $0.waitingForCard?.lastTryAt = t }
+            }
+        }
     }
 
     /// A stopped pod's kept volume disk is billed (0.20 USD/GB/month); book it as it accrues so
@@ -690,7 +794,9 @@ public actor PodManager {
             pod = try await client.pod(id: podId)
         } catch let error as RunpodError where error.isNotFound {
             account(id: id, run: run)
+            loadProgress[id] = nil
             try? await updateRun(id) { $0.podId = nil; $0.podStatus = nil; $0.phase = .stopped; $0.lastReason = "pod-gone" }
+            try? await putBackReplacedPod(id)
             return
         } catch {
             return // RunPod unreachable: keep what we know, try again next tick.
@@ -752,6 +858,18 @@ public actor PodManager {
                 }
                 return
             }
+            // A loading engine that shows no progress at all (no download, no log line, no GPU
+            // memory, no CPU) has hung, often on a stalled download. It would bill until the run's end.
+            if !ready, let watchdog, noteLoadProgress(id, watchdog) {
+                let lines = await engineLog(podId: podId, modelId: id)
+                let last = lines?.last(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty })
+                try? await stop(id, reason: "engine-stuck")
+                try? await updateRun(id) {
+                    $0.phase = .failed; $0.lastReason = "engine-stuck"; $0.engineLog = lines
+                    $0.lastMessage = last.map { String($0.trimmingCharacters(in: .whitespaces).prefix(200)) }
+                }
+                return
+            }
             if !ready, await engineAnswers(podId: podId, modelId: id) {
                 // Start test: a model that only repeats one character (a broken quantisation or
                 // kernel) would make every agent request run to its length limit.
@@ -765,10 +883,17 @@ public actor PodManager {
                     return
                 }
                 ready = true
+                loadProgress[id] = nil
+                // The new pod of a "Start on a New Card" answers: the old pod can go.
+                if let replaced = run.replacing {
+                    try? await updateRun(id) { $0.replacing = nil; $0.oldPodToDelete = replaced.podId }
+                    await deleteReplacedPods()
+                }
             }
         } else {
             ready = false
             samples[id] = nil
+            loadProgress[id] = nil
         }
 
         let wasRunning = run.podStatus == .running
@@ -856,6 +981,39 @@ public actor PodManager {
         var engineAlive: Bool?
         var engineExitCode: Int?
         var telemetry: PodTelemetry?
+        /// Size of the engine's log; it grows while the engine works.
+        var engineLogBytes: Int?
+    }
+
+    /// What shows a loading engine at work. Sizes in 64 MB steps, so small noise does not count.
+    struct LoadSignature: Equatable {
+        var storedSteps: Int?
+        var gpuMemorySteps: Int?
+        var logBytes: Int?
+
+        init(_ status: WatchdogStatus) {
+            let step = 64.0 * 1_048_576
+            let t = status.telemetry
+            let stored = [t?.diskUsedBytes, t?.volumeUsedBytes].compactMap { $0 }
+            storedSteps = stored.isEmpty ? nil : Int(stored.reduce(0, +) / step)
+            let gpu = (t?.gpus ?? []).compactMap(\.memoryUsedBytes)
+            gpuMemorySteps = gpu.isEmpty ? nil : Int(gpu.reduce(0, +) / step)
+            logBytes = status.engineLogBytes
+        }
+    }
+
+    /// Notes what a loading pod shows. True once it has shown no progress for `loadStallLimit`.
+    /// Without telemetry (a watchdog from before 0.5) nothing is decided.
+    private func noteLoadProgress(_ id: UUID, _ status: WatchdogStatus) -> Bool {
+        guard status.telemetry != nil else { return false }
+        let t = now()
+        let signature = LoadSignature(status)
+        let busy = (status.telemetry?.cpuPercent ?? 0) >= 1
+        guard let seen = loadProgress[id], seen.signature == signature, !busy else {
+            loadProgress[id] = (signature, t)
+            return false
+        }
+        return t.timeIntervalSince(seen.since) >= loadStallLimit
     }
 
     // MARK: Telemetry
@@ -892,7 +1050,7 @@ public actor PodManager {
             .flatMap { try? JSONSerialization.data(withJSONObject: $0) }
             .flatMap { try? JSONDecoder().decode(PodTelemetry.self, from: $0) }
         return WatchdogStatus(engineAlive: json?["engineAlive"] as? Bool, engineExitCode: json?["engineExitCode"] as? Int,
-                              telemetry: telemetry)
+                              telemetry: telemetry, engineLogBytes: json?["engineLogBytes"] as? Int)
     }
 
     /// The last lines vLLM wrote, kept by the watchdog because RunPod drops a stopped pod's output.
