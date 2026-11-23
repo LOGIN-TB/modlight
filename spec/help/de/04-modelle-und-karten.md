@@ -51,7 +51,7 @@ Pods, die eine frühere Podlight-Version angelegt hat, melden keine Auslastung, 
 
 ## Auf mehreren Macs
 
-Ein Modell gehört dem Mac, auf dem du es angelegt hast. Ein zweiter Mac mit demselben RunPod-Key zeigt in der Übersicht unter „Von anderen Macs“ die Modelle, deren Pod existiert, also laufende und gestoppte mit behaltener Festplatte. Mit „Übernehmen …“ holst du eines auf diesen Mac. Er startet, stoppt und berechnet es ab dann, und deine Agenten verbinden sich mit ihm.
+Ein Modell gehört dem Mac, auf dem du es angelegt hast. Ein zweiter Mac mit demselben RunPod-Key zeigt in der Übersicht unter „Von anderen Macs“ die Modelle, deren Pod existiert, also laufende und gestoppte mit behaltener Festplatte. Er sucht jede Minute danach, sofort mit dem Pfeil neben der Überschrift. Mit „Übernehmen …“ holst du eines auf diesen Mac. Er startet, stoppt und berechnet es ab dann, und deine Agenten verbinden sich mit ihm.
 
 Der erste Mac gibt das Modell innerhalb einer Minute ab, oder sobald er das nächste Mal läuft. Bei ihm steht dann „Verwaltet von …“. Er lässt den Pod in Ruhe, und Anfragen seiner Agenten an dieses Modell bekommen den Hinweis, den anderen Mac zu nutzen. Mit „Zurückholen“ holst du das Modell wieder zu ihm. Löschen entfernt ein abgegebenes Modell nur von diesem Mac, der Pod bleibt.
 

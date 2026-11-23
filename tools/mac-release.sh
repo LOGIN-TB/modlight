@@ -27,6 +27,13 @@ app="$out/export/Podlight.app"
 dmg="$out/Podlight-$version.dmg"
 
 echo "==> Podlight $version ($build_number)"
+# The app shows this version in its sidebar, settings and menu bar. A release tag on this commit
+# must name the same version, so the number users see is the one they downloaded.
+tag="$(git -C "$root" describe --tags --exact-match HEAD 2>/dev/null || true)"
+if [[ -n "$tag" && "$tag" != "v$version" ]]; then
+  echo "The commit is tagged $tag, but project.yml says $version. Bump MARKETING_VERSION first."
+  exit 2
+fi
 rm -rf "$out"
 mkdir -p "$out"
 

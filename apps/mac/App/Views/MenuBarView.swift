@@ -41,6 +41,7 @@ struct MenuBarView: View {
                     NSApp.activate()
                 }
                 Spacer()
+                Text(Format.appVersion).font(.caption).foregroundStyle(.tertiary)
                 Button("Quit") { NSApp.terminate(nil) }
             }
         }

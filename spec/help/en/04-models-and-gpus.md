@@ -51,7 +51,7 @@ Pods created by an earlier Podlight version report no usage, also when they are 
 
 ## On several Macs
 
-A model belongs to the Mac you added it on. A second Mac with the same RunPod key lists, under "From other Macs" in the overview, the models whose pod exists: running ones, and stopped ones with their disk kept. "Take Over…" moves one to this Mac. From then on it starts, stops and bills it, and your agents connect to it.
+A model belongs to the Mac you added it on. A second Mac with the same RunPod key lists, under "From other Macs" in the overview, the models whose pod exists: running ones, and stopped ones with their disk kept. It looks every minute, or at once with the arrow next to the heading. "Take Over…" moves one to this Mac. From then on it starts, stops and bills it, and your agents connect to it.
 
 The first Mac lets go within a minute, or the next time it runs, and shows "Managed by …". It leaves the pod alone, and requests from its agents for that model are told to use the other Mac. "Take Back" moves the model back to it. Deleting a model another Mac took over removes it from this Mac only; the pod stays.
 

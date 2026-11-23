@@ -32,6 +32,9 @@ final class AppModel {
     private(set) var otherMacsPods: [ForeignPod] = []
     /// Pods being taken over right now, for a progress indicator on their row.
     private(set) var takingOver: Set<String> = []
+    /// When the account was last searched for other Macs' models, and why that failed, if it did.
+    private(set) var otherMacsCheckedAt: Date?
+    private(set) var otherMacsError: String?
     /// Telemetry for the screenshots, instead of live pods.
     var sampleTelemetry: [UUID: [PodTelemetry]]?
     private(set) var hasRunpodKey = false
@@ -98,12 +101,12 @@ final class AppModel {
                 try? await Task.sleep(for: .seconds(5))
             }
         })
-        // Other Macs' pods change rarely: look every five minutes, and after every take-over.
+        // Other Macs' pods: one list request a minute, and after every take-over.
         loops.append(Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
                 await self.refreshOtherMacsPods()
-                try? await Task.sleep(for: .seconds(300))
+                try? await Task.sleep(for: .seconds(60))
             }
         })
         loops.append(Task { [weak self] in
@@ -294,7 +297,13 @@ final class AppModel {
 
     func refreshOtherMacsPods() async {
         guard hasRunpodKey else { otherMacsPods = []; return }
-        if let pods = try? await manager.podsFromOtherMacs() { otherMacsPods = pods }
+        do {
+            otherMacsPods = try await manager.podsFromOtherMacs()
+            otherMacsError = nil
+        } catch {
+            otherMacsError = Describe.error(error)
+        }
+        otherMacsCheckedAt = .now
     }
 
     /// Takes another Mac's model over; that Mac lets go when it next looks at the pod.

@@ -2533,6 +2533,16 @@
         }
       }
     },
+    "Looking in your RunPod account…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche in deinem RunPod-Konto …"
+          }
+        }
+      }
+    },
     "MLX builds run on Apple chips only, not on RunPod's NVIDIA cards.": {
       "localizations": {
         "de": {
@@ -2613,12 +2623,12 @@
         }
       }
     },
-    "Models another Mac set up with the same RunPod key. Taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Only models whose pod exists (running, or stopped with its disk kept) are listed.": {
+    "Models another Mac set up with the same RunPod key, checked every minute. Taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Only models whose pod exists (running, or stopped with its disk kept) are listed.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modelle, die ein anderer Mac mit demselben RunPod-Key eingerichtet hat. Übernehmen holt eines auf diesen Mac: Ab dann startet, stoppt und berechnet es dieser Mac, und der andere gibt es ab. Aufgeführt sind nur Modelle, deren Pod existiert (läuft oder gestoppt mit behaltener Festplatte)."
+            "value": "Modelle, die ein anderer Mac mit demselben RunPod-Key eingerichtet hat, jede Minute neu geprüft. Übernehmen holt eines auf diesen Mac: Ab dann startet, stoppt und berechnet es dieser Mac, und der andere gibt es ab. Aufgeführt sind nur Modelle, deren Pod existiert (läuft oder gestoppt mit behaltener Festplatte)."
           }
         }
       }
@@ -2895,6 +2905,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kein Modell"
+          }
+        }
+      }
+    },
+    "No models from other Macs right now. Checked at %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Derzeit keine Modelle von anderen Macs. Geprüft um %@."
           }
         }
       }
@@ -3345,6 +3365,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Podlight"
+          }
+        }
+      }
+    },
+    "Podlight %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight %@"
           }
         }
       }
@@ -5389,6 +5419,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Variablen"
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
           }
         }
       }

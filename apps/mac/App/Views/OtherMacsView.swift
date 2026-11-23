@@ -8,6 +8,14 @@ struct OtherMacsSection: View {
     var body: some View {
         Section {
             ForEach(model.otherMacsPods) { pod in OtherMacPodRow(pod: pod) }
+            if let error = model.otherMacsError {
+                Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+            } else if model.otherMacsPods.isEmpty {
+                Text(model.otherMacsCheckedAt == nil
+                     ? String(localized: "Looking in your RunPod account…")
+                     : String(localized: "No models from other Macs right now. Checked at \(Format.time(model.otherMacsCheckedAt!))."))
+                    .foregroundStyle(.secondary)
+            }
         } header: {
             HStack {
                 Text("From other Macs")
@@ -18,7 +26,7 @@ struct OtherMacsSection: View {
                     .accessibilityLabel(Text("Refresh"))
             }
         } footer: {
-            Text("Models another Mac set up with the same RunPod key. Taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Only models whose pod exists (running, or stopped with its disk kept) are listed.")
+            Text("Models another Mac set up with the same RunPod key, checked every minute. Taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Only models whose pod exists (running, or stopped with its disk kept) are listed.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

@@ -70,6 +70,19 @@ public struct PodState: Codable, Equatable, Sendable {
     public enum Status: String, Codable, Sendable {
         case running = "RUNNING", starting = "STARTING", provisioning = "PROVISIONING"
         case exited = "EXITED", error = "ERROR", terminated = "TERMINATED"
+
+        /// RunPod has more states than Podlight acts on (e.g. CREATED, RESTARTING, PAUSED, DEAD).
+        /// An unknown one must not make a whole pod list unreadable: it is read as the nearest
+        /// known state.
+        public init(from decoder: Decoder) throws {
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            if let known = Status(rawValue: raw.uppercased()) { self = known; return }
+            switch raw.uppercased() {
+            case "PAUSED", "DEAD", "STOPPED": self = .exited
+            case "FAILED": self = .error
+            default: self = .provisioning
+            }
+        }
     }
 
     public var status: Status?
