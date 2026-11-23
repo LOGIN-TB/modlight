@@ -12,10 +12,12 @@ struct OverviewView: View {
     var body: some View {
         Form {
             nowSection
+            // Models waiting to be taken over go near the top, where they are seen.
+            if model.hasRunpodKey && !model.otherMacsPods.isEmpty { OtherMacsSection() }
             if !steps.allSatisfy(\.done) { nextSteps }
             spendingSection
             modelsSection
-            if !model.otherMacsPods.isEmpty { OtherMacsSection() }
+            if model.hasRunpodKey && model.otherMacsPods.isEmpty { OtherMacsSection() }
             ForEach(model.servers) { server in ServerOverviewSection(server: server) }
             connectSection
         }

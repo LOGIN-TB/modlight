@@ -54,6 +54,22 @@ struct PodOwnerTests {
     }
 }
 
+@Suite("Reading the pod list")
+struct PodListReadingTests {
+    @Test func anOddPodOrAnUnknownStatusDoesNotHideTheOthers() throws {
+        let json = """
+        {"pods":[\(TakeOverFixture.podJSON(id: "p1", name: "podlight-coder@mac-a-1234", status: "RUNNING")),
+                 {"id":"odd","name":"someone-else","status":"RUNNING","gpu":"not an object"},
+                 \(TakeOverFixture.podJSON(id: "p2", name: "podlight-other@mac-a-1234", status: "CREATED")),
+                 \(TakeOverFixture.podJSON(id: "p3", name: "podlight-third@mac-a-1234", status: "PAUSED"))],
+         "pagination":{"hasNextPage":false,"nextCursor":null}}
+        """
+        let list = try RunpodClient.decoder.decode(RunpodPodList.self, from: Data(json.utf8))
+        #expect(list.pods.map(\.id) == ["p1", "p2", "p3"], "the odd pod is skipped, not the list")
+        #expect(list.pods.map(\.status) == [.running, .provisioning, .exited])
+    }
+}
+
 enum TakeOverFixture {
     static func podJSON(id: String, name: String, status: String, key: String = "pod-key-a") -> String {
         """

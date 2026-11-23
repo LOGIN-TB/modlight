@@ -67,7 +67,14 @@ private struct Sidebar: View {
             }
         }
         .listStyle(.sidebar)
-        .safeAreaBar(edge: .bottom) { GatewayStatusBadge().padding(.horizontal, 12).padding(.vertical, 8) }
+        .safeAreaBar(edge: .bottom) {
+            VStack(alignment: .leading, spacing: 4) {
+                GatewayStatusBadge()
+                Text("Podlight \(Format.appVersion)").font(.caption2).foregroundStyle(.tertiary)
+                    .textSelection(.enabled)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+        }
     }
 }
 

@@ -7,6 +7,15 @@ enum Format {
         usd.formatted(.currency(code: "USD").precision(.fractionLength(usd < 10 ? 2 : 0)))
     }
 
+    /// This build's version, e.g. "0.6.1 (10)". Read from the bundle, which takes it from
+    /// MARKETING_VERSION and CURRENT_PROJECT_VERSION in project.yml, so every release shows its own.
+    static var appVersion: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        guard let build = info?["CFBundleVersion"] as? String, !build.isEmpty else { return version }
+        return "\(version) (\(build))"
+    }
+
     static func perHour(_ usd: Double) -> String {
         String(localized: "\(money(usd))/h")
     }

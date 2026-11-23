@@ -615,7 +615,6 @@ DE = {
     "Look for other Macs' models again": 'Erneut nach Modellen anderer Macs suchen',
     'Manage this model on this Mac again': 'Dieses Modell wieder auf diesem Mac verwalten',
     'Managed by %@': 'Verwaltet von %@',
-    'Models another Mac set up with the same RunPod key. Taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Only models whose pod exists (running, or stopped with its disk kept) are listed.': 'Modelle, die ein anderer Mac mit demselben RunPod-Key eingerichtet hat. Übernehmen holt eines auf diesen Mac: Ab dann startet, stoppt und berechnet es dieser Mac, und der andere gibt es ab. Aufgeführt sind nur Modelle, deren Pod existiert (läuft oder gestoppt mit behaltener Festplatte).',
     'Refresh': 'Aktualisieren',
     'Take Back': 'Zurückholen',
     'Take Over': 'Übernehmen',
@@ -631,4 +630,9 @@ DE = {
     'Taken back from another Mac.': 'Von einem anderen Mac zurückgeholt.',
     'Taken over from another Mac.': 'Von einem anderen Mac übernommen.',
     'That Mac manages it now. Take it back in Podlight to use it here.': 'Der andere Mac verwaltet es jetzt. Hol es in Podlight zurück, um es hier zu nutzen.',
+    'Looking in your RunPod account…': 'Suche in deinem RunPod-Konto …',
+    'Models another Mac set up with the same RunPod key, checked every minute. Taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Only models whose pod exists (running, or stopped with its disk kept) are listed.': 'Modelle, die ein anderer Mac mit demselben RunPod-Key eingerichtet hat, jede Minute neu geprüft. Übernehmen holt eines auf diesen Mac: Ab dann startet, stoppt und berechnet es dieser Mac, und der andere gibt es ab. Aufgeführt sind nur Modelle, deren Pod existiert (läuft oder gestoppt mit behaltener Festplatte).',
+    'No models from other Macs right now. Checked at %@.': 'Derzeit keine Modelle von anderen Macs. Geprüft um %@.',
+    'Podlight %@': 'Podlight %@',
+    'Version': 'Version',
 }

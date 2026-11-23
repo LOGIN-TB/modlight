@@ -44,6 +44,22 @@ public struct RunpodPodList: Codable, Sendable {
     }
     public var pods: [RunpodPod]
     public var pagination: Pagination?
+
+    private enum CodingKeys: String, CodingKey { case pods, pagination }
+    private struct Skipped: Decodable {}
+
+    /// A pod that does not decode (a shape Podlight does not know, someone else's odd pod) is
+    /// left out instead of making the whole list unreadable.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        pagination = try c.decodeIfPresent(Pagination.self, forKey: .pagination)
+        var list = try c.nestedUnkeyedContainer(forKey: .pods)
+        var pods: [RunpodPod] = []
+        while !list.isAtEnd {
+            if let pod = try? list.decode(RunpodPod.self) { pods.append(pod) } else { _ = try? list.decode(Skipped.self) }
+        }
+        self.pods = pods
+    }
 }
 
 /// What Podlight asks RunPod to create. Only the fields Podlight sets.

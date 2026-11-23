@@ -108,6 +108,8 @@ struct SettingsContent: View {
 
             Section("General") {
                 Toggle("Open Podlight at login", isOn: Binding(get: { model.launchesAtLogin }, set: { model.launchesAtLogin = $0 }))
+                LabeledContent("Version", value: Format.appVersion)
+                    .textSelection(.enabled)
             }
         }
         .formStyle(.grouped)
