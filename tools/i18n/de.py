@@ -645,4 +645,8 @@ DE = {
     "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept. Start again in a few minutes, or start on a new card (the model is downloaded again).": 'Die Karte auf dem Rechner dieses Pods ist gerade belegt. Pod und Festplatte mit dem Modell bleiben erhalten. Starte in ein paar Minuten erneut oder auf einer neuen Karte (dann wird das Modell neu geladen).',
     "The card on the pod's machine was taken, so it could not resume. Its disk with the model is kept.": 'Die Karte auf dem Rechner des Pods war belegt, deshalb ließ er sich nicht fortsetzen. Seine Festplatte mit dem Modell bleibt erhalten.',
     'The old pod and its disk are deleted. A new pod downloads the model again, which takes 10–25 minutes.': 'Der alte Pod und seine Festplatte werden gelöscht. Ein neuer Pod lädt das Modell neu, das dauert 10–25 Minuten.',
+    'Engine log of %@': 'Engine-Log von %@',
+    'Show Engine Log…': 'Engine-Log anzeigen …',
+    'The RunPod machine could not use its card (a CUDA error before the model was loaded). That is the machine, not the model: start on a new card, or choose another card type under Edit.': 'Der RunPod-Rechner konnte seine Karte nicht ansprechen (CUDA-Fehler, bevor das Modell geladen wurde). Das liegt am Rechner, nicht am Modell: Starte auf einer neuen Karte oder wähle unter „Bearbeiten“ eine andere Kartenart.',
+    'The last lines the engine wrote before it stopped. The cause is usually near an error line, often above the final traceback.': 'Die letzten Zeilen, die die Engine vor dem Abbruch geschrieben hat. Die Ursache steht meist bei einer Fehlerzeile, oft oberhalb des letzten Tracebacks.',
 }

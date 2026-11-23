@@ -233,6 +233,7 @@ public actor PodManager {
         try await updateRun(id) {
             $0.podStatus = pod.status
             $0.phase = .loading
+            $0.engineLog = nil
             $0.startedAt = t
             $0.accountedUntil = t
             $0.engineReady = false
@@ -741,10 +742,14 @@ public actor PodManager {
             if let telemetry = watchdog?.telemetry { record(telemetry, for: id) }
             // The engine died: say why, then end the pod now instead of after the watchdog's grace.
             if watchdog?.engineAlive == false {
-                let message = await engineFailure(podId: podId, modelId: id)
+                let lines = await engineLog(podId: podId, modelId: id)
+                let message = lines.map(Self.summarizeEngineLog)
                     ?? "exit code \(watchdog?.engineExitCode.map(String.init) ?? "?")"
-                try? await stop(id, reason: "engine-exited")
-                try? await updateRun(id) { $0.phase = .failed; $0.lastReason = "engine-exited"; $0.lastMessage = message }
+                let reason = Self.engineFailureReason(lines ?? [])
+                try? await stop(id, reason: reason)
+                try? await updateRun(id) {
+                    $0.phase = .failed; $0.lastReason = reason; $0.lastMessage = message; $0.engineLog = lines
+                }
                 return
             }
             if !ready { ready = await engineAnswers(podId: podId, modelId: id) }
@@ -798,7 +803,8 @@ public actor PodManager {
     private func deleteLongStopped() async {
         let state = await store.current()
         let cutoff = now().addingTimeInterval(-TimeInterval(state.settings.deleteStoppedAfterDays) * 86_400)
-        for (id, run) in state.runs where run.podId != nil && run.phase == .stopped && run.managedBy == nil {
+        // A failed start keeps its stopped pod too (with a kept disk); it counts like a stopped one.
+        for (id, run) in state.runs where run.podId != nil && (run.phase == .stopped || run.phase == .failed) && run.managedBy == nil {
             // A stopped pod with no date at all (from an older state) starts its clock now instead
             // of counting as ancient and being deleted at once.
             guard let lastUse = [run.stoppedAt, run.lastRequestAt, run.startedAt].compactMap({ $0 }).max() else {
@@ -878,7 +884,8 @@ public actor PodManager {
 
     /// The last lines vLLM wrote, kept by the watchdog because RunPod drops a stopped pod's output.
     /// Reduced to the lines that say what went wrong.
-    private func engineFailure(podId: String, modelId: UUID) async -> String? {
+    /// The engine's last lines, kept by the watchdog because RunPod drops a stopped pod's output.
+    private func engineLog(podId: String, modelId: UUID) async -> [String]? {
         guard let key = try? podKey(for: modelId) else { return nil }
         var request = URLRequest(url: podURL(podId, PodPlan.watchdogPort).appendingPathComponent("log"))
         request.timeoutInterval = 10
@@ -886,11 +893,27 @@ public actor PodManager {
         guard let (data, response) = try? await transport.send(request), response.statusCode == 200,
               let lines = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["lines"] as? [String]
         else { return nil }
-        return Self.summarizeEngineLog(lines)
+        return lines
     }
 
-    /// The error lines of an engine log, or its last lines when none says "error".
+    /// `gpu-unusable` when the pod's machine could not use its card at all (CUDA failed before the
+    /// model was touched; seen on an RTX PRO 6000 host where the same model ran on a B200), else
+    /// `engine-exited`. The first is the machine's fault, so the remedy is another machine.
+    static func engineFailureReason(_ lines: [String]) -> String {
+        let pattern = #"(CUDA unknown error|no CUDA-capable device|CUDA driver version is insufficient|NVIDIA driver on your system is too old|Failed to get device capability|cudaErrorNoDevice|CUDA error: initialization error)"#
+        return lines.contains { $0.range(of: pattern, options: .regularExpression) != nil } ? "gpu-unusable" : "engine-exited"
+    }
+
+    /// The error lines of an engine log, or its last lines when none says "error". vLLM runs the
+    /// engine in a process of its own; when it fails, the API server's last words are only "See
+    /// root cause above". Then that process's lines are left out, so the engine's own error shows.
     static func summarizeEngineLog(_ lines: [String]) -> String {
+        var lines = lines
+        if let pointer = lines.last(where: { $0.contains("root cause above") }),
+           let prefix = pointer.range(of: #"^\([^)]*\)"#, options: .regularExpression).map({ String(pointer[$0]) }) {
+            let others = lines.filter { !$0.hasPrefix(prefix) }
+            if !others.isEmpty { lines = others }
+        }
         let errors = lines.filter { $0.range(of: #"(Error|Exception|error:|CUDA|out of memory|Traceback|failed to|unable to allocate|error loading model)"#, options: .regularExpression) != nil }
         let picked = (errors.isEmpty ? lines : errors).suffix(3)
         return picked.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: "\n")

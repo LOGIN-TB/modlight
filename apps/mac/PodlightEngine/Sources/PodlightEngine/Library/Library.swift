@@ -187,6 +187,8 @@ public struct ModelRun: Codable, Sendable, Equatable {
     public var managedBy: String?
     /// The model's record in the RunPod account (a private template), so other Macs see it.
     public var recordId: String?
+    /// The engine's last log lines when it failed, for "Show Engine Log".
+    public var engineLog: [String]?
 
     public init() {}
 }
