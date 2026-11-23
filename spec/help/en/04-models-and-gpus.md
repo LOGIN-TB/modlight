@@ -35,3 +35,16 @@ Podlight reads how much memory one token needs from the model's configuration. S
 ## Several cards
 
 If a long context does not fit on one card, Podlight suggests 2, 4 or 8 cards in one pod, for example "2 × L40S". vLLM then spreads the model across all of them, which also makes it faster. llama.cpp spreads the model's layers across the cards: more room, but no extra speed for a single request. The price covers all cards together. Getting several identical cards free at once is harder at RunPod; if needed, Podlight tries the next suggestions.
+
+## Usage
+
+While a model runs, its page shows what the pod is doing under "Usage":
+- **Rings** for GPU load, graphics memory in use (VRAM), CPU, memory and disk, one set per card when there are several.
+- **The engine's figures:** running and waiting requests, tokens per second, and how full the context cache is.
+- **A chart** of the last 30 minutes.
+
+The model list, the overview and the menu bar show the GPU load beside every running model.
+
+The pod measures this itself, about every 10 seconds, because RunPod's API does not report graphics memory in use. vLLM taking almost all graphics memory is normal: it reserves it for the context cache when it starts. GPU load and tokens per second show whether the model is working.
+
+Pods created by an earlier Podlight version report no usage, also when they are resumed with "Keep model on disk". The figures appear once the model starts on a new pod.

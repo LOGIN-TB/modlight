@@ -19,6 +19,9 @@ struct MenuBarView: View {
                         VStack(alignment: .leading, spacing: 1) {
                             Text(item.name).font(.body.weight(.medium))
                             Text(line(source, run)).font(.caption).foregroundStyle(.secondary)
+                            if run.phase == .ready, let gpu = UsageText.gpu(model.telemetry(item.id)) {
+                                Text(gpu).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                            }
                         }
                         Spacer()
                         Button("Stop") { Task { await model.stop(item) } }

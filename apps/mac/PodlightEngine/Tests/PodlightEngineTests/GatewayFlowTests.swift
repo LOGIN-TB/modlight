@@ -30,6 +30,8 @@ actor FakeRunPod: HTTPTransport {
             if url.path.hasSuffix("/heartbeat") {
                 let body = try JSONSerialization.jsonObject(with: request.httpBody ?? Data("{}".utf8)) as? [String: Any]
                 heartbeats.append("\(body?["deadline"] ?? "null")")
+                // What a 0.5 watchdog sends back: a sample per heartbeat, unknown values as null.
+                return reply(200, #"{"engineAlive":true,"telemetry":{"time":\#(1_800_000_000 + heartbeats.count),"cpuPercent":12.5,"gpus":[{"index":0,"name":"NVIDIA L40S","utilPercent":87,"memoryUsedBytes":45000000000,"memoryTotalBytes":48000000000,"temperatureC":55,"powerW":null}],"engine":{"running":1,"kvCachePercent":41.5}}}"#)
             }
             return reply(200, "{}")
         }
@@ -171,6 +173,11 @@ struct GatewayFlowTests {
         #expect(run.podId == "fakepod")
         #expect(run.lastRequestAt != nil)
         #expect(await fake.heartbeats.isEmpty == false)
+        let sample = await manager.latestTelemetry()[m.id]
+        #expect(sample?.gpus?.first?.utilPercent == 87)
+        #expect(sample?.gpus?.first?.powerW == nil)
+        #expect(sample?.engine?.kvCachePercent == 41.5)
+        #expect(await manager.telemetry(for: m.id).isEmpty == false)
 
         // "Läuft bis" passes: the next tick stops the pod, and says why.
         try await manager.extend(m.id, until: Date().addingTimeInterval(-1))
@@ -179,6 +186,7 @@ struct GatewayFlowTests {
         #expect(await fake.actions == ["stop"])
         #expect(run.phase == .stopped)
         #expect(run.lastReason == "run-until")
+        #expect(await manager.latestTelemetry()[m.id] == nil, "telemetry ends with the pod")
         #expect(await manager.state().spendByDay.values.reduce(0, +) >= 0)
 
         // At the spending limit a request cannot wake it again.

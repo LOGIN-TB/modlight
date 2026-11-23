@@ -638,6 +638,166 @@
           "cloud"
         ]
       },
+      "PodTelemetry": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number"
+          },
+          "cpuPercent": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "memoryUsedBytes": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "memoryTotalBytes": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "diskUsedBytes": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "diskTotalBytes": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "volumeUsedBytes": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "volumeTotalBytes": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "gpus": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "index": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "utilPercent": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "memoryUsedBytes": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "memoryTotalBytes": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "temperatureC": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "powerW": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "powerLimitW": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "engine": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "running": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "waiting": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "kvCachePercent": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "promptTokensPerSecond": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "generationTokensPerSecond": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "time"
+        ],
+        "description": "One sample of what a pod is doing, measured by its watchdog. `time` is Unix seconds; a missing source leaves out its fields."
+      },
       "Settings": {
         "allOf": [
           {
@@ -863,6 +1023,13 @@
               "string",
               "null"
             ]
+          },
+          "telemetry": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PodTelemetry"
+            },
+            "description": "The latest sample per model whose pod runs, keyed by model id."
           }
         }
       },
@@ -2315,6 +2482,60 @@
               "application/json": {
                 "schema": {
                   "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/models/{id}/telemetry": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "What the pod has been doing in the last 30 minutes, oldest first",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Samples",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "samples": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PodTelemetry"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

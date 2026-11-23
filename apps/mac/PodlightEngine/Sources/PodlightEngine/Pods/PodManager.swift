@@ -37,6 +37,8 @@ public actor PodManager {
     private let podURL: @Sendable (_ podId: String, _ port: Int) -> URL
     private var inFlight: [UUID: Int] = [:]
     private var starts: [UUID: Task<Void, Error>] = [:]
+    /// Telemetry per model while its pod runs, the last 30 minutes. In memory only.
+    private var samples: [UUID: [PodTelemetry]] = [:]
 
     public init(store: StateStore, keychain: KeychainStore = KeychainStore(),
                 transport: HTTPTransport = URLSession.shared, now: @escaping @Sendable () -> Date = Date.init,
@@ -67,6 +69,7 @@ public actor PodManager {
 
     /// Removes a model, deleting its pod and disk at RunPod first.
     public func remove(_ id: UUID) async throws {
+        samples[id] = nil
         let run = await store.current().run(id)
         if let podId = run.podId, let client = try? client() {
             do { try await client.deletePod(id: podId) } catch let e as RunpodError where e.isNotFound {}
@@ -219,6 +222,7 @@ public actor PodManager {
     }
 
     private func markStopped(_ id: UUID, status: PodState.Status?, reason: String) async throws {
+        samples[id] = nil
         let t = now()
         try await updateRun(id) {
             $0.storageAccountedUntil = t
@@ -374,6 +378,7 @@ public actor PodManager {
         if pod.status == .running {
             let watchdog = await heartbeat(podId: podId, modelId: id, runUntil: run.runUntil)
             if watchdog != nil { heartbeatAt = now() }
+            if let telemetry = watchdog?.telemetry { record(telemetry, for: id) }
             // The engine died: say why, then end the pod now instead of after the watchdog's grace.
             if watchdog?.engineAlive == false {
                 let message = await engineFailure(podId: podId, modelId: id)
@@ -385,6 +390,7 @@ public actor PodManager {
             if !ready { ready = await engineAnswers(podId: podId, modelId: id) }
         } else {
             ready = false
+            samples[id] = nil
         }
 
         let wasRunning = run.podStatus == .running
@@ -464,7 +470,26 @@ public actor PodManager {
     struct WatchdogStatus: Sendable {
         var engineAlive: Bool?
         var engineExitCode: Int?
+        var telemetry: PodTelemetry?
     }
+
+    // MARK: Telemetry
+
+    private func record(_ sample: PodTelemetry, for id: UUID) {
+        var list = samples[id] ?? []
+        if list.last?.time == sample.time { return }
+        list.append(sample)
+        if list.count > PodTelemetry.historyLimit { list.removeFirst(list.count - PodTelemetry.historyLimit) }
+        samples[id] = list
+    }
+
+    /// The latest sample per model whose pod runs.
+    public func latestTelemetry() -> [UUID: PodTelemetry] {
+        samples.compactMapValues(\.last)
+    }
+
+    /// The last 30 minutes of one model's pod, oldest first.
+    public func telemetry(for id: UUID) -> [PodTelemetry] { samples[id] ?? [] }
 
     private func heartbeat(podId: String, modelId: UUID, runUntil: Date?) async -> WatchdogStatus? {
         guard let key = try? podKey(for: modelId) else { return nil }
@@ -477,7 +502,12 @@ public actor PodManager {
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["deadline": deadline])
         guard let (data, response) = try? await transport.send(request), response.statusCode == 200 else { return nil }
         let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
-        return WatchdogStatus(engineAlive: json?["engineAlive"] as? Bool, engineExitCode: json?["engineExitCode"] as? Int)
+        // A watchdog from before 0.5 sends no telemetry; a sample that does not decode is left out.
+        let telemetry = (json?["telemetry"] as? [String: Any])
+            .flatMap { try? JSONSerialization.data(withJSONObject: $0) }
+            .flatMap { try? JSONDecoder().decode(PodTelemetry.self, from: $0) }
+        return WatchdogStatus(engineAlive: json?["engineAlive"] as? Bool, engineExitCode: json?["engineExitCode"] as? Int,
+                              telemetry: telemetry)
     }
 
     /// The last lines vLLM wrote, kept by the watchdog because RunPod drops a stopped pod's output.

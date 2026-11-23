@@ -1,0 +1,140 @@
+{
+  "description": "Pod telemetry (Podlight 0.5, 2026-11-22): what the watchdog in every pod reads from nvidia-smi and from the engine's /metrics, and sends back with each heartbeat. RunPod's API reports no GPU memory in use and no disk, so the pod measures itself. Parsed in spec/pod/watchdog.py only (status: pod), tested by tools/test_watchdog.py; the app and the server only store and show the result.",
+  "cases": [
+    {
+      "id": "nvidiaSmi/one-card",
+      "status": "pod",
+      "title": "One A40 as nvidia-smi reports it: MiB become bytes, decimals stay",
+      "function": "nvidiaSmi",
+      "input": {
+        "csv": "0, NVIDIA A40, 87, 43210, 46068, 55, 250.31, 300.00\n"
+      },
+      "expected": [
+        {
+          "index": 0,
+          "name": "NVIDIA A40",
+          "utilPercent": 87,
+          "memoryUsedBytes": 45308968960,
+          "memoryTotalBytes": 48305799168,
+          "temperatureC": 55,
+          "powerW": 250.31,
+          "powerLimitW": 300
+        }
+      ]
+    },
+    {
+      "id": "nvidiaSmi/not-supported",
+      "status": "pod",
+      "title": "Cards that cannot report a value say [N/A] or [Not Supported]; that value is unknown, the card is still listed",
+      "function": "nvidiaSmi",
+      "input": {
+        "csv": "0, NVIDIA RTX PRO 4500, 12, 30000, 32607, 41, [N/A], [Not Supported]\n1, NVIDIA RTX PRO 4500, [N/A], 0, 32607, 30, 20.5, 300.00\n"
+      },
+      "expected": [
+        {
+          "index": 0,
+          "name": "NVIDIA RTX PRO 4500",
+          "utilPercent": 12,
+          "memoryUsedBytes": 31457280000,
+          "memoryTotalBytes": 34190917632,
+          "temperatureC": 41,
+          "powerW": null,
+          "powerLimitW": null
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA RTX PRO 4500",
+          "utilPercent": null,
+          "memoryUsedBytes": 0,
+          "memoryTotalBytes": 34190917632,
+          "temperatureC": 30,
+          "powerW": 20.5,
+          "powerLimitW": 300
+        }
+      ]
+    },
+    {
+      "id": "nvidiaSmi/garbage",
+      "status": "pod",
+      "title": "An error message instead of CSV gives no cards rather than a broken heartbeat",
+      "function": "nvidiaSmi",
+      "input": {
+        "csv": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver.\n"
+      },
+      "expected": []
+    },
+    {
+      "id": "engineTelemetry/vllm",
+      "status": "pod",
+      "title": "vLLM: requests, KV cache (a fraction, shown as percent) and token rates over the seconds between two samples",
+      "function": "engineTelemetry",
+      "input": {
+        "metrics": "vllm:num_requests_running{engine=\"0\",model_name=\"m\"} 2.0\nvllm:num_requests_waiting{engine=\"0\",model_name=\"m\"} 1.0\nvllm:kv_cache_usage_perc{engine=\"0\",model_name=\"m\"} 0.415\nvllm:prompt_tokens_total{engine=\"0\",model_name=\"m\"} 12000.0\nvllm:generation_tokens_total{engine=\"0\",model_name=\"m\"} 1500.0\nvllm:generation_tokens_created{engine=\"0\",model_name=\"m\"} 1.7e9\n",
+        "previousMetrics": "vllm:prompt_tokens_total{engine=\"0\",model_name=\"m\"} 2000.0\nvllm:generation_tokens_total{engine=\"0\",model_name=\"m\"} 1000.0\n",
+        "seconds": 10
+      },
+      "expected": {
+        "running": 2,
+        "waiting": 1,
+        "kvCachePercent": 41.5,
+        "promptTokensPerSecond": 1000.0,
+        "generationTokensPerSecond": 50.0
+      }
+    },
+    {
+      "id": "engineTelemetry/first-sample",
+      "status": "pod",
+      "title": "The first sample has nothing to compare with, so it has no rates yet",
+      "function": "engineTelemetry",
+      "input": {
+        "metrics": "vllm:num_requests_running{engine=\"0\",model_name=\"m\"} 2.0\nvllm:num_requests_waiting{engine=\"0\",model_name=\"m\"} 1.0\nvllm:kv_cache_usage_perc{engine=\"0\",model_name=\"m\"} 0.415\nvllm:prompt_tokens_total{engine=\"0\",model_name=\"m\"} 12000.0\nvllm:generation_tokens_total{engine=\"0\",model_name=\"m\"} 1500.0\nvllm:generation_tokens_created{engine=\"0\",model_name=\"m\"} 1.7e9\n"
+      },
+      "expected": {
+        "running": 2,
+        "waiting": 1,
+        "kvCachePercent": 41.5
+      }
+    },
+    {
+      "id": "engineTelemetry/engine-restarted",
+      "status": "pod",
+      "title": "A counter that went down means the engine restarted: no rate rather than a negative one",
+      "function": "engineTelemetry",
+      "input": {
+        "metrics": "vllm:prompt_tokens_total{engine=\"0\",model_name=\"m\"} 2000.0\nvllm:generation_tokens_total{engine=\"0\",model_name=\"m\"} 1000.0\n",
+        "previousMetrics": "vllm:num_requests_running{engine=\"0\",model_name=\"m\"} 2.0\nvllm:num_requests_waiting{engine=\"0\",model_name=\"m\"} 1.0\nvllm:kv_cache_usage_perc{engine=\"0\",model_name=\"m\"} 0.415\nvllm:prompt_tokens_total{engine=\"0\",model_name=\"m\"} 12000.0\nvllm:generation_tokens_total{engine=\"0\",model_name=\"m\"} 1500.0\nvllm:generation_tokens_created{engine=\"0\",model_name=\"m\"} 1.7e9\n",
+        "seconds": 10
+      },
+      "expected": {}
+    },
+    {
+      "id": "engineTelemetry/llamacpp",
+      "status": "pod",
+      "title": "llama.cpp with --metrics: processing and deferred requests, its own counter names",
+      "function": "engineTelemetry",
+      "input": {
+        "metrics": "# HELP llamacpp:prompt_tokens_total Number of prompt tokens processed.\n# TYPE llamacpp:prompt_tokens_total counter\nllamacpp:prompt_tokens_total 900\nllamacpp:tokens_predicted_total 400\nllamacpp:requests_processing 1\nllamacpp:requests_deferred 0\n",
+        "previousMetrics": "llamacpp:prompt_tokens_total 400\nllamacpp:tokens_predicted_total 100\n",
+        "seconds": 5
+      },
+      "expected": {
+        "running": 1,
+        "waiting": 0,
+        "promptTokensPerSecond": 100.0,
+        "generationTokensPerSecond": 60.0
+      }
+    },
+    {
+      "id": "engineTelemetry/old-vllm-cache-name",
+      "status": "pod",
+      "title": "Older vLLM called the KV cache gauge gpu_cache_usage_perc",
+      "function": "engineTelemetry",
+      "input": {
+        "metrics": "vllm:gpu_cache_usage_perc{model_name=\"m\"} 0.9\n"
+      },
+      "expected": {
+        "kvCachePercent": 90.0
+      }
+    }
+  ]
+}

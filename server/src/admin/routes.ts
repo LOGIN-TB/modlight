@@ -101,6 +101,7 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       spend: manager.spend(),
       costPerHour: manager.costPerHour(),
       lastClientRequestAt: store.meta('lastClientRequestAt'),
+      telemetry: manager.latestTelemetry(),
     }))
 
     admin.get('/admin/settings', async () => publicSettings())
@@ -169,6 +170,12 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       const model = store.model(request.params.id)
       if (!model) return problem(reply, 404, 'No such model.', 'model_not_found')
       return { lines: (await manager.engineLog(model.id)) ?? [] }
+    })
+
+    admin.get<{ Params: { id: string } }>('/admin/models/:id/telemetry', async (request, reply) => {
+      const model = store.model(request.params.id)
+      if (!model) return problem(reply, 404, 'No such model.', 'model_not_found')
+      return { samples: manager.telemetry(model.id) }
     })
 
     admin.get('/admin/client-tokens', async () => tokens.list('client'))

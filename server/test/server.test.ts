@@ -76,6 +76,8 @@ class FakePod {
   proxyNotReadyFor = 0
   /** Set when a slow stream was cut off by the other side. */
   slowStreamAborted = false
+  /** Telemetry the watchdog reports; each heartbeat is a new sample. */
+  telemetryTime = 1_800_000_000
 
   engine = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     const chunks: Buffer[] = []
@@ -114,7 +116,9 @@ class FakePod {
     if (req.url === '/heartbeat') this.heartbeats.push(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}'))
     res.writeHead(200, { 'content-type': 'application/json' })
     if (req.url === '/log') return void res.end(JSON.stringify({ lines: ['loading', 'torch.OutOfMemoryError: CUDA out of memory'] }))
-    res.end(JSON.stringify({ engineAlive: this.engineAlive, engineExitCode: this.engineAlive ? null : 1 }))
+    const telemetry = { time: this.telemetryTime++, cpuPercent: 12.5, gpus: [{ index: 0, name: 'NVIDIA A40', utilPercent: 87, memoryUsedBytes: 4.5e10, memoryTotalBytes: 4.8e10, temperatureC: 55, powerW: 250.3, powerLimitW: null }],
+      engine: { running: 2, waiting: 0, kvCachePercent: 41.5, generationTokensPerSecond: 58 } }
+    res.end(JSON.stringify({ engineAlive: this.engineAlive, engineExitCode: this.engineAlive ? null : 1, telemetry }))
   }
 }
 
@@ -286,6 +290,24 @@ describe('Podlight server', () => {
     assert.equal(response.statusCode, 200)
     assert.equal(response.json().choices[0].message.content, 'hello from the pod')
     assert.equal(JSON.stringify(pod.engineRequests.at(-1)!.body), JSON.stringify(JSON.parse(raw)))
+  })
+
+  test('telemetry from each heartbeat reaches the state and the history, and ends with the pod', async () => {
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
+    await s.manager.tick()
+    await s.manager.tick()
+    const state = (await admin('GET', '/admin/state')).json()
+    assert.equal(state.telemetry[MODEL_ID].gpus[0].utilPercent, 87)
+    assert.equal(state.telemetry[MODEL_ID].gpus[0].powerLimitW, null)
+    assert.equal(state.telemetry[MODEL_ID].engine.generationTokensPerSecond, 58)
+    const history = (await admin('GET', `/admin/models/${MODEL_ID}/telemetry`)).json()
+    assert.equal(history.samples.length, 2)
+    assert.ok(history.samples[0].time < history.samples[1].time)
+    assert.equal((await admin('GET', `/admin/models/${OTHER_ID}/telemetry`)).statusCode, 404)
+
+    await admin('POST', `/admin/models/${MODEL_ID}/stop`)
+    assert.deepEqual((await admin('GET', `/admin/models/${MODEL_ID}/telemetry`)).json().samples, [])
+    assert.equal((await admin('GET', '/admin/state')).json().telemetry[MODEL_ID], undefined)
   })
 
   test('a manual start with an end feeds the watchdog the deadline and the end stops and deletes the pod', async () => {

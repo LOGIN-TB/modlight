@@ -11,7 +11,7 @@
 # so the next start is fast, and Podlight deletes unused pods itself after three days.
 #
 # Standard library only: it must run in any image that has python3.
-import json, os, socketserver, sys, threading, time, urllib.request, urllib.error
+import json, os, socketserver, subprocess, sys, threading, time, urllib.request, urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 POD_ID = os.environ.get("RUNPOD_POD_ID", "")
@@ -28,6 +28,13 @@ ENGINE_EXIT_FILE = os.environ.get("PODLIGHT_ENGINE_EXIT_FILE", "/tmp/podlight-en
 ENGINE_LOG = os.environ.get("PODLIGHT_ENGINE_LOG", "/tmp/podlight-engine.log")
 # After the engine exits, wait this long before stopping, so Podlight can read the reason.
 ENGINE_EXIT_GRACE = float(os.environ.get("PODLIGHT_ENGINE_EXIT_GRACE", "120"))
+# Telemetry: how often it is measured, and where. The paths are overridable for tests only.
+TELEMETRY_SECONDS = float(os.environ.get("PODLIGHT_TELEMETRY_SECONDS", "5"))
+NVIDIA_SMI = os.environ.get("PODLIGHT_NVIDIA_SMI", "nvidia-smi")
+CGROUP = os.environ.get("PODLIGHT_CGROUP", "/sys/fs/cgroup")
+PROC = os.environ.get("PODLIGHT_PROC", "/proc")
+ENGINE_URL = os.environ.get("PODLIGHT_ENGINE_URL", "http://127.0.0.1:8000")
+DISKS = {"disk": os.environ.get("PODLIGHT_DISK_PATH", "/"), "volume": os.environ.get("PODLIGHT_VOLUME_PATH", "/workspace")}
 
 state = {
     "started": time.time(),
@@ -124,6 +131,247 @@ def check_loop():
         time.sleep(CHECK_SECONDS)
 
 
+# MARK: telemetry
+#
+# What the pod is doing, measured here because RunPod's API does not say how much GPU memory or
+# disk is in use. Sent back with every heartbeat. A source that is missing leaves out its fields;
+# nothing here may break a heartbeat.
+
+def _number(text):
+    try:
+        value = float(text.strip())
+    except (ValueError, AttributeError):
+        return None  # "[N/A]", "[Not Supported]"
+    return int(value) if value.is_integer() else value
+
+
+def parse_nvidia_smi(text):
+    """CSV from --query-gpu=index,name,utilization.gpu,memory.used,memory.total,temperature.gpu,
+    power.draw,power.limit --format=csv,noheader,nounits."""
+    gpus = []
+    for line in text.strip().splitlines():
+        cells = [c.strip() for c in line.split(",")]
+        if len(cells) < 8:
+            continue
+        index, name, util, used, total, temp, power, limit = cells[:8]
+        mib = lambda v: None if _number(v) is None else int(_number(v) * 1024 * 1024)
+        gpus.append({"index": _number(index), "name": name, "utilPercent": _number(util),
+                     "memoryUsedBytes": mib(used), "memoryTotalBytes": mib(total),
+                     "temperatureC": _number(temp), "powerW": _number(power), "powerLimitW": _number(limit)})
+    return gpus
+
+
+def parse_prometheus(text):
+    """Metric name -> values, one per label set. Comments are skipped."""
+    metrics = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "}" in line:
+            name, rest = line.split("{", 1)[0], line[line.rindex("}") + 1:]
+        else:
+            name, _, rest = line.partition(" ")
+        fields = rest.split()
+        value = _number(fields[0]) if fields else None
+        if name and value is not None and abs(value) != float("inf") and value == value:
+            metrics.setdefault(name, []).append(float(value))
+    return metrics
+
+
+# Engine metric names: vLLM first, then llama.cpp (needs --metrics). Older vLLM used gpu_cache.
+ENGINE_METRICS = {
+    "running": (["vllm:num_requests_running", "llamacpp:requests_processing"], sum),
+    "waiting": (["vllm:num_requests_waiting", "llamacpp:requests_deferred"], sum),
+    "kvCache": (["vllm:kv_cache_usage_perc", "vllm:gpu_cache_usage_perc", "llamacpp:kv_cache_usage_ratio"], max),
+    "promptTokens": (["vllm:prompt_tokens_total", "llamacpp:prompt_tokens_total"], sum),
+    "generationTokens": (["vllm:generation_tokens_total", "llamacpp:tokens_predicted_total"], sum),
+}
+
+
+def engine_values(metrics):
+    values = {}
+    for key, (names, combine) in ENGINE_METRICS.items():
+        for name in names:
+            if metrics.get(name):
+                values[key] = combine(metrics[name])
+                break
+    return values
+
+
+def engine_telemetry(values, previous, seconds):
+    """Requests, KV cache and token rates since the previous sample. A counter that went down
+    (the engine restarted) gives no rate."""
+    out = {}
+    for key in ("running", "waiting"):
+        if key in values:
+            out[key] = int(values[key])
+    if "kvCache" in values:
+        out["kvCachePercent"] = round(values["kvCache"] * 100, 1)
+    for key, field in (("promptTokens", "promptTokensPerSecond"), ("generationTokens", "generationTokensPerSecond")):
+        if previous and seconds and seconds > 0 and key in values and key in previous and values[key] >= previous[key]:
+            out[field] = round((values[key] - previous[key]) / seconds, 1)
+    return out
+
+
+def _read(path):
+    try:
+        with open(path) as f:
+            return f.read()
+    except OSError:
+        return None
+
+
+def cpu_seconds():
+    """CPU time the container has used, and how many CPUs it may use."""
+    stat = _read(f"{CGROUP}/cpu.stat")  # cgroup v2
+    if stat:
+        usage = dict(line.split() for line in stat.splitlines() if len(line.split()) == 2).get("usage_usec")
+        quota = (_read(f"{CGROUP}/cpu.max") or "max").split()
+        cpus = int(quota[0]) / int(quota[1]) if quota[0] != "max" and len(quota) > 1 else os.cpu_count()
+        if usage is not None:
+            return int(usage) / 1e6, cpus
+    usage = _read(f"{CGROUP}/cpuacct/cpuacct.usage")  # cgroup v1
+    if usage:
+        return int(usage) / 1e9, os.cpu_count()
+    fields = (_read(f"{PROC}/stat") or "").split("\n", 1)[0].split()[1:]
+    if len(fields) >= 4:  # whole machine: busy jiffies
+        busy = sum(int(v) for v in fields[:8]) - int(fields[3]) - (int(fields[4]) if len(fields) > 4 else 0)
+        return busy / os.sysconf("SC_CLK_TCK"), os.cpu_count()
+    return None, None
+
+
+def memory():
+    """Used and total bytes, as `docker stats` counts them: without reclaimable file cache."""
+    current, limit = _read(f"{CGROUP}/memory.current"), _read(f"{CGROUP}/memory.max")
+    stat_name = "inactive_file"
+    if current is None:  # cgroup v1
+        current, limit = _read(f"{CGROUP}/memory/memory.usage_in_bytes"), _read(f"{CGROUP}/memory/memory.limit_in_bytes")
+        stat_name = "total_inactive_file"
+    stat = _read(f"{CGROUP}/memory.stat") or _read(f"{CGROUP}/memory/memory.stat") or ""
+    meminfo = dict((l.split(":")[0], l.split()[1]) for l in (_read(f"{PROC}/meminfo") or "").splitlines() if ":" in l)
+    total = int(meminfo["MemTotal"]) * 1024 if "MemTotal" in meminfo else None
+    if limit and limit.strip().isdigit() and (total is None or int(limit) < total):
+        total = int(limit)
+    if current is None or not current.strip().isdigit():
+        if "MemAvailable" in meminfo and total:
+            return total - int(meminfo["MemAvailable"]) * 1024, total
+        return None, total
+    inactive = dict(l.split() for l in stat.splitlines() if len(l.split()) == 2).get(stat_name, "0")
+    return max(0, int(current) - int(inactive)), total
+
+
+def disk(path):
+    try:
+        if path != "/" and not os.path.ismount(path):
+            return None, None
+        st = os.statvfs(path)
+        return (st.f_blocks - st.f_bfree) * st.f_frsize, st.f_blocks * st.f_frsize
+    except OSError:
+        return None, None
+
+
+telemetry_state = {"latest": None, "cpu": None, "engine": None, "time": None}
+GPU_QUERY = "index,name,utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,power.limit"
+# One long-running nvidia-smi, read every second. Starting nvidia-smi for every sample
+# re-initialises the driver's counters, and the first reading after that often says 0 % load even
+# while the card is busy (seen on 2026-11-22: 0 % at 297 tokens/s and 49 of 70 W). Its load figure
+# covers only the last fraction of a second, so the sample reports the average over the readings
+# since the previous sample: a short burst of requests between two samples still shows.
+gpu_lines = {"cards": {}, "loads": {}, "time": 0.0}
+GPU_READ_MS = int(os.environ.get("PODLIGHT_GPU_READ_MS", "1000"))
+
+
+def gpu_reader():
+    while True:
+        try:
+            proc = subprocess.Popen([NVIDIA_SMI, f"--query-gpu={GPU_QUERY}", "--format=csv,noheader,nounits",
+                                     f"--loop-ms={GPU_READ_MS}"],
+                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+        except OSError:
+            return  # no nvidia-smi in this image
+        for line in proc.stdout:
+            for gpu in parse_nvidia_smi(line):
+                with lock:
+                    gpu_lines["cards"][gpu["index"]] = gpu
+                    if gpu["utilPercent"] is not None:
+                        gpu_lines["loads"].setdefault(gpu["index"], []).append(gpu["utilPercent"])
+                    gpu_lines["time"] = time.time()
+        proc.wait()
+        time.sleep(10)  # it ended (driver trouble): start it again
+
+
+def gpus_now():
+    """Fresh lines from the long-running nvidia-smi, else one call of its own."""
+    with lock:
+        fresh = time.time() - gpu_lines["time"] < max(15, TELEMETRY_SECONDS * 3) and gpu_lines["cards"]
+        if fresh:
+            cards, loads = dict(gpu_lines["cards"]), gpu_lines["loads"]
+            gpu_lines["loads"] = {}
+    if fresh:
+        out = []
+        for k in sorted(cards, key=lambda k: (k is None, k or 0)):
+            gpu = dict(cards[k])
+            if loads.get(k):
+                gpu["utilPercent"] = round(sum(loads[k]) / len(loads[k]), 1)
+            out.append(gpu)
+        return out
+    result = subprocess.run([NVIDIA_SMI, f"--query-gpu={GPU_QUERY}", "--format=csv,noheader,nounits"],
+                            capture_output=True, text=True, timeout=3)
+    return parse_nvidia_smi(result.stdout) if result.returncode == 0 else None
+
+
+def measure():
+    now = time.time()
+    previous_time = telemetry_state["time"]
+    seconds = now - previous_time if previous_time else None
+    sample = {"time": int(now)}
+    try:
+        used, cpus = cpu_seconds()
+        if used is not None:
+            prev = telemetry_state["cpu"]
+            if prev and seconds and cpus:
+                sample["cpuPercent"] = round(max(0.0, min(100.0, (used - prev) / seconds / cpus * 100)), 1)
+            telemetry_state["cpu"] = used
+    except Exception as e:
+        log(f"telemetry cpu: {e}")
+    try:
+        used, total = memory()
+        if used is not None: sample["memoryUsedBytes"] = used
+        if total is not None: sample["memoryTotalBytes"] = total
+    except Exception as e:
+        log(f"telemetry memory: {e}")
+    for key, path in DISKS.items():
+        used, total = disk(path)
+        if used is not None and total:
+            sample[f"{key}UsedBytes"], sample[f"{key}TotalBytes"] = used, total
+    try:
+        gpus = gpus_now()
+        if gpus is not None:
+            sample["gpus"] = gpus
+    except (OSError, subprocess.SubprocessError):
+        pass  # no nvidia-smi in this image
+    try:
+        req = urllib.request.Request(f"{ENGINE_URL}/metrics", headers={"Authorization": f"Bearer {GATEWAY_KEY}"})
+        with opener.open(req, timeout=2) as r:
+            values = engine_values(parse_prometheus(r.read().decode("utf-8", "replace")))
+        sample["engine"] = engine_telemetry(values, telemetry_state["engine"], seconds)
+        telemetry_state["engine"] = values
+    except Exception:
+        telemetry_state["engine"] = None  # engine still loading, or no metrics
+    telemetry_state["time"] = now
+    telemetry_state["latest"] = sample
+
+
+def telemetry_loop():
+    while True:
+        try:
+            measure()
+        except Exception as e:  # never let telemetry end the thread
+            log(f"telemetry: {e}")
+        time.sleep(TELEMETRY_SECONDS)
+
+
 class Handler(BaseHTTPRequestHandler):
     def _authorised(self):
         return GATEWAY_KEY and self.headers.get("Authorization", "") == f"Bearer {GATEWAY_KEY}"
@@ -146,6 +394,7 @@ class Handler(BaseHTTPRequestHandler):
                 "engineAlive": engine_alive(),
                 "engineExitCode": engine_exit_code(),
                 "uptimeSeconds": int(time.time() - state["started"]),
+                "telemetry": telemetry_state["latest"],
             }
 
     def do_GET(self):
@@ -190,5 +439,8 @@ if __name__ == "__main__":
     if not POD_ID or not RUNPOD_KEY:
         log("RUNPOD_POD_ID or RUNPOD_API_KEY missing: the pod cannot stop itself")
     threading.Thread(target=check_loop, daemon=True).start()
+    if TELEMETRY_SECONDS > 0:
+        threading.Thread(target=gpu_reader, daemon=True).start()
+        threading.Thread(target=telemetry_loop, daemon=True).start()
     log(f"watching: heartbeat every {MINUTES:g} min, deadline {state['deadline']}")
     Server((HOST, PORT), Handler).serve_forever()

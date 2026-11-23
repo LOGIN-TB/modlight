@@ -28,6 +28,7 @@ if [[ "${PODLIGHT_ENGINE:-vllm}" == "llamacpp" ]]; then
     --jinja
     -np "$parallel"
     --no-mmproj
+    --metrics
   )
   # The context is shared by the parallel slots, so each request gets the full window.
   [[ -n "${PODLIGHT_MAX_LEN:-}" ]] && args+=(-c "$((PODLIGHT_MAX_LEN * parallel))")

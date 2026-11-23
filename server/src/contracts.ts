@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { VERSION } from './admin/routes.ts'
 import { FORWARDED_PATHS } from './gateway/routes.ts'
-import { gpuChoice, hostingPolicy, modelRun, podlightModel, schedule, serverSettings, settingsPatch } from './model.ts'
+import { gpuChoice, hostingPolicy, modelRun, podlightModel, podTelemetry, schedule, serverSettings, settingsPatch } from './model.ts'
 
 // The documents in spec/ that are generated from the server's own schemas, so they cannot drift:
 // spec/schema/model.json (the model both sides store) and spec/openapi.json (this server's API).
@@ -57,6 +57,7 @@ export function openapi(): object {
         Schedule: schema(schedule),
         HostingPolicy: schema(hostingPolicy),
         GPUChoice: schema(gpuChoice),
+        PodTelemetry: { ...schema(podTelemetry), description: 'One sample of what a pod is doing, measured by its watchdog. `time` is Unix seconds; a missing source leaves out its fields.' },
         Settings: { allOf: [schema(serverSettings), { type: 'object', properties: { hasRunpodKey: { type: 'boolean' }, hasHuggingFaceToken: { type: 'boolean' } } }] },
         SettingsPatch: schema(settingsPatch),
         Spend: { type: 'object', properties: { todayUsd: { type: 'number' }, monthUsd: { type: 'number' }, dailyLimitUsd: { type: ['number', 'null'] }, monthlyLimitUsd: { type: ['number', 'null'] } } },
@@ -68,6 +69,7 @@ export function openapi(): object {
             runs: { type: 'object', additionalProperties: ref('ModelRun'), description: 'Keyed by model id.' },
             settings: ref('Settings'), spendByDay: { type: 'object', additionalProperties: { type: 'number' } },
             spend: ref('Spend'), costPerHour: { type: 'number' }, lastClientRequestAt: { type: ['string', 'null'] },
+            telemetry: { type: 'object', additionalProperties: ref('PodTelemetry'), description: 'The latest sample per model whose pod runs, keyed by model id.' },
           },
         },
         ClientToken: {
@@ -108,6 +110,8 @@ export function openapi(): object {
       '/admin/models/{id}/extend': { post: { tags: ['admin'], security: device, summary: 'Move "Läuft bis"', parameters: idParam,
         requestBody: { required: true, content: json({ type: 'object', required: ['until'], properties: { until: { type: 'string', format: 'date-time' } } }) }, responses: { 200: ok('Run', ref('ModelRun')) } } },
       '/admin/models/{id}/log': { get: { tags: ['admin'], security: device, summary: 'The engine\'s last log lines', parameters: idParam, responses: { 200: ok('Lines') } } },
+      '/admin/models/{id}/telemetry': { get: { tags: ['admin'], security: device, summary: 'What the pod has been doing in the last 30 minutes, oldest first', parameters: idParam,
+        responses: { 200: ok('Samples', { type: 'object', properties: { samples: { type: 'array', items: ref('PodTelemetry') } } }), 404: error } } },
       '/admin/client-tokens': {
         get: { tags: ['admin'], security: device, summary: 'Access keys for agents', responses: { 200: ok('Keys', { type: 'array', items: ref('ClientToken') }) } },
         post: { tags: ['admin'], security: device, summary: 'Create an access key, optionally limited to models; the key is shown once',
