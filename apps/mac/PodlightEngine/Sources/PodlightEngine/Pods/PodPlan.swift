@@ -27,7 +27,8 @@ public enum PodPlan {
     public static let deadlineGrace: TimeInterval = 10 * 60
 
     public static func request(for model: PodlightModel, podKey: String, huggingFaceToken: String?,
-                               runUntil: Date?, heartbeatMinutes: Int, dataCenterIds: [String]? = nil) -> CreatePodRequest {
+                               runUntil: Date?, heartbeatMinutes: Int, dataCenterIds: [String]? = nil,
+                               owner: String? = nil) -> CreatePodRequest {
         let cards = model.preferredGPU?.count ?? 1
         var env: [String: String] = [
             "PODLIGHT_MODEL": model.repoId,
@@ -59,7 +60,7 @@ public enum PodPlan {
         if let runUntil { env["PODLIGHT_DEADLINE"] = String(Int(runUntil.addingTimeInterval(deadlineGrace).timeIntervalSince1970)) }
 
         return CreatePodRequest(
-            name: "podlight-\(model.name)".prefix(60).description,
+            name: PodOwner.podName(model: model.name, owner: owner),
             image: image(for: model.engine),
             cloud: model.preferredGPU?.cloud ?? .secure,
             gpu: .init(id: model.preferredGPU?.gpuId ?? "placeholder", count: cards, minCudaVersion: minCudaVersion(for: model.engine)),

@@ -129,6 +129,32 @@
         }
       }
     },
+    "%@ manages this model now. Take it back to use it on this Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ verwaltet dieses Modell jetzt. Hol es zurück, um es auf diesem Mac zu nutzen."
+          }
+        }
+      }
+    },
+    "%@ moved to %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist jetzt auf %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ moved to %2$@"
+          }
+        }
+      }
+    },
     "%@ of %@": {
       "localizations": {
         "de": {
@@ -233,6 +259,22 @@
           "stringUnit": {
             "state": "new",
             "value": "%1$@ was taken; Podlight used %2$@."
+          }
+        }
+      }
+    },
+    "%@ · %@ · from %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ · von %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@ · from %3$@"
           }
         }
       }
@@ -1773,6 +1815,16 @@
         }
       }
     },
+    "Deleting removes the model from this Mac only. Its pod stays with the other Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen entfernt das Modell nur von diesem Mac. Sein Pod bleibt beim anderen Mac."
+          }
+        }
+      }
+    },
     "Disk": {
       "localizations": {
         "de": {
@@ -2059,6 +2111,16 @@
         }
       }
     },
+    "From other Macs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von anderen Macs"
+          }
+        }
+      }
+    },
     "GPU": {
       "localizations": {
         "de": {
@@ -2215,6 +2277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hugging Face ist nicht erreichbar. Prüfe die Internetverbindung und versuche es noch einmal."
+          }
+        }
+      }
+    },
+    "Hugging Face could not describe the model, so it cannot be taken over yet: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hugging Face konnte das Modell nicht beschreiben, deshalb lässt es sich noch nicht übernehmen: %@"
           }
         }
       }
@@ -2451,12 +2523,42 @@
         }
       }
     },
+    "Look for other Macs' models again": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut nach Modellen anderer Macs suchen"
+          }
+        }
+      }
+    },
     "MLX builds run on Apple chips only, not on RunPod's NVIDIA cards.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "MLX-Builds laufen nur auf Apple-Chips, nicht auf den NVIDIA-Karten von RunPod."
+          }
+        }
+      }
+    },
+    "Manage this model on this Mac again": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Modell wieder auf diesem Mac verwalten"
+          }
+        }
+      }
+    },
+    "Managed by %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwaltet von %@"
           }
         }
       }
@@ -2507,6 +2609,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modelle"
+          }
+        }
+      }
+    },
+    "Models another Mac set up with the same RunPod key. Taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Only models whose pod exists (running, or stopped with its disk kept) are listed.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelle, die ein anderer Mac mit demselben RunPod-Key eingerichtet hat. Übernehmen holt eines auf diesen Mac: Ab dann startet, stoppt und berechnet es dieser Mac, und der andere gibt es ab. Aufgeführt sind nur Modelle, deren Pod existiert (läuft oder gestoppt mit behaltener Festplatte)."
           }
         }
       }
@@ -3503,6 +3615,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Empfohlen: Ohne Token begrenzt Hugging Face Downloads stärker, und gesperrte Modelle brauchen ihn."
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
           }
         }
       }
@@ -4573,6 +4695,66 @@
         }
       }
     },
+    "Take Back": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurückholen"
+          }
+        }
+      }
+    },
+    "Take Over": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übernehmen"
+          }
+        }
+      }
+    },
+    "Take Over…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übernehmen …"
+          }
+        }
+      }
+    },
+    "Take over %@?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ übernehmen?"
+          }
+        }
+      }
+    },
+    "Taken back from another Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von einem anderen Mac zurückgeholt."
+          }
+        }
+      }
+    },
+    "Taken over from another Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von einem anderen Mac übernommen."
+          }
+        }
+      }
+    },
     "Temperature and power": {
       "localizations": {
         "de": {
@@ -4599,6 +4781,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verbindung testen"
+          }
+        }
+      }
+    },
+    "That Mac manages it now. Take it back in Podlight to use it here.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der andere Mac verwaltet es jetzt. Hol es in Podlight zurück, um es hier zu nutzen."
+          }
+        }
+      }
+    },
+    "That Mac took this model over. This Mac leaves its pod alone: it does not start, stop or bill it. Take it back to use the model here again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der andere Mac hat das Modell übernommen. Dieser Mac lässt den Pod in Ruhe: Er startet, stoppt und berechnet ihn nicht. Hol das Modell zurück, um es hier wieder zu nutzen."
           }
         }
       }
@@ -4649,6 +4851,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Key funktioniert."
+          }
+        }
+      }
+    },
+    "The model is removed from this Mac. Its pod and disk at RunPod stay with the Mac that manages it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Modell wird von diesem Mac entfernt. Pod und Festplatte bei RunPod bleiben beim Mac, der es verwaltet."
           }
         }
       }
@@ -4859,12 +5071,54 @@
         }
       }
     },
+    "This Mac already has a model named %@. Rename or remove it first, then take the pod over.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem Mac gibt es schon ein Modell namens %@. Benenne es um oder entferne es, dann übernimm den Pod."
+          }
+        }
+      }
+    },
     "This Mac and the local network": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Dieser Mac und das lokale Netzwerk"
+          }
+        }
+      }
+    },
+    "This Mac manages %@ from now on, including its kept disk (%@). %@ lets go the next time it checks.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Mac verwaltet %@ ab jetzt, samt behaltener Festplatte (%@). %@ gibt es bei der nächsten Prüfung ab."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "This Mac manages %1$@ from now on, including its kept disk (%2$@). %3$@ lets go the next time it checks."
+          }
+        }
+      }
+    },
+    "This Mac manages %@ from now on: it keeps the pod running, stops it when idle and counts its costs. %@ lets go within a minute; agents there are told to use this Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Mac verwaltet %@ ab jetzt: Er hält den Pod am Laufen, stoppt ihn bei Leerlauf und zählt seine Kosten. %@ gibt es innerhalb einer Minute ab; Agenten dort erfahren, dass sie diesen Mac nutzen sollen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "This Mac manages %1$@ from now on: it keeps the pod running, stops it when idle and counts its costs. %2$@ lets go within a minute; agents there are told to use this Mac."
           }
         }
       }
@@ -5311,6 +5565,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "etwa %lld Token/s"
+          }
+        }
+      }
+    },
+    "an older Podlight version": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "einer älteren Podlight-Version"
           }
         }
       }

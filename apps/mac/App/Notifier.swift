@@ -49,6 +49,10 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
                          category: Self.endingCategory, modelId: model.id)
                 }
             }
+            if before.managedBy == nil, let other = now.managedBy, previous.runs[model.id] != nil {
+                post(String(localized: "\(model.name) moved to \(PodOwner.displayName(of: other))"),
+                     String(localized: "That Mac manages it now. Take it back in Podlight to use it here."), id: "moved-\(model.id)")
+            }
             if before.lastReason != now.lastReason, let reason = now.lastReason {
                 switch reason {
                 case "daily-limit", "monthly-limit":

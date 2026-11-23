@@ -98,7 +98,9 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
   chat with a tool call, Messages and Responses API, the safety stop after the container was stopped,
   resume and deletion, 0.03 USD) and
   [docs/measurements-2026-11-22-telemetry.md](docs/measurements-2026-11-22-telemetry.md) (pod load on
-  vLLM and llama.cpp, from the Mac and through the server).
+  vLLM and llama.cpp, from the Mac and through the server) and
+  [docs/measurements-2026-11-23-takeover.md](docs/measurements-2026-11-23-takeover.md) (a model taken
+  over by a second Mac while running, and taken back).
 
 ## Known limits
 
@@ -111,6 +113,9 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
   part of the measurements yet.
 - On the local network the connection is plain HTTP (key required); use it only in trusted networks.
 - The Windows app is not part of 0.5.
+- A model belongs to one Mac at a time. A second Mac can take over models whose pod exists (running,
+  or stopped with a kept disk); both Macs need 0.6. For several computers using the same models at
+  once, use a server.
 - Pod load is measured by the pod itself. Pods created before 0.5, including ones resumed from a kept
   disk, report none until the model starts on a new pod. llama.cpp reports no KV cache figure, and
   load on pods with several cards has not been measured live.

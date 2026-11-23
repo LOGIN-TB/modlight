@@ -182,6 +182,9 @@ public struct ModelRun: Codable, Sendable, Equatable {
     public var storageAccountedUntil: Date?
     /// The hosting rules the pod was created under; its placement is checked against these.
     public var hosting: HostingPolicy?
+    /// Another Mac took this model's pod over (its tag). This Mac then leaves the pod alone until
+    /// it is taken back.
+    public var managedBy: String?
 
     public init() {}
 }
@@ -257,11 +260,13 @@ public struct PodlightState: Codable, Sendable, Equatable {
     public var lastClientRequestAt: Date?
     /// Podlight servers this app controls (server mode). Their device tokens are in the keychain.
     public var servers: [ServerEntry] = []
+    /// This Mac's tag in pod names (`podlight-<model>@<tag>`), made once.
+    public var deviceTag: String?
 
     public init() {}
 
     private enum CodingKeys: String, CodingKey {
-        case models, runs, settings, spendByDay, lastClientRequestAt, servers
+        case models, runs, settings, spendByDay, lastClientRequestAt, servers, deviceTag
     }
 
     // Every field optional on read, so a state file from an older version still loads.
@@ -273,6 +278,7 @@ public struct PodlightState: Codable, Sendable, Equatable {
         spendByDay = try c.decodeIfPresent([String: Double].self, forKey: .spendByDay) ?? [:]
         lastClientRequestAt = try c.decodeIfPresent(Date.self, forKey: .lastClientRequestAt)
         servers = try c.decodeIfPresent([ServerEntry].self, forKey: .servers) ?? []
+        deviceTag = try c.decodeIfPresent(String.self, forKey: .deviceTag)
     }
 
     public func run(_ id: UUID) -> ModelRun { runs[id] ?? ModelRun() }
@@ -297,7 +303,7 @@ public struct PodlightState: Codable, Sendable, Equatable {
     /// Current hourly cost of everything running.
     /// What everything running costs per hour: the GPU and the pod's storage.
     public var costPerHour: Double {
-        runs.values.filter { $0.podStatus == .running || $0.phase == .loading || $0.phase == .ready }
+        runs.values.filter { $0.managedBy == nil && ($0.podStatus == .running || $0.phase == .loading || $0.phase == .ready) }
             .map { ($0.pricePerHour ?? 0) + ($0.pricePerHour == nil ? 0 : $0.storagePerHour ?? 0) }.reduce(0, +)
     }
 

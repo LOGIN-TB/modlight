@@ -120,7 +120,7 @@ private struct ModelCostRow: View {
     let run: ModelRun
     let keptGB: Int?
 
-    private var isActive: Bool { [.creating, .loading, .ready, .stopping].contains(run.phase) }
+    private var isActive: Bool { run.managedBy == nil && [.creating, .loading, .ready, .stopping].contains(run.phase) }
 
     var body: some View {
         LabeledContent {
@@ -138,6 +138,7 @@ private struct ModelCostRow: View {
     }
 
     private var caption: String {
+        if let other = run.managedBy { return String(localized: "Managed by \(PodOwner.displayName(of: other))") }
         if isActive {
             if let price = run.pricePerHour, let storage = run.storagePerHour, storage > 0 {
                 return String(localized: "Running · \(Format.perHour(price)) GPU + \(Format.storagePerHour(storage)) storage")

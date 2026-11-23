@@ -27,12 +27,23 @@ public struct RunpodPod: Codable, Sendable, Equatable, Identifiable {
     public var cost: Double?
     public var image: String?
     public var createdAt: Date?
+    /// Set again on every resume (measured 2026-11-23).
     public var startedAt: Date?
     public var dataCenterId: String?
+    /// The pod's environment. Podlight's pods carry their model and pod key here.
+    public var env: [String: String]?
+    /// Container disk in GB.
+    public var disk: Int?
+    public var mounts: CreatePodRequest.Mounts?
 }
 
 public struct RunpodPodList: Codable, Sendable {
+    public struct Pagination: Codable, Sendable {
+        public var hasNextPage: Bool?
+        public var nextCursor: String?
+    }
     public var pods: [RunpodPod]
+    public var pagination: Pagination?
 }
 
 /// What Podlight asks RunPod to create. Only the fields Podlight sets.

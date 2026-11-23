@@ -15,6 +15,7 @@ struct OverviewView: View {
             if !steps.allSatisfy(\.done) { nextSteps }
             spendingSection
             modelsSection
+            if !model.otherMacsPods.isEmpty { OtherMacsSection() }
             ForEach(model.servers) { server in ServerOverviewSection(server: server) }
             connectSection
         }
