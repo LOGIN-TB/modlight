@@ -76,7 +76,7 @@ export function failure(error: GatewayError, model: string): Failure {
     case 'notAllowed':
       return { status: 403, code: 'model_not_allowed', message: `This access key may not use ${model}.` }
     case 'hostBusy':
-      return { status: 503, code: 'host_busy', message: `The card on the machine of ${model}'s pod is taken right now, so it could not resume. Its disk with the model is kept. Try again in a few minutes, or start it on a new card in the Podlight app.` }
+      return { status: 503, code: 'host_busy', message: `The card on the machine of ${model}'s pod is taken right now, so it could not resume. Its disk with the model is kept, and the server keeps trying to resume it for half an hour. Try again in a few minutes, or start it on a new card in the Podlight app.` }
   }
 }
 

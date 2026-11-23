@@ -675,6 +675,16 @@
         }
       }
     },
+    "A new pod downloads the model again, which takes 10–25 minutes. The old pod and its disk stay until the new one answers; if the new one fails, the old one is kept.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein neuer Pod lädt das Modell neu, das dauert 10–25 Minuten. Der alte Pod und seine Festplatte bleiben, bis der neue antwortet. Scheitert der neue, bleibt der alte erhalten."
+          }
+        }
+      }
+    },
     "A pod stops itself when the server has not been in touch for this long, for example when the server is down.": {
       "localizations": {
         "de": {
@@ -1205,12 +1215,12 @@
         }
       }
     },
-    "Builds a new pod and downloads the model again; the old pod and its disk are deleted.": {
+    "Builds a new pod and downloads the model again. The old pod and its disk stay until the new one answers.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Legt einen neuen Pod an und lädt das Modell neu; der alte Pod und seine Festplatte werden gelöscht."
+            "value": "Legt einen neuen Pod an und lädt das Modell neu. Der alte Pod und seine Festplatte bleiben, bis der neue antwortet."
           }
         }
       }
@@ -3509,6 +3519,16 @@
         }
       }
     },
+    "Podlight tries every 30 seconds until %@ and then resumes the pod with its disk, without downloading the model again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight versucht es bis %@ alle 30 Sekunden und setzt den Pod dann mit seiner Festplatte fort, ohne das Modell neu zu laden."
+          }
+        }
+      }
+    },
     "Podlight: nothing running": {
       "localizations": {
         "de": {
@@ -4535,6 +4555,16 @@
         }
       }
     },
+    "Stop Waiting": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warten beenden"
+          }
+        }
+      }
+    },
     "Stop and Quit": {
       "localizations": {
         "de": {
@@ -4945,12 +4975,12 @@
         }
       }
     },
-    "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept. Start again in a few minutes, or start on a new card (the model is downloaded again).": {
+    "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept, and Podlight keeps trying to resume it until the end you chose. You can also start on a new card (the model is downloaded again).": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Karte auf dem Rechner dieses Pods ist gerade belegt. Pod und Festplatte mit dem Modell bleiben erhalten. Starte in ein paar Minuten erneut oder auf einer neuen Karte (dann wird das Modell neu geladen)."
+            "value": "Die Karte auf dem Rechner des Pods ist gerade belegt. Der Pod und seine Festplatte mit dem Modell bleiben erhalten, und Podlight versucht bis zu dem gewählten Ende, ihn fortzusetzen. Du kannst ihn auch auf einer neuen Karte starten (das Modell wird dann neu geladen)."
           }
         }
       }
@@ -4961,6 +4991,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die Karte auf dem Rechner des Pods war belegt, deshalb ließ er sich nicht fortsetzen. Seine Festplatte mit dem Modell bleibt erhalten."
+          }
+        }
+      }
+    },
+    "The engine made no progress for 10 minutes while loading (often a stalled download on that machine), so Podlight stopped the pod. Start again, or start on a new card. Its last line:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Engine kam beim Laden zehn Minuten nicht voran (oft ein abgerissener Download auf diesem Rechner), deshalb hat Podlight den Pod gestoppt. Starte erneut oder auf einer neuen Karte. Ihre letzte Zeile:"
           }
         }
       }
@@ -5097,16 +5137,6 @@
           "stringUnit": {
             "state": "new",
             "value": "The next start takes about a minute instead of 10–25. RunPod bills the disk (%1$lld GB) by the hour, also while the model is stopped, until Podlight deletes it after %2$lld days without use."
-          }
-        }
-      }
-    },
-    "The old pod and its disk are deleted. A new pod downloads the model again, which takes 10–25 minutes.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der alte Pod und seine Festplatte werden gelöscht. Ein neuer Pod lädt das Modell neu, das dauert 10–25 Minuten."
           }
         }
       }
@@ -5583,6 +5613,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volume"
+          }
+        }
+      }
+    },
+    "Waiting for a Card": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet auf eine Karte"
+          }
+        }
+      }
+    },
+    "Waiting for a card": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet auf eine Karte"
           }
         }
       }

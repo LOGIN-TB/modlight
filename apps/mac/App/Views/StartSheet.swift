@@ -37,7 +37,7 @@ struct StartSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             Text(model.startingOnNewCard ? "Start \(model_.name) on a New Card" : "Start \(model_.name)").font(.title2.weight(.semibold))
             if model.startingOnNewCard {
-                Text("The old pod and its disk are deleted. A new pod downloads the model again, which takes 10–25 minutes.")
+                Text("A new pod downloads the model again, which takes 10–25 minutes. The old pod and its disk stay until the new one answers; if the new one fails, the old one is kept.")
                     .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             if case .server = source {

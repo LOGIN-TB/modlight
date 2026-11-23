@@ -135,6 +135,8 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(self.api.stops, [], "must not stop before the grace period")
         status, body = self.get("/")
         self.assertEqual((status, body["engineAlive"], body["engineExitCode"]), (200, False, 1))
+        # The log size lets Podlight tell a working engine from a hung one.
+        self.assertEqual(body["engineLogBytes"], os.path.getsize(self.pidfile + ".log"))
         status, log = self.get("/log")
         self.assertIn("KV cache", log["lines"][-1])
         self.assertEqual(self.get("/log", key="wrong")[0], 401)

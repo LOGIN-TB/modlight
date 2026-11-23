@@ -289,6 +289,10 @@ final class AppModel {
                 try await server.client(keychain).start(model.id, until: until, newPod: newPod)
                 await server.refresh(keychain)
             }
+        } catch PodlightError.hostBusy {
+            // The model's page shows the waiting and what the user can do instead.
+        } catch ServerError.refused(_, _, "host_busy") {
+            if case .server(let id) = source(of: model.id) { await server(id)?.refresh(keychain) }
         } catch {
             actionError = Describe.error(error)
         }

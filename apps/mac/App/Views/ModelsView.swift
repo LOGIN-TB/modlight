@@ -61,6 +61,7 @@ enum PhaseText {
 
     static func summary(_ run: ModelRun) -> String {
         if let other = run.managedBy { return String(localized: "Managed by \(PodOwner.displayName(of: other))") }
+        if run.waitingForCard != nil { return String(localized: "Waiting for a card") }
         switch run.phase {
         case .ready:
             if let end = run.runUntil { return String(localized: "Running · \(Format.remaining(until: end)) left") }
@@ -91,7 +92,8 @@ struct ModelDetailView: View {
                 HStack(alignment: .center, spacing: 12) {
                     PhaseIcon(phase: run.phase).imageScale(.large)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(PhaseText.title(run.phase)).font(.title3.weight(.semibold))
+                        Text(run.waitingForCard != nil ? String(localized: "Waiting for a Card") : PhaseText.title(run.phase))
+                            .font(.title3.weight(.semibold))
                         if let detail = statusDetail {
                             Text(detail).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         }
@@ -99,19 +101,28 @@ struct ModelDetailView: View {
                 }
                 .padding(.vertical, 4)
                 ModelActions(item: item, run: run, prominent: true)
-                if ["host-busy", "gpu-unusable"].contains(run.lastReason ?? ""), run.phase == .stopped || run.phase == .failed, run.podId != nil {
+                if let waiting = run.waitingForCard {
+                    HStack(spacing: 10) {
+                        ProgressView().controlSize(.small)
+                        Text("Podlight tries every 30 seconds until \(Format.time(waiting.until)) and then resumes the pod with its disk, without downloading the model again.")
+                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                        Button("Stop Waiting") { Task { await model.stop(item) } }
+                    }
+                }
+                if ["host-busy", "gpu-unusable", "engine-stuck"].contains(run.lastReason ?? ""), run.phase == .stopped || run.phase == .failed, run.podId != nil {
                     HStack {
                         Button("Start on a New Card…") {
                             model.startingOnNewCard = true
                             model.startingModel = item
                         }
-                        Text("Builds a new pod and downloads the model again; the old pod and its disk are deleted.")
+                        Text("Builds a new pod and downloads the model again. The old pod and its disk stay until the new one answers.")
                             .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 if run.phase == .loading || run.phase == .creating {
                     ProgressView {
-                        Text(item.keepDisk && run.persistentGB != nil
+                        Text(run.resumed == true
                              ? "Resuming takes about a minute."
                              : item.engine == .vllm
                                 ? "A new pod can take 10–25 minutes: the GPU host first downloads the engine (about 9 GB), then the model. Resuming a stopped pod takes about a minute."

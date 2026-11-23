@@ -37,3 +37,7 @@ Nach jedem Start stellt Podlight dem Modell eine kurze Frage. Antwortet es nur m
 ## „Der RunPod-Rechner konnte seine Karte nicht ansprechen“
 
 Die Engine brach mit einem CUDA-Fehler ab, bevor sie das Modell geladen hat. Das liegt am Rechner bei RunPod, nicht am Modell. Starte mit „Auf neuer Karte starten …“ oder wähle unter „Bearbeiten“ eine andere Kartenart. „Engine-Log anzeigen …“ zeigt die letzten Zeilen der Engine.
+
+## „Die Engine kam beim Laden zehn Minuten nicht voran“
+
+Während des Ladens schaut Podlight, ob sich etwas tut: Die Festplatte füllt sich mit dem Download, das Log der Engine wächst, die Engine belegt Grafikspeicher oder rechnet. Steht all das zehn Minuten still, hängt die Engine, meist an einem abgerissenen Download auf diesem Rechner. Podlight stoppt den Pod dann, statt ihn bis zum gewählten Ende laufen und kosten zu lassen. Starte erneut oder mit „Auf neuer Karte starten …“ auf einem anderen Rechner.

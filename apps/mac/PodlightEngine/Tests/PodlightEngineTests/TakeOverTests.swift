@@ -97,6 +97,12 @@ actor SharedRunPod: HTTPTransport {
     /// The engine answers the start test with "!!!!…", like a broken quantisation.
     var garbageAnswers = false
     func setGarbage(_ on: Bool) { garbageAnswers = on }
+    /// The engine is still loading: /v1/models does not answer yet.
+    var engineLoading = false
+    func setEngineLoading(_ on: Bool) { engineLoading = on }
+    /// What the watchdog reports of the engine's log size; a loading engine's grows.
+    var engineLogBytes = 1000
+    func growEngineLog() { engineLogBytes += 500 }
     var renames: [String] = []
     private var next = 0
 
@@ -125,7 +131,8 @@ actor SharedRunPod: HTTPTransport {
                 let text = garbageAnswers ? String(repeating: "!", count: 48) : "ready"
                 return reply(200, #"{"choices":[{"message":{"role":"assistant","content":"\#(text)"},"finish_reason":"stop"}]}"#)
             }
-            return reply(200, #"{"engineAlive":true}"#)
+            if url.path.hasSuffix("/v1/models"), engineLoading { return reply(503, "loading") }
+            return reply(200, #"{"engineAlive":true,"engineLogBytes":\#(engineLogBytes),"telemetry":{"time":1,"cpuPercent":0,"diskUsedBytes":16000000,"volumeUsedBytes":2.1e10,"gpus":[{"memoryUsedBytes":4000000}]}}"#)
         }
         let parts = url.path.split(separator: "/").map(String.init) // v2, pods, id, action
         let body = (request.httpBody.flatMap { try? JSONSerialization.jsonObject(with: $0) }) as? [String: Any]
@@ -205,7 +212,7 @@ struct TakeOverFlowTests {
         }
     }
 
-    static func mac(_ runpod: SharedRunPod, tag: String) async throws -> Mac {
+    static func mac(_ runpod: SharedRunPod, tag: String, loadStallLimit: TimeInterval = 600) async throws -> Mac {
         let keychain = KeychainStore(service: "app.podlight.tests.\(UUID().uuidString)")
         try keychain.write("rp-test", for: .runpodAPIKey)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("podlight-takeover-\(UUID()).json")
@@ -213,7 +220,7 @@ struct TakeOverFlowTests {
         try await store.update { $0.deviceTag = tag }
         let manager = PodManager(store: store, keychain: keychain, transport: runpod,
                                  podURL: { _, port in URL(string: "http://127.0.0.1:1/\(port)")! },
-                                 hostBusyTries: 3, hostBusyDelay: .zero)
+                                 hostBusyTries: 3, hostBusyDelay: .zero, cardRetryInterval: 0, loadStallLimit: loadStallLimit)
         return Mac(manager: manager, keychain: keychain, stateURL: url)
     }
 
@@ -416,19 +423,109 @@ struct TakeOverFlowTests {
         #expect(await a.manager.state().run(model.id).podId == podId)
         try await a.manager.stop(model.id)
 
-        // Busy for longer: the pod and its disk stay, and the start says why.
+        // Busy for longer: the pod and its disk stay, the start says why, and Podlight keeps
+        // trying in the background until the run's end.
         await runpod.setHostBusy(10)
-        await #expect(throws: PodlightError.hostBusy) { try await a.manager.start(model.id, until: nil) }
+        let until = Date().addingTimeInterval(3600)
+        await #expect(throws: PodlightError.hostBusy) { try await a.manager.start(model.id, until: until) }
         let run = await a.manager.state().run(model.id)
         #expect(run.podId == podId && run.lastReason == "host-busy" && run.phase == .stopped)
+        #expect(run.waitingForCard?.until == until && run.waitingForCard?.manual == true)
         #expect(await runpod.pods[podId] != nil)
         #expect(await runpod.deleted.isEmpty)
+        await a.manager.tick()
+        #expect(await a.manager.state().run(model.id).waitingForCard != nil, "still busy: still waiting")
 
-        // Only the user's choice of a new card replaces it.
+        // The card comes free: the next tick resumes the same pod with its disk.
         await runpod.setHostBusy(0)
+        await a.manager.tick()
+        let resumed = await a.manager.state().run(model.id)
+        #expect(resumed.podId == podId && resumed.waitingForCard == nil && resumed.runUntil == until)
+        #expect(resumed.resumed == true && resumed.phase != .stopped)
+        #expect(await runpod.deleted.isEmpty)
+        try await a.manager.stop(model.id)
+
+        // Stop ends the waiting.
+        await runpod.setHostBusy(10)
+        await #expect(throws: PodlightError.hostBusy) { try await a.manager.start(model.id, until: until) }
+        try await a.manager.stop(model.id)
+        #expect(await a.manager.state().run(model.id).waitingForCard == nil)
+
+        // A new card builds a new pod, but keeps the old one with its disk until the new one answers.
+        await runpod.setHostBusy(0)
+        await runpod.setEngineLoading(true)
+        try await a.manager.start(model.id, until: until, newPod: true)
+        let replacing = await a.manager.state().run(model.id)
+        let newId = try #require(replacing.podId)
+        #expect(newId != podId && replacing.replacing?.podId == podId && replacing.resumed == false)
+        #expect(await runpod.deleted.isEmpty, "the old pod stays while the new one loads")
+        await a.manager.refresh(model.id)
+        #expect(await runpod.deleted.isEmpty)
+        await runpod.setEngineLoading(false)
+        await a.manager.refresh(model.id)
+        let done = await a.manager.state().run(model.id)
+        #expect(done.phase == .ready && done.podId == newId && done.replacing == nil && done.oldPodToDelete == nil)
+        #expect(await runpod.deleted == [podId], "the old pod goes once the new one answers")
+    }
+
+    @Test func aNewCardThatFailsPutsTheOldPodBack() async throws {
+        let runpod = SharedRunPod()
+        let a = try await Self.mac(runpod, tag: "mac-a-aaaa")
+        let model = PodlightModel(name: "coder", repoId: "Org/Coder-AWQ", format: .awq, weightBytes: 6e9,
+                                  nativeContextTokens: 131_072, toolCallParser: nil, reasoningParser: nil,
+                                  contextTokens: 16_384, preferredGPU: GPUChoice(gpuId: "NVIDIA RTX A4000", cloud: .community),
+                                  keepDisk: true)
+        try await a.manager.save(model)
+        defer { a.cleanUp(models: [model.id]) }
+        try await a.manager.start(model.id, until: nil)
+        let oldId = try #require(await a.manager.state().run(model.id).podId)
+        try await a.manager.stop(model.id)
+
+        // The new pod answers with garbage: it is deleted, the old pod is the model's pod again.
+        await runpod.setGarbage(true)
         try await a.manager.start(model.id, until: nil, newPod: true)
-        #expect(await runpod.deleted == [podId])
-        #expect(await a.manager.state().run(model.id).podId != podId)
+        let newId = try #require(await a.manager.state().run(model.id).podId)
+        await a.manager.refresh(model.id)
+        let run = await a.manager.state().run(model.id)
+        #expect(run.podId == oldId && run.replacing == nil && run.phase == .failed && run.lastReason == "garbage-output")
+        #expect(run.podStatus == .exited && run.persistentGB != nil)
+        #expect(await runpod.deleted == [newId])
+        #expect(await runpod.pods[oldId] != nil)
+
+        // Stopping a new pod that has not answered yet does the same.
+        await runpod.setGarbage(false)
+        await runpod.setEngineLoading(true)
+        try await a.manager.start(model.id, until: nil, newPod: true)
+        let second = try #require(await a.manager.state().run(model.id).podId)
+        try await a.manager.stop(model.id)
+        let stopped = await a.manager.state().run(model.id)
+        #expect(stopped.podId == oldId && stopped.phase == .stopped && stopped.replacing == nil)
+        #expect(await runpod.deleted == [newId, second])
+    }
+
+    @Test func aLoadingEngineThatShowsNoProgressIsStoppedAsHung() async throws {
+        let runpod = SharedRunPod()
+        let a = try await Self.mac(runpod, tag: "mac-a-aaaa", loadStallLimit: 0)
+        let model = PodlightModel(name: "coder", repoId: "Org/Coder-GGUF", format: .gguf, weightBytes: 6e9,
+                                  nativeContextTokens: 131_072, toolCallParser: nil, reasoningParser: nil,
+                                  contextTokens: 16_384, preferredGPU: GPUChoice(gpuId: "NVIDIA RTX A4000", cloud: .community),
+                                  keepDisk: true)
+        try await a.manager.save(model)
+        defer { a.cleanUp(models: [model.id]) }
+        await runpod.setEngineLoading(true)
+        try await a.manager.start(model.id, until: nil)
+
+        // A log that grows is progress, however long it takes.
+        await a.manager.refresh(model.id)
+        await runpod.growEngineLog()
+        await a.manager.refresh(model.id)
+        #expect(await a.manager.state().run(model.id).phase == .loading)
+
+        // Nothing moves: hung.
+        await a.manager.refresh(model.id)
+        let run = await a.manager.state().run(model.id)
+        #expect(run.phase == .failed && run.lastReason == "engine-stuck")
+        #expect(run.podStatus == .exited, "stopped, its disk kept")
     }
 
     @Test func aStoppedPodWithoutDatesStartsItsDeletionClockInsteadOfVanishing() async throws {

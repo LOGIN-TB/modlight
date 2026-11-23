@@ -37,3 +37,7 @@ After every start Podlight asks the model a short question. If it answers only w
 ## "The RunPod machine could not use its card"
 
 The engine stopped with a CUDA error before it loaded the model. That is the machine at RunPod, not the model. Start with "Start on a New Card…", or choose another card type under Edit. "Show Engine Log…" shows the engine's last lines.
+
+## "The engine made no progress for 10 minutes while loading"
+
+While a model loads, Podlight checks that something happens: the disk fills with the download, the engine's log grows, the engine takes graphics memory or computes. If all of that stands still for ten minutes, the engine has hung, usually on a stalled download on that machine. Podlight then stops the pod instead of letting it run, and cost, until the end you chose. Start again, or use "Start on a New Card…" to get another machine.

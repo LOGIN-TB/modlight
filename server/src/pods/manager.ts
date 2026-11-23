@@ -35,7 +35,29 @@ export interface ManagerOptions {
   /** Tries, and the wait between them, to resume a pod whose machine has no free card. */
   hostBusyTries?: number
   hostBusyDelayMs?: number
+  /** While the machine stays busy, the resume is tried again this often, in the background. */
+  cardRetryMs?: number
+  /** A loading engine with no sign of progress for this long is taken as hung. */
+  loadStallMs?: number
   log?: (message: string) => void
+}
+
+/** What the watchdog reports with each heartbeat. `engineLogBytes` grows while the engine works. */
+interface WatchdogStatus { engineAlive?: boolean; engineExitCode?: number; engineLogBytes?: number; telemetry?: unknown }
+
+/** How long a start that a request woke waits for a busy machine's card. */
+const WOKEN_WAIT_FOR_CARD_MS = 30 * 60_000
+
+/** What shows a loading engine at work. Sizes in 64 MB steps, so small noise does not count. */
+export function loadSignature(t: PodTelemetry, logBytes: number | null): string {
+  const step = 64 * 1_048_576
+  const stored = [t.diskUsedBytes, t.volumeUsedBytes].filter((v): v is number => typeof v === 'number')
+  const gpu = (t.gpus ?? []).map((g) => g.memoryUsedBytes).filter((v): v is number => typeof v === 'number')
+  return JSON.stringify([
+    stored.length ? Math.floor(stored.reduce((a, b) => a + b, 0) / step) : null,
+    gpu.length ? Math.floor(gpu.reduce((a, b) => a + b, 0) / step) : null,
+    logBytes,
+  ])
 }
 
 const ACTIVE = new Set(['creating', 'loading', 'ready', 'stopping'])
@@ -59,10 +81,16 @@ export class PodManager {
 
   private readonly hostBusyTries: number
   private readonly hostBusyDelayMs: number
+  private readonly cardRetryMs: number
+  private readonly loadStallMs: number
+  /** What a loading pod last showed of its progress, and since when (ms), per model. In memory. */
+  private readonly loadProgress = new Map<string, { signature: string; since: number }>()
 
   constructor(o: ManagerOptions) {
     this.hostBusyTries = Math.max(1, o.hostBusyTries ?? 5)
     this.hostBusyDelayMs = o.hostBusyDelayMs ?? 15_000
+    this.cardRetryMs = o.cardRetryMs ?? 30_000
+    this.loadStallMs = o.loadStallMs ?? 600_000
     this.store = o.store
     this.settings = o.settings
     this.now = o.now ?? (() => new Date())
@@ -138,14 +166,24 @@ export class PodManager {
     const settings = this.settings.read()
     const podKey = this.podKey(id)
     const run = this.store.run(id)
+    // A new start ends any waiting for the old machine's card.
+    if (run.waitingForCard) this.store.updateRun(id, (r) => { r.waitingForCard = null })
 
     if (newPod && run.podId) {
-      try {
-        await client.deletePod(run.podId)
-      } catch (error) {
-        if (!(error instanceof RunpodError && error.isNotFound)) throw this.asFailure(error)
+      // The old pod and its disk stay until the new pod answers; if the new one fails, the old one
+      // is put back. A failed earlier replacement is deleted, its original kept.
+      if (run.replacing) {
+        try {
+          await client.deletePod(run.podId)
+        } catch (error) {
+          if (!(error instanceof RunpodError && error.isNotFound)) throw this.asFailure(error)
+        }
       }
-      this.store.updateRun(id, (r) => { r.podId = null; r.podStatus = null; r.persistentGB = null })
+      const replaced = run.replacing ?? {
+        podId: run.podId, gpu: run.gpu, gpuName: run.gpuName, pricePerHour: run.pricePerHour, persistentGB: run.persistentGB,
+        containerGB: run.containerGB, storagePerHour: run.storagePerHour, dataCenterId: run.dataCenterId, hosting: run.hosting,
+      }
+      this.store.updateRun(id, (r) => { r.replacing = replaced; r.podId = null; r.podStatus = null; r.persistentGB = null })
       run.podId = null
     }
 
@@ -164,13 +202,19 @@ export class PodManager {
         const fresh = pod.env ? podPlan.freshenedEnv(pod.env, runUntil) : null
         if (fresh) await client.updateEnv(run.podId, fresh).catch(() => {})
         const resumed = await this.resumeWaitingForHost(client, run.podId)
-        this.markStarted(id, resumed, runUntil, manual)
+        this.markStarted(id, resumed, runUntil, manual, true)
         return
       } catch (error) {
         if (error instanceof RunpodError && error.isHostGpuUnavailable) {
           // Its machine gave the card away. The pod and its disk stay: deleting them would throw
-          // away the downloaded model long before its deletion date. The user decides.
-          this.store.updateRun(id, (r) => { r.phase = 'stopped'; r.lastReason = 'host-busy'; r.lastMessage = null })
+          // away the downloaded model long before its deletion date. The server keeps trying in
+          // the background until the run's end; the user may start on a new card.
+          const t = this.now()
+          const waiting = {
+            until: iso(runUntil ?? new Date(t.getTime() + WOKEN_WAIT_FOR_CARD_MS)),
+            runUntil: runUntil ? iso(runUntil) : null, manual, lastTryAt: iso(t),
+          }
+          this.store.updateRun(id, (r) => { r.phase = 'stopped'; r.lastReason = 'host-busy'; r.lastMessage = null; r.waitingForCard = waiting })
           throw new GatewayFailure({ kind: 'hostBusy' })
         }
         if (error instanceof RunpodError && error.isNotFound) {
@@ -185,6 +229,17 @@ export class PodManager {
       }
     }
 
+    try {
+      await this.createPod(id, model, client, podKey, runUntil, manual)
+    } catch (error) {
+      // No new pod came of it: a replaced pod is the model's pod again.
+      this.putBackReplacedPod(id)
+      throw error
+    }
+  }
+
+  private async createPod(id: string, model: PodlightModel, client: RunpodClient, podKey: string, runUntil: Date | null, manual: boolean): Promise<void> {
+    const settings = this.settings.read()
     this.store.updateRun(id, (r) => { r.phase = 'creating'; r.lastReason = null; r.lastMessage = null; r.fellBackFrom = null })
     try {
       const catalog = await client.gpuCatalog()
@@ -213,7 +268,7 @@ export class PodManager {
         r.hosting = hosting
         r.fellBackFrom = created.attempts.filter((a) => a.outcome !== 'created').map((a) => names.get(a.choice.gpuId) ?? a.choice.gpuId)
       })
-      this.markStarted(id, created.pod, runUntil, manual)
+      this.markStarted(id, created.pod, runUntil, manual, false)
     } catch (error) {
       if (error instanceof NoCapacityError) {
         const tried = error.attempts.map((a) => a.choice.gpuId)
@@ -231,9 +286,12 @@ export class PodManager {
     }
   }
 
-  private markStarted(id: string, pod: Pod, runUntil: Date | null, manual: boolean): void {
+  private markStarted(id: string, pod: Pod, runUntil: Date | null, manual: boolean, resumed: boolean): void {
     const t = iso(this.now())
+    this.loadProgress.delete(id)
     this.store.updateRun(id, (r) => {
+      r.resumed = resumed
+      r.waitingForCard = null
       const before = r.phase
       r.podStatus = pod.status
       r.phase = 'loading'
@@ -264,8 +322,31 @@ export class PodManager {
    */
   async stop(id: string, reason = 'manual'): Promise<void> {
     const run = this.store.run(id)
+    // Stopping a start that waits for its machine's card just ends the waiting.
+    if (run.waitingForCard) {
+      this.store.updateRun(id, (r) => { r.waitingForCard = null })
+      if (run.phase === 'stopped' || run.phase === 'failed') return
+    }
     if (!run.podId) return
     this.account(id, run)
+    this.loadProgress.delete(id)
+    if (run.replacing) {
+      // A new pod that never answered ends by being deleted; the old pod with the downloaded model
+      // is the model's pod again.
+      this.store.updateRun(id, (r) => { r.phase = 'stopping' })
+      try {
+        await this.client().deletePod(run.podId)
+      } catch (error) {
+        if (!(error instanceof RunpodError && error.isNotFound)) {
+          if (error instanceof RunpodError) this.fail(id, error)
+          throw this.asFailure(error)
+        }
+      }
+      this.putBackReplacedPod(id)
+      this.markStopped(id, 'EXITED', reason)
+      this.log(`stopped ${id}: ${reason}; the replaced pod is back`)
+      return
+    }
     this.store.updateRun(id, (r) => { r.phase = 'stopping' })
     const keepDisk = this.store.model(id)?.keepDisk ?? true
     try {
@@ -389,11 +470,93 @@ export class PodManager {
         await this.refresh(model.id)
         await this.applyRules(model.id)
       }
+      await this.retryWaitingStarts()
+      await this.deleteReplacedPods()
       await this.deleteLongStopped()
       this.accountStoredDisks()
     } finally {
       this.ticking = false
     }
+  }
+
+  /** The old pod of a "Start on a New Card" whose new pod answered, and its disk, are deleted. */
+  private async deleteReplacedPods(): Promise<void> {
+    const client = this.clientOrNull()
+    if (!client) return
+    for (const [id, run] of Object.entries(this.store.runs())) {
+      if (!run.oldPodToDelete) continue
+      try {
+        await client.deletePod(run.oldPodToDelete)
+      } catch (error) {
+        if (!(error instanceof RunpodError && error.isNotFound)) continue
+      }
+      this.store.updateRun(id, (r) => { r.oldPodToDelete = null })
+    }
+  }
+
+  /** Puts the pod a "Start on a New Card" replaced back as the model's pod. */
+  private putBackReplacedPod(id: string): void {
+    const replaced = this.store.run(id).replacing
+    if (!replaced) return
+    this.store.updateRun(id, (r) => {
+      Object.assign(r, {
+        podId: replaced.podId, gpu: replaced.gpu, gpuName: replaced.gpuName, pricePerHour: replaced.pricePerHour,
+        persistentGB: replaced.persistentGB, containerGB: replaced.containerGB, storagePerHour: replaced.storagePerHour,
+        dataCenterId: replaced.dataCenterId, hosting: replaced.hosting,
+      })
+      r.podStatus = 'EXITED'; r.engineReady = false; r.replacing = null
+    })
+  }
+
+  /** Tries again to resume the pods whose machine had no free card, until each run's end. */
+  private async retryWaitingStarts(): Promise<void> {
+    const t = this.now()
+    for (const [id, run] of Object.entries(this.store.runs())) {
+      const waiting = run.waitingForCard
+      if (!waiting) continue
+      const until = parseDate(waiting.until)
+      if (!run.podId || (run.phase !== 'stopped' && run.phase !== 'failed') || !until || t >= until || !admitWake(this.spend()).admit) {
+        this.store.updateRun(id, (r) => { r.waitingForCard = null })
+        continue
+      }
+      const last = parseDate(waiting.lastTryAt)
+      if (last && t.getTime() - last.getTime() < this.cardRetryMs) continue
+      const client = this.clientOrNull()
+      if (!client) return
+      try {
+        const pod = await client.action(run.podId, 'start')
+        this.store.updateRun(id, (r) => { r.lastReason = null })
+        this.markStarted(id, pod, parseDate(waiting.runUntil), waiting.manual, true)
+      } catch (error) {
+        if (error instanceof RunpodError && error.isHostGpuUnavailable) {
+          this.store.updateRun(id, (r) => { if (r.waitingForCard) r.waitingForCard.lastTryAt = iso(t) })
+        } else if (error instanceof RunpodError && error.isNotFound) {
+          this.store.updateRun(id, (r) => { r.waitingForCard = null; r.podId = null; r.podStatus = null; r.lastReason = 'pod-gone' })
+        } else if (error instanceof RunpodError) {
+          this.store.updateRun(id, (r) => { r.waitingForCard = null })
+          this.fail(id, error)
+        } else {
+          // RunPod unreachable: try again next time.
+          this.store.updateRun(id, (r) => { if (r.waitingForCard) r.waitingForCard.lastTryAt = iso(t) })
+        }
+      }
+    }
+  }
+
+  /** Notes what a loading pod shows. True once it has shown no progress for `loadStallMs`. Without
+   * telemetry (a watchdog from before 0.5) nothing is decided. */
+  private noteLoadProgress(id: string, status: { engineLogBytes?: number; telemetry?: unknown }): boolean {
+    const parsed = podTelemetry.safeParse(status.telemetry)
+    if (!status.telemetry || !parsed.success) return false
+    const signature = loadSignature(parsed.data, status.engineLogBytes ?? null)
+    const t = this.now().getTime()
+    const busy = (parsed.data.cpuPercent ?? 0) >= 1
+    const seen = this.loadProgress.get(id)
+    if (!seen || seen.signature !== signature || busy) {
+      this.loadProgress.set(id, { signature, since: t })
+      return false
+    }
+    return t - seen.since >= this.loadStallMs
   }
 
   /** A stopped pod's kept volume disk is billed; book it as it accrues. */
@@ -422,7 +585,9 @@ export class PodManager {
     } catch (error) {
       if (error instanceof RunpodError && error.isNotFound) {
         this.account(id, run)
+        this.loadProgress.delete(id)
         this.store.updateRun(id, (r) => { r.podId = null; r.podStatus = null; r.phase = 'stopped'; r.lastReason = 'pod-gone' })
+        this.putBackReplacedPod(id)
       }
       return // RunPod unreachable: keep what we know, try again next tick.
     }
@@ -459,6 +624,15 @@ export class PodManager {
         this.store.updateRun(id, (r) => { r.phase = 'failed'; r.lastReason = reason; r.lastMessage = message })
         return
       }
+      // A loading engine that shows no progress at all (no download, no log line, no GPU memory, no
+      // CPU) has hung, often on a stalled download. It would bill until the run's end.
+      if (!ready && watchdog && this.noteLoadProgress(id, watchdog)) {
+        const lines = await this.engineLogLines(podId, id)
+        const last = lines?.filter((l) => l.trim()).at(-1)?.trim().slice(0, 200) ?? null
+        await this.stop(id, 'engine-stuck').catch(() => {})
+        this.store.updateRun(id, (r) => { r.phase = 'failed'; r.lastReason = 'engine-stuck'; r.lastMessage = last })
+        return
+      }
       if (!ready && (await this.engineAnswers(podId, id))) {
         // Start test: a model that only repeats one character (a broken quantisation or kernel)
         // would make every agent request run to its length limit.
@@ -470,10 +644,18 @@ export class PodManager {
           return
         }
         ready = true
+        this.loadProgress.delete(id)
+        // The new pod of a "Start on a New Card" answers: the old pod can go.
+        const replaced = this.store.run(id).replacing
+        if (replaced) {
+          this.store.updateRun(id, (r) => { r.replacing = null; r.oldPodToDelete = replaced.podId })
+          await this.deleteReplacedPods()
+        }
       }
     } else {
       ready = false
       this.samples.delete(id)
+      this.loadProgress.delete(id)
     }
 
     const wasRunning = run.podStatus === 'RUNNING'
@@ -586,14 +768,13 @@ export class PodManager {
     return [...(this.samples.get(id) ?? [])]
   }
 
-  private async heartbeat(podId: string, modelId: string, runUntil: Date | null): Promise<{ engineAlive?: boolean; engineExitCode?: number; telemetry?: unknown } | null> {
+  private async heartbeat(podId: string, modelId: string, runUntil: Date | null): Promise<WatchdogStatus | null> {
     const deadline = runUntil ? (runUntil.getTime() + podPlan.DEADLINE_GRACE_MS) / 1000 : null
     const response = await this.podFetch(podId, modelId, podPlan.WATCHDOG_PORT, '/heartbeat', {
       method: 'POST', body: JSON.stringify({ deadline }),
     })
     if (!response || response.status !== 200) return null
-    const json = (await response.json().catch(() => ({}))) as { engineAlive?: boolean; engineExitCode?: number; telemetry?: unknown }
-    return json
+    return (await response.json().catch(() => ({}))) as WatchdogStatus
   }
 
   /** The last lines the engine wrote, kept by the watchdog because RunPod drops a stopped pod's output. */

@@ -70,6 +70,17 @@ enum Snapshots {
         render("model-managed", size: CGSize(width: 720, height: 520), into: folder) {
             NavigationStack { ModelDetailView(item: releasedModel.state.models[1]) }.environment(releasedModel)
         }
+        // A start waiting for the card on its machine, the disk kept.
+        _ = try? await store.update {
+            $0.runs[released, default: ModelRun()].managedBy = nil
+            $0.runs[released, default: ModelRun()].lastReason = "host-busy"
+            $0.runs[released, default: ModelRun()].waitingForCard = WaitingForCard(until: Date().addingTimeInterval(3600), runUntil: nil, manual: true)
+        }
+        let waitingModel = AppModel(storeURL: storeURL, keychainService: service)
+        await waitingModel.reloadState()
+        render("model-waiting", size: CGSize(width: 720, height: 640), into: folder) {
+            NavigationStack { ModelDetailView(item: waitingModel.state.models[1]) }.environment(waitingModel)
+        }
 
         // Server mode, with a sample server that is never contacted.
         let entry = ServerEntry(name: "Office", baseURL: URL(string: "https://podlight.example.com")!)

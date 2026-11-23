@@ -89,12 +89,17 @@ class FakePod {
   /** Start tests seen, and whether the engine answers them with "!!!!…" (a broken model). */
   startTests = 0
   garbage = false
+  /** The engine is still loading: /v1/models does not answer yet. */
+  loading = false
+  /** The loading engine has hung: no CPU, and log, disks and GPU memory stand still. */
+  stuck = false
 
   engine = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     const chunks: Buffer[] = []
     for await (const chunk of req) chunks.push(chunk as Buffer)
     const text = Buffer.concat(chunks).toString('utf8')
     if (req.url === '/v1/models') {
+      if (this.loading || this.stuck) { res.writeHead(503); return void res.end('loading') }
       res.writeHead(200, { 'content-type': 'application/json' })
       return void res.end('{"data":[]}')
     }
@@ -134,6 +139,10 @@ class FakePod {
     if (req.url === '/log') return void res.end(JSON.stringify({ lines: ['loading', 'torch.OutOfMemoryError: CUDA out of memory'] }))
     const telemetry = { time: this.telemetryTime++, cpuPercent: 12.5, gpus: [{ index: 0, name: 'NVIDIA A40', utilPercent: 87, memoryUsedBytes: 4.5e10, memoryTotalBytes: 4.8e10, temperatureC: 55, powerW: 250.3, powerLimitW: null }],
       engine: { running: 2, waiting: 0, kvCachePercent: 41.5, generationTokensPerSecond: 58 } }
+    if (this.stuck) {
+      const still = { time: this.telemetryTime++, cpuPercent: 0, diskUsedBytes: 1.6e7, volumeUsedBytes: 2.1e10, gpus: [{ memoryUsedBytes: 4e6 }] }
+      return void res.end(JSON.stringify({ engineAlive: true, engineExitCode: null, engineLogBytes: 300, telemetry: still }))
+    }
     res.end(JSON.stringify({ engineAlive: this.engineAlive, engineExitCode: this.engineAlive ? null : 1, telemetry }))
   }
 }
@@ -187,9 +196,12 @@ describe('Podlight server', () => {
     pod.heartbeats = []
     pod.engineAlive = true
     pod.proxyNotReadyFor = 0
+    pod.loading = false
+    pod.stuck = false
+    pod.garbage = false
     s = await buildServer({
       db: openDatabase(':memory:'), sealer: sealer(randomBytes(32)), wrongKeyDelayMs: 0, proxyRetryDelayMs: 10,
-      manager: { runpodBase: runpodURL, wakePollMs: 20, hostBusyTries: 3, hostBusyDelayMs: 5, podURL: (_id, port) => (port === 8000 ? engineURL : watchdogURL) },
+      manager: { runpodBase: runpodURL, wakePollMs: 20, hostBusyTries: 3, hostBusyDelayMs: 5, cardRetryMs: 0, loadStallMs: 0, podURL: (_id, port) => (port === 8000 ? engineURL : watchdogURL) },
     })
     const code = s.pairing.issue().code
     const paired = await s.app.inject({ method: 'POST', url: '/pair', payload: { code, deviceName: 'Test Mac' } })
@@ -382,7 +394,7 @@ describe('Podlight server', () => {
     assert.equal(s.store.run(MODEL_ID).podId, podId)
     await admin('POST', `/admin/models/${MODEL_ID}/stop`)
 
-    // Busy for longer: the pod stays, the start says why.
+    // Busy for longer: the pod stays, the start says why, and the server keeps trying.
     runpod.hostBusyFor = 10
     const busy = await admin('POST', `/admin/models/${MODEL_ID}/start`, {})
     assert.equal(busy.statusCode, 503)
@@ -390,14 +402,71 @@ describe('Podlight server', () => {
     assert.equal(s.store.run(MODEL_ID).podId, podId)
     assert.equal(s.store.run(MODEL_ID).lastReason, 'host-busy')
     assert.equal(s.store.run(MODEL_ID).phase, 'stopped')
+    assert.ok(s.store.run(MODEL_ID).waitingForCard)
     assert.ok(runpod.pods.has(podId), 'the pod and its disk are kept')
     assert.ok(!runpod.requests.some((r) => r.method === 'DELETE'))
+    await s.manager.tick()
+    assert.ok(s.store.run(MODEL_ID).waitingForCard, 'still busy: still waiting')
 
-    // The user chooses a new card: now the old pod goes and a new one is built.
+    // The card comes free: the next tick resumes the same pod.
     runpod.hostBusyFor = 0
+    await s.manager.tick()
+    assert.equal(s.store.run(MODEL_ID).podId, podId)
+    assert.equal(s.store.run(MODEL_ID).waitingForCard ?? null, null)
+    assert.equal(s.store.run(MODEL_ID).resumed, true)
+    assert.equal(runpod.pods.get(podId)!.status, 'RUNNING')
+    await admin('POST', `/admin/models/${MODEL_ID}/stop`)
+
+    // Stop ends the waiting.
+    runpod.hostBusyFor = 10
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 503)
+    await admin('POST', `/admin/models/${MODEL_ID}/stop`)
+    assert.equal(s.store.run(MODEL_ID).waitingForCard ?? null, null)
+
+    // A new card builds a new pod but keeps the old one until the new one answers.
+    runpod.hostBusyFor = 0
+    pod.loading = true
     assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, { newPod: true })).statusCode, 200)
-    assert.ok(!runpod.pods.has(podId))
-    assert.notEqual(s.store.run(MODEL_ID).podId, podId)
+    const newId = s.store.run(MODEL_ID).podId!
+    assert.notEqual(newId, podId)
+    assert.equal(s.store.run(MODEL_ID).replacing?.podId, podId)
+    await s.manager.refresh(MODEL_ID)
+    assert.ok(runpod.pods.has(podId), 'the old pod stays while the new one loads')
+    pod.loading = false
+    await s.manager.refresh(MODEL_ID)
+    assert.equal(s.store.run(MODEL_ID).phase, 'ready')
+    assert.ok(!runpod.pods.has(podId), 'the old pod goes once the new one answers')
+    assert.equal(s.store.run(MODEL_ID).replacing ?? null, null)
+  })
+
+  test('a new card that fails puts the old pod back', async () => {
+    await admin('PUT', `/admin/models/${MODEL_ID}`, model(MODEL_ID, 'coder', { keepDisk: true }))
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
+    await admin('POST', `/admin/models/${MODEL_ID}/stop`)
+    const oldId = s.store.run(MODEL_ID).podId!
+    pod.garbage = true
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, { newPod: true })).statusCode, 200)
+    const newId = s.store.run(MODEL_ID).podId!
+    await s.manager.refresh(MODEL_ID)
+    const run = s.store.run(MODEL_ID)
+    assert.equal(run.podId, oldId)
+    assert.equal(run.phase, 'failed')
+    assert.equal(run.lastReason, 'garbage-output')
+    assert.equal(run.replacing ?? null, null)
+    assert.ok(runpod.pods.has(oldId) && !runpod.pods.has(newId))
+  })
+
+  test('a loading engine that shows no progress is stopped as hung', async () => {
+    await admin('PUT', `/admin/models/${MODEL_ID}`, model(MODEL_ID, 'coder', { keepDisk: true }))
+    pod.stuck = true
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
+    await s.manager.refresh(MODEL_ID)
+    assert.equal(s.store.run(MODEL_ID).phase, 'loading')
+    await s.manager.refresh(MODEL_ID)
+    const run = s.store.run(MODEL_ID)
+    assert.equal(run.phase, 'failed')
+    assert.equal(run.lastReason, 'engine-stuck')
+    assert.equal(run.podStatus, 'EXITED')
   })
 
   test('the start test stops a model that only repeats one character', async () => {
