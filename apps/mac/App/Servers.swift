@@ -119,7 +119,7 @@ extension AppModel {
         }
     }
 
-    func canStart(_ model: PodlightModel) -> Bool { canStart(in: source(of: model.id)) }
+    func canStart(_ model: PodlightModel) -> Bool { canStart(in: source(of: model.id)) && run(model.id).managedBy == nil }
 
     func defaultHosting(in source: Source) -> HostingPolicy {
         switch source {
@@ -174,7 +174,7 @@ extension AppModel {
     func keptDisks(in source: Source) -> [KeptDisk] {
         models(in: source).compactMap { item in
             let run = run(item.id)
-            guard run.podId != nil, run.phase == .stopped, let gb = run.persistentGB, gb > 0 else { return nil }
+            guard run.podId != nil, run.managedBy == nil, run.phase == .stopped, let gb = run.persistentGB, gb > 0 else { return nil }
             return KeptDisk(source: source, model: item, gb: gb)
         }
     }

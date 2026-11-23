@@ -35,11 +35,15 @@ enum Snapshots {
 
         let running = model.state.models[0]
         model.sampleTelemetry = [running.id: sampleTelemetry(gpu: "NVIDIA L40S", memoryGB: 48)]
+        model.showOtherMacsPodsForSnapshots(sampleOtherMacsPods())
         // Content views without the sidebar: its material does not render offscreen, and the help
         // pages are about the content anyway.
         render("overview", size: CGSize(width: 720, height: 900), into: folder) { NavigationStack { OverviewView() }.environment(model) }
         render("model-stopped", size: CGSize(width: 720, height: 640), into: folder) {
             NavigationStack { ModelDetailView(item: model.state.models[1]) }.environment(model)
+        }
+        render("other-macs", size: CGSize(width: 720, height: 520), into: folder) {
+            Form { OtherMacsSection() }.formStyle(.grouped).environment(model)
         }
         render("models", size: CGSize(width: 720, height: 1180), into: folder) { NavigationStack { ModelDetailView(item: running) }.environment(model) }
         render("connection", size: CGSize(width: 720, height: 860), into: folder) { ConnectionView().environment(model) }
@@ -58,6 +62,14 @@ enum Snapshots {
         render("settings", size: CGSize(width: 640, height: 900), into: folder) { SettingsContent().environment(model) }
         render("add-model", size: CGSize(width: 760, height: 600), into: folder) { AddModelSheet(editing: running).environment(model) }
         render("move", size: CGSize(width: 460, height: 360), into: folder) { MoveToApplicationsView() }
+        // A model another Mac took over, as this Mac shows it.
+        let released = model.state.models[1].id
+        _ = try? await store.update { $0.runs[released, default: ModelRun()].managedBy = "studio-mac-7c1e" }
+        let releasedModel = AppModel(storeURL: storeURL, keychainService: service)
+        await releasedModel.reloadState()
+        render("model-managed", size: CGSize(width: 720, height: 520), into: folder) {
+            NavigationStack { ModelDetailView(item: releasedModel.state.models[1]) }.environment(releasedModel)
+        }
 
         // Server mode, with a sample server that is never contacted.
         let entry = ServerEntry(name: "Office", baseURL: URL(string: "https://podlight.example.com")!)
@@ -160,6 +172,21 @@ enum Snapshots {
                 engine: PodTelemetry.Engine(running: busy ? 1 + Int(wave * 2) : 0, waiting: 0, kvCachePercent: busy ? 18 + 30 * wave : 0,
                                             promptTokensPerSecond: busy ? 900 * wave : 0, generationTokensPerSecond: busy ? 48 + 14 * wave : 0))
         }
+    }
+
+    /// Two of another Mac's models: one running, one stopped with its disk kept.
+    nonisolated static func sampleOtherMacsPods() -> [ForeignPod] {
+        func pod(_ id: String, _ name: String, _ status: String, gpu: String, cost: Double, disk: Int) -> ForeignPod? {
+            let json = """
+            {"id":"\(id)","name":"podlight-\(name)@studio-mac-7c1e","status":"\(status)","cloud":"SECURE","cost":\(cost),"disk":30,
+             "gpu":{"id":"\(gpu)","count":1},"mounts":{"persistent":{"size":\(disk),"path":"/workspace"}},
+             "env":{"PODLIGHT_API_KEY":"sample","PODLIGHT_MODEL":"Qwen/Qwen3-32B-AWQ","PODLIGHT_SERVED_NAME":"\(name)",
+                    "PODLIGHT_ENGINE":"vllm","PODLIGHT_MAX_LEN":"32768"}}
+            """
+            return (try? JSONDecoder().decode(RunpodPod.self, from: Data(json.utf8))).flatMap(ForeignPod.init)
+        }
+        return [pod("s1", "qwen3-32b", "RUNNING", gpu: "NVIDIA A40", cost: 0.44, disk: 30),
+                pod("s2", "gemma3-27b", "EXITED", gpu: "NVIDIA RTX A6000", cost: 0.49, disk: 26)].compactMap { $0 }
     }
 
     nonisolated static func sampleState() -> PodlightState {

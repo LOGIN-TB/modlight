@@ -17,6 +17,12 @@ public enum PodlightError: Error, Sendable, Equatable {
     /// The model is stopped and waking on request is switched off.
     case wakeDisabled
     case keychain(String)
+    /// Another Mac took this model over (its readable name). Take it back to use it here.
+    case managedElsewhere(String)
+    /// Taking a pod over would add a second model with this name.
+    case nameTaken(String)
+    /// Hugging Face could not describe the model of a pod being taken over.
+    case modelLookup(String)
 }
 
 /// Where the gateway forwards a request.
@@ -71,7 +77,8 @@ public actor PodManager {
     public func remove(_ id: UUID) async throws {
         samples[id] = nil
         let run = await store.current().run(id)
-        if let podId = run.podId, let client = try? client() {
+        // A pod another Mac took over is that Mac's now: removing the model here leaves it alone.
+        if let podId = run.podId, run.managedBy == nil, let client = try? client() {
             do { try await client.deletePod(id: podId) } catch let e as RunpodError where e.isNotFound {}
         }
         try? keychain.delete(.podKey(id))
@@ -96,10 +103,12 @@ public actor PodManager {
     private func performStart(_ id: UUID, until runUntil: Date?, manual: Bool) async throws {
         let state = await store.current()
         guard let model = state.models.first(where: { $0.id == id }) else { throw PodlightError.unknownModel(id.uuidString) }
+        if let other = state.run(id).managedBy { throw PodlightError.managedElsewhere(PodOwner.displayName(of: other)) }
         let wake = Scheduler.admitWake(spend: state.spend(on: now()))
         guard wake.admit else { throw PodlightError.limitReached(wake.because) }
         let client = try client()
         let podKey = try podKey(for: id)
+        let owner = await ownTag()
         var run = state.run(id)
 
         if let podId = run.podId {
@@ -136,7 +145,7 @@ public actor PodManager {
             let token = try? keychain.read(.huggingFaceToken)
             let request = PodPlan.request(for: model, podKey: podKey, huggingFaceToken: token, runUntil: runUntil,
                                           heartbeatMinutes: state.settings.heartbeatMinutes,
-                                          dataCenterIds: hosting.dataCenterIds(in: catalog))
+                                          dataCenterIds: hosting.dataCenterIds(in: catalog), owner: owner)
             let created = try await client.createPod(request, tryingInOrder: choices, catalog: catalog)
             let names = Dictionary(catalog.map { ($0.id, $0.name) }, uniquingKeysWith: { a, _ in a })
             let price = created.pod.cost ?? catalog.first { $0.id == created.choice.gpuId }
@@ -248,10 +257,144 @@ public actor PodManager {
         let state = await store.current()
         await withTaskGroup(of: Void.self) { group in
             for (model, run) in state.runs.compactMap({ id, run in state.models.first { $0.id == id }.map { ($0, run) } })
-            where run.podId != nil && [.creating, .loading, .ready, .stopping].contains(run.phase) || run.podStatus == .running {
+            where run.managedBy == nil && (run.podId != nil && [.creating, .loading, .ready, .stopping].contains(run.phase) || run.podStatus == .running) {
                 group.addTask { try? await self.stop(model.id, reason: reason) }
             }
         }
+    }
+
+    // MARK: Other Macs
+
+    /// This Mac's tag in pod names, made on first use.
+    public func ownTag() async -> String {
+        if let tag = await store.current().deviceTag { return tag }
+        let tag = PodOwner.makeTag(hostName: Host.current().localizedName ?? "mac")
+        try? await store.update { if $0.deviceTag == nil { $0.deviceTag = tag } }
+        return await store.current().deviceTag ?? tag
+    }
+
+    /// Podlight pods in the RunPod account that this Mac does not manage: another Mac's, or ones
+    /// an older version created. Server pods and pods without Podlight's environment are left out.
+    public func podsFromOtherMacs() async throws -> [ForeignPod] {
+        let state = await store.current()
+        let mine = await ownTag()
+        let known = Set(state.runs.compactMap { $0.value.managedBy == nil ? $0.value.podId : nil })
+        let pods = try await client().listPods()
+        return pods.compactMap(ForeignPod.init).filter { !known.contains($0.id) && $0.owner != mine && $0.status != .terminated }
+    }
+
+    /// Takes another Mac's model over: rebuilds the model from the pod and Hugging Face, keeps the
+    /// pod key, and renames the pod to this Mac. The other Mac lets go when it next sees the name.
+    /// `lookup` describes a repository; nil asks Hugging Face (tests pass their own).
+    @discardableResult
+    public func takeOver(_ foreign: ForeignPod,
+                         lookup: (@Sendable (String) async throws -> ModelInfo)? = nil) async throws -> UUID {
+        let state = await store.current()
+        let client = try client()
+        // Read again: the list may be minutes old.
+        let pod: RunpodPod
+        do { pod = try await client.pod(id: foreign.id) } catch let e as RunpodError {
+            throw PodlightError.runpod(status: e.status, message: e.body)
+        }
+        guard let fresh = ForeignPod(pod) else { throw PodlightError.runpod(status: 0, message: "not a Podlight pod") }
+        // A model this Mac released earlier: take it back instead of adding a second one.
+        if let (id, _) = state.runs.first(where: { $0.value.podId == fresh.id && $0.value.managedBy != nil }) {
+            try await takeBack(id)
+            return id
+        }
+        if state.model(named: fresh.servedName) != nil { throw PodlightError.nameTaken(fresh.servedName) }
+
+        var info: ModelInfo
+        do {
+            if let lookup {
+                info = try await lookup(fresh.repoId)
+            } else {
+                info = try await HuggingFaceClient(token: try? keychain.read(.huggingFaceToken), transport: transport).info(fresh.repoId)
+            }
+        } catch {
+            throw PodlightError.modelLookup("\(error)")
+        }
+        if let quant = fresh.quant, info.format == .gguf { info = info.choosing(quant: quant) }
+        let model = fresh.model(from: info)
+        do { try keychain.write(fresh.podKey, for: .podKey(model.id)) } catch { throw PodlightError.keychain("\(error)") }
+
+        let mine = await ownTag()
+        do {
+            try await client.rename(pod: fresh.id, to: PodOwner.podName(model: model.name, owner: mine))
+        } catch let e as RunpodError {
+            try? keychain.delete(.podKey(model.id))
+            throw PodlightError.runpod(status: e.status, message: e.body)
+        }
+        let t = now()
+        var run = ModelRun()
+        run.podId = fresh.id
+        run.podStatus = fresh.status
+        run.phase = fresh.isRunning ? .loading : .stopped
+        run.gpu = model.preferredGPU
+        run.gpuName = fresh.gpuId.map { Self.shortGPUName($0, count: fresh.gpuCount) }
+        run.pricePerHour = fresh.pricePerHour
+        run.persistentGB = fresh.persistentGB
+        run.containerGB = fresh.containerGB
+        run.storagePerHour = StoragePricing.runningPerHour(containerGB: fresh.containerGB ?? 0, volumeGB: fresh.persistentGB ?? 0)
+        run.dataCenterId = fresh.dataCenterId
+        // Costs count from now on this Mac; idle stop and deletion of unused pods count from now too,
+        // so a pod in use elsewhere is not stopped the moment it arrives.
+        run.startedAt = fresh.isRunning ? t : nil
+        run.accountedUntil = t
+        run.storageAccountedUntil = t
+        run.lastRequestAt = t
+        run.stoppedAt = fresh.isRunning ? nil : t
+        run.lastReason = "taken-over"
+        let newRun = run
+        try await store.update { state in
+            state.models.append(model)
+            state.runs[model.id] = newRun
+        }
+        if fresh.isRunning { await refresh(model.id) }
+        return model.id
+    }
+
+    /// Takes a model back that another Mac took over: renames its pod to this Mac again.
+    public func takeBack(_ id: UUID) async throws {
+        let state = await store.current()
+        guard let model = state.models.first(where: { $0.id == id }) else { throw PodlightError.unknownModel(id.uuidString) }
+        let run = state.run(id)
+        let mine = await ownTag()
+        var status = run.podStatus
+        if let podId = run.podId {
+            let client = try client()
+            do {
+                let pod = try await client.pod(id: podId)
+                status = pod.status
+                try await client.rename(pod: podId, to: PodOwner.podName(model: model.name, owner: mine))
+            } catch let e as RunpodError where e.isNotFound {
+                try await updateRun(id) { $0 = ModelRun() }
+                return
+            } catch let e as RunpodError {
+                throw PodlightError.runpod(status: e.status, message: e.body)
+            }
+        }
+        let t = now()
+        let current = status
+        let running = current == .running || current == .starting || current == .provisioning
+        try await updateRun(id) {
+            $0.managedBy = nil
+            $0.podStatus = current
+            $0.phase = running ? .loading : .stopped
+            $0.accountedUntil = t
+            $0.storageAccountedUntil = t
+            $0.lastRequestAt = t
+            $0.startedAt = running ? t : $0.startedAt
+            $0.stoppedAt = running ? nil : t
+            $0.runUntil = nil
+            $0.lastReason = "taken-back"
+        }
+        if running { await refresh(id) }
+    }
+
+    static func shortGPUName(_ id: String, count: Int) -> String {
+        let name = id.replacingOccurrences(of: "NVIDIA ", with: "").replacingOccurrences(of: "GeForce ", with: "")
+        return count > 1 ? "\(count) × \(name)" : name
     }
 
     // MARK: Gateway
@@ -260,6 +403,7 @@ public actor PodManager {
     public func endpoint(forModelNamed name: String) async throws -> PodEndpoint {
         let state = await store.current()
         guard let model = state.model(named: name) else { throw PodlightError.unknownModel(name) }
+        if let other = state.run(model.id).managedBy { throw PodlightError.managedElsewhere(PodOwner.displayName(of: other)) }
         if let ready = try readyEndpoint(model.id, state: state) { return ready }
 
         let phase = state.run(model.id).phase
@@ -314,7 +458,8 @@ public actor PodManager {
     public func tick() async {
         guard (try? client()) != nil else { return }
         let state = await store.current()
-        for model in state.models {
+        // A model another Mac took over is left alone until it is taken back.
+        for model in state.models where state.run(model.id).managedBy == nil {
             await refresh(model.id)
             await applyRules(model.id)
         }
@@ -327,7 +472,7 @@ public actor PodManager {
     private func accountStoredDisks() async {
         let t = now()
         try? await store.update { state in
-            for (id, run) in state.runs where run.podId != nil && run.phase == .stopped {
+            for (id, run) in state.runs where run.podId != nil && run.phase == .stopped && run.managedBy == nil {
                 guard let gb = run.persistentGB, gb > 0, let since = run.storageAccountedUntil ?? run.stoppedAt else { continue }
                 let hours = max(0, t.timeIntervalSince(since)) / 3600
                 let cost = StoragePricing.stoppedPerMonth(volumeGB: gb) / StoragePricing.hoursPerMonth * hours
@@ -352,6 +497,25 @@ public actor PodManager {
             return
         } catch {
             return // RunPod unreachable: keep what we know, try again next tick.
+        }
+
+        // The pod's name says which Mac manages it. Another Mac's tag: it took the model over, so
+        // this Mac lets go at once (no heartbeat, no idle stop, no cost). No tag: a pod from before
+        // 0.6, claimed for this Mac.
+        let mine = await ownTag()
+        switch PodOwner.owner(ofPodName: pod.name) {
+        case let other? where other != mine:
+            samples[id] = nil
+            try? await updateRun(id) {
+                $0.managedBy = other; $0.engineReady = false; $0.phase = .stopped; $0.podStatus = pod.status
+            }
+            return
+        case nil:
+            if let model = await store.current().models.first(where: { $0.id == id }) {
+                try? await client.rename(pod: podId, to: PodOwner.podName(model: model.name, owner: mine))
+            }
+        default:
+            break
         }
 
         account(id: id, run: run)
@@ -438,7 +602,7 @@ public actor PodManager {
     private func deleteLongStopped() async {
         let state = await store.current()
         let cutoff = now().addingTimeInterval(-TimeInterval(state.settings.deleteStoppedAfterDays) * 86_400)
-        for (id, run) in state.runs where run.podId != nil && run.phase == .stopped {
+        for (id, run) in state.runs where run.podId != nil && run.phase == .stopped && run.managedBy == nil {
             let lastUse = [run.stoppedAt, run.lastRequestAt, run.startedAt].compactMap { $0 }.max() ?? .distantPast
             guard lastUse < cutoff, let podId = run.podId, let client = try? client() else { continue }
             do {

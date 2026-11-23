@@ -28,6 +28,10 @@ final class AppModel {
     private(set) var state = PodlightState()
     /// The latest telemetry per model on this Mac whose pod runs, from the pod's watchdog.
     private(set) var localTelemetry: [UUID: PodTelemetry] = [:]
+    /// Podlight pods in the RunPod account that another Mac manages, offered for taking over.
+    private(set) var otherMacsPods: [ForeignPod] = []
+    /// Pods being taken over right now, for a progress indicator on their row.
+    private(set) var takingOver: Set<String> = []
     /// Telemetry for the screenshots, instead of live pods.
     var sampleTelemetry: [UUID: [PodTelemetry]]?
     private(set) var hasRunpodKey = false
@@ -92,6 +96,14 @@ final class AppModel {
                 guard let self else { return }
                 await self.refreshServers()
                 try? await Task.sleep(for: .seconds(5))
+            }
+        })
+        // Other Macs' pods change rarely: look every five minutes, and after every take-over.
+        loops.append(Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                await self.refreshOtherMacsPods()
+                try? await Task.sleep(for: .seconds(300))
             }
         })
         loops.append(Task { [weak self] in
@@ -277,6 +289,39 @@ final class AppModel {
         }
         await reloadState()
     }
+
+    // MARK: Other Macs
+
+    func refreshOtherMacsPods() async {
+        guard hasRunpodKey else { otherMacsPods = []; return }
+        if let pods = try? await manager.podsFromOtherMacs() { otherMacsPods = pods }
+    }
+
+    /// Takes another Mac's model over; that Mac lets go when it next looks at the pod.
+    func takeOver(_ pod: ForeignPod) async {
+        actionError = nil
+        takingOver.insert(pod.id)
+        defer { takingOver.remove(pod.id) }
+        do {
+            let id = try await manager.takeOver(pod)
+            await reloadState()
+            selection = .model(id)
+        } catch {
+            actionError = Describe.error(error)
+        }
+        await refreshOtherMacsPods()
+    }
+
+    /// Takes a model back that another Mac took over.
+    func takeBack(_ model: PodlightModel) async {
+        actionError = nil
+        do { try await manager.takeBack(model.id) } catch { actionError = Describe.error(error) }
+        await reloadState()
+        await refreshOtherMacsPods()
+    }
+
+    /// For screenshots only.
+    func showOtherMacsPodsForSnapshots(_ pods: [ForeignPod]) { otherMacsPods = pods }
 
     func stop(_ model: PodlightModel) async {
         do {

@@ -5,7 +5,7 @@ Pick a model on Hugging Face, let Podlight suggest a GPU and show what it will c
 as long as you need, and point OpenCode, Claude Code, Codex or any OpenAI-compatible client at it. When the time is
 up, or nobody is asking, the pod stops. It also stops when your Mac sleeps or the app is gone.
 
-> **Status: 0.5.1.** Local mode on the Mac, usable from other computers on your network, and server
+> **Status: 0.6.0.** Local mode on the Mac, usable from other computers on your network, and server
 > mode: a container that keeps models reachable while your Mac is off, controlled from the app. vLLM
 > and llama.cpp (GGUF); Claude Code and Codex as well as OpenAI-compatible agents. Built and tested on
 > real RunPod hardware. See [What has been tested](#what-has-been-tested) and [Known limits](#known-limits).
@@ -98,7 +98,9 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
   chat with a tool call, Messages and Responses API, the safety stop after the container was stopped,
   resume and deletion, 0.03 USD) and
   [docs/measurements-2026-11-22-telemetry.md](docs/measurements-2026-11-22-telemetry.md) (pod load on
-  vLLM and llama.cpp, from the Mac and through the server).
+  vLLM and llama.cpp, from the Mac and through the server) and
+  [docs/measurements-2026-11-23-takeover.md](docs/measurements-2026-11-23-takeover.md) (a model taken
+  over by a second Mac while running, and taken back).
 
 ## Known limits
 
@@ -110,7 +112,10 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
   Anthropic-compatible route, without web search. A full agent session against a large model is not
   part of the measurements yet.
 - On the local network the connection is plain HTTP (key required); use it only in trusted networks.
-- The Windows app is not part of 0.5.
+- The Windows app is not part of 0.6.
+- A model belongs to one Mac at a time. A second Mac can take over models whose pod exists (running,
+  or stopped with a kept disk); both Macs need 0.6. For several computers using the same models at
+  once, use a server.
 - Pod load is measured by the pod itself. Pods created before 0.5, including ones resumed from a kept
   disk, report none until the model starts on a new pod. llama.cpp reports no KV cache figure, and
   load on pods with several cards has not been measured live.

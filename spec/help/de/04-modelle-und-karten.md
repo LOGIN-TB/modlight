@@ -48,3 +48,11 @@ In der Modellliste, der Übersicht und der Menüleiste steht die GPU-Last neben 
 Gemessen wird im Pod selbst, etwa alle 10 Sekunden, weil RunPods Schnittstelle den belegten Grafikspeicher nicht meldet. Dass vLLM fast den ganzen Grafikspeicher belegt, ist normal: Es reserviert ihn beim Start für den Kontext-Cache. Ob das Modell arbeitet, zeigen GPU-Last und Token pro Sekunde.
 
 Pods, die eine frühere Podlight-Version angelegt hat, melden keine Auslastung, auch wenn sie mit „Modell zwischenspeichern“ fortgesetzt werden. Die Werte erscheinen, sobald das Modell auf einem neuen Pod startet.
+
+## Auf mehreren Macs
+
+Ein Modell gehört dem Mac, auf dem du es angelegt hast. Ein zweiter Mac mit demselben RunPod-Key zeigt in der Übersicht unter „Von anderen Macs“ die Modelle, deren Pod existiert, also laufende und gestoppte mit behaltener Festplatte. Mit „Übernehmen …“ holst du eines auf diesen Mac. Er startet, stoppt und berechnet es ab dann, und deine Agenten verbinden sich mit ihm.
+
+Der erste Mac gibt das Modell innerhalb einer Minute ab, oder sobald er das nächste Mal läuft. Bei ihm steht dann „Verwaltet von …“. Er lässt den Pod in Ruhe, und Anfragen seiner Agenten an dieses Modell bekommen den Hinweis, den anderen Mac zu nutzen. Mit „Zurückholen“ holst du das Modell wieder zu ihm. Löschen entfernt ein abgegebenes Modell nur von diesem Mac, der Pod bleibt.
+
+Welcher Mac ein Modell verwaltet, steht bei RunPod im Namen des Pods, etwa `podlight-coder@studio-mac-7c1e`. Beide Macs brauchen Podlight 0.6 oder neuer. Ein Modell ohne Pod (gelöscht, ohne behaltene Festplatte) legst du auf dem zweiten Mac neu an. Sollen mehrere Rechner dieselben Modelle gleichzeitig nutzen, ist ein Podlight-Server der passende Weg.

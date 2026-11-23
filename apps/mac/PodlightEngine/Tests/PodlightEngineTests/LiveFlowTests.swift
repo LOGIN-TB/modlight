@@ -489,3 +489,133 @@ struct LiveTelemetryTests {
         await cleanUp()
     }
 }
+
+/// Two Macs (two engines with their own state and keychain) and one real pod: A starts a tiny
+/// GGUF model with a kept disk, B takes it over while it runs, A lets go, B stops it, A takes it
+/// back. Opt-in: `PODLIGHT_LIVE_TAKEOVER=1 RUNPOD_API_KEY=… swift test --filter LiveTakeOver`.
+@Suite("Live take-over between two Macs", .serialized,
+       .enabled(if: ProcessInfo.processInfo.environment["PODLIGHT_LIVE_TAKEOVER"] == "1"))
+struct LiveTakeOverTests {
+    struct Mac {
+        let manager: PodManager
+        let keychain: KeychainStore
+        let stateURL: URL
+    }
+
+    static func mac(_ apiKey: String, tag: String) async throws -> Mac {
+        let keychain = KeychainStore(service: "app.podlight.live.\(UUID().uuidString)")
+        try keychain.write(apiKey, for: .runpodAPIKey)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("podlight-live-\(UUID()).json")
+        let store = StateStore(url: url)
+        try await store.update { $0.deviceTag = tag }
+        return Mac(manager: PodManager(store: store, keychain: keychain), keychain: keychain, stateURL: url)
+    }
+
+    @Test(.timeLimit(.minutes(30)))
+    func takeOverAndBack() async throws {
+        let apiKey = ProcessInfo.processInfo.environment["RUNPOD_API_KEY"]!
+        let client = RunpodClient(apiKey: apiKey)
+        let a = try await Self.mac(apiKey, tag: "live-a-\(String(format: "%04x", UInt16.random(in: 0...0xffff)))")
+        let b = try await Self.mac(apiKey, tag: "live-b-\(String(format: "%04x", UInt16.random(in: 0...0xffff)))")
+        var podId: String?
+        var aModel: UUID?
+        var bModel: UUID?
+        func log(_ s: String) { print("[takeover] \(s)") }
+
+        func cleanUp() async {
+            if let podId {
+                try? await client.deletePod(id: podId)
+                do { _ = try await client.pod(id: podId); log("WARNING: pod \(podId) still exists") }
+                catch let e as RunpodError where e.isNotFound { log("pod \(podId) is gone at RunPod (404)") }
+                catch { log("could not confirm deletion: \(error)") }
+            }
+            for (mac, id) in [(a, aModel), (b, bModel)] {
+                if let id { try? mac.keychain.delete(.podKey(id)) }
+                try? mac.keychain.delete(.runpodAPIKey)
+                try? FileManager.default.removeItem(at: mac.stateURL)
+            }
+        }
+
+        func waitReady(_ mac: Mac, _ id: UUID, label: String) async throws -> ModelRun {
+            let t0 = Date()
+            var run = await mac.manager.state().run(id)
+            while Date().timeIntervalSince(t0) < 10 * 60 {
+                try await Task.sleep(for: .seconds(10))
+                await mac.manager.refresh(id)
+                run = await mac.manager.state().run(id)
+                if run.phase == .ready || run.phase == .failed { break }
+            }
+            log("\(label): \(run.phase) after \(Int(Date().timeIntervalSince(t0)))s")
+            return run
+        }
+
+        do {
+            let info = try await HuggingFaceClient().info("Qwen/Qwen2.5-0.5B-Instruct-GGUF")
+            var model = PodlightModel(name: "tiny-takeover", repoId: info.repoId, format: info.format, weightBytes: info.weightBytes,
+                                      nativeContextTokens: info.nativeContextTokens, toolCallParser: info.toolCallParser,
+                                      reasoningParser: info.reasoningParser, contextTokens: 8_192, goal: .economical,
+                                      kvProfile: info.kvProfile, keepDisk: true, quant: info.quant)
+            let catalog = try await client.gpuCatalog()
+            model.preferredGPU = GPUSuggestion.options(for: model.info, catalog: catalog, goal: .economical)
+                .filter { $0.pricePerHour <= 0.5 }.first?.choice
+            try await a.manager.save(model)
+            aModel = model.id
+
+            // A starts it; the pod carries A's tag.
+            try await a.manager.start(model.id, until: Date().addingTimeInterval(20 * 60))
+            podId = await a.manager.state().run(model.id).podId
+            let ready = try await waitReady(a, model.id, label: "A ready")
+            #expect(ready.phase == .ready)
+            guard ready.phase == .ready, let podId else { await cleanUp(); return }
+            let created = try await client.pod(id: podId)
+            log("pod \(podId) named \(created.name) on \(ready.gpuName ?? "?") at $\(ready.pricePerHour ?? 0)/h")
+            let aTag = await a.manager.ownTag()
+            let bTag = await b.manager.ownTag()
+            #expect(PodOwner.owner(ofPodName: created.name) == aTag)
+
+            // B finds it and takes it over while it runs (real Hugging Face lookup).
+            let found = try await b.manager.podsFromOtherMacs()
+            log("B sees: " + found.map { "\($0.servedName) from \($0.owner ?? "-") \($0.status)" }.joined(separator: ", "))
+            let foreign = try #require(found.first { $0.id == podId })
+            bModel = try await b.manager.takeOver(foreign)
+            let renamed = try await client.pod(id: podId)
+            log("after take-over: \(renamed.name), status \(renamed.status)")
+            #expect(renamed.status == .running, "renaming does not restart the pod")
+            let bRun = try await waitReady(b, bModel!, label: "B ready")
+            #expect(bRun.phase == .ready)
+            let endpoint = try await b.manager.endpoint(forModelNamed: "tiny-takeover")
+            var request = URLRequest(url: endpoint.baseURL.appendingPathComponent("v1/models"))
+            request.setValue("Bearer \(endpoint.key)", forHTTPHeaderField: "Authorization")
+            let (_, response) = try await URLSession.shared.data(for: request)
+            log("B reaches the engine with the taken-over key: \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+            #expect((response as? HTTPURLResponse)?.statusCode == 200)
+
+            // A lets go on its next tick.
+            await a.manager.tick()
+            let released = await a.manager.state().run(model.id)
+            log("A after tick: managedBy \(released.managedBy ?? "-"), phase \(released.phase)")
+            #expect(released.managedBy == bTag)
+            await #expect(throws: PodlightError.self) { _ = try await a.manager.endpoint(forModelNamed: "tiny-takeover") }
+
+            // B stops it (kept disk); A takes it back while it is stopped, and B lets go.
+            try await b.manager.stop(bModel!)
+            let stopped = try await client.pod(id: podId)
+            log("B stopped it: \(stopped.status)")
+            let again = try await a.manager.podsFromOtherMacs()
+            let back = try await a.manager.takeOver(try #require(again.first { $0.id == podId }))
+            #expect(back == model.id)
+            let backName = try await client.pod(id: podId)
+            log("A took it back: \(backName.name), status \(backName.status)")
+            #expect(backName.status == .exited, "taking back a stopped pod does not start it")
+            await b.manager.tick()
+            let bAfter = await b.manager.state().run(bModel!).managedBy
+            log("B after tick: managedBy \(bAfter ?? "-")")
+            #expect(bAfter == aTag)
+        } catch {
+            log("error: \(error)")
+            await cleanUp()
+            throw error
+        }
+        await cleanUp()
+    }
+}

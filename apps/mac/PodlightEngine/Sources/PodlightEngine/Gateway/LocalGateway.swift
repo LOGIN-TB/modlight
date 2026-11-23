@@ -237,6 +237,10 @@ public struct LocalGateway: Sendable {
             return Failure(status: 502, message: "RunPod refused (\(status)): \(message.prefix(200))", code: "runpod_error")
         case .keychain(let message):
             return Failure(status: 500, message: "Podlight could not read its keychain: \(message)", code: "keychain")
+        case .managedElsewhere(let mac):
+            return Failure(status: 409, message: "\(model) is managed by another Mac (\(mac)) now. Use it there, or take it back in Podlight on this Mac.", code: "managed_elsewhere")
+        case .nameTaken, .modelLookup:
+            return Failure(status: 500, message: "Podlight could not serve \(model).", code: "internal")
         }
     }
 

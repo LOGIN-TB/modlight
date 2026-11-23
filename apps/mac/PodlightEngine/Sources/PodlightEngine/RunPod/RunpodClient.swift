@@ -86,9 +86,22 @@ public struct RunpodClient: Sendable {
 
     // MARK: Pods
 
+    /// Every pod of the account, following RunPod's pages.
     public func listPods() async throws -> [RunpodPod] {
-        let list: RunpodPodList = try await call("listPods", "GET", "/v2/pods")
-        return list.pods
+        var pods: [RunpodPod] = []
+        var cursor: String?
+        for _ in 0..<20 {
+            let list: RunpodPodList = try await call("listPods", "GET", "/v2/pods", query: cursor.map { ["cursor": $0] } ?? [:])
+            pods += list.pods
+            guard list.pagination?.hasNextPage == true, let next = list.pagination?.nextCursor else { break }
+            cursor = next
+        }
+        return pods
+    }
+
+    /// Renames a pod. RunPod applies it without restarting the pod, running or stopped.
+    public func rename(pod id: String, to name: String) async throws {
+        _ = try await raw("updatePod", "PATCH", "/v2/pods/\(escape(id))", body: ["name": name])
     }
 
     public func pod(id: String) async throws -> RunpodPod {

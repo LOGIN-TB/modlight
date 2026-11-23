@@ -8,7 +8,7 @@ struct ModelRow: View {
 
     private var summary: String {
         let text = PhaseText.summary(run)
-        if run.phase == .stopped, run.podId != nil, let gb = run.persistentGB, gb > 0 {
+        if run.phase == .stopped, run.managedBy == nil, run.podId != nil, let gb = run.persistentGB, gb > 0 {
             return String(localized: "\(text) · disk \(Format.storagePerHour(StoragePricing.stoppedPerHour(volumeGB: gb)))")
         }
         guard run.phase == .ready, let gpu = UsageText.gpu(model.telemetry(item.id)) else { return text }
@@ -60,6 +60,7 @@ enum PhaseText {
     }
 
     static func summary(_ run: ModelRun) -> String {
+        if let other = run.managedBy { return String(localized: "Managed by \(PodOwner.displayName(of: other))") }
         switch run.phase {
         case .ready:
             if let end = run.runUntil { return String(localized: "Running · \(Format.remaining(until: end)) left") }
@@ -82,6 +83,9 @@ struct ModelDetailView: View {
 
     var body: some View {
         Form {
+            if let other = run.managedBy {
+                managedElsewhereSection(PodOwner.displayName(of: other))
+            } else {
             Section {
                 HStack(alignment: .center, spacing: 12) {
                     PhaseIcon(phase: run.phase).imageScale(.large)
@@ -114,8 +118,9 @@ struct ModelDetailView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
+            }
 
-            if run.podStatus == .running, run.phase == .ready || run.phase == .loading {
+            if run.managedBy == nil, run.podStatus == .running, run.phase == .ready || run.phase == .loading {
                 UsageSection(item: item, run: run)
             }
 
@@ -156,12 +161,14 @@ struct ModelDetailView: View {
 
             Section {
                 HStack {
-                    Button("Edit…") { model.editingModel = item }.disabled(!isIdle)
+                    Button("Edit…") { model.editingModel = item }.disabled(!isIdle || run.managedBy != nil)
                     Spacer()
                     Button("Delete Model…", role: .destructive) { confirmingDelete = true }
                 }
             } footer: {
-                Text(isIdle ? "Deleting also deletes a kept disk at RunPod." : "Stop the model to edit it.")
+                Text(run.managedBy != nil
+                     ? "Deleting removes the model from this Mac only. Its pod stays with the other Mac."
+                     : isIdle ? "Deleting also deletes a kept disk at RunPod." : "Stop the model to edit it.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -171,7 +178,28 @@ struct ModelDetailView: View {
         .confirmationDialog("Delete \(item.name)?", isPresented: $confirmingDelete) {
             Button("Delete", role: .destructive) { Task { await model.remove(item) } }
         } message: {
-            Text("The model's pod and its disk at RunPod are deleted too. This cannot be undone.")
+            Text(run.managedBy != nil
+                 ? "The model is removed from this Mac. Its pod and disk at RunPod stay with the Mac that manages it."
+                 : "The model's pod and its disk at RunPod are deleted too. This cannot be undone.")
+        }
+    }
+
+    /// Another Mac took this model over: this Mac leaves the pod alone until it is taken back.
+    @ViewBuilder private func managedElsewhereSection(_ mac: String) -> some View {
+        Section {
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: "laptopcomputer.and.arrow.down").imageScale(.large).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Managed by \(mac)").font(.title3.weight(.semibold))
+                    Text("That Mac took this model over. This Mac leaves its pod alone: it does not start, stop or bill it. Take it back to use the model here again.")
+                        .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.vertical, 4)
+            ModelActions(item: item, run: run, prominent: true)
+            if let error = model.actionError {
+                Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+            }
         }
     }
 
@@ -199,7 +227,13 @@ struct ModelDetailView: View {
 
     /// One prominent action at the trailing end, as the HIG asks: Start, or Stop while running.
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
-        if run.phase == .loading || run.phase == .ready {
+        if run.managedBy != nil {
+            ToolbarItem(placement: .primaryAction) {
+                Button { Task { await model.takeBack(item) } } label: { Label("Take Back", systemImage: "arrow.uturn.backward") }
+                    .buttonStyle(.glassProminent)
+                    .help("Manage this model on this Mac again")
+            }
+        } else if run.phase == .loading || run.phase == .ready {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button("1 Hour") { Task { await model.extend(item, by: 3600) } }
@@ -239,6 +273,11 @@ struct ModelActions: View {
 
     var body: some View {
         HStack(spacing: 10) {
+            if run.managedBy != nil {
+                Button { Task { await model.takeBack(item) } } label: { Label("Take Back", systemImage: "arrow.uturn.backward") }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(prominent ? .large : .regular)
+            } else {
             switch run.phase {
             case .stopped, .failed:
                 Button { model.startingModel = item } label: { Label("Start…", systemImage: "play.fill") }
@@ -264,6 +303,7 @@ struct ModelActions: View {
                 .disabled(run.runUntil == nil)
             case .creating, .stopping:
                 ProgressView().controlSize(.small)
+            }
             }
             Spacer(minLength: 0)
         }
