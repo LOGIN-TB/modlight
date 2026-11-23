@@ -3,7 +3,7 @@ import { hostingOf, iso, type ModelRun, parseDate, type PodlightModel, type PodT
 import { allows, dataCenterIds, needsPlacementCheck, StoragePricing } from '../rules/hosting.ts'
 import * as podPlan from '../rules/podPlan.ts'
 import { admitWake, decide, type Spend } from '../rules/scheduler.ts'
-import { GatewayFailure, summarizeEngineLog } from '../gateway/shape.ts'
+import { engineFailureReason, GatewayFailure, summarizeEngineLog } from '../gateway/shape.ts'
 import { createWithFallback, NoCapacityError, RunpodClient, RunpodError } from '../runpod/client.ts'
 import { type Pod, pricePerHour } from '../runpod/types.ts'
 import type { SettingsStore } from '../store/settings.ts'
@@ -452,9 +452,11 @@ export class PodManager {
       if (watchdog?.telemetry) this.record(id, watchdog.telemetry)
       // The engine died: say why, then end the pod now instead of after the watchdog's grace.
       if (watchdog?.engineAlive === false) {
-        const message = (await this.engineFailure(podId, id)) ?? `exit code ${watchdog.engineExitCode ?? '?'}`
-        await this.stop(id, 'engine-exited').catch(() => {})
-        this.store.updateRun(id, (r) => { r.phase = 'failed'; r.lastReason = 'engine-exited'; r.lastMessage = message })
+        const lines = await this.engineLogLines(podId, id)
+        const message = lines ? summarizeEngineLog(lines) : `exit code ${watchdog.engineExitCode ?? '?'}`
+        const reason = engineFailureReason(lines ?? [])
+        await this.stop(id, reason).catch(() => {})
+        this.store.updateRun(id, (r) => { r.phase = 'failed'; r.lastReason = reason; r.lastMessage = message })
         return
       }
       if (!ready) ready = await this.engineAnswers(podId, id)
@@ -508,7 +510,8 @@ export class PodManager {
     const client = this.clientOrNull()
     if (!client) return
     for (const [id, run] of Object.entries(this.store.runs())) {
-      if (!run.podId || run.phase !== 'stopped') continue
+      // A failed start keeps its stopped pod too (with a kept disk); it counts like a stopped one.
+      if (!run.podId || (run.phase !== 'stopped' && run.phase !== 'failed')) continue
       const dates = [run.stoppedAt, run.lastRequestAt, run.startedAt].map((d) => parseDate(d)?.getTime()).filter((t): t is number => t !== undefined)
       // A stopped pod with no date at all starts its clock now instead of counting as ancient.
       if (dates.length === 0) { this.store.updateRun(id, (r) => { r.stoppedAt = iso(this.now()) }); continue }
@@ -583,11 +586,11 @@ export class PodManager {
   }
 
   /** The last lines the engine wrote, kept by the watchdog because RunPod drops a stopped pod's output. */
-  private async engineFailure(podId: string, modelId: string): Promise<string | null> {
+  private async engineLogLines(podId: string, modelId: string): Promise<string[] | null> {
     const response = await this.podFetch(podId, modelId, podPlan.WATCHDOG_PORT, '/log')
     if (!response || response.status !== 200) return null
     const json = (await response.json().catch(() => null)) as { lines?: string[] } | null
-    return json?.lines ? summarizeEngineLog(json.lines) : null
+    return json?.lines ?? null
   }
 
   /** The engine's last log lines, for the app's detail view. */

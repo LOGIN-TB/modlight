@@ -98,8 +98,24 @@ export function errorBody(status: number, message: string, code: string, anthrop
   return { error: { message, type: 'podlight_error', code } }
 }
 
-/** The error lines of an engine log, or its last lines when none says "error". */
-export function summarizeEngineLog(lines: string[]): string {
+/** `gpu-unusable` when the pod's machine could not use its card at all (CUDA failed before the model
+ * was touched), else `engine-exited`. The first is the machine's fault; another machine helps. */
+export function engineFailureReason(lines: string[]): string {
+  const pattern = /(CUDA unknown error|no CUDA-capable device|CUDA driver version is insufficient|NVIDIA driver on your system is too old|Failed to get device capability|cudaErrorNoDevice|CUDA error: initialization error)/
+  return lines.some((l) => pattern.test(l)) ? 'gpu-unusable' : 'engine-exited'
+}
+
+/** The error lines of an engine log, or its last lines when none says "error". vLLM runs the engine
+ * in a process of its own; when it fails, the API server's last words are only "See root cause
+ * above". Then that process's lines are left out, so the engine's own error shows. */
+export function summarizeEngineLog(all: string[]): string {
+  let lines = all
+  const pointer = [...lines].reverse().find((l) => l.includes('root cause above'))
+  const prefix = pointer?.match(/^\([^)]*\)/)?.[0]
+  if (prefix) {
+    const others = lines.filter((l) => !l.startsWith(prefix))
+    if (others.length > 0) lines = others
+  }
   const pattern = /(Error|Exception|error:|CUDA|out of memory|Traceback|failed to|unable to allocate|error loading model)/
   const errors = lines.filter((l) => pattern.test(l))
   return (errors.length > 0 ? errors : lines).slice(-3).map((l) => l.trim()).join('\n')

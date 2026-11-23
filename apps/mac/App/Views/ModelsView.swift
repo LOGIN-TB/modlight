@@ -76,6 +76,7 @@ struct ModelDetailView: View {
     @Environment(AppModel.self) private var model
     let item: PodlightModel
     @State private var confirmingDelete = false
+    @State private var showingEngineLog = false
 
     private var run: ModelRun { model.run(item.id) }
     private var source: Source { model.source(of: item.id) }
@@ -98,7 +99,7 @@ struct ModelDetailView: View {
                 }
                 .padding(.vertical, 4)
                 ModelActions(item: item, run: run, prominent: true)
-                if run.lastReason == "host-busy", run.phase == .stopped, run.podId != nil {
+                if ["host-busy", "gpu-unusable"].contains(run.lastReason ?? ""), run.phase == .stopped || run.phase == .failed, run.podId != nil {
                     HStack {
                         Button("Start on a New Card…") {
                             model.startingOnNewCard = true
@@ -121,6 +122,10 @@ struct ModelDetailView: View {
                 }
                 if let error = model.actionError {
                     Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                }
+                if run.phase == .failed, let lines = run.engineLog, !lines.isEmpty {
+                    Button("Show Engine Log…") { showingEngineLog = true }
+                        .sheet(isPresented: $showingEngineLog) { EngineLogSheet(name: item.name, lines: lines) }
                 }
                 if let fallback = run.fellBackFrom, !fallback.isEmpty, !isIdle {
                     Label("\(fallback.joined(separator: ", ")) was taken; Podlight used \(run.gpuName ?? "another card").",
@@ -317,5 +322,37 @@ struct ModelActions: View {
             }
             Spacer(minLength: 0)
         }
+    }
+}
+
+/// The engine's last lines from a failed start, to read the whole error or pass it on.
+struct EngineLogSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let name: String
+    let lines: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Engine log of \(name)").font(.title3.weight(.semibold))
+            Text("The last lines the engine wrote before it stopped. The cause is usually near an error line, often above the final traceback.")
+                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            ScrollView {
+                Text(lines.joined(separator: "\n"))
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(minHeight: 320)
+            HStack {
+                Button("Copy") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(lines.joined(separator: "\n"), forType: .string)
+                }
+                Spacer()
+                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(20)
+        .frame(width: 760, height: 520)
     }
 }

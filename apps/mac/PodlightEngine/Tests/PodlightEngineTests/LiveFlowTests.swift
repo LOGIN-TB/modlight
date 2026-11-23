@@ -680,3 +680,162 @@ struct LiveRecordsTests {
         await cleanUp()
     }
 }
+
+/// Starts one model on a real pod the way the app does and keeps the whole engine log, read from
+/// the watchdog every few seconds, so a failed start can be diagnosed. Deletes the pod afterwards.
+/// Opt-in: `PODLIGHT_LIVE_DEBUG_REPO=org/repo [PODLIGHT_LIVE_DEBUG_GPU="NVIDIA …"]
+/// [PODLIGHT_LIVE_DEBUG_CONTEXT=262144] RUNPOD_API_KEY=… swift test --filter LiveModelDebug`.
+@Suite("Live model start with full engine log", .serialized,
+       .enabled(if: ProcessInfo.processInfo.environment["PODLIGHT_LIVE_DEBUG_REPO"] != nil))
+struct LiveModelDebugTests {
+    @Test(.timeLimit(.minutes(45)))
+    func startAndKeepTheLog() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let apiKey = env["RUNPOD_API_KEY"]!
+        let repo = env["PODLIGHT_LIVE_DEBUG_REPO"]!
+        func log(_ s: String) { print("[debug] \(s)") }
+        let keychain = KeychainStore(service: "app.podlight.live.\(UUID().uuidString)")
+        try keychain.write(apiKey, for: .runpodAPIKey)
+        let stateURL = FileManager.default.temporaryDirectory.appendingPathComponent("podlight-live-\(UUID()).json")
+        let manager = PodManager(store: StateStore(url: stateURL), keychain: keychain)
+        let client = RunpodClient(apiKey: apiKey)
+        var modelId: UUID?
+        var engineLog: [String] = []
+
+        func cleanUp() async {
+            if let id = modelId {
+                let run = await manager.state().run(id)
+                if let podId = run.podId { try? await client.deletePod(id: podId) }
+                if let podId = run.podId {
+                    do { _ = try await client.pod(id: podId); log("WARNING: pod \(podId) still exists") }
+                    catch let e as RunpodError where e.isNotFound { log("pod \(podId) is gone (404)") } catch {}
+                }
+                try? await manager.remove(id)
+                try? keychain.delete(.podKey(id))
+            }
+            try? keychain.delete(.runpodAPIKey)
+            try? FileManager.default.removeItem(at: stateURL)
+        }
+
+        func fetchLog(_ podId: String, _ key: String) async {
+            var request = URLRequest(url: PodPlan.proxyURL(podId, PodPlan.watchdogPort).appendingPathComponent("log"))
+            request.timeoutInterval = 10
+            request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+            guard let (data, response) = try? await URLSession.shared.data(for: request), (response as? HTTPURLResponse)?.statusCode == 200,
+                  let lines = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["lines"] as? [String] else { return }
+            // Append what is new: the tail overlaps the end of what we have.
+            var overlap = min(engineLog.count, lines.count)
+            while overlap > 0 && Array(engineLog.suffix(overlap)) != Array(lines.prefix(overlap)) { overlap -= 1 }
+            engineLog += lines.dropFirst(overlap)
+        }
+
+        do {
+            var info = try await HuggingFaceClient().info(repo)
+            if info.format == .gguf, let q = env["PODLIGHT_LIVE_DEBUG_QUANT"] { info = info.choosing(quant: q) }
+            var model = PodlightModel(name: "debug-\(Int.random(in: 1000...9999))", repoId: info.repoId, format: info.format,
+                                      weightBytes: info.weightBytes, nativeContextTokens: info.nativeContextTokens,
+                                      toolCallParser: info.toolCallParser, reasoningParser: info.reasoningParser,
+                                      contextTokens: env["PODLIGHT_LIVE_DEBUG_CONTEXT"].flatMap(Int.init) ?? 32_768,
+                                      kvProfile: info.kvProfile, quant: info.quant)
+            let catalog = try await client.gpuCatalog()
+            let options = GPUSuggestion.options(for: model.info, catalog: catalog, goal: .economical, context: model.contextTokens)
+            if let wanted = env["PODLIGHT_LIVE_DEBUG_GPU"] {
+                let cloud = options.first { $0.choice.gpuId == wanted }?.choice.cloud ?? .community
+                model.preferredGPU = GPUChoice(gpuId: wanted, cloud: cloud)
+            } else {
+                model.preferredGPU = options.first?.choice
+            }
+            log("model \(repo), \(info.format), weights \(Int(info.weightBytes / 1e9)) GB, context \(model.contextTokens), card \(model.preferredGPU?.gpuId ?? "-")")
+            try await manager.save(model)
+            modelId = model.id
+            let t0 = Date()
+            try await manager.start(model.id, until: Date().addingTimeInterval(40 * 60))
+            let key = try #require(try keychain.read(.podKey(model.id)))
+            var run = await manager.state().run(model.id)
+            log("pod \(run.podId ?? "?") on \(run.gpuName ?? "?") at $\(run.pricePerHour ?? 0)/h")
+            while Date().timeIntervalSince(t0) < 40 * 60 {
+                try await Task.sleep(for: .seconds(5))
+                if let podId = await manager.state().run(model.id).podId { await fetchLog(podId, key) }
+                await manager.refresh(model.id)
+                run = await manager.state().run(model.id)
+                if [.ready, .failed, .stopped].contains(run.phase) { break }
+            }
+            log("\(run.phase) after \(Int(Date().timeIntervalSince(t0)))s: \(run.lastMessage ?? "-")")
+            let interesting = engineLog.filter { !$0.contains("it/s]") && !$0.contains("%|") }
+            log("engine log (\(engineLog.count) lines, progress bars left out):")
+            for line in interesting.suffix(160) { print("  | \(line.prefix(400))") }
+        } catch {
+            log("error: \(error)")
+        }
+        await cleanUp()
+    }
+}
+
+/// Like LiveModelDebugTests, but on exactly the given cards (no fallback): creates the pod
+/// directly, reads the engine log from the watchdog until the engine answers or dies, deletes it.
+/// Opt-in: `PODLIGHT_LIVE_PIN_REPO=… PODLIGHT_LIVE_PIN_GPUS="id1,id2" [PODLIGHT_LIVE_PIN_CONTEXT=…]
+/// [PODLIGHT_LIVE_PIN_EXTRA_ARGS="…"] RUNPOD_API_KEY=… swift test --filter LivePinnedCard`.
+@Suite("Live start pinned to one card type", .serialized,
+       .enabled(if: ProcessInfo.processInfo.environment["PODLIGHT_LIVE_PIN_REPO"] != nil))
+struct LivePinnedCardTests {
+    @Test(.timeLimit(.minutes(40)))
+    func startOnThisCardOnly() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let client = RunpodClient(apiKey: env["RUNPOD_API_KEY"]!)
+        func log(_ s: String) { print("[pin] \(s)") }
+        let info = try await HuggingFaceClient().info(env["PODLIGHT_LIVE_PIN_REPO"]!)
+        let gpus = env["PODLIGHT_LIVE_PIN_GPUS"]!.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        let model = PodlightModel(name: "pin-\(Int.random(in: 1000...9999))", repoId: info.repoId, format: info.format,
+                                  weightBytes: info.weightBytes, nativeContextTokens: info.nativeContextTokens,
+                                  toolCallParser: info.toolCallParser, reasoningParser: info.reasoningParser,
+                                  contextTokens: env["PODLIGHT_LIVE_PIN_CONTEXT"].flatMap(Int.init) ?? 32_768,
+                                  kvProfile: info.kvProfile, quant: info.quant)
+        let key = PodManager.randomKey()
+        var request = PodPlan.request(for: model, podKey: key, huggingFaceToken: nil, runUntil: Date().addingTimeInterval(40 * 60),
+                                      heartbeatMinutes: 15)
+        if let extra = env["PODLIGHT_LIVE_PIN_EXTRA_ARGS"] { request.env["PODLIGHT_EXTRA_ARGS"] = extra }
+        let catalog = try await client.gpuCatalog()
+
+        var pod: RunpodPod?
+        outer: for gpu in gpus {
+            for cloud in [RunpodCloud.community, .secure] {
+                var attempt = request
+                attempt.gpu = .init(id: gpu, count: 1, minCudaVersion: request.gpu.minCudaVersion)
+                attempt.cloud = cloud
+                do {
+                    pod = try await client.createPod(attempt)
+                    let price = catalog.first { $0.id == gpu }?.pricePerHour(in: cloud)
+                    log("created \(pod!.id) on \(gpu) \(cloud.rawValue) at $\(price ?? 0)/h")
+                    break outer
+                } catch let e as RunpodError { log("\(gpu) \(cloud.rawValue): \(e.status) \(e.body.prefix(120))") }
+            }
+        }
+        guard let pod else { log("no card free; nothing created"); return }
+
+        var lines: [String] = []
+        func fetchLog() async {
+            var r = URLRequest(url: PodPlan.proxyURL(pod.id, PodPlan.watchdogPort).appendingPathComponent("log"))
+            r.timeoutInterval = 10
+            r.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+            guard let (data, resp) = try? await URLSession.shared.data(for: r), (resp as? HTTPURLResponse)?.statusCode == 200,
+                  let new = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["lines"] as? [String] else { return }
+            var overlap = min(lines.count, new.count)
+            while overlap > 0 && Array(lines.suffix(overlap)) != Array(new.prefix(overlap)) { overlap -= 1 }
+            lines += new.dropFirst(overlap)
+        }
+        let t0 = Date()
+        var outcome = "timeout"
+        while Date().timeIntervalSince(t0) < 35 * 60 {
+            try await Task.sleep(for: .seconds(5))
+            await fetchLog()
+            if lines.contains(where: { $0.contains("Application startup complete") }) { outcome = "ready"; break }
+            if lines.contains(where: { $0.contains("engine exited with") }) { outcome = "engine died"; break }
+            if let p = try? await client.pod(id: pod.id), p.status == .exited || p.status == .terminated { outcome = "pod stopped"; break }
+        }
+        log("\(outcome) after \(Int(Date().timeIntervalSince(t0)))s")
+        for line in lines.filter({ !$0.contains("it/s]") && !$0.contains("%|") }).suffix(200) { print("  | \(line.prefix(500))") }
+        try? await client.deletePod(id: pod.id)
+        do { _ = try await client.pod(id: pod.id); log("WARNING: pod still exists") }
+        catch let e as RunpodError where e.isNotFound { log("pod \(pod.id) is gone (404)") } catch {}
+    }
+}

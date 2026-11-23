@@ -1955,6 +1955,16 @@
         }
       }
     },
+    "Engine log of %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engine-Log von %@"
+          }
+        }
+      }
+    },
     "Enter the address, key and model name in your coding agent.": {
       "localizations": {
         "de": {
@@ -4235,6 +4245,16 @@
         }
       }
     },
+    "Show Engine Log…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engine-Log anzeigen …"
+          }
+        }
+      }
+    },
     "Show Model": {
       "localizations": {
         "de": {
@@ -4905,6 +4925,16 @@
         }
       }
     },
+    "The RunPod machine could not use its card (a CUDA error before the model was loaded). That is the machine, not the model: start on a new card, or choose another card type under Edit.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der RunPod-Rechner konnte seine Karte nicht ansprechen (CUDA-Fehler, bevor das Modell geladen wurde). Das liegt am Rechner, nicht am Modell: Starte auf einer neuen Karte oder wähle unter „Bearbeiten“ eine andere Kartenart."
+          }
+        }
+      }
+    },
     "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept. Start again in a few minutes, or start on a new card (the model is downloaded again).": {
       "localizations": {
         "de": {
@@ -4971,6 +5001,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Key funktioniert."
+          }
+        }
+      }
+    },
+    "The last lines the engine wrote before it stopped. The cause is usually near an error line, often above the final traceback.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die letzten Zeilen, die die Engine vor dem Abbruch geschrieben hat. Die Ursache steht meist bei einer Fehlerzeile, oft oberhalb des letzten Tracebacks."
           }
         }
       }

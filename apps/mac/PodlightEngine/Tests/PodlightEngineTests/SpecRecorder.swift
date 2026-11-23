@@ -269,6 +269,15 @@ struct SpecRecorder {
             ("none", ["line 1", "line 2", "line 3", "line 4"]),
             ("llama", ["llama_model_load: error loading model: tensor shape mismatch", "srv main: exiting"]),
             ("many-errors", ["Error a", "  Error b  ", "Traceback (most recent call last):", "ValueError: bad", "INFO end"]),
+            // vLLM's engine in its own process: the API server only points back at it.
+            ("root-cause-above", [
+                "(EngineCore_DP0 pid=120) ERROR 11-23 13:05:01 [core.py:708] EngineCore failed to start.",
+                "(EngineCore_DP0 pid=120) ERROR 11-23 13:05:01 [core.py:708] Traceback (most recent call last):",
+                "(EngineCore_DP0 pid=120) ERROR 11-23 13:05:01 [core.py:708] ValueError: To serve at least one request with the model's max seq len (262144), 12.5 GiB KV cache is needed, which is larger than the available KV cache memory (9.8 GiB).",
+                "(APIServer pid=68) Traceback (most recent call last):",
+                "(APIServer pid=68)     raise RuntimeError(",
+                "(APIServer pid=68) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}",
+            ]),
         ]
         for (id, lines) in logs {
             file.add("log-\(id)", "Engine log summary: \(id)", "summarizeEngineLog", input: ["lines": lines],

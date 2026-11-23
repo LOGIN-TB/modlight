@@ -439,4 +439,34 @@ struct TakeOverFlowTests {
         #expect(await runpod.pods["kept"] != nil, "not deleted as if ancient")
         #expect(await reloaded.state().run(model.id).stoppedAt != nil, "its clock starts now")
     }
+
+}
+
+@Suite("Engine failure on a pod")
+struct EngineFailureTests {
+    /// The log of the failed start on an RTX PRO 6000 Workstation host (2026-11-23), shortened.
+    static let rtxProLog = [
+        "(APIServer pid=68) INFO 11-23 13:08:05 [api_utils.py:272] non-default args: {...}",
+        "Failed to get device capability: CUDA unknown error - this may be due to an incorrectly set up environment, e.g. changing env variable CUDA_VISIBLE_DEVICES after program start. Setting the available devices to be zero..",
+        "(EngineCore pid=579) ERROR 11-23 13:08:40 [core.py:1346] EngineCore failed to start.",
+        "(EngineCore pid=579) ERROR 11-23 13:08:40 [core.py:1346] Traceback (most recent call last):",
+        "(EngineCore pid=579) ERROR 11-23 13:08:40 [core.py:1346]     torch._C._cuda_init()",
+        "(EngineCore pid=579) ERROR 11-23 13:08:40 [core.py:1346] RuntimeError: CUDA unknown error - this may be due to an incorrectly set up environment, e.g. changing env variable CUDA_VISIBLE_DEVICES after program start. Setting the available devices to be zero.",
+        "(APIServer pid=68) Traceback (most recent call last):",
+        "(APIServer pid=68)     raise RuntimeError(",
+        "(APIServer pid=68) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}",
+        "[podlight] engine exited with 1",
+    ]
+
+    @Test func theEnginesOwnErrorShowsInsteadOfTheAPIServersPointer() {
+        let summary = PodManager.summarizeEngineLog(Self.rtxProLog)
+        #expect(summary.contains("RuntimeError: CUDA unknown error"))
+        #expect(!summary.contains("See root cause above"))
+    }
+
+    @Test func aMachineThatCannotUseItsCardIsToldApartFromAModelError() {
+        #expect(PodManager.engineFailureReason(Self.rtxProLog) == "gpu-unusable")
+        #expect(PodManager.engineFailureReason(["torch.OutOfMemoryError: CUDA out of memory."]) == "engine-exited")
+        #expect(PodManager.engineFailureReason([]) == "engine-exited")
+    }
 }

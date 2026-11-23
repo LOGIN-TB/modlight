@@ -638,6 +638,22 @@
         ]
       },
       "title" : "Engine log summary: many-errors"
+    },
+    {
+      "expected" : "(EngineCore_DP0 pid=120) ERROR 11-23 13:05:01 [core.py:708] EngineCore failed to start.\n(EngineCore_DP0 pid=120) ERROR 11-23 13:05:01 [core.py:708] Traceback (most recent call last):\n(EngineCore_DP0 pid=120) ERROR 11-23 13:05:01 [core.py:708] ValueError: To serve at least one request with the model's max seq len (262144), 12.5 GiB KV cache is needed, which is larger than the available KV cache memory (9.8 GiB).",
+      "function" : "summarizeEngineLog",
+      "id" : "log-root-cause-above",
+      "input" : {
+        "lines" : [
+          "(EngineCore_DP0 pid=120) ERROR 11-23 13:05:01 [core.py:708] EngineCore failed to start.",
+          "(EngineCore_DP0 pid=120) ERROR 11-23 13:05:01 [core.py:708] Traceback (most recent call last):",
+          "(EngineCore_DP0 pid=120) ERROR 11-23 13:05:01 [core.py:708] ValueError: To serve at least one request with the model's max seq len (262144), 12.5 GiB KV cache is needed, which is larger than the available KV cache memory (9.8 GiB).",
+          "(APIServer pid=68) Traceback (most recent call last):",
+          "(APIServer pid=68)     raise RuntimeError(",
+          "(APIServer pid=68) RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}"
+        ]
+      },
+      "title" : "Engine log summary: root-cause-above"
     }
   ],
   "description" : "What the gateway changes and says. `systemMessagesAsReminders` (Anthropic Messages API only): expected is the rewritten body, or null when the body must be forwarded unchanged. `gatewayError`: status and code (OpenAI shape) or error type (Anthropic shape); the message text may differ per implementation. `isValidName`: the served-name rule. `summarizeEngineLog`: the lines shown when an engine dies.",

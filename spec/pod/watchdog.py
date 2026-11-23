@@ -87,11 +87,11 @@ def engine_exit_code():
         return None
 
 
-def engine_log_tail(lines=80):
+def engine_log_tail(lines=250):
     try:
         with open(ENGINE_LOG, "rb") as f:
             f.seek(0, 2)
-            f.seek(max(0, f.tell() - 64_000))
+            f.seek(max(0, f.tell() - 160_000))
             return f.read().decode("utf-8", "replace").splitlines()[-lines:]
     except OSError:
         return []
