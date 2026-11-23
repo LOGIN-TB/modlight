@@ -5,7 +5,7 @@ Pick a model on Hugging Face, let Podlight suggest a GPU and show what it will c
 as long as you need, and point OpenCode, Claude Code, Codex or any OpenAI-compatible client at it. When the time is
 up, or nobody is asking, the pod stops. It also stops when your Mac sleeps or the app is gone.
 
-> **Status: 0.4.0.** Local mode on the Mac, usable from other computers on your network, and server
+> **Status: 0.5.0.** Local mode on the Mac, usable from other computers on your network, and server
 > mode: a container that keeps models reachable while your Mac is off, controlled from the app. vLLM
 > and llama.cpp (GGUF); Claude Code and Codex as well as OpenAI-compatible agents. Built and tested on
 > real RunPod hardware. See [What has been tested](#what-has-been-tested) and [Known limits](#known-limits).
@@ -85,7 +85,9 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
   recorded responses, GPU suggestion, pod plan, and an end-to-end run of the gateway against a fake
   RunPod and a fake vLLM.
 - **Watchdog** (`tools/test_watchdog.py`): stops without heartbeat, at its deadline, when the
-  engine dies; ignores a stale deadline; rejects a heartbeat without the key.
+  engine dies; ignores a stale deadline; rejects a heartbeat without the key; reports load with every
+  heartbeat and keeps answering when `nvidia-smi`, cgroups or the engine's metrics are missing; parses
+  `nvidia-smi` and engine metrics as in [`spec/cases/telemetry.json`](spec/cases/telemetry.json).
 - **Real hardware**: [docs/measurements-2026-11-20-e2e.md](docs/measurements-2026-11-20-e2e.md) (0.1) and
   [docs/measurements-2026-11-21-0.2.md](docs/measurements-2026-11-21-0.2.md) (EU only, no disk; two cards in one pod
   not yet verified live, RunPod had no two-card capacity in the EU) and
@@ -94,7 +96,9 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
   run with a tool call against a 27B GGUF model) and
   [docs/measurements-2026-11-21-m2.md](docs/measurements-2026-11-21-m2.md) (the server in a container: wake,
   chat with a tool call, Messages and Responses API, the safety stop after the container was stopped,
-  resume and deletion, 0.03 USD).
+  resume and deletion, 0.03 USD) and
+  [docs/measurements-2026-11-22-telemetry.md](docs/measurements-2026-11-22-telemetry.md) (pod load on
+  vLLM and llama.cpp, from the Mac and through the server).
 
 ## Known limits
 
@@ -106,7 +110,10 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
   Anthropic-compatible route, without web search. A full agent session against a large model is not
   part of the measurements yet.
 - On the local network the connection is plain HTTP (key required); use it only in trusted networks.
-- The Windows app is not part of 0.4.
+- The Windows app is not part of 0.5.
+- Pod load is measured by the pod itself. Pods created before 0.5, including ones resumed from a kept
+  disk, report none until the model starts on a new pod. llama.cpp reports no KV cache figure, and
+  load on pods with several cards has not been measured live.
 - The app's server screens were checked as rendered screenshots and through the app's server client
   against a real server, not yet by clicking through them on a Mac connected to a remote server.
 - A request that is not streamed and takes longer than 100 seconds can be cut off by RunPod's proxy
