@@ -86,6 +86,9 @@ class FakePod {
   slowStreamAborted = false
   /** Telemetry the watchdog reports; each heartbeat is a new sample. */
   telemetryTime = 1_800_000_000
+  /** Start tests seen, and whether the engine answers them with "!!!!…" (a broken model). */
+  startTests = 0
+  garbage = false
 
   engine = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     const chunks: Buffer[] = []
@@ -94,6 +97,11 @@ class FakePod {
     if (req.url === '/v1/models') {
       res.writeHead(200, { 'content-type': 'application/json' })
       return void res.end('{"data":[]}')
+    }
+    if (text.includes('Reply with one word: ready')) {
+      this.startTests += 1
+      res.writeHead(200, { 'content-type': 'application/json' })
+      return void res.end(JSON.stringify({ choices: [{ message: { content: this.garbage ? '!'.repeat(48) : 'ready' }, finish_reason: 'stop' }] }))
     }
     if (this.proxyNotReadyFor > 0) {
       this.proxyNotReadyFor -= 1
@@ -390,6 +398,24 @@ describe('Podlight server', () => {
     assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, { newPod: true })).statusCode, 200)
     assert.ok(!runpod.pods.has(podId))
     assert.notEqual(s.store.run(MODEL_ID).podId, podId)
+  })
+
+  test('the start test stops a model that only repeats one character', async () => {
+    pod.garbage = true
+    pod.startTests = 0
+    try {
+      assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
+      const podId = s.store.run(MODEL_ID).podId!
+      await s.manager.tick()
+      const run = s.store.run(MODEL_ID)
+      assert.equal(pod.startTests, 1)
+      assert.equal(run.phase, 'failed')
+      assert.equal(run.lastReason, 'garbage-output')
+      assert.match(run.lastMessage ?? '', /^"!!!!/)
+      assert.ok(!runpod.pods.has(podId), 'without a kept disk the useless pod is deleted')
+    } finally {
+      pod.garbage = false
+    }
   })
 
   test('a pod outside the allowed region is deleted at once', async () => {

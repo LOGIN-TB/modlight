@@ -106,6 +106,8 @@ enum SpecRuntime {
             got = PodlightModel.isValidName(input["name"] as? String ?? "")
         case "summarizeEngineLog":
             got = PodManager.summarizeEngineLog(input["lines"] as? [String] ?? [])
+        case "looksDegenerate":
+            got = PodManager.looksDegenerate(input["text"] as? String ?? "")
         default:
             Issue.record("SpecRuntime has no \(c.function)")
             return

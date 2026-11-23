@@ -654,6 +654,78 @@
         ]
       },
       "title" : "Engine log summary: root-cause-above"
+    },
+    {
+      "expected" : true,
+      "function" : "looksDegenerate",
+      "id" : "degenerate-bangs",
+      "input" : {
+        "text" : "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      },
+      "title" : "Start test answer: bangs"
+    },
+    {
+      "expected" : false,
+      "function" : "looksDegenerate",
+      "id" : "degenerate-ready",
+      "input" : {
+        "text" : "ready"
+      },
+      "title" : "Start test answer: ready"
+    },
+    {
+      "expected" : false,
+      "function" : "looksDegenerate",
+      "id" : "degenerate-ready-sentence",
+      "input" : {
+        "text" : "Ready. I am here and listening!"
+      },
+      "title" : "Start test answer: ready-sentence"
+    },
+    {
+      "expected" : false,
+      "function" : "looksDegenerate",
+      "id" : "degenerate-short-repeat",
+      "input" : {
+        "text" : "!!!!!!"
+      },
+      "title" : "Start test answer: short-repeat"
+    },
+    {
+      "expected" : true,
+      "function" : "looksDegenerate",
+      "id" : "degenerate-two-chars",
+      "input" : {
+        "text" : "?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!"
+      },
+      "title" : "Start test answer: two-chars"
+    },
+    {
+      "expected" : true,
+      "function" : "looksDegenerate",
+      "id" : "degenerate-spaces",
+      "input" : {
+        "text" : "! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
+      },
+      "title" : "Start test answer: spaces"
+    },
+    {
+      "expected" : false,
+      "function" : "looksDegenerate",
+      "id" : "degenerate-three-chars",
+      "input" : {
+        "text" : "abcabcabcabcabcabcabcabcabcabc"
+      },
+      "title" : "Start test answer: three-chars"
+    },
+    {
+      "expected" : false,
+      "function" : "looksDegenerate",
+      "id" : "degenerate-empty",
+      "input" : {
+        "text" : ""
+      },
+      "title" : "Start test answer: empty"
     }
   ],
   "description" : "What the gateway changes and says. `systemMessagesAsReminders` (Anthropic Messages API only): expected is the rewritten body, or null when the body must be forwarded unchanged. `gatewayError`: status and code (OpenAI shape) or error type (Anthropic shape); the message text may differ per implementation. `isValidName`: the served-name rule. `summarizeEngineLog`: the lines shown when an engine dies.",

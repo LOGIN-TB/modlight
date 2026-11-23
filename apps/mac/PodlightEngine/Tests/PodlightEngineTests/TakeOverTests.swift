@@ -94,6 +94,9 @@ actor SharedRunPod: HTTPTransport {
     /// Resumes refused with "not enough free GPUs on the host machine" before one succeeds.
     var hostBusyFor = 0
     func setHostBusy(_ n: Int) { hostBusyFor = n }
+    /// The engine answers the start test with "!!!!…", like a broken quantisation.
+    var garbageAnswers = false
+    func setGarbage(_ on: Bool) { garbageAnswers = on }
     var renames: [String] = []
     private var next = 0
 
@@ -117,7 +120,13 @@ actor SharedRunPod: HTTPTransport {
         func reply(_ code: Int, _ body: String) -> (Data, HTTPURLResponse) {
             (Data(body.utf8), HTTPURLResponse(url: url, statusCode: code, httpVersion: nil, headerFields: nil)!)
         }
-        if url.host == "127.0.0.1" { return reply(200, #"{"engineAlive":true}"#) }
+        if url.host == "127.0.0.1" {
+            if url.path.hasSuffix("/v1/chat/completions") {
+                let text = garbageAnswers ? String(repeating: "!", count: 48) : "ready"
+                return reply(200, #"{"choices":[{"message":{"role":"assistant","content":"\#(text)"},"finish_reason":"stop"}]}"#)
+            }
+            return reply(200, #"{"engineAlive":true}"#)
+        }
         let parts = url.path.split(separator: "/").map(String.init) // v2, pods, id, action
         let body = (request.httpBody.flatMap { try? JSONSerialization.jsonObject(with: $0) }) as? [String: Any]
         if parts.count >= 2, parts[1] == "templates" {
@@ -468,5 +477,41 @@ struct EngineFailureTests {
         #expect(PodManager.engineFailureReason(Self.rtxProLog) == "gpu-unusable")
         #expect(PodManager.engineFailureReason(["torch.OutOfMemoryError: CUDA out of memory."]) == "engine-exited")
         #expect(PodManager.engineFailureReason([]) == "engine-exited")
+    }
+
+}
+
+@Suite("Start test", .serialized, .enabled(if: ProcessInfo.processInfo.environment["CI"] == nil,
+                                           "uses the login keychain; runs on a developer Mac"))
+struct StartTestTests {
+    @Test func aModelThatOnlyRepeatsOneCharacterIsStoppedAtOnce() async throws {
+        let runpod = SharedRunPod()
+        let a = try await TakeOverFlowTests.mac(runpod, tag: "mac-a-aaaa")
+        let model = PodlightModel(name: "broken", repoId: "Org/Broken-NVFP4", format: .nvfp4, weightBytes: 2e10,
+                                  nativeContextTokens: 262_144, toolCallParser: nil, reasoningParser: nil,
+                                  contextTokens: 32_768, preferredGPU: GPUChoice(gpuId: "NVIDIA RTX A4000", cloud: .community))
+        try await a.manager.save(model)
+        defer { a.cleanUp(models: [model.id]) }
+        await runpod.setGarbage(true)
+        try await a.manager.start(model.id, until: nil)
+        let podId = try #require(await a.manager.state().run(model.id).podId)
+        await a.manager.refresh(model.id)
+        let run = await a.manager.state().run(model.id)
+        #expect(run.phase == .failed && run.lastReason == "garbage-output")
+        #expect(run.lastMessage?.hasPrefix("\"!!!!") == true)
+        #expect(await runpod.deleted == [podId], "without a kept disk the useless pod is deleted")
+    }
+
+    @Test func aModelThatAnswersBecomesReady() async throws {
+        let runpod = SharedRunPod()
+        let a = try await TakeOverFlowTests.mac(runpod, tag: "mac-a-aaaa")
+        let model = PodlightModel(name: "fine", repoId: "Org/Fine-AWQ", format: .awq, weightBytes: 6e9,
+                                  nativeContextTokens: 131_072, toolCallParser: nil, reasoningParser: nil,
+                                  contextTokens: 16_384, preferredGPU: GPUChoice(gpuId: "NVIDIA RTX A4000", cloud: .community))
+        try await a.manager.save(model)
+        defer { a.cleanUp(models: [model.id]) }
+        try await a.manager.start(model.id, until: nil)
+        await a.manager.refresh(model.id)
+        #expect(await a.manager.state().run(model.id).phase == .ready)
     }
 }

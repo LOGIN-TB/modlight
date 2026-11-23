@@ -98,6 +98,14 @@ export function errorBody(status: number, message: string, code: string, anthrop
   return { error: { message, type: 'podlight_error', code } }
 }
 
+/** True for an answer made of one or two characters repeated, as a model gives when its numbers are
+ * broken ("!!!!…" from an NVFP4 build on an RTX PRO 6000, 2026-11-23). */
+export function looksDegenerate(text: string): boolean {
+  const characters = [...text].filter((c) => !/\s/.test(c))
+  if (characters.length < 16) return false
+  return new Set(characters).size <= 2
+}
+
 /** `gpu-unusable` when the pod's machine could not use its card at all (CUDA failed before the model
  * was touched), else `engine-exited`. The first is the machine's fault; another machine helps. */
 export function engineFailureReason(lines: string[]): string {
