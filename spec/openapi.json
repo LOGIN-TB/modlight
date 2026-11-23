@@ -2322,6 +2322,10 @@
                       "null"
                     ],
                     "format": "date-time"
+                  },
+                  "newPod": {
+                    "type": "boolean",
+                    "description": "Delete a stopped pod with its disk and build a new one (when its machine has no free card)."
                   }
                 }
               }

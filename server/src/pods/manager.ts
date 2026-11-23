@@ -32,6 +32,9 @@ export interface ManagerOptions {
   runpodBase?: string
   /** Wait between readiness checks while a woken pod starts. */
   wakePollMs?: number
+  /** Tries, and the wait between them, to resume a pod whose machine has no free card. */
+  hostBusyTries?: number
+  hostBusyDelayMs?: number
   log?: (message: string) => void
 }
 
@@ -54,7 +57,12 @@ export class PodManager {
   private readonly samples = new Map<string, PodTelemetry[]>()
   private ticking = false
 
+  private readonly hostBusyTries: number
+  private readonly hostBusyDelayMs: number
+
   constructor(o: ManagerOptions) {
+    this.hostBusyTries = Math.max(1, o.hostBusyTries ?? 5)
+    this.hostBusyDelayMs = o.hostBusyDelayMs ?? 15_000
     this.store = o.store
     this.settings = o.settings
     this.now = o.now ?? (() => new Date())
@@ -99,16 +107,29 @@ export class PodManager {
 
   // MARK: Start, stop, extend
 
-  /** Starts (or resumes) a model's pod. Returns once RunPod has accepted it. */
-  start(id: string, runUntil: Date | null, manual = true): Promise<void> {
+  /** Resumes a stopped pod, trying again for about a minute while its machine has no free card. */
+  private async resumeWaitingForHost(client: RunpodClient, podId: string): Promise<Pod> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await client.action(podId, 'start')
+      } catch (error) {
+        if (!(error instanceof RunpodError && error.isHostGpuUnavailable) || attempt >= this.hostBusyTries) throw error
+        await new Promise((resolve) => setTimeout(resolve, this.hostBusyDelayMs))
+      }
+    }
+  }
+
+  /** Starts (or resumes) a model's pod. Returns once RunPod has accepted it. `newPod`: the user
+   * chose a new card for a pod whose machine is busy; only then is a stopped pod deleted. */
+  start(id: string, runUntil: Date | null, manual = true, newPod = false): Promise<void> {
     const running = this.starts.get(id)
     if (running) return running
-    const task = this.performStart(id, runUntil, manual).finally(() => this.starts.delete(id))
+    const task = this.performStart(id, runUntil, manual, newPod).finally(() => this.starts.delete(id))
     this.starts.set(id, task)
     return task
   }
 
-  private async performStart(id: string, runUntil: Date | null, manual: boolean): Promise<void> {
+  private async performStart(id: string, runUntil: Date | null, manual: boolean, newPod: boolean): Promise<void> {
     const model = this.store.model(id)
     if (!model) throw new GatewayFailure({ kind: 'unknownModel' })
     const wake = admitWake(this.spend())
@@ -117,6 +138,16 @@ export class PodManager {
     const settings = this.settings.read()
     const podKey = this.podKey(id)
     const run = this.store.run(id)
+
+    if (newPod && run.podId) {
+      try {
+        await client.deletePod(run.podId)
+      } catch (error) {
+        if (!(error instanceof RunpodError && error.isNotFound)) throw this.asFailure(error)
+      }
+      this.store.updateRun(id, (r) => { r.podId = null; r.podStatus = null; r.persistentGB = null })
+      run.podId = null
+    }
 
     if (run.podId) {
       try {
@@ -129,13 +160,21 @@ export class PodManager {
           return
         }
         this.store.updateRun(id, (r) => { r.phase = 'creating'; r.lastReason = null; r.lastMessage = null })
-        const resumed = await client.action(run.podId, 'start')
+        // Resume with this version's start script and watchdog, not the ones it was made with.
+        const fresh = pod.env ? podPlan.freshenedEnv(pod.env, runUntil) : null
+        if (fresh) await client.updateEnv(run.podId, fresh).catch(() => {})
+        const resumed = await this.resumeWaitingForHost(client, run.podId)
         this.markStarted(id, resumed, runUntil, manual)
         return
       } catch (error) {
-        if (error instanceof RunpodError && (error.isNotFound || error.isHostGpuUnavailable)) {
-          // Gone, or its host gave the card away: build a new one from the same model.
-          if (!error.isNotFound) await client.deletePod(run.podId).catch(() => {})
+        if (error instanceof RunpodError && error.isHostGpuUnavailable) {
+          // Its machine gave the card away. The pod and its disk stay: deleting them would throw
+          // away the downloaded model long before its deletion date. The user decides.
+          this.store.updateRun(id, (r) => { r.phase = 'stopped'; r.lastReason = 'host-busy'; r.lastMessage = null })
+          throw new GatewayFailure({ kind: 'hostBusy' })
+        }
+        if (error instanceof RunpodError && error.isNotFound) {
+          // Gone: build a new one from the same model.
           this.store.updateRun(id, (r) => { r.podId = null })
         } else if (error instanceof RunpodError) {
           this.fail(id, error)
@@ -470,7 +509,10 @@ export class PodManager {
     if (!client) return
     for (const [id, run] of Object.entries(this.store.runs())) {
       if (!run.podId || run.phase !== 'stopped') continue
-      const lastUse = Math.max(...[run.stoppedAt, run.lastRequestAt, run.startedAt].map((d) => parseDate(d)?.getTime() ?? 0))
+      const dates = [run.stoppedAt, run.lastRequestAt, run.startedAt].map((d) => parseDate(d)?.getTime()).filter((t): t is number => t !== undefined)
+      // A stopped pod with no date at all starts its clock now instead of counting as ancient.
+      if (dates.length === 0) { this.store.updateRun(id, (r) => { r.stoppedAt = iso(this.now()) }); continue }
+      const lastUse = Math.max(...dates)
       if (lastUse >= cutoff) continue
       try {
         await client.deletePod(run.podId)

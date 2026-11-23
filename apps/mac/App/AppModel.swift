@@ -50,6 +50,8 @@ final class AppModel {
     var showingAddModel = false
     var editingModel: PodlightModel?
     var startingModel: PodlightModel?
+    /// The start sheet builds a new pod on a new card (after "the machine's card is busy").
+    var startingOnNewCard = false
     /// A model just added with "Add and Start…": its start sheet opens when the add sheet is gone.
     var startAfterAdding: UUID?
     /// Where the add sheet puts a new model.
@@ -275,16 +277,16 @@ final class AppModel {
         }
     }
 
-    func start(_ model: PodlightModel, until: Date) async {
+    func start(_ model: PodlightModel, until: Date, newPod: Bool = false) async {
         actionError = nil
         notifier.requestPermissionOnce()
         do {
             switch source(of: model.id) {
             case .local:
-                try await manager.start(model.id, until: until, manual: true)
+                try await manager.start(model.id, until: until, manual: true, newPod: newPod)
             case .server(let id):
                 guard let server = server(id) else { return }
-                try await server.client(keychain).start(model.id, until: until)
+                try await server.client(keychain).start(model.id, until: until, newPod: newPod)
                 await server.refresh(keychain)
             }
         } catch {

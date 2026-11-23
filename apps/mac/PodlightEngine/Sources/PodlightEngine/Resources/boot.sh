@@ -54,6 +54,13 @@ else
   [[ "${PODLIGHT_TP:-1}" -gt 1 ]] && args+=(--tensor-parallel-size "$PODLIGHT_TP")
   [[ -n "${PODLIGHT_TOOL_PARSER:-}" ]] && args+=(--enable-auto-tool-choice --tool-call-parser "$PODLIGHT_TOOL_PARSER")
   [[ -n "${PODLIGHT_REASONING_PARSER:-}" ]] && args+=(--reasoning-parser "$PODLIGHT_REASONING_PARSER")
+  # An image-and-text model whose repository lacks the image processor (common in quantised
+  # re-uploads) makes vLLM fail with "Can't load image processor". Serve its text part instead.
+  text_only="${PODLIGHT_TEXT_ONLY:-$(python3 /tmp/podlight-watchdog.py text-only-check "$PODLIGHT_MODEL" 2>/dev/null || echo 0)}"
+  if [[ "$text_only" == "1" ]]; then
+    args+=(--language-model-only)
+    log "no image processor in $PODLIGHT_MODEL: serving text only"
+  fi
   engine=(vllm serve)
   engine_name="vLLM"
   model_label="$PODLIGHT_MODEL"

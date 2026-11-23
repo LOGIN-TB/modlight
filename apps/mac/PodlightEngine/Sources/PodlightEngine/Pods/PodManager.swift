@@ -23,6 +23,9 @@ public enum PodlightError: Error, Sendable, Equatable {
     case nameTaken(String)
     /// Hugging Face could not describe the model of a pod being taken over.
     case modelLookup(String)
+    /// The card on the machine of a stopped pod is taken. The pod and its disk are kept; start
+    /// again later, or on a new card (which builds a new pod and downloads the model again).
+    case hostBusy
 }
 
 /// Where the gateway forwards a request.
@@ -49,9 +52,17 @@ public actor PodManager {
     private var published: [UUID: String] = [:]
     private var lastRecordCheck: Date?
 
+    /// How often and how far apart a resume is tried again while the pod's machine has no free
+    /// card. RunPod often frees it within seconds (measured: 10 s after a stop).
+    private let hostBusyTries: Int
+    private let hostBusyDelay: Duration
+
     public init(store: StateStore, keychain: KeychainStore = KeychainStore(),
                 transport: HTTPTransport = URLSession.shared, now: @escaping @Sendable () -> Date = Date.init,
-                podURL: @escaping @Sendable (_ podId: String, _ port: Int) -> URL = PodPlan.proxyURL) {
+                podURL: @escaping @Sendable (_ podId: String, _ port: Int) -> URL = PodPlan.proxyURL,
+                hostBusyTries: Int = 5, hostBusyDelay: Duration = .seconds(15)) {
+        self.hostBusyTries = max(1, hostBusyTries)
+        self.hostBusyDelay = hostBusyDelay
         self.store = store
         self.keychain = keychain
         self.transport = transport
@@ -99,15 +110,17 @@ public actor PodManager {
 
     /// Starts (or resumes) a model's pod. Returns once RunPod has accepted it; the engine then
     /// needs minutes to load, which `tick` follows.
-    public func start(_ id: UUID, until runUntil: Date?, manual: Bool = true) async throws {
+    /// `newPod`: the user chose a new card for a pod whose machine is busy. Only then is a stopped
+    /// pod with its disk deleted to build a new one.
+    public func start(_ id: UUID, until runUntil: Date?, manual: Bool = true, newPod: Bool = false) async throws {
         if let running = starts[id] { return try await running.value }
-        let task = Task { try await self.performStart(id, until: runUntil, manual: manual) }
+        let task = Task { try await self.performStart(id, until: runUntil, manual: manual, newPod: newPod) }
         starts[id] = task
         defer { starts[id] = nil }
         try await task.value
     }
 
-    private func performStart(_ id: UUID, until runUntil: Date?, manual: Bool) async throws {
+    private func performStart(_ id: UUID, until runUntil: Date?, manual: Bool, newPod: Bool) async throws {
         let state = await store.current()
         guard let model = state.models.first(where: { $0.id == id }) else { throw PodlightError.unknownModel(id.uuidString) }
         if let other = state.run(id).managedBy { throw PodlightError.managedElsewhere(PodOwner.displayName(of: other)) }
@@ -117,6 +130,14 @@ public actor PodManager {
         let podKey = try podKey(for: id)
         let owner = await ownTag()
         var run = state.run(id)
+
+        if newPod, let podId = run.podId {
+            do { try await client.deletePod(id: podId) } catch let e as RunpodError where e.isNotFound {} catch let e as RunpodError {
+                throw PodlightError.runpod(status: e.status, message: e.body)
+            }
+            run.podId = nil
+            try await updateRun(id) { $0.podId = nil; $0.podStatus = nil; $0.persistentGB = nil }
+        }
 
         if let podId = run.podId {
             do {
@@ -129,12 +150,21 @@ public actor PodManager {
                     return
                 }
                 try await updateRun(id) { $0.phase = .creating; $0.lastReason = nil; $0.lastMessage = nil }
-                let resumed = try await client.perform(.start, onPod: podId)
+                // Resume with this version's start script and watchdog, not the ones it was made with.
+                if let env = pod.env, let fresh = PodPlan.freshenedEnv(env, runUntil: runUntil) {
+                    try? await client.updateEnv(pod: podId, to: fresh)
+                }
+                let resumed = try await resumeWaitingForHost(client, podId)
                 try await markStarted(id, pod: resumed, runUntil: runUntil, manual: manual)
                 return
-            } catch let error as RunpodError where error.isNotFound || error.isHostGPUUnavailable {
-                // Gone, or its host gave the card away: build a new one from the same model.
-                if !error.isNotFound { try? await client.deletePod(id: podId) }
+            } catch let error as RunpodError where error.isHostGPUUnavailable {
+                // Its machine gave the card away. The pod and its disk stay: deleting them would
+                // throw away the downloaded model long before its deletion date. The user decides
+                // whether to try again later or to start on a new card.
+                try await updateRun(id) { $0.phase = .stopped; $0.lastReason = "host-busy"; $0.lastMessage = nil }
+                throw PodlightError.hostBusy
+            } catch let error as RunpodError where error.isNotFound {
+                // Gone: build a new one from the same model.
                 run.podId = nil
                 try await updateRun(id) { $0.podId = nil }
             } catch let error as RunpodError {
@@ -182,6 +212,19 @@ public actor PodManager {
         } catch let error as PodlightError {
             try await updateRun(id) { $0.phase = .failed; $0.lastReason = "no-suitable-card" }
             throw error
+        }
+    }
+
+    /// Resumes a stopped pod, trying again for about a minute while its machine has no free card.
+    private func resumeWaitingForHost(_ client: RunpodClient, _ podId: String) async throws -> RunpodPod {
+        var attempt = 1
+        while true {
+            do {
+                return try await client.perform(.start, onPod: podId)
+            } catch let error as RunpodError where error.isHostGPUUnavailable && attempt < hostBusyTries {
+                attempt += 1
+                try await Task.sleep(for: hostBusyDelay)
+            }
         }
     }
 
@@ -756,7 +799,13 @@ public actor PodManager {
         let state = await store.current()
         let cutoff = now().addingTimeInterval(-TimeInterval(state.settings.deleteStoppedAfterDays) * 86_400)
         for (id, run) in state.runs where run.podId != nil && run.phase == .stopped && run.managedBy == nil {
-            let lastUse = [run.stoppedAt, run.lastRequestAt, run.startedAt].compactMap { $0 }.max() ?? .distantPast
+            // A stopped pod with no date at all (from an older state) starts its clock now instead
+            // of counting as ancient and being deleted at once.
+            guard let lastUse = [run.stoppedAt, run.lastRequestAt, run.startedAt].compactMap({ $0 }).max() else {
+                let t = now()
+                try? await updateRun(id) { $0.stoppedAt = t }
+                continue
+            }
             guard lastUse < cutoff, let podId = run.podId, let client = try? client() else { continue }
             do {
                 try await client.deletePod(id: podId)

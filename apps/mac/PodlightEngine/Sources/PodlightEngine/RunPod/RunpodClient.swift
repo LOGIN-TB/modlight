@@ -124,6 +124,13 @@ public struct RunpodClient: Sendable {
         _ = try await raw("deleteTemplate", "DELETE", "/v2/templates/\(escape(id))")
     }
 
+    /// Replaces a pod's environment (all of it). Used on stopped pods only: RunPod keeps them
+    /// stopped, and the next start runs with the new environment.
+    public func updateEnv(pod id: String, to env: [String: String]) async throws {
+        struct Body: Encodable, Sendable { var env: [String: String] }
+        _ = try await raw("updatePod", "PATCH", "/v2/pods/\(escape(id))", body: Body(env: env))
+    }
+
     /// Renames a pod. RunPod applies it without restarting the pod, running or stopped.
     public func rename(pod id: String, to name: String) async throws {
         _ = try await raw("updatePod", "PATCH", "/v2/pods/\(escape(id))", body: ["name": name])

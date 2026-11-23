@@ -26,6 +26,19 @@ public enum PodPlan {
     /// the deadline is only the backstop for when the app cannot.
     public static let deadlineGrace: TimeInterval = 10 * 60
 
+    /// A stopped pod resumes with the environment it was created with, so it would run the start
+    /// script and watchdog of the version that made it. Before a resume, Podlight puts in the
+    /// current ones and the new deadline. RunPod accepts a new environment for a stopped pod and
+    /// keeps it stopped (measured 2026-11-23). Nil when nothing changes.
+    public static func freshenedEnv(_ env: [String: String], runUntil: Date?) -> [String: String]? {
+        guard env["PODLIGHT_API_KEY"] != nil else { return nil } // not Podlight's
+        var fresh = env
+        fresh["PODLIGHT_WATCHDOG_B64"] = resource("watchdog", "py").base64EncodedString()
+        fresh["PODLIGHT_BOOT_B64"] = resource("boot", "sh").base64EncodedString()
+        fresh["PODLIGHT_DEADLINE"] = runUntil.map { String(Int($0.addingTimeInterval(deadlineGrace).timeIntervalSince1970)) }
+        return fresh == env ? nil : fresh
+    }
+
     public static func request(for model: PodlightModel, podKey: String, huggingFaceToken: String?,
                                runUntil: Date?, heartbeatMinutes: Int, dataCenterIds: [String]? = nil,
                                owner: String? = nil) -> CreatePodRequest {

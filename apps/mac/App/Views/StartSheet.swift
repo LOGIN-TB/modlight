@@ -35,7 +35,11 @@ struct StartSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Start \(model_.name)").font(.title2.weight(.semibold))
+            Text(model.startingOnNewCard ? "Start \(model_.name) on a New Card" : "Start \(model_.name)").font(.title2.weight(.semibold))
+            if model.startingOnNewCard {
+                Text("The old pod and its disk are deleted. A new pod downloads the model again, which takes 10–25 minutes.")
+                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
             if case .server = source {
                 Label("On \(model.name(of: source))", systemImage: "server.rack").foregroundStyle(.secondary)
             }
@@ -68,11 +72,12 @@ struct StartSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
                 Spacer()
-                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Cancel") { model.startingOnNewCard = false; dismiss() }.keyboardShortcut(.cancelAction)
                 Button("Start") {
                     starting = true
                     Task {
-                        await model.start(model_, until: end)
+                        await model.start(model_, until: end, newPod: model.startingOnNewCard)
+                        model.startingOnNewCard = false
                         starting = false
                         dismiss()
                     }

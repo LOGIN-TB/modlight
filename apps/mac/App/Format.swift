@@ -95,6 +95,8 @@ enum Describe {
                 return String(localized: "\(mac) manages this model now. Take it back to use it on this Mac.")
             case .nameTaken(let name):
                 return String(localized: "This Mac already has a model named \(name). Rename or remove it first, then take the pod over.")
+            case .hostBusy:
+                return String(localized: "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept. Start again in a few minutes, or start on a new card (the model is downloaded again).")
             case .modelLookup(let message):
                 return String(localized: "Hugging Face could not describe the model, so it cannot be taken over yet: \(message)")
             }
@@ -150,6 +152,7 @@ enum Describe {
         case "pod-error": String(localized: "The pod is in an error state at RunPod.")
         case "engine-exited": String(localized: "The engine stopped with an error, so Podlight ended the pod:")
         case "outside-region": String(localized: "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions under Edit.")
+        case "host-busy": String(localized: "The card on the pod's machine was taken, so it could not resume. Its disk with the model is kept.")
         case "taken-over": String(localized: "Taken over from another Mac.")
         case "taken-back": String(localized: "Taken back from another Mac.")
         default: code

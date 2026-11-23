@@ -639,4 +639,10 @@ DE = {
     'Stopped: nothing': 'Gestoppt: kostenlos',
     'Take Over and Start…': 'Übernehmen und starten …',
     'The model moves to this Mac: from now on this Mac starts, stops and bills it, and your agents use it here. %@ lets go within a minute, or the next time it runs.': 'Das Modell zieht auf diesen Mac um: Ab jetzt startet, stoppt und berechnet es dieser Mac, und deine Agenten nutzen es hier. %@ gibt es innerhalb einer Minute ab, oder sobald er das nächste Mal läuft.',
+    'Builds a new pod and downloads the model again; the old pod and its disk are deleted.': 'Legt einen neuen Pod an und lädt das Modell neu; der alte Pod und seine Festplatte werden gelöscht.',
+    'Start %@ on a New Card': '%@ auf neuer Karte starten',
+    'Start on a New Card…': 'Auf neuer Karte starten …',
+    "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept. Start again in a few minutes, or start on a new card (the model is downloaded again).": 'Die Karte auf dem Rechner dieses Pods ist gerade belegt. Pod und Festplatte mit dem Modell bleiben erhalten. Starte in ein paar Minuten erneut oder auf einer neuen Karte (dann wird das Modell neu geladen).',
+    "The card on the pod's machine was taken, so it could not resume. Its disk with the model is kept.": 'Die Karte auf dem Rechner des Pods war belegt, deshalb ließ er sich nicht fortsetzen. Seine Festplatte mit dem Modell bleibt erhalten.',
+    'The old pod and its disk are deleted. A new pod downloads the model again, which takes 10–25 minutes.': 'Der alte Pod und seine Festplatte werden gelöscht. Ein neuer Pod lädt das Modell neu, das dauert 10–25 Minuten.',
 }
