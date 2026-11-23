@@ -5,7 +5,7 @@ Pick a model on Hugging Face, let Podlight suggest a GPU and show what it will c
 as long as you need, and point OpenCode, Claude Code, Codex or any OpenAI-compatible client at it. When the time is
 up, or nobody is asking, the pod stops. It also stops when your Mac sleeps or the app is gone.
 
-> **Status: 0.7.0.** Local mode on the Mac, usable from other computers on your network, and server
+> **Status: 0.7.1.** Local mode on the Mac, usable from other computers on your network, and server
 > mode: a container that keeps models reachable while your Mac is off, controlled from the app. vLLM
 > and llama.cpp (GGUF); Claude Code and Codex as well as OpenAI-compatible agents. Built and tested on
 > real RunPod hardware. See [What has been tested](#what-has-been-tested) and [Known limits](#known-limits).

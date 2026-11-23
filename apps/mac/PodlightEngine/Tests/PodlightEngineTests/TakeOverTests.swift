@@ -91,11 +91,16 @@ actor SharedRunPod: HTTPTransport {
     var pods: [String: Pod] = [:]
     var templates: [String: Template] = [:]
     var deleted: [String] = []
+    /// Resumes refused with "not enough free GPUs on the host machine" before one succeeds.
+    var hostBusyFor = 0
+    func setHostBusy(_ n: Int) { hostBusyFor = n }
     var renames: [String] = []
     private var next = 0
 
     func add(id: String, name: String, status: String, env: [String: String]) { pods[id] = Pod(name: name, status: status, env: env) }
     func name(of id: String) -> String? { pods[id]?.name }
+    func env(of id: String) -> [String: String]? { pods[id]?.env }
+    func setEnv(_ id: String, _ key: String, _ value: String) { pods[id]?.env[key] = value }
     func recordNames() -> [String] { templates.values.map(\.name).sorted() }
     func recordPodId() -> String? { templates.values.first?.env["PODLIGHT_POD_ID"] }
 
@@ -157,8 +162,8 @@ actor SharedRunPod: HTTPTransport {
             return reply(200, json(parts[2], pod))
         case ("PATCH", 3):
             guard pods[parts[2]] != nil else { return reply(404, #"{"detail":"pod not found"}"#) }
-            pods[parts[2]]!.name = body?["name"] as? String ?? pods[parts[2]]!.name
-            renames.append(pods[parts[2]]!.name)
+            if let name = body?["name"] as? String { pods[parts[2]]!.name = name; renames.append(name) }
+            if let env = body?["env"] as? [String: String] { pods[parts[2]]!.env = env }
             return reply(200, json(parts[2], pods[parts[2]]!))
         case ("DELETE", 3):
             pods[parts[2]] = nil
@@ -166,6 +171,10 @@ actor SharedRunPod: HTTPTransport {
             return reply(204, "")
         case ("POST", 4):
             guard pods[parts[2]] != nil else { return reply(404, #"{"detail":"pod not found"}"#) }
+            if (body?["action"] as? String) == "start", hostBusyFor > 0 {
+                hostBusyFor -= 1
+                return reply(400, #"{"detail":"There are not enough free GPUs on the host machine to start this pod.","status":400}"#)
+            }
             pods[parts[2]]!.status = (body?["action"] as? String) == "stop" ? "EXITED" : "RUNNING"
             return reply(200, json(parts[2], pods[parts[2]]!))
         default:
@@ -194,7 +203,8 @@ struct TakeOverFlowTests {
         let store = StateStore(url: url)
         try await store.update { $0.deviceTag = tag }
         let manager = PodManager(store: store, keychain: keychain, transport: runpod,
-                                 podURL: { _, port in URL(string: "http://127.0.0.1:1/\(port)")! })
+                                 podURL: { _, port in URL(string: "http://127.0.0.1:1/\(port)")! },
+                                 hostBusyTries: 3, hostBusyDelay: .zero)
         return Mac(manager: manager, keychain: keychain, stateURL: url)
     }
 
@@ -348,5 +358,85 @@ struct TakeOverFlowTests {
         try await a.manager.remove(id)
         #expect(await runpod.pods.isEmpty)
         #expect(await runpod.recordNames().isEmpty)
+    }
+
+    @Test func aStoppedPodResumesWithThisVersionsScripts() async throws {
+        let runpod = SharedRunPod()
+        let a = try await Self.mac(runpod, tag: "mac-a-aaaa")
+        let model = PodlightModel(name: "coder", repoId: "Org/Coder-AWQ", format: .awq, weightBytes: 6e9,
+                                  nativeContextTokens: 131_072, toolCallParser: nil, reasoningParser: nil,
+                                  contextTokens: 16_384, preferredGPU: GPUChoice(gpuId: "NVIDIA RTX A4000", cloud: .community),
+                                  keepDisk: true)
+        try await a.manager.save(model)
+        defer { a.cleanUp(models: [model.id]) }
+        try await a.manager.start(model.id, until: nil)
+        let podId = try #require(await a.manager.state().run(model.id).podId)
+        try await a.manager.stop(model.id)
+        // As made by an older version.
+        await runpod.setEnv(podId, "PODLIGHT_BOOT_B64", "old")
+        await runpod.setEnv(podId, "PODLIGHT_WATCHDOG_B64", "old")
+        let key = await runpod.env(of: podId)?["PODLIGHT_API_KEY"]
+
+        let until = Date().addingTimeInterval(3600)
+        try await a.manager.start(model.id, until: until)
+        let env = try #require(await runpod.env(of: podId))
+        #expect(env["PODLIGHT_BOOT_B64"] == PodPlan.resource("boot", "sh").base64EncodedString())
+        #expect(env["PODLIGHT_WATCHDOG_B64"] == PodPlan.resource("watchdog", "py").base64EncodedString())
+        #expect(env["PODLIGHT_DEADLINE"] == String(Int(until.addingTimeInterval(PodPlan.deadlineGrace).timeIntervalSince1970)))
+        #expect(env["PODLIGHT_API_KEY"] == key, "the rest stays")
+        #expect(PodPlan.freshenedEnv(env, runUntil: until) == nil, "nothing to change the second time")
+        #expect(PodPlan.freshenedEnv(["X": "1"], runUntil: nil) == nil, "not Podlight's")
+    }
+
+    @Test func aBusyMachineKeepsTheStoppedPodAndOnlyANewCardReplacesIt() async throws {
+        let runpod = SharedRunPod()
+        let a = try await Self.mac(runpod, tag: "mac-a-aaaa")
+        let model = PodlightModel(name: "coder", repoId: "Org/Coder-AWQ", format: .awq, weightBytes: 6e9,
+                                  nativeContextTokens: 131_072, toolCallParser: nil, reasoningParser: nil,
+                                  contextTokens: 16_384, preferredGPU: GPUChoice(gpuId: "NVIDIA RTX A4000", cloud: .community),
+                                  keepDisk: true)
+        try await a.manager.save(model)
+        defer { a.cleanUp(models: [model.id]) }
+        try await a.manager.start(model.id, until: nil)
+        let podId = try #require(await a.manager.state().run(model.id).podId)
+        try await a.manager.stop(model.id)
+
+        // Busy for two tries, free on the third: it resumes the same pod.
+        await runpod.setHostBusy(2)
+        try await a.manager.start(model.id, until: nil)
+        #expect(await a.manager.state().run(model.id).podId == podId)
+        try await a.manager.stop(model.id)
+
+        // Busy for longer: the pod and its disk stay, and the start says why.
+        await runpod.setHostBusy(10)
+        await #expect(throws: PodlightError.hostBusy) { try await a.manager.start(model.id, until: nil) }
+        let run = await a.manager.state().run(model.id)
+        #expect(run.podId == podId && run.lastReason == "host-busy" && run.phase == .stopped)
+        #expect(await runpod.pods[podId] != nil)
+        #expect(await runpod.deleted.isEmpty)
+
+        // Only the user's choice of a new card replaces it.
+        await runpod.setHostBusy(0)
+        try await a.manager.start(model.id, until: nil, newPod: true)
+        #expect(await runpod.deleted == [podId])
+        #expect(await a.manager.state().run(model.id).podId != podId)
+    }
+
+    @Test func aStoppedPodWithoutDatesStartsItsDeletionClockInsteadOfVanishing() async throws {
+        let runpod = SharedRunPod()
+        let a = try await Self.mac(runpod, tag: "mac-a-aaaa")
+        let model = PodlightModel(name: "coder", repoId: "Org/Coder-AWQ", format: .awq, weightBytes: 6e9,
+                                  nativeContextTokens: 131_072, toolCallParser: nil, reasoningParser: nil,
+                                  contextTokens: 16_384, keepDisk: true)
+        try await a.manager.save(model)
+        defer { a.cleanUp(models: [model.id]) }
+        await runpod.add(id: "kept", name: "podlight-coder@mac-a-aaaa", status: "EXITED",
+                         env: ["PODLIGHT_API_KEY": "k", "PODLIGHT_MODEL": "Org/Coder-AWQ", "PODLIGHT_SERVED_NAME": "coder"])
+        try await StateStore(url: a.stateURL).update { $0.runs[model.id, default: ModelRun()].podId = "kept" }
+        let reloaded = PodManager(store: StateStore(url: a.stateURL), keychain: a.keychain, transport: runpod,
+                                  podURL: { _, port in URL(string: "http://127.0.0.1:1/\(port)")! })
+        await reloaded.tick()
+        #expect(await runpod.pods["kept"] != nil, "not deleted as if ancient")
+        #expect(await reloaded.state().run(model.id).stoppedAt != nil, "its clock starts now")
     }
 }

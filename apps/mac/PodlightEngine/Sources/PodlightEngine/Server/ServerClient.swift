@@ -279,8 +279,10 @@ public struct ServerClient: Sendable {
         _ = try await call("DELETE", "/admin/models/\(id.uuidString)", timeout: 60)
     }
 
-    public func start(_ id: UUID, until: Date?) async throws(ServerError) {
-        let body: [String: Any] = ["until": until.map { Self.iso($0) } ?? NSNull()]
+    /// `newPod`: delete a stopped pod with its disk and build a new one (its machine was busy).
+    public func start(_ id: UUID, until: Date?, newPod: Bool = false) async throws(ServerError) {
+        var body: [String: Any] = ["until": until.map { Self.iso($0) } ?? NSNull()]
+        if newPod { body["newPod"] = true }
         _ = try await call("POST", "/admin/models/\(id.uuidString)/start", body: body, timeout: 120)
     }
 

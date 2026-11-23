@@ -1205,6 +1205,16 @@
         }
       }
     },
+    "Builds a new pod and downloads the model again; the old pod and its disk are deleted.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legt einen neuen Pod an und lädt das Modell neu; der alte Pod und seine Festplatte werden gelöscht."
+          }
+        }
+      }
+    },
     "CPU": {
       "localizations": {
         "de": {
@@ -4325,6 +4335,16 @@
         }
       }
     },
+    "Start %@ on a New Card": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ auf neuer Karte starten"
+          }
+        }
+      }
+    },
     "Start %@ on this Mac?": {
       "localizations": {
         "de": {
@@ -4371,6 +4391,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Starte ihn mit docker compose up -d und lies den Code mit docker compose logs ab."
+          }
+        }
+      }
+    },
+    "Start on a New Card…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf neuer Karte starten …"
           }
         }
       }
@@ -4875,6 +4905,26 @@
         }
       }
     },
+    "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept. Start again in a few minutes, or start on a new card (the model is downloaded again).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Karte auf dem Rechner dieses Pods ist gerade belegt. Pod und Festplatte mit dem Modell bleiben erhalten. Starte in ein paar Minuten erneut oder auf einer neuen Karte (dann wird das Modell neu geladen)."
+          }
+        }
+      }
+    },
+    "The card on the pod's machine was taken, so it could not resume. Its disk with the model is kept.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Karte auf dem Rechner des Pods war belegt, deshalb ließ er sich nicht fortsetzen. Seine Festplatte mit dem Modell bleibt erhalten."
+          }
+        }
+      }
+    },
     "The engine stopped with an error, so Podlight ended the pod:": {
       "localizations": {
         "de": {
@@ -4997,6 +5047,16 @@
           "stringUnit": {
             "state": "new",
             "value": "The next start takes about a minute instead of 10–25. RunPod bills the disk (%1$lld GB) by the hour, also while the model is stopped, until Podlight deletes it after %2$lld days without use."
+          }
+        }
+      }
+    },
+    "The old pod and its disk are deleted. A new pod downloads the model again, which takes 10–25 minutes.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der alte Pod und seine Festplatte werden gelöscht. Ein neuer Pod lädt das Modell neu, das dauert 10–25 Minuten."
           }
         }
       }

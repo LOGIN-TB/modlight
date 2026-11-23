@@ -35,7 +35,7 @@ declare module 'fastify' {
 }
 
 const pairBody = z.object({ code: z.string().min(1).max(64), deviceName: z.string().max(100).default('') })
-const startBody = z.object({ until: z.string().datetime({ offset: true }).nullish() })
+const startBody = z.object({ until: z.string().datetime({ offset: true }).nullish(), newPod: z.boolean().optional() })
 const extendBody = z.object({ until: z.string().datetime({ offset: true }) })
 const tokenBody = z.object({ name: z.string().min(1).max(100), models: z.array(z.guid()).nullish() })
 const tokenPatch = z.object({ name: z.string().min(1).max(100).optional(), models: z.array(z.guid()).nullish() })
@@ -144,7 +144,7 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       const model = store.model(request.params.id)
       if (!model) return problem(reply, 404, 'No such model.', 'model_not_found')
       const body = startBody.parse(request.body ?? {})
-      await manager.start(model.id, body.until ? new Date(body.until) : null, true)
+      await manager.start(model.id, body.until ? new Date(body.until) : null, true, body.newPod ?? false)
       audit(deps.db, actor(request), 'start', `${model.name} until ${body.until ?? 'idle stop'}`)
       return store.run(model.id)
     })

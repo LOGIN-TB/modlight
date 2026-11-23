@@ -105,7 +105,7 @@ export function openapi(): object {
         delete: { tags: ['admin'], security: device, summary: 'Remove a model, deleting its pod and disk', parameters: idParam, responses: { 204: { description: 'Removed' }, 404: error } },
       },
       '/admin/models/{id}/start': { post: { tags: ['admin'], security: device, summary: 'Start until a time ("Läuft bis"); without one, idle stop ends it', parameters: idParam,
-        requestBody: { content: json({ type: 'object', properties: { until: { type: ['string', 'null'], format: 'date-time' } } }) }, responses: { 200: ok('Run', ref('ModelRun')), 429: error, 503: error } } },
+        requestBody: { content: json({ type: 'object', properties: { until: { type: ['string', 'null'], format: 'date-time' }, newPod: { type: 'boolean', description: 'Delete a stopped pod with its disk and build a new one (when its machine has no free card).' } } }) }, responses: { 200: ok('Run', ref('ModelRun')), 429: error, 503: error } } },
       '/admin/models/{id}/stop': { post: { tags: ['admin'], security: device, summary: 'Stop (kept disk) or delete the pod', parameters: idParam, responses: { 200: ok('Run', ref('ModelRun')) } } },
       '/admin/models/{id}/extend': { post: { tags: ['admin'], security: device, summary: 'Move "Läuft bis"', parameters: idParam,
         requestBody: { required: true, content: json({ type: 'object', required: ['until'], properties: { until: { type: 'string', format: 'date-time' } } }) }, responses: { 200: ok('Run', ref('ModelRun')) } } },

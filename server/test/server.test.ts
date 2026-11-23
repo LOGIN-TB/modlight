@@ -6,6 +6,7 @@ import { after, before, beforeEach, describe, test } from 'node:test'
 import { buildServer, type Server } from '../src/app.ts'
 import { sealer } from '../src/crypto.ts'
 import { openDatabase } from '../src/store/db.ts'
+import { POD_SCRIPTS } from '../src/rules/podPlan.ts'
 
 // The server end to end, against a fake RunPod and a fake pod (engine on one port, watchdog on
 // another). Nothing here reaches the internet.
@@ -14,6 +15,8 @@ interface Recorded { method: string; path: string; body: any }
 
 class FakeRunPod {
   requests: Recorded[] = []
+  /** Resumes refused with "not enough free GPUs on the host machine" before one succeeds. */
+  hostBusyFor = 0
   pods = new Map<string, { id: string; status: string; cost: number; dataCenterId: string | null; env: Record<string, string> }>()
   /** Responses to POST /v2/pods, in order; `capacity` answers RunPod's "no instances" 400. */
   createScript: Array<'ok' | 'capacity'> = []
@@ -57,7 +60,12 @@ class FakeRunPod {
       const pod = this.pods.get(match[1]!)
       if (!pod) return json(404, { error: 'pod not found' })
       if (req.method === 'DELETE') { this.pods.delete(pod.id); return json(204, undefined) }
+      if (req.method === 'PATCH') { if (body.env) pod.env = body.env; return json(200, { ...pod, name: 'x' }) }
       if (match[2]) {
+        if (body.action === 'start' && this.hostBusyFor > 0) {
+          this.hostBusyFor--
+          return json(400, { detail: 'There are not enough free GPUs on the host machine to start this pod.', status: 400 })
+        }
         pod.status = body.action === 'stop' ? 'EXITED' : 'RUNNING'
         return json(200, { ...pod, name: 'x' })
       }
@@ -173,7 +181,7 @@ describe('Podlight server', () => {
     pod.proxyNotReadyFor = 0
     s = await buildServer({
       db: openDatabase(':memory:'), sealer: sealer(randomBytes(32)), wrongKeyDelayMs: 0, proxyRetryDelayMs: 10,
-      manager: { runpodBase: runpodURL, wakePollMs: 20, podURL: (_id, port) => (port === 8000 ? engineURL : watchdogURL) },
+      manager: { runpodBase: runpodURL, wakePollMs: 20, hostBusyTries: 3, hostBusyDelayMs: 5, podURL: (_id, port) => (port === 8000 ? engineURL : watchdogURL) },
     })
     const code = s.pairing.issue().code
     const paired = await s.app.inject({ method: 'POST', url: '/pair', payload: { code, deviceName: 'Test Mac' } })
@@ -332,6 +340,56 @@ describe('Podlight server', () => {
     assert.equal(run.lastReason, 'run-until')
     assert.equal(run.podId ?? null, null)
     assert.ok(runpod.requests.some((r) => r.method === 'DELETE'))
+  })
+
+  test('a stopped pod resumes with this version\'s start script and watchdog', async () => {
+    await admin('PUT', `/admin/models/${MODEL_ID}`, model(MODEL_ID, 'coder', { keepDisk: true }))
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
+    await admin('POST', `/admin/models/${MODEL_ID}/stop`)
+    const podId = s.store.run(MODEL_ID).podId!
+    const stopped = runpod.pods.get(podId)!
+    assert.equal(stopped.status, 'EXITED')
+    const key = stopped.env.PODLIGHT_API_KEY
+    assert.ok(key)
+    // As made by an older version.
+    stopped.env = { ...stopped.env, PODLIGHT_BOOT_B64: 'old', PODLIGHT_WATCHDOG_B64: 'old' }
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
+    const patch = runpod.requests.find((r) => r.method === 'PATCH' && r.path === `/v2/pods/${podId}`)
+    assert.ok(patch, 'the env is replaced before the resume')
+    assert.equal(runpod.pods.get(podId)!.env.PODLIGHT_BOOT_B64, POD_SCRIPTS.boot)
+    assert.equal(runpod.pods.get(podId)!.env.PODLIGHT_WATCHDOG_B64, POD_SCRIPTS.watchdog)
+    assert.equal(runpod.pods.get(podId)!.env.PODLIGHT_API_KEY, key, 'the rest stays')
+    assert.equal(runpod.pods.get(podId)!.status, 'RUNNING')
+  })
+
+  test('a busy machine keeps the stopped pod and its disk; only a chosen new card replaces it', async () => {
+    await admin('PUT', `/admin/models/${MODEL_ID}`, model(MODEL_ID, 'coder', { keepDisk: true }))
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
+    await admin('POST', `/admin/models/${MODEL_ID}/stop`)
+    const podId = s.store.run(MODEL_ID).podId!
+
+    // Busy for two tries, free on the third: it resumes.
+    runpod.hostBusyFor = 2
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
+    assert.equal(s.store.run(MODEL_ID).podId, podId)
+    await admin('POST', `/admin/models/${MODEL_ID}/stop`)
+
+    // Busy for longer: the pod stays, the start says why.
+    runpod.hostBusyFor = 10
+    const busy = await admin('POST', `/admin/models/${MODEL_ID}/start`, {})
+    assert.equal(busy.statusCode, 503)
+    assert.equal(busy.json().error.code, 'host_busy')
+    assert.equal(s.store.run(MODEL_ID).podId, podId)
+    assert.equal(s.store.run(MODEL_ID).lastReason, 'host-busy')
+    assert.equal(s.store.run(MODEL_ID).phase, 'stopped')
+    assert.ok(runpod.pods.has(podId), 'the pod and its disk are kept')
+    assert.ok(!runpod.requests.some((r) => r.method === 'DELETE'))
+
+    // The user chooses a new card: now the old pod goes and a new one is built.
+    runpod.hostBusyFor = 0
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, { newPod: true })).statusCode, 200)
+    assert.ok(!runpod.pods.has(podId))
+    assert.notEqual(s.store.run(MODEL_ID).podId, podId)
   })
 
   test('a pod outside the allowed region is deleted at once', async () => {

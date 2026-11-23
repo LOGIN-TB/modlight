@@ -424,6 +424,38 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
+# --- Text-only check, asked by boot.sh before vLLM starts ----------------------------------------
+
+PROCESSOR_FILES = ("preprocessor_config.json", "processor_config.json")
+
+
+def needs_text_only(config, files):
+    """True for a model whose config describes images (or audio) while its repository carries no
+    processor for them. vLLM then fails with "Can't load image processor"; with
+    --language-model-only it serves the text part, which is all an agent needs."""
+    multimodal = any(key in (config or {}) for key in ("vision_config", "audio_config"))
+    return multimodal and not any(name in files for name in PROCESSOR_FILES)
+
+
+def text_only_check(repo):
+    """Asks Hugging Face for the repository's files and config. Any failure answers False: then
+    vLLM starts as before."""
+    endpoint = os.environ.get("HF_ENDPOINT", "https://huggingface.co").rstrip("/")
+    headers = {"User-Agent": "podlight-pod"}
+    token = os.environ.get("HF_TOKEN")
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    try:
+        with opener.open(urllib.request.Request(f"{endpoint}/api/models/{repo}", headers=headers), timeout=20) as r:
+            files = {s.get("rfilename") for s in json.load(r).get("siblings", [])}
+        with opener.open(urllib.request.Request(f"{endpoint}/{repo}/resolve/main/config.json", headers=headers), timeout=20) as r:
+            config = json.load(r)
+    except Exception:
+        return False
+    return needs_text_only(config, files)
+
+
 class Server(ThreadingHTTPServer):
     # http.server looks up its own host name with getfqdn() when binding. That reverse DNS lookup
     # can hang for many seconds (seen on CI runners); the name is never used here.
@@ -435,6 +467,9 @@ class Server(ThreadingHTTPServer):
 if __name__ == "__main__":
     if len(sys.argv) > 2 and sys.argv[1] == "stop":
         stop(" ".join(sys.argv[2:]))
+        sys.exit(0)
+    if len(sys.argv) > 2 and sys.argv[1] == "text-only-check":
+        print("1" if text_only_check(sys.argv[2]) else "0")
         sys.exit(0)
     if not POD_ID or not RUNPOD_KEY:
         log("RUNPOD_POD_ID or RUNPOD_API_KEY missing: the pod cannot stop itself")

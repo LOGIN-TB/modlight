@@ -35,6 +35,17 @@ export interface RequestOptions {
   namePrefix?: string
 }
 
+/** A stopped pod resumes with the environment it was created with; before a resume it gets this
+ * version's start script, watchdog and the new deadline. Null when nothing changes. */
+export function freshenedEnv(env: Record<string, string>, runUntil: Date | null): Record<string, string> | null {
+  if (env.PODLIGHT_API_KEY === undefined) return null
+  const fresh: Record<string, string> = { ...env, PODLIGHT_WATCHDOG_B64: POD_SCRIPTS.watchdog, PODLIGHT_BOOT_B64: POD_SCRIPTS.boot }
+  if (runUntil) fresh.PODLIGHT_DEADLINE = String(Math.trunc((runUntil.getTime() + DEADLINE_GRACE_MS) / 1000))
+  else delete fresh.PODLIGHT_DEADLINE
+  const same = Object.keys(fresh).length === Object.keys(env).length && Object.entries(fresh).every(([k, v]) => env[k] === v)
+  return same ? null : fresh
+}
+
 export function request(model: PodlightModel, o: RequestOptions): CreatePodRequest {
   const engine = engineOf(model.format)
   const cards = model.preferredGPU?.count ?? 1

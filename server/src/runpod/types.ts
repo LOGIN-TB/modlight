@@ -38,6 +38,8 @@ export interface Pod {
   cost?: number | null
   image?: string | null
   dataCenterId?: string | null
+  /** The pod's environment; Podlight's pods carry their start script and watchdog here. */
+  env?: Record<string, string> | null
 }
 
 export interface CreatePodRequest {

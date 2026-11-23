@@ -72,6 +72,11 @@ export class RunpodClient {
     return this.call('POST', '/v2/pods', body)
   }
 
+  /** Replaces a stopped pod's environment (all of it); RunPod keeps it stopped. */
+  async updateEnv(id: string, env: Record<string, string>): Promise<void> {
+    await this.call('PATCH', `/v2/pods/${encodeURIComponent(id)}`, { env })
+  }
+
   action(id: string, action: 'start' | 'stop' | 'restart' | 'terminate'): Promise<Pod> {
     return this.call('POST', `/v2/pods/${encodeURIComponent(id)}/action`, { action })
   }

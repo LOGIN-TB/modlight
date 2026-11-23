@@ -98,6 +98,16 @@ struct ModelDetailView: View {
                 }
                 .padding(.vertical, 4)
                 ModelActions(item: item, run: run, prominent: true)
+                if run.lastReason == "host-busy", run.phase == .stopped, run.podId != nil {
+                    HStack {
+                        Button("Start on a New Card…") {
+                            model.startingOnNewCard = true
+                            model.startingModel = item
+                        }
+                        Text("Builds a new pod and downloads the model again; the old pod and its disk are deleted.")
+                            .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
                 if run.phase == .loading || run.phase == .creating {
                     ProgressView {
                         Text(item.keepDisk && run.persistentGB != nil

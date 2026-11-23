@@ -37,6 +37,7 @@ export type GatewayError =
   | { kind: 'wakeDisabled' }
   | { kind: 'runpod'; status: number; message: string }
   | { kind: 'notAllowed' }
+  | { kind: 'hostBusy' }
 
 export class GatewayFailure extends Error {
   readonly error: GatewayError
@@ -74,6 +75,8 @@ export function failure(error: GatewayError, model: string): Failure {
       return { status: 502, code: 'runpod_error', message: `RunPod refused (${error.status}): ${error.message.slice(0, 200)}` }
     case 'notAllowed':
       return { status: 403, code: 'model_not_allowed', message: `This access key may not use ${model}.` }
+    case 'hostBusy':
+      return { status: 503, code: 'host_busy', message: `The card on the machine of ${model}'s pod is taken right now, so it could not resume. Its disk with the model is kept. Try again in a few minutes, or start it on a new card in the Podlight app.` }
   }
 }
 

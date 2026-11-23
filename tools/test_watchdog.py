@@ -276,5 +276,68 @@ class TelemetryParsingTest(unittest.TestCase):
                 self.assertEqual(got, case["expected"])
 
 
+class FakeHub:
+    """Hugging Face's model API and file downloads, for the text-only check."""
+    def __init__(self, files, config):
+        hub = self
+        hub.files, hub.config, hub.auth = files, config, []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                hub.auth.append(self.headers.get("Authorization"))
+                if self.path.startswith("/api/models/"):
+                    body = {"siblings": [{"rfilename": f} for f in hub.files]}
+                elif self.path.endswith("/resolve/main/config.json"):
+                    body = hub.config
+                else:
+                    self.send_response(404); self.end_headers(); return
+                data = json.dumps(body).encode()
+                self.send_response(200); self.send_header("Content-Length", str(len(data))); self.end_headers()
+                self.wfile.write(data)
+            def log_message(self, *a): pass
+
+        self.port = free_port()
+        self.server = ThreadingHTTPServer(("127.0.0.1", self.port), Handler)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def close(self):
+        self.server.shutdown()
+
+
+class TextOnlyCheckTest(unittest.TestCase):
+    """An image-and-text model without its image processor runs text-only (vLLM --language-model-only)."""
+    w = load_watchdog()
+    vision = {"architectures": ["Qwen3_5MoeForConditionalGeneration"], "vision_config": {}, "text_config": {}}
+
+    def test_the_rule(self):
+        self.assertTrue(self.w.needs_text_only(self.vision, {"config.json", "tokenizer.json"}))
+        self.assertFalse(self.w.needs_text_only(self.vision, {"config.json", "preprocessor_config.json"}))
+        self.assertFalse(self.w.needs_text_only(self.vision, {"config.json", "processor_config.json"}))
+        self.assertFalse(self.w.needs_text_only({"architectures": ["Qwen3ForCausalLM"]}, {"config.json"}))
+        self.assertTrue(self.w.needs_text_only({"audio_config": {}}, set()))
+
+    def run_check(self, hub, token=None):
+        env = dict(os.environ, HF_ENDPOINT=f"http://127.0.0.1:{hub.port}")
+        env.pop("HF_TOKEN", None)
+        if token: env["HF_TOKEN"] = token
+        out = subprocess.run([sys.executable, "-I", WATCHDOG, "text-only-check", "org/model"], env=env,
+                             capture_output=True, text=True, timeout=30)
+        return out.stdout.strip()
+
+    def test_asks_the_hub_from_the_command_line(self):
+        hub = FakeHub(["config.json", "model.safetensors.index.json", "tokenizer.json"], self.vision)
+        self.addCleanup(hub.close)
+        self.assertEqual(self.run_check(hub, token="hf_x"), "1")
+        self.assertIn("Bearer hf_x", hub.auth, "a gated model needs the token")
+        hub.files.append("preprocessor_config.json")
+        self.assertEqual(self.run_check(hub), "0")
+
+    def test_an_unreachable_hub_changes_nothing(self):
+        env = dict(os.environ, HF_ENDPOINT=f"http://127.0.0.1:{free_port()}")
+        out = subprocess.run([sys.executable, "-I", WATCHDOG, "text-only-check", "org/model"], env=env,
+                             capture_output=True, text=True, timeout=30)
+        self.assertEqual(out.stdout.strip(), "0")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
