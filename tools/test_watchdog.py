@@ -176,7 +176,10 @@ class WatchdogTest(unittest.TestCase):
         status, body = self.get("/")
         self.assertEqual(status, 200)
         t = body["telemetry"]
-        self.assertAlmostEqual(t["gpus"][0]["utilPercent"], 55, delta=8, msg="averaged readings of the long-running nvidia-smi")
+        # Any average of alternating 30/80 readings lies strictly between them (55 for an even count,
+        # 63.3 for 80-30-80 on a slow runner); a single call would say 87, a single reading 30 or 80.
+        util = t["gpus"][0]["utilPercent"]
+        self.assertTrue(30 < util < 80, f"averaged readings of the long-running nvidia-smi, got {util}")
         self.assertEqual(t["gpus"][0]["memoryUsedBytes"], 43210 * 1024 * 1024)
         self.assertEqual(t["memoryUsedBytes"], 2_000_000_000)  # without the file cache
         self.assertEqual(t["memoryTotalBytes"], 50_000_000_000)
