@@ -170,6 +170,19 @@ extension AppModel {
             + servers.flatMap { s in (s.snapshot?.activeRuns ?? []).map { (.server(s.id), $0.0, $0.1) } }
     }
 
+    /// Stopped pods whose disk is kept: RunPod bills them by the hour until the pod is deleted.
+    func keptDisks(in source: Source) -> [KeptDisk] {
+        models(in: source).compactMap { item in
+            let run = run(item.id)
+            guard run.podId != nil, run.phase == .stopped, let gb = run.persistentGB, gb > 0 else { return nil }
+            return KeptDisk(source: source, model: item, gb: gb)
+        }
+    }
+
+    var allKeptDisks: [KeptDisk] {
+        ([Source.local] + servers.map { Source.server($0.id) }).flatMap { keptDisks(in: $0) }
+    }
+
     var totalCostPerHour: Double { state.costPerHour + servers.compactMap(\.snapshot?.costPerHour).reduce(0, +) }
 
     func name(of source: Source) -> String {
@@ -279,4 +292,20 @@ extension AppModel {
         guard let server = server(id) else { return }
         if let tokens = try? await server.client(keychain).clientTokens() { server.tokens = tokens }
     }
+}
+
+/// A stopped pod's kept disk and what it costs.
+struct KeptDisk: Identifiable {
+    let source: Source
+    let model: PodlightModel
+    let gb: Int
+    var id: UUID { model.id }
+    var perHour: Double { StoragePricing.stoppedPerHour(volumeGB: gb) }
+    var perMonth: Double { StoragePricing.stoppedPerMonth(volumeGB: gb) }
+}
+
+extension Array where Element == KeptDisk {
+    var gb: Int { map(\.gb).reduce(0, +) }
+    var perHour: Double { map(\.perHour).reduce(0, +) }
+    var perMonth: Double { map(\.perMonth).reduce(0, +) }
 }

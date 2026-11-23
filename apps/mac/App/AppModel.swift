@@ -323,9 +323,11 @@ final class AppModel {
         return GPUSuggestion.cost(pricePerHour: price + storage, from: .now, until: end)
     }
 
-    /// Monthly cost of a kept disk while the pod is stopped, if the model keeps one.
-    func keptDiskPerMonth(_ model: PodlightModel) -> Double? {
-        model.keepDisk ? StoragePricing.stoppedPerMonth(volumeGB: PodPlan.persistentGB(for: model)) : nil
+    /// Size of the disk a model keeps while its pod is stopped, if it keeps one: the pod's own
+    /// once it has one, else the planned size.
+    func keptDiskGB(_ model: PodlightModel) -> Int? {
+        guard model.keepDisk else { return nil }
+        return run(model.id).persistentGB ?? PodPlan.persistentGB(for: model)
     }
 
     // MARK: Quit

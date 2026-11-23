@@ -172,11 +172,13 @@ enum Snapshots {
                                   nativeContextTokens: 131_072, toolCallParser: "hermes", reasoningParser: "qwen3",
                                   contextTokens: 32_768, preferredGPU: GPUChoice(gpuId: "NVIDIA GeForce RTX 4090", cloud: .community))
         small.expectedPricePerHour = 0.34
+        small.keepDisk = true
         state.models = [coder, small]
         var run = ModelRun()
         run.podId = "sample"
         run.gpuName = "L40S"
         run.pricePerHour = 0.86
+        run.storagePerHour = PodPlan.storagePerHour(for: coder)
         run.podStatus = .running
         run.phase = .ready
         run.engineReady = true
@@ -187,6 +189,10 @@ enum Snapshots {
         var stopped = ModelRun()
         stopped.phase = .stopped
         stopped.lastReason = "idle-timeout"
+        // Stopped with its disk kept, as the costs view and the overview show it.
+        stopped.podId = "sample-kept"
+        stopped.podStatus = .exited
+        stopped.persistentGB = PodPlan.persistentGB(for: small)
         state.runs[small.id] = stopped
         let calendar = Calendar.current
         for offset in 0..<30 {

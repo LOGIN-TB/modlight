@@ -23,8 +23,6 @@ struct CostsView: View {
         }
     }
 
-    private var runs: [ModelRun] { model.models(in: source).map { model.run($0.id) } }
-
     private func setLimits(daily: Double?? = .none, monthly: Double?? = .none) async {
         switch source {
         case .local:
@@ -49,15 +47,29 @@ struct CostsView: View {
         }
     }
 
-    private var stoppedDiskGB: Int {
-        runs.filter { $0.podId != nil && $0.phase == .stopped }.compactMap(\.persistentGB).reduce(0, +)
-    }
+    private var keptDisks: [KeptDisk] { model.keptDisks(in: source) }
 
     var body: some View {
         Form {
             Section("Now") {
                 LabeledContent("Running pods", value: "\(model.activeRuns(in: source).count)")
                 LabeledContent("Cost per hour", value: Format.perHour(model.costPerHour(in: source)))
+                if !keptDisks.isEmpty {
+                    LabeledContent("Kept disks (\(keptDisks.gb) GB)", value: Format.keptDisk(perHour: keptDisks.perHour, perMonth: keptDisks.perMonth))
+                }
+            }
+            let models = model.models(in: source)
+            if !models.isEmpty {
+                Section {
+                    ForEach(models) { item in
+                        ModelCostRow(item: item, run: model.run(item.id), keptGB: keptDisks.first { $0.id == item.id }?.gb)
+                    }
+                } header: {
+                    Text("Models")
+                } footer: {
+                    Text("Running models are billed for the GPU and their storage. A stopped model costs nothing unless it keeps its disk: RunPod bills that disk by the hour (0.20 USD per GB and month) until Podlight deletes it after \(model.deleteStoppedAfterDays(in: source)) days without use. These costs are included in the figures below.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }
             Section {
                 LimitRow(title: "Today", spent: spend.todayUsd, limit: spend.dailyLimitUsd)
@@ -89,14 +101,6 @@ struct CostsView: View {
                 .accessibilityLabel(Text("Spending per day, last 30 days"))
                 .accessibilityValue(Text("Total \(Format.money(lastThirtyDays.map(\.usd).reduce(0, +)))"))
             }
-            if stoppedDiskGB > 0 {
-                Section("Kept disks") {
-                    LabeledContent("Disk kept", value: "\(stoppedDiskGB) GB")
-                    LabeledContent("Costs while stopped", value: String(localized: "about \(Format.money(StoragePricing.stoppedPerMonth(volumeGB: stoppedDiskGB))) a month"))
-                    Text("Models with \"Keep model on disk\" switched on keep their disk while stopped, so the next start skips the download. RunPod charges 0.20 USD per GB and month for it; it is included in the figures above. Podlight deletes pods left unused for \(model.deleteStoppedAfterDays(in: source)) days.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            }
             Section {
                 Text(source == .local
                      ? "These figures are Podlight's own count of this Mac's pods (price per hour × running time). Your RunPod account shows the exact charges, including other pods."
@@ -107,6 +111,43 @@ struct CostsView: View {
         }
         .formStyle(.grouped)
         .navigationTitle(source == .local ? String(localized: "Costs") : String(localized: "Costs · \(model.name(of: source))"))
+    }
+}
+
+/// One model and what it costs right now: running, stopped with its disk kept, or nothing.
+private struct ModelCostRow: View {
+    let item: PodlightModel
+    let run: ModelRun
+    let keptGB: Int?
+
+    private var isActive: Bool { [.creating, .loading, .ready, .stopping].contains(run.phase) }
+
+    var body: some View {
+        LabeledContent {
+            if isActive, let price = run.pricePerHour {
+                Text(Format.perHour(price + (run.storagePerHour ?? 0)))
+            } else if let keptGB {
+                Text(Format.keptDisk(gb: keptGB))
+            } else {
+                Text("nothing")
+            }
+        } label: {
+            Text(item.name)
+            Text(caption)
+        }
+    }
+
+    private var caption: String {
+        if isActive {
+            if let price = run.pricePerHour, let storage = run.storagePerHour, storage > 0 {
+                return String(localized: "Running · \(Format.perHour(price)) GPU + \(Format.storagePerHour(storage)) storage")
+            }
+            return String(localized: "Running")
+        }
+        if let keptGB { return String(localized: "Stopped · disk kept (\(keptGB) GB)") }
+        return item.keepDisk
+            ? String(localized: "Stopped · nothing on disk right now")
+            : String(localized: "Stopped · disk not kept")
     }
 }
 

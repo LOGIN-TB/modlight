@@ -8,6 +8,9 @@ struct ModelRow: View {
 
     private var summary: String {
         let text = PhaseText.summary(run)
+        if run.phase == .stopped, run.podId != nil, let gb = run.persistentGB, gb > 0 {
+            return String(localized: "\(text) · disk \(Format.storagePerHour(StoragePricing.stoppedPerHour(volumeGB: gb)))")
+        }
         guard run.phase == .ready, let gpu = UsageText.gpu(model.telemetry(item.id)) else { return text }
         return "\(text) · \(gpu)"
     }
@@ -133,8 +136,8 @@ struct ModelDetailView: View {
                 }
                 LabeledContent("Stops when idle for", value: "\(item.schedule.idleStopMinutes) min")
                 LabeledContent("Keep model on disk") {
-                    if let monthly = model.keptDiskPerMonth(item) {
-                        Text("On · about \(Format.money(monthly)) a month while stopped")
+                    if let gb = model.keptDiskGB(item) {
+                        Text("On · \(Format.keptDisk(gb: gb)) while stopped")
                     } else {
                         Text("Off · nothing billed while stopped")
                     }

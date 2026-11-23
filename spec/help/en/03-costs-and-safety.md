@@ -35,6 +35,6 @@ Closing the window does not quit Podlight. It keeps running in the menu bar, and
 For each model you decide whether it stays on a disk at RunPod between runs:
 
 - **Off (default):** at the end of a run Podlight deletes the pod. Nothing is billed until the next start. Each start downloads the model again, which takes 10 to 25 minutes.
-- **On:** the pod is only stopped and keeps its disk. The next start takes about a minute. RunPod charges 0.20 USD per GB and month for the disk while the pod is stopped, 0.10 USD while it runs. For 30 GB that is about 6 USD a month.
+- **On:** the pod is only stopped and keeps its disk. The next start takes about a minute. RunPod charges 0.20 USD per GB and month for the disk while the pod is stopped, 0.10 USD while it runs. It is billed by the hour: for 30 GB that is about 0.008 USD an hour while stopped, or 6 USD a month.
 
-Podlight shows these costs when you add a model, when you start it and under "Costs", and counts them towards your spending limits. Pods with a disk left unused for three days are deleted, disk included. Change the switch under "Edit" while the model is stopped.
+Podlight shows these costs per hour and per month when you add a model, when you start it and on the model's page. "Costs" lists every model with what it costs right now: the GPU and storage while it runs, the kept disk while it is stopped, otherwise nothing. Podlight counts these costs towards your spending limits. Pods with a disk left unused for three days are deleted, disk included. Change the switch under "Edit" while the model is stopped.

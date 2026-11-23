@@ -300,6 +300,9 @@ describe('Podlight server', () => {
     assert.equal(state.telemetry[MODEL_ID].gpus[0].utilPercent, 87)
     assert.equal(state.telemetry[MODEL_ID].gpus[0].powerLimitW, null)
     assert.equal(state.telemetry[MODEL_ID].engine.generationTokensPerSecond, 58)
+    const running = state.runs[MODEL_ID]
+    assert.ok(running.storagePerHour > 0)
+    assert.ok(Math.abs(state.costPerHour - (running.pricePerHour + running.storagePerHour)) < 1e-9, 'cost per hour includes the storage')
     const history = (await admin('GET', `/admin/models/${MODEL_ID}/telemetry`)).json()
     assert.equal(history.samples.length, 2)
     assert.ok(history.samples[0].time < history.samples[1].time)
