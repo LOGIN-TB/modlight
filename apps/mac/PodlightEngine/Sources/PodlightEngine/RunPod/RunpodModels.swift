@@ -37,6 +37,41 @@ public struct RunpodPod: Codable, Sendable, Equatable, Identifiable {
     public var mounts: CreatePodRequest.Mounts?
 }
 
+/// A pod template. Podlight keeps one private template per model as the model's record in the
+/// account (see `ModelRecord`).
+public struct RunpodTemplate: Codable, Sendable, Equatable, Identifiable {
+    public var id: String
+    public var name: String
+    public var env: [String: String]?
+
+    public init(id: String, name: String, env: [String: String]?) {
+        self.id = id
+        self.name = name
+        self.env = env
+    }
+}
+
+struct RunpodTemplateList: Decodable {
+    var templates: [RunpodTemplate]
+    private enum CodingKeys: String, CodingKey { case templates }
+    /// RunPod answers with a bare array or with `{"templates": [...]}`; a template that does not
+    /// decode is skipped.
+    init(from decoder: Decoder) throws {
+        var list: UnkeyedDecodingContainer
+        if let keyed = try? decoder.container(keyedBy: CodingKeys.self), keyed.contains(.templates) {
+            list = try keyed.nestedUnkeyedContainer(forKey: .templates)
+        } else {
+            list = try decoder.unkeyedContainer()
+        }
+        var out: [RunpodTemplate] = []
+        struct Skipped: Decodable {}
+        while !list.isAtEnd {
+            if let t = try? list.decode(RunpodTemplate.self) { out.append(t) } else { _ = try? list.decode(Skipped.self) }
+        }
+        templates = out
+    }
+}
+
 public struct RunpodPodList: Codable, Sendable {
     public struct Pagination: Codable, Sendable {
         public var hasNextPage: Bool?

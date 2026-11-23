@@ -99,6 +99,31 @@ public struct RunpodClient: Sendable {
         return pods
     }
 
+    // MARK: Templates (model records)
+
+    public func listTemplates() async throws -> [RunpodTemplate] {
+        let list: RunpodTemplateList = try await call("listTemplates", "GET", "/v2/templates")
+        return list.templates
+    }
+
+    public func createTemplate(name: String, image: String, env: [String: String]) async throws -> RunpodTemplate {
+        struct Body: Encodable, Sendable { var name: String; var image: String; var env: [String: String]; var disk = 5 }
+        return try await call("createTemplate", "POST", "/v2/templates", body: Body(name: name, image: image, env: env))
+    }
+
+    public func updateTemplate(id: String, name: String, env: [String: String]) async throws {
+        struct Body: Encodable, Sendable { var name: String; var env: [String: String] }
+        _ = try await raw("updateTemplate", "PATCH", "/v2/templates/\(escape(id))", body: Body(name: name, env: env))
+    }
+
+    public func renameTemplate(id: String, to name: String) async throws {
+        _ = try await raw("updateTemplate", "PATCH", "/v2/templates/\(escape(id))", body: ["name": name])
+    }
+
+    public func deleteTemplate(id: String) async throws {
+        _ = try await raw("deleteTemplate", "DELETE", "/v2/templates/\(escape(id))")
+    }
+
     /// Renames a pod. RunPod applies it without restarting the pod, running or stopped.
     public func rename(pod id: String, to name: String) async throws {
         _ = try await raw("updatePod", "PATCH", "/v2/pods/\(escape(id))", body: ["name": name])

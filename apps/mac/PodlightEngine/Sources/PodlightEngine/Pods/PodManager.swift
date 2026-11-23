@@ -45,6 +45,9 @@ public actor PodManager {
     private var starts: [UUID: Task<Void, Error>] = [:]
     /// Telemetry per model while its pod runs, the last 30 minutes. In memory only.
     private var samples: [UUID: [PodTelemetry]] = [:]
+    /// What was last written to each model's record, so unchanged records are not written again.
+    private var published: [UUID: String] = [:]
+    private var lastRecordCheck: Date?
 
     public init(store: StateStore, keychain: KeychainStore = KeychainStore(),
                 transport: HTTPTransport = URLSession.shared, now: @escaping @Sendable () -> Date = Date.init,
@@ -81,6 +84,10 @@ public actor PodManager {
         if let podId = run.podId, run.managedBy == nil, let client = try? client() {
             do { try await client.deletePod(id: podId) } catch let e as RunpodError where e.isNotFound {}
         }
+        if let recordId = run.recordId, run.managedBy == nil, let client = try? client() {
+            do { try await client.deleteTemplate(id: recordId) } catch let e as RunpodError where e.isNotFound {} catch {}
+        }
+        published[id] = nil
         try? keychain.delete(.podKey(id))
         try await store.update { state in
             state.models.removeAll { $0.id == id }
@@ -273,123 +280,268 @@ public actor PodManager {
         return await store.current().deviceTag ?? tag
     }
 
-    /// Podlight pods in the RunPod account that this Mac does not manage: another Mac's, or ones
-    /// an older version created. Server pods and pods without Podlight's environment are left out.
+    /// The models in the RunPod account that this Mac does not manage: another Mac's, with or
+    /// without a pod (from their records), and bare pods an older version created. Server pods
+    /// and pods without Podlight's environment are left out.
     public func podsFromOtherMacs() async throws -> [ForeignPod] {
         let state = await store.current()
         let mine = await ownTag()
-        let known = Set(state.runs.compactMap { $0.value.managedBy == nil ? $0.value.podId : nil })
-        let pods = try await client().listPods()
-        return pods.compactMap(ForeignPod.init).filter { !known.contains($0.id) && $0.owner != mine && $0.status != .terminated }
+        let client = try client()
+        let owned = state.models.filter { state.run($0.id).managedBy == nil }
+        let ownedIds = Set(owned.map(\.id))
+        let ownedPods = Set(owned.compactMap { state.run($0.id).podId })
+        async let podList = client.listPods()
+        async let recordList = client.listTemplates()
+        let pods = try await podList
+        let records = (try? await recordList) ?? []
+        let podsById = Dictionary(pods.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+
+        var found: [ForeignPod] = []
+        var recordedPods = Set<String>()
+        for record in records where record.name.hasPrefix(ModelRecord.prefix) {
+            guard let content = record.env.flatMap(ModelRecord.decode) else { continue }
+            if let podId = content.podId { recordedPods.insert(podId) }
+            guard ModelRecord.owner(ofName: record.name) != mine, !ownedIds.contains(content.model.id) else { continue }
+            if let foreign = ForeignPod(record: record, pod: content.podId.flatMap { podsById[$0] }) { found.append(foreign) }
+        }
+        for pod in pods where !recordedPods.contains(pod.id) && !ownedPods.contains(pod.id) && pod.status != .terminated {
+            if let foreign = ForeignPod(pod), foreign.owner != mine { found.append(foreign) }
+        }
+        return found.sorted { $0.servedName < $1.servedName }
     }
 
-    /// Takes another Mac's model over: rebuilds the model from the pod and Hugging Face, keeps the
-    /// pod key, and renames the pod to this Mac. The other Mac lets go when it next sees the name.
-    /// `lookup` describes a repository; nil asks Hugging Face (tests pass their own).
+    /// Takes another Mac's model over and renames its record and pod to this Mac; the other Mac
+    /// lets go when it next looks. From a record the model comes over exactly; from a bare pod
+    /// (older version) it is rebuilt from the pod and Hugging Face (`lookup`, nil asks Hugging Face).
     @discardableResult
     public func takeOver(_ foreign: ForeignPod,
                          lookup: (@Sendable (String) async throws -> ModelInfo)? = nil) async throws -> UUID {
         let state = await store.current()
         let client = try client()
-        // Read again: the list may be minutes old.
-        let pod: RunpodPod
-        do { pod = try await client.pod(id: foreign.id) } catch let e as RunpodError {
-            throw PodlightError.runpod(status: e.status, message: e.body)
+        let mine = await ownTag()
+
+        // Read again: the list may be a minute old.
+        var current = foreign
+        if let recordId = foreign.recordId {
+            let records = try await runpod { try await client.listTemplates() }
+            guard let record = records.first(where: { $0.id == recordId }) else {
+                throw PodlightError.runpod(status: 404, message: "the model is no longer in the RunPod account")
+            }
+            let content = record.env.flatMap(ModelRecord.decode)
+            var pod: RunpodPod?
+            if let podId = content?.podId { pod = try? await client.pod(id: podId) }
+            guard let fresh = ForeignPod(record: record, pod: pod) else { throw PodlightError.runpod(status: 0, message: "not a Podlight model") }
+            current = fresh
+        } else if let podId = foreign.podId {
+            let pod = try await runpod { try await client.pod(id: podId) }
+            guard let fresh = ForeignPod(pod) else { throw PodlightError.runpod(status: 0, message: "not a Podlight pod") }
+            current = fresh
         }
-        guard let fresh = ForeignPod(pod) else { throw PodlightError.runpod(status: 0, message: "not a Podlight pod") }
+
         // A model this Mac released earlier: take it back instead of adding a second one.
-        if let (id, _) = state.runs.first(where: { $0.value.podId == fresh.id && $0.value.managedBy != nil }) {
+        if let id = current.recordedModel?.id, state.models.contains(where: { $0.id == id }) {
             try await takeBack(id)
             return id
         }
-        if state.model(named: fresh.servedName) != nil { throw PodlightError.nameTaken(fresh.servedName) }
-
-        var info: ModelInfo
-        do {
-            if let lookup {
-                info = try await lookup(fresh.repoId)
-            } else {
-                info = try await HuggingFaceClient(token: try? keychain.read(.huggingFaceToken), transport: transport).info(fresh.repoId)
-            }
-        } catch {
-            throw PodlightError.modelLookup("\(error)")
+        if let podId = current.podId, let (id, _) = state.runs.first(where: { $0.value.podId == podId && $0.value.managedBy != nil }) {
+            try await takeBack(id)
+            return id
         }
-        if let quant = fresh.quant, info.format == .gguf { info = info.choosing(quant: quant) }
-        let model = fresh.model(from: info)
-        do { try keychain.write(fresh.podKey, for: .podKey(model.id)) } catch { throw PodlightError.keychain("\(error)") }
+        if state.model(named: current.servedName) != nil { throw PodlightError.nameTaken(current.servedName) }
 
-        let mine = await ownTag()
+        var info: ModelInfo?
+        if current.recordedModel == nil {
+            do {
+                var described: ModelInfo
+                if let lookup {
+                    described = try await lookup(current.repoId)
+                } else {
+                    described = try await HuggingFaceClient(token: try? keychain.read(.huggingFaceToken), transport: transport).info(current.repoId)
+                }
+                if let quant = current.quant, described.format == .gguf { described = described.choosing(quant: quant) }
+                info = described
+            } catch {
+                throw PodlightError.modelLookup("\(error)")
+            }
+        }
+        let model = info.map { current.model(from: $0) } ?? current.recordedModel!
+        do { try keychain.write(current.podKey, for: .podKey(model.id)) } catch { throw PodlightError.keychain("\(error)") }
+
         do {
-            try await client.rename(pod: fresh.id, to: PodOwner.podName(model: model.name, owner: mine))
+            if let recordId = current.recordId {
+                try await client.renameTemplate(id: recordId, to: ModelRecord.name(model: model.name, owner: mine))
+            }
+            if let podId = current.podId, current.hasPod {
+                try await client.rename(pod: podId, to: PodOwner.podName(model: model.name, owner: mine))
+            }
         } catch let e as RunpodError {
             try? keychain.delete(.podKey(model.id))
             throw PodlightError.runpod(status: e.status, message: e.body)
         }
+
         let t = now()
         var run = ModelRun()
-        run.podId = fresh.id
-        run.podStatus = fresh.status
-        run.phase = fresh.isRunning ? .loading : .stopped
-        run.gpu = model.preferredGPU
-        run.gpuName = fresh.gpuId.map { Self.shortGPUName($0, count: fresh.gpuCount) }
-        run.pricePerHour = fresh.pricePerHour
-        run.persistentGB = fresh.persistentGB
-        run.containerGB = fresh.containerGB
-        run.storagePerHour = StoragePricing.runningPerHour(containerGB: fresh.containerGB ?? 0, volumeGB: fresh.persistentGB ?? 0)
-        run.dataCenterId = fresh.dataCenterId
-        // Costs count from now on this Mac; idle stop and deletion of unused pods count from now too,
-        // so a pod in use elsewhere is not stopped the moment it arrives.
-        run.startedAt = fresh.isRunning ? t : nil
-        run.accountedUntil = t
-        run.storageAccountedUntil = t
-        run.lastRequestAt = t
-        run.stoppedAt = fresh.isRunning ? nil : t
+        run.recordId = current.recordId
         run.lastReason = "taken-over"
+        if let podId = current.podId, current.hasPod {
+            run.podId = podId
+            run.podStatus = current.status
+            run.phase = current.isRunning ? .loading : .stopped
+            run.gpu = model.preferredGPU
+            run.gpuName = current.gpuId.map { Self.shortGPUName($0, count: current.gpuCount) }
+            run.pricePerHour = current.pricePerHour
+            run.persistentGB = current.persistentGB
+            run.containerGB = current.containerGB
+            run.storagePerHour = StoragePricing.runningPerHour(containerGB: current.containerGB ?? 0, volumeGB: current.persistentGB ?? 0)
+            run.dataCenterId = current.dataCenterId
+            // Costs count from now on this Mac; idle stop and deletion of unused pods count from
+            // now too, so a pod in use elsewhere is not stopped the moment it arrives.
+            run.startedAt = current.isRunning ? t : nil
+            run.accountedUntil = t
+            run.storageAccountedUntil = t
+            run.lastRequestAt = t
+            run.stoppedAt = current.isRunning ? nil : t
+        }
         let newRun = run
         try await store.update { state in
             state.models.append(model)
             state.runs[model.id] = newRun
         }
-        if fresh.isRunning { await refresh(model.id) }
+        published[model.id] = nil
+        if current.isRunning { await refresh(model.id) }
         return model.id
     }
 
-    /// Takes a model back that another Mac took over: renames its pod to this Mac again.
+    /// Takes a model back that another Mac took over: reads its record (the other Mac may have
+    /// changed it or started a new pod), and renames record and pod to this Mac again.
     public func takeBack(_ id: UUID) async throws {
         let state = await store.current()
-        guard let model = state.models.first(where: { $0.id == id }) else { throw PodlightError.unknownModel(id.uuidString) }
-        let run = state.run(id)
+        guard var model = state.models.first(where: { $0.id == id }) else { throw PodlightError.unknownModel(id.uuidString) }
+        let client = try client()
         let mine = await ownTag()
-        var status = run.podStatus
+        var run = state.run(id)
+
+        if let recordId = run.recordId {
+            let records = try await runpod { try await client.listTemplates() }
+            if let record = records.first(where: { $0.id == recordId }), let content = record.env.flatMap(ModelRecord.decode) {
+                model = content.model
+                if content.podId != run.podId { run = ModelRun(); run.recordId = recordId; run.podId = content.podId }
+                try await runpod { try await client.renameTemplate(id: recordId, to: ModelRecord.name(model: model.name, owner: mine)) }
+            } else {
+                run.recordId = nil
+            }
+        }
+
+        var status: PodState.Status?
         if let podId = run.podId {
-            let client = try client()
             do {
                 let pod = try await client.pod(id: podId)
                 status = pod.status
                 try await client.rename(pod: podId, to: PodOwner.podName(model: model.name, owner: mine))
             } catch let e as RunpodError where e.isNotFound {
-                try await updateRun(id) { $0 = ModelRun() }
-                return
+                run.podId = nil
             } catch let e as RunpodError {
                 throw PodlightError.runpod(status: e.status, message: e.body)
             }
         }
         let t = now()
-        let current = status
-        let running = current == .running || current == .starting || current == .provisioning
-        try await updateRun(id) {
-            $0.managedBy = nil
-            $0.podStatus = current
-            $0.phase = running ? .loading : .stopped
-            $0.accountedUntil = t
-            $0.storageAccountedUntil = t
-            $0.lastRequestAt = t
-            $0.startedAt = running ? t : $0.startedAt
-            $0.stoppedAt = running ? nil : t
-            $0.runUntil = nil
-            $0.lastReason = "taken-back"
+        let running = status == .running || status == .starting || status == .provisioning
+        run.managedBy = nil
+        run.podStatus = run.podId == nil ? nil : status
+        run.phase = running ? .loading : .stopped
+        run.accountedUntil = t
+        run.storageAccountedUntil = t
+        run.lastRequestAt = t
+        run.startedAt = running ? t : run.startedAt
+        run.stoppedAt = running ? nil : (run.podId == nil ? run.stoppedAt : t)
+        run.runUntil = nil
+        run.lastReason = "taken-back"
+        let newRun = run
+        let newModel = model
+        try await store.update { state in
+            if let index = state.models.firstIndex(where: { $0.id == id }) { state.models[index] = newModel }
+            state.runs[id] = newRun
         }
+        published[id] = nil
         if running { await refresh(id) }
+    }
+
+    // MARK: Records in the RunPod account
+
+    /// Checks the records against the account (another Mac may have taken a model over), then
+    /// writes the records of this Mac's models that changed. Checking comes first, so a model that
+    /// moved while this Mac was off is released, not grabbed back.
+    public func syncRecords(force: Bool = false) async {
+        guard let client = try? client() else { return }
+        let state = await store.current()
+        let mine = await ownTag()
+        var owned = state.models.filter { state.run($0.id).managedBy == nil }
+        var desired: [UUID: (name: String, env: [String: String], signature: String)] = [:]
+        for model in owned {
+            guard let key = try? podKey(for: model.id) else { continue }
+            let name = ModelRecord.name(model: model.name, owner: mine)
+            let env = ModelRecord.env(model: model, podKey: key, podId: state.run(model.id).podId)
+            let signature = name + "|" + env.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ";")
+            desired[model.id] = (name, env, signature)
+        }
+        let pending = owned.filter { published[$0.id] != desired[$0.id]?.signature }
+        let due = force || lastRecordCheck.map { now().timeIntervalSince($0) >= 60 } ?? true
+        guard !pending.isEmpty || due else { return }
+
+        guard let records = try? await client.listTemplates() else { return }
+        lastRecordCheck = now()
+        let byId = Dictionary(records.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        for model in owned {
+            let run = state.run(model.id)
+            guard let recordId = run.recordId else { continue }
+            guard let record = byId[recordId] else {
+                // Gone (deleted at RunPod): written again below.
+                published[model.id] = nil
+                try? await updateRun(model.id) { $0.recordId = nil }
+                continue
+            }
+            if let other = ModelRecord.owner(ofName: record.name), other != mine {
+                samples[model.id] = nil
+                published[model.id] = nil
+                try? await updateRun(model.id) { $0.managedBy = other; $0.engineReady = false; $0.phase = .stopped }
+                owned.removeAll { $0.id == model.id }
+            }
+        }
+
+        let current = await store.current()
+        for model in owned where published[model.id] != desired[model.id]?.signature {
+            guard let want = desired[model.id] else { continue }
+            var recordId = current.run(model.id).recordId
+            do {
+                if let id = recordId {
+                    try await client.updateTemplate(id: id, name: want.name, env: want.env)
+                } else {
+                    let image = PodPlan.image(for: model.engine)
+                    do {
+                        recordId = try await client.createTemplate(name: want.name, image: image, env: want.env).id
+                    } catch let e as RunpodError where e.status == 400 {
+                        // Already there under this name (an earlier write whose answer was lost).
+                        guard let existing = records.first(where: { $0.name == want.name }) else { throw e }
+                        recordId = existing.id
+                        try await client.updateTemplate(id: existing.id, name: want.name, env: want.env)
+                    }
+                }
+                published[model.id] = want.signature
+                let id = recordId
+                try? await updateRun(model.id) { $0.recordId = id }
+            } catch let e as RunpodError where e.isNotFound {
+                try? await updateRun(model.id) { $0.recordId = nil }
+            } catch {
+                continue // RunPod unreachable: try again next tick.
+            }
+        }
+    }
+
+    /// Runs a RunPod call and turns its error into the interface's.
+    private func runpod<T: Sendable>(_ call: () async throws -> T) async throws -> T {
+        do { return try await call() } catch let e as RunpodError {
+            throw PodlightError.runpod(status: e.status, message: e.body)
+        }
     }
 
     static func shortGPUName(_ id: String, count: Int) -> String {
@@ -465,6 +617,7 @@ public actor PodManager {
         }
         await deleteLongStopped()
         await accountStoredDisks()
+        await syncRecords()
     }
 
     /// A stopped pod's kept volume disk is billed (0.20 USD/GB/month); book it as it accrues so

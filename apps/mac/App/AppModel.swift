@@ -306,8 +306,9 @@ final class AppModel {
         otherMacsCheckedAt = .now
     }
 
-    /// Takes another Mac's model over; that Mac lets go when it next looks at the pod.
-    func takeOver(_ pod: ForeignPod) async {
+    /// Takes another Mac's model over; that Mac lets go when it next looks. With `thenStart`, the
+    /// start sheet opens right after, so "Start…" on another Mac's model is one step.
+    func takeOver(_ pod: ForeignPod, thenStart: Bool = false) async {
         actionError = nil
         takingOver.insert(pod.id)
         defer { takingOver.remove(pod.id) }
@@ -315,6 +316,10 @@ final class AppModel {
             let id = try await manager.takeOver(pod)
             await reloadState()
             selection = .model(id)
+            let phase = run(id).phase
+            if thenStart, phase == .stopped || phase == .failed, let item = state.models.first(where: { $0.id == id }) {
+                startingModel = item
+            }
         } catch {
             actionError = Describe.error(error)
         }

@@ -185,6 +185,8 @@ public struct ModelRun: Codable, Sendable, Equatable {
     /// Another Mac took this model's pod over (its tag). This Mac then leaves the pod alone until
     /// it is taken back.
     public var managedBy: String?
+    /// The model's record in the RunPod account (a private template), so other Macs see it.
+    public var recordId: String?
 
     public init() {}
 }

@@ -33,3 +33,17 @@ Kosten des Ablaufs: etwa 2 Cent.
 - Die Oberfläche am echten Pod (geprüft als Snapshots de/en).
 - Ein Pod aus einer Version vor 0.6, der gerade läuft. Der Code benennt ihn beim ersten Abgleich auf
   den eigenen Mac um; geprüft ist das mit dem gefälschten RunPod.
+
+## Nachtrag 0.7: Modelle ohne Pod
+Ein Modell ohne behaltene Festplatte hat zwischen zwei Läufen keinen Pod; der zweite Mac des
+Anwenders fand deshalb nichts (im Konto lag kein Podlight-Pod mehr). Seit 0.7 legt jeder Mac seine
+Modelle zusätzlich als private Pod-Vorlage ab: `podlight-model-<name>@<mac>`, im env die
+Modelldefinition (JSON, base64), der Pod-Schlüssel und die aktuelle Pod-ID.
+
+Vorab an eigenen Test-Vorlagen geprüft (kostenlos): `POST/PATCH/GET/DELETE /v2/templates` funktionieren,
+`PATCH` ändert Name und env, neue Vorlagen sind privat (`public: false`), Namen müssen im Konto
+eindeutig sein („Template name must be unique.“), 4 KB im env sind kein Problem.
+
+`LiveRecordsTests` mit zwei Engines, ohne Pod: Eintrag `podlight-model-records-test-8520@live-a-c9dd`
+angelegt, B sieht das Modell (`pod: false`) und übernimmt es mit demselben Schlüssel, A gibt beim
+nächsten Abgleich ab, A holt zurück, B gibt ab, nach dem Löschen bleibt kein Eintrag. 4,5 s, 0 $.

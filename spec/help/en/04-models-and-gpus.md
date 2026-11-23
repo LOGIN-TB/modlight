@@ -51,8 +51,10 @@ Pods created by an earlier Podlight version report no usage, also when they are 
 
 ## On several Macs
 
-A model belongs to the Mac you added it on. A second Mac with the same RunPod key lists, under "From other Macs" in the overview, the models whose pod exists: running ones, and stopped ones with their disk kept. It looks every minute, or at once with the arrow next to the heading. "Take Over…" moves one to this Mac. From then on it starts, stops and bills it, and your agents connect to it.
+A model belongs to the Mac you added it on. Podlight also keeps each model in your RunPod account, out of sight and free of charge. A second Mac with the same RunPod key therefore lists all of the first Mac's models, running and stopped, under "From other Macs" in the overview. It looks every minute, or at once with the arrow next to the heading.
 
-The first Mac lets go within a minute, or the next time it runs, and shows "Managed by …". It leaves the pod alone, and requests from its agents for that model are told to use the other Mac. "Take Back" moves the model back to it. Deleting a model another Mac took over removes it from this Mac only; the pod stays.
+"Start…" moves a stopped model to this Mac and then asks how long it should run. "Take Over" moves it without starting it. From then on this Mac starts, stops and bills it, and your agents connect to it.
 
-RunPod shows which Mac manages a model in the pod's name, for example `podlight-coder@studio-mac-7c1e`. Both Macs need Podlight 0.6 or later. A model without a pod (deleted, no kept disk) is added again on the second Mac. For several computers using the same models at once, a Podlight server is the better fit.
+The first Mac lets go within a minute, or the next time it runs, and shows "Managed by …". It leaves the model alone, and requests from its agents for that model are told to use the other Mac. "Take Back" moves the model back to it. Deleting a model another Mac took over removes it from this Mac only.
+
+Both Macs need Podlight 0.7 or later. Models of a Mac with an older version appear only while they have a pod. For several computers using the same models at once, a Podlight server is the better fit.
