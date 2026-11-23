@@ -176,7 +176,16 @@ class WatchdogTest(unittest.TestCase):
         status, body = self.get("/")
         self.assertEqual(status, 200)
         t = body["telemetry"]
-        self.assertAlmostEqual(t["gpus"][0]["utilPercent"], 55, delta=8, msg="averaged readings of the long-running nvidia-smi")
+        # Any average of alternating 30/80 readings lies strictly between them. A slow runner can put
+        # a single reading (30 or 80) into one sample, so watch a few samples; a single call of
+        # nvidia-smi would say 87 and must never show.
+        seen = [t["gpus"][0]["utilPercent"]]
+        deadline = time.time() + 5
+        while not any(30 < u < 80 for u in seen) and time.time() < deadline:
+            time.sleep(0.1)
+            seen.append(self.get("/")[1]["telemetry"]["gpus"][0]["utilPercent"])
+        self.assertTrue(any(30 < u < 80 for u in seen), f"averaged readings of the long-running nvidia-smi, got {seen}")
+        self.assertNotIn(87, seen)
         self.assertEqual(t["gpus"][0]["memoryUsedBytes"], 43210 * 1024 * 1024)
         self.assertEqual(t["memoryUsedBytes"], 2_000_000_000)  # without the file cache
         self.assertEqual(t["memoryTotalBytes"], 50_000_000_000)
