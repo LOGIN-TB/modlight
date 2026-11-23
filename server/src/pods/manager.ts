@@ -3,7 +3,7 @@ import { hostingOf, iso, type ModelRun, parseDate, type PodlightModel, type PodT
 import { allows, dataCenterIds, needsPlacementCheck, StoragePricing } from '../rules/hosting.ts'
 import * as podPlan from '../rules/podPlan.ts'
 import { admitWake, decide, type Spend } from '../rules/scheduler.ts'
-import { engineFailureReason, GatewayFailure, summarizeEngineLog } from '../gateway/shape.ts'
+import { engineFailureReason, GatewayFailure, looksDegenerate, summarizeEngineLog } from '../gateway/shape.ts'
 import { createWithFallback, NoCapacityError, RunpodClient, RunpodError } from '../runpod/client.ts'
 import { type Pod, pricePerHour } from '../runpod/types.ts'
 import type { SettingsStore } from '../store/settings.ts'
@@ -459,7 +459,18 @@ export class PodManager {
         this.store.updateRun(id, (r) => { r.phase = 'failed'; r.lastReason = reason; r.lastMessage = message })
         return
       }
-      if (!ready) ready = await this.engineAnswers(podId, id)
+      if (!ready && (await this.engineAnswers(podId, id))) {
+        // Start test: a model that only repeats one character (a broken quantisation or kernel)
+        // would make every agent request run to its length limit.
+        const model = this.store.model(id)
+        const garbage = model ? await this.garbageAnswer(podId, id, model.name) : null
+        if (garbage !== null) {
+          await this.stop(id, 'garbage-output').catch(() => {})
+          this.store.updateRun(id, (r) => { r.phase = 'failed'; r.lastReason = 'garbage-output'; r.lastMessage = `"${garbage.slice(0, 40)}…"` })
+          return
+        }
+        ready = true
+      }
     } else {
       ready = false
       this.samples.delete(id)
@@ -538,12 +549,12 @@ export class PodManager {
 
   // MARK: Pod HTTP
 
-  private async podFetch(podId: string, modelId: string, port: number, path: string, init: RequestInit = {}): Promise<Response | null> {
+  private async podFetch(podId: string, modelId: string, port: number, path: string, init: RequestInit = {}, timeoutMs = 10_000): Promise<Response | null> {
     try {
       return await this.fetchImpl(`${this.podURL(podId, port)}${path}`, {
         ...init,
         headers: { Authorization: `Bearer ${this.podKey(modelId)}`, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(timeoutMs),
       })
     } catch {
       return null
@@ -600,6 +611,29 @@ export class PodManager {
     const response = await this.podFetch(run.podId, id, podPlan.WATCHDOG_PORT, '/log')
     if (!response || response.status !== 200) return null
     return ((await response.json().catch(() => null)) as { lines?: string[] } | null)?.lines ?? null
+  }
+
+  /** The model's answer to one short question when that answer is degenerate; null when it is fine
+   * or the test could not run (the start is never held up by the test). */
+  private async garbageAnswer(podId: string, modelId: string, name: string): Promise<string | null> {
+    for (const withKwargs of [true, false]) {
+      const body: Record<string, unknown> = {
+        model: name, max_tokens: 48, temperature: 0, messages: [{ role: 'user', content: 'Reply with one word: ready' }],
+      }
+      // Without thinking, so a reasoning model answers within the few tokens allowed.
+      if (withKwargs) body.chat_template_kwargs = { enable_thinking: false }
+      const response = await this.podFetch(podId, modelId, podPlan.ENGINE_PORT, '/v1/chat/completions',
+        { method: 'POST', body: JSON.stringify(body) }, 60_000)
+      if (!response) return null
+      if (response.status === 400 && withKwargs) continue
+      if (response.status !== 200) return null
+      const json = (await response.json().catch(() => null)) as { choices?: Array<{ message?: Record<string, unknown> }> } | null
+      const message = json?.choices?.[0]?.message
+      if (!message) return null
+      const text = ['content', 'reasoning_content', 'reasoning'].map((k) => message[k]).filter((v): v is string => typeof v === 'string').join('')
+      return looksDegenerate(text) ? text : null
+    }
+    return null
   }
 
   private async engineAnswers(podId: string, modelId: string): Promise<boolean> {

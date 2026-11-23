@@ -154,6 +154,7 @@ enum Describe {
         case "outside-region": String(localized: "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions under Edit.")
         case "host-busy": String(localized: "The card on the pod's machine was taken, so it could not resume. Its disk with the model is kept.")
         case "gpu-unusable": String(localized: "The RunPod machine could not use its card (a CUDA error before the model was loaded). That is the machine, not the model: start on a new card, or choose another card type under Edit.")
+        case "garbage-output": String(localized: "Start test failed: the model answered only with repeated characters, so Podlight stopped it. This build of the model does not work on this card (often a broken quantisation); try another build, such as a GGUF, or another card. Its answer:")
         case "taken-over": String(localized: "Taken over from another Mac.")
         case "taken-back": String(localized: "Taken back from another Mac.")
         default: code

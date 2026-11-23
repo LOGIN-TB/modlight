@@ -752,7 +752,20 @@ public actor PodManager {
                 }
                 return
             }
-            if !ready { ready = await engineAnswers(podId: podId, modelId: id) }
+            if !ready, await engineAnswers(podId: podId, modelId: id) {
+                // Start test: a model that only repeats one character (a broken quantisation or
+                // kernel) would make every agent request run to its length limit.
+                if let model = await store.current().models.first(where: { $0.id == id }),
+                   let garbage = await garbageAnswer(podId: podId, model: model) {
+                    let sample = String(garbage.prefix(40))
+                    try? await stop(id, reason: "garbage-output")
+                    try? await updateRun(id) {
+                        $0.phase = .failed; $0.lastReason = "garbage-output"; $0.lastMessage = "\"\(sample)…\""
+                    }
+                    return
+                }
+                ready = true
+            }
         } else {
             ready = false
             samples[id] = nil
@@ -917,6 +930,43 @@ public actor PodManager {
         let errors = lines.filter { $0.range(of: #"(Error|Exception|error:|CUDA|out of memory|Traceback|failed to|unable to allocate|error loading model)"#, options: .regularExpression) != nil }
         let picked = (errors.isEmpty ? lines : errors).suffix(3)
         return picked.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: "\n")
+    }
+
+    /// True for an answer made of one or two characters repeated, as a model gives when its
+    /// numbers are broken ("!!!!…" from an NVFP4 build on an RTX PRO 6000, 2026-11-23).
+    static func looksDegenerate(_ text: String) -> Bool {
+        let characters = text.filter { !$0.isWhitespace }
+        guard characters.count >= 16 else { return false }
+        return Set(characters).count <= 2
+    }
+
+    /// Asks the model one short question. Returns its answer when that answer is degenerate; nil
+    /// when it is fine or the test itself could not run (the start is never held up by the test).
+    private func garbageAnswer(podId: String, model: PodlightModel) async -> String? {
+        guard let key = try? podKey(for: model.id) else { return nil }
+        for withKwargs in [true, false] {
+            var body: [String: Any] = [
+                "model": model.name, "max_tokens": 48, "temperature": 0,
+                "messages": [["role": "user", "content": "Reply with one word: ready"]],
+            ]
+            // Without thinking, so a reasoning model answers within the few tokens allowed.
+            if withKwargs { body["chat_template_kwargs"] = ["enable_thinking": false] }
+            var request = URLRequest(url: podURL(podId, PodPlan.enginePort).appendingPathComponent("v1/chat/completions"))
+            request.httpMethod = "POST"
+            request.timeoutInterval = 60
+            request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+            guard let (data, response) = try? await transport.send(request) else { return nil }
+            if response.statusCode == 400 && withKwargs { continue } // an engine that refuses the kwargs
+            guard response.statusCode == 200,
+                  let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+                  let message = ((json["choices"] as? [[String: Any]])?.first?["message"]) as? [String: Any] else { return nil }
+            let text = [message["content"], message["reasoning_content"], message["reasoning"]]
+                .compactMap { $0 as? String }.joined()
+            return Self.looksDegenerate(text) ? text : nil
+        }
+        return nil
     }
 
     private func engineAnswers(podId: String, modelId: UUID) async -> Bool {

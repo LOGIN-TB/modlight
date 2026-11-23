@@ -7,7 +7,7 @@ import { options } from '../src/rules/gpuSuggestion.ts'
 import * as hosting from '../src/rules/hosting.ts'
 import * as podPlan from '../src/rules/podPlan.ts'
 import * as scheduler from '../src/rules/scheduler.ts'
-import { failure, anthropicType, summarizeEngineLog, systemMessagesAsReminders, type GatewayError } from '../src/gateway/shape.ts'
+import { failure, anthropicType, looksDegenerate, summarizeEngineLog, systemMessagesAsReminders, type GatewayError } from '../src/gateway/shape.ts'
 import { MODEL_NAME } from '../src/model.ts'
 import { specPath } from '../src/spec.ts'
 import type { GPUType } from '../src/runpod/types.ts'
@@ -102,6 +102,7 @@ function run(c: SpecCase): unknown {
     }
     case 'isValidName': return MODEL_NAME.test(i.name)
     case 'summarizeEngineLog': return summarizeEngineLog(i.lines)
+    case 'looksDegenerate': return looksDegenerate(i.text)
     default: throw new Error(`no server implementation for ${c.function}`)
   }
 }

@@ -29,3 +29,11 @@ RunPod behandelt die gewählte Region nur als Vorgabe. Podlight hat den Pod gel�
 ## Ein Pod lief weiter, obwohl Podlight zu war
 
 Podlight war beendet, und die Notbremse im Pod stoppt ihn erst nach der eingestellten Zeit ohne Kontakt, standardmäßig 15 Minuten. Beim nächsten Öffnen zeigt Podlight beim Modell an, dass er außerhalb von Podlight gestoppt wurde. Prüfe im Zweifel die RunPod-Konsole: Dort steht verbindlich, welche Pods laufen.
+
+## „Starttest fehlgeschlagen“ oder Claude Code meldet „exceeded the 32000 output token maximum“
+
+Nach jedem Start stellt Podlight dem Modell eine kurze Frage. Antwortet es nur mit wiederholten Zeichen wie „!!!!“, stoppt Podlight den Pod sofort. Ein solches Modell hört nie von selbst auf zu schreiben, und Claude Code bricht jede Antwort dann am Längenlimit ab. Ursache ist meist eine fehlerhafte Quantisierung oder ein Rechenkern, der auf dieser Karte falsch rechnet. Nimm eine andere Fassung des Modells, etwa die GGUF-Fassung des Herausgebers, oder eine andere Kartenart.
+
+## „Der RunPod-Rechner konnte seine Karte nicht ansprechen“
+
+Die Engine brach mit einem CUDA-Fehler ab, bevor sie das Modell geladen hat. Das liegt am Rechner bei RunPod, nicht am Modell. Starte mit „Auf neuer Karte starten …“ oder wähle unter „Bearbeiten“ eine andere Kartenart. „Engine-Log anzeigen …“ zeigt die letzten Zeilen der Engine.

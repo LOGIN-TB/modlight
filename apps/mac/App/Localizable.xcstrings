@@ -4425,6 +4425,16 @@
         }
       }
     },
+    "Start test failed: the model answered only with repeated characters, so Podlight stopped it. This build of the model does not work on this card (often a broken quantisation); try another build, such as a GGUF, or another card. Its answer:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starttest fehlgeschlagen: Das Modell antwortete nur mit wiederholten Zeichen, deshalb hat Podlight es gestoppt. Diese Fassung des Modells funktioniert auf dieser Karte nicht (oft eine fehlerhafte Quantisierung); nimm eine andere Fassung, etwa eine GGUF, oder eine andere Karte. Seine Antwort:"
+          }
+        }
+      }
+    },
     "Start this model for a set time": {
       "localizations": {
         "de": {

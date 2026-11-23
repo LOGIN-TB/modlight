@@ -283,6 +283,22 @@ struct SpecRecorder {
             file.add("log-\(id)", "Engine log summary: \(id)", "summarizeEngineLog", input: ["lines": lines],
                      expected: PodManager.summarizeEngineLog(lines))
         }
+
+        // The start test: an answer of one or two repeated characters means a broken model.
+        let answers: [(String, String)] = [
+            ("bangs", String(repeating: "!", count: 48)),
+            ("ready", "ready"),
+            ("ready-sentence", "Ready. I am here and listening!"),
+            ("short-repeat", "!!!!!!"),
+            ("two-chars", String(repeating: "?!", count: 20)),
+            ("spaces", String(repeating: "! ", count: 30)),
+            ("three-chars", String(repeating: "abc", count: 10)),
+            ("empty", ""),
+        ]
+        for (id, text) in answers {
+            file.add("degenerate-\(id)", "Start test answer: \(id)", "looksDegenerate", input: ["text": text],
+                     expected: PodManager.looksDegenerate(text))
+        }
         try file.write()
     }
 }
