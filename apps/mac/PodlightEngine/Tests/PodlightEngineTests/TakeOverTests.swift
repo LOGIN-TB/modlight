@@ -103,6 +103,9 @@ actor SharedRunPod: HTTPTransport {
     /// What the watchdog reports of the engine's log size; a loading engine's grows.
     var engineLogBytes = 1000
     func growEngineLog() { engineLogBytes += 500 }
+    /// What the watchdog says of the warm-up; nil leaves the field out, as before 0.9.1.
+    var engineWarm: Bool?
+    func setWarm(_ warm: Bool?) { engineWarm = warm }
     var renames: [String] = []
     /// The catalog's "gpus" array, when a test needs more than the one RTX A4000.
     var catalogGPUs: String?
@@ -143,7 +146,8 @@ actor SharedRunPod: HTTPTransport {
                 return reply(200, #"{"choices":[{"message":{"role":"assistant","content":"\#(text)"},"finish_reason":"stop"}]}"#)
             }
             if url.path.hasSuffix("/v1/models"), engineLoading { return reply(503, "loading") }
-            return reply(200, #"{"engineAlive":true,"engineLogBytes":\#(engineLogBytes),"telemetry":{"time":1,"cpuPercent":0,"diskUsedBytes":16000000,"volumeUsedBytes":2.1e10,"gpus":[{"memoryUsedBytes":4000000}]}}"#)
+            let warm = engineWarm.map { #","engineWarm":\#($0)"# } ?? ""
+            return reply(200, #"{"engineAlive":true\#(warm),"engineLogBytes":\#(engineLogBytes),"telemetry":{"time":1,"cpuPercent":0,"diskUsedBytes":16000000,"volumeUsedBytes":2.1e10,"gpus":[{"memoryUsedBytes":4000000}]}}"#)
         }
         let parts = url.path.split(separator: "/").map(String.init) // v2, pods, id, action
         let body = (request.httpBody.flatMap { try? JSONSerialization.jsonObject(with: $0) }) as? [String: Any]
@@ -709,6 +713,24 @@ struct StartTestTests {
         try await a.manager.save(model)
         defer { a.cleanUp(models: [model.id]) }
         try await a.manager.start(model.id, until: nil)
+        await a.manager.refresh(model.id)
+        #expect(await a.manager.state().run(model.id).phase == .ready)
+    }
+
+    @Test func aModelIsReadyOnlyOnceTheWatchdogHasWarmedItUp() async throws {
+        let runpod = SharedRunPod()
+        let a = try await TakeOverFlowTests.mac(runpod, tag: "mac-a-aaaa")
+        let model = PodlightModel(name: "warm", repoId: "Org/Warm-AWQ", format: .awq, weightBytes: 6e9,
+                                  nativeContextTokens: 131_072, toolCallParser: nil, reasoningParser: nil,
+                                  contextTokens: 16_384, preferredGPU: GPUChoice(gpuId: "NVIDIA RTX A4000", cloud: .community))
+        try await a.manager.save(model)
+        defer { a.cleanUp(models: [model.id]) }
+        // The engine answers, but the watchdog still compiles GPU code with its warm-up prompt.
+        await runpod.setWarm(false)
+        try await a.manager.start(model.id, until: nil)
+        await a.manager.refresh(model.id)
+        #expect(await a.manager.state().run(model.id).phase == .loading)
+        await runpod.setWarm(true)
         await a.manager.refresh(model.id)
         #expect(await a.manager.state().run(model.id).phase == .ready)
     }

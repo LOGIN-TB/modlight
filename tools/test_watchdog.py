@@ -200,6 +200,39 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("telemetry", beat)
 
+    def test_warms_the_engine_up_before_it_counts_as_ready(self):
+        engine = WarmEngine()
+        self.addCleanup(engine.close)
+        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_TELEMETRY_SECONDS="0", PODLIGHT_ENGINE_URL=f"http://127.0.0.1:{engine.port}",
+                   PODLIGHT_SERVED_NAME="coder", PODLIGHT_MAX_LEN="4096", PODLIGHT_WARMUP_TOKENS="3000")
+        # The engine still loads: not warm.
+        self.assertFalse(self.get("/")[1]["engineWarm"])
+        engine.loaded.set()
+        deadline = time.time() + 10
+        while engine.prompt is None and time.time() < deadline:
+            time.sleep(0.05)
+        self.assertEqual(engine.model, "coder")
+        self.assertEqual(engine.auth, "Bearer gw")
+        # At most half the context: 4096 // 2 = 2048 tokens, ten per sentence.
+        self.assertEqual(engine.prompt.count("lazy dog"), 204)
+        self.assertFalse(self.get("/")[1]["engineWarm"], "still answering the warm-up")
+        engine.answer.set()
+        while not self.get("/")[1]["engineWarm"] and time.time() < deadline:
+            time.sleep(0.05)
+        self.assertTrue(self.get("/")[1]["engineWarm"])
+        self.assertTrue(any("warm-up done" in line for line in self.get("/log")[1]["lines"]))
+
+    def test_a_failing_warm_up_never_holds_the_start(self):
+        engine = WarmEngine(fail=True)
+        self.addCleanup(engine.close)
+        engine.loaded.set()
+        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_TELEMETRY_SECONDS="0", PODLIGHT_ENGINE_URL=f"http://127.0.0.1:{engine.port}")
+        deadline = time.time() + 10
+        while not self.get("/")[1]["engineWarm"] and time.time() < deadline:
+            time.sleep(0.05)
+        self.assertTrue(self.get("/")[1]["engineWarm"])
+        self.assertTrue(any("warm-up did not finish" in line for line in self.get("/log")[1]["lines"]))
+
     def test_missing_sources_leave_a_working_heartbeat(self):
         self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_TELEMETRY_SECONDS="0.2", PODLIGHT_NVIDIA_SMI="/nonexistent",
                    PODLIGHT_CGROUP="/nonexistent", PODLIGHT_PROC="/nonexistent", PODLIGHT_ENGINE_URL="http://127.0.0.1:9")
@@ -220,6 +253,39 @@ class WatchdogTest(unittest.TestCase):
             return response.status, json.loads(response.read() or b"{}")
         finally:
             conn.close()
+
+
+class WarmEngine:
+    """An engine that loads until `loaded` is set and answers the warm-up once `answer` is set."""
+    def __init__(self, fail=False):
+        self.loaded, self.answer = threading.Event(), threading.Event()
+        self.prompt = self.model = self.auth = None
+        outer = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                code = 200 if outer.loaded.is_set() else 503
+                self.send_response(code); self.send_header("Content-Length", "2"); self.end_headers(); self.wfile.write(b"{}")
+
+            def do_POST(self):
+                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)))
+                outer.auth, outer.model, outer.prompt = self.headers.get("Authorization"), body.get("model"), body.get("prompt")
+                if fail:
+                    self.send_response(500); self.send_header("Content-Length", "0"); self.end_headers()
+                    return
+                outer.answer.wait(10)
+                data = b'{"choices":[{"text":" ok"}]}'
+                self.send_response(200); self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
+
+            def log_message(self, *a): pass
+
+        self.port = free_port()
+        self.server = ThreadingHTTPServer(("127.0.0.1", self.port), Handler)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def close(self):
+        self.answer.set()
+        self.server.shutdown()
 
 
 class FakeEngine:

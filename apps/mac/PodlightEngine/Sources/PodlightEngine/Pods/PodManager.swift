@@ -982,7 +982,9 @@ public actor PodManager {
                 }
                 return
             }
-            if !ready, await engineAnswers(podId: podId, modelId: id) {
+            // Ready once the engine answers and the watchdog (which must answer) has warmed it up, so an agent's first
+            // request does not wait for GPU code to be compiled.
+            if !ready, let watchdog, watchdog.engineWarm != false, await engineAnswers(podId: podId, modelId: id) {
                 // Start test: a model that only repeats one character (a broken quantisation or
                 // kernel) would make every agent request run to its length limit.
                 if let model = await store.current().models.first(where: { $0.id == id }),
@@ -1136,6 +1138,9 @@ public actor PodManager {
         var telemetry: PodTelemetry?
         /// Size of the engine's log; it grows while the engine works.
         var engineLogBytes: Int?
+        /// False while the watchdog warms the engine up (GPU code compiled on first use); nil from
+        /// a watchdog before 0.9.1, which counts as warm.
+        var engineWarm: Bool?
     }
 
     /// What shows a loading engine at work. Sizes in 64 MB steps, so small noise does not count.
@@ -1203,7 +1208,8 @@ public actor PodManager {
             .flatMap { try? JSONSerialization.data(withJSONObject: $0) }
             .flatMap { try? JSONDecoder().decode(PodTelemetry.self, from: $0) }
         return WatchdogStatus(engineAlive: json?["engineAlive"] as? Bool, engineExitCode: json?["engineExitCode"] as? Int,
-                              telemetry: telemetry, engineLogBytes: json?["engineLogBytes"] as? Int)
+                              telemetry: telemetry, engineLogBytes: json?["engineLogBytes"] as? Int,
+                              engineWarm: json?["engineWarm"] as? Bool)
     }
 
     /// The last lines vLLM wrote, kept by the watchdog because RunPod drops a stopped pod's output.

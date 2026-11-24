@@ -52,7 +52,8 @@ export class AdoptRefused extends Error {
 }
 
 /** What the watchdog reports with each heartbeat. `engineLogBytes` grows while the engine works. */
-interface WatchdogStatus { engineAlive?: boolean; engineExitCode?: number; engineLogBytes?: number; telemetry?: unknown }
+/** `engineWarm` is false while the watchdog warms the engine up; absent before 0.9.1, which counts as warm. */
+interface WatchdogStatus { engineAlive?: boolean; engineExitCode?: number; engineLogBytes?: number; engineWarm?: boolean; telemetry?: unknown }
 
 /** How long a start that a request woke waits for a busy machine's card. */
 const WOKEN_WAIT_FOR_CARD_MS = 30 * 60_000
@@ -800,7 +801,9 @@ export class PodManager {
         this.store.updateRun(id, (r) => { r.phase = 'failed'; r.lastReason = 'engine-stuck'; r.lastMessage = last })
         return
       }
-      if (!ready && (await this.engineAnswers(podId, id))) {
+      // Ready once the engine answers and the watchdog has warmed it up, so an agent's first request
+      // does not wait for GPU code to be compiled.
+      if (!ready && watchdog && watchdog.engineWarm !== false && (await this.engineAnswers(podId, id))) {
         // Start test: a model that only repeats one character (a broken quantisation or kernel)
         // would make every agent request run to its length limit.
         const model = this.store.model(id)
