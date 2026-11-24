@@ -3253,16 +3253,6 @@
         }
       }
     },
-    "No figures from the engine": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Werte von der Engine"
-          }
-        }
-      }
-    },
     "No free card at RunPod.": {
       "localizations": {
         "de": {
@@ -6674,7 +6664,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "aus dem Cache statt neu gelesen"
+            "value": "aus dem Cache"
           }
         }
       }
@@ -6709,6 +6699,16 @@
         }
       }
     },
+    "power: –": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leistung: –"
+          }
+        }
+      }
+    },
     "runs with llama.cpp": {
       "localizations": {
         "de": {
@@ -6739,6 +6739,16 @@
         }
       }
     },
+    "waiting: –": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wartend: –"
+          }
+        }
+      }
+    },
     "while it answers": {
       "localizations": {
         "de": {
@@ -6755,6 +6765,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "beim Einlesen des Prompts"
+          }
+        }
+      }
+    },
+    "written: –": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geschrieben: –"
           }
         }
       }
