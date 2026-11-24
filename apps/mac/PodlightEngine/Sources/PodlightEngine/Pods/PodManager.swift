@@ -26,6 +26,8 @@ public enum PodlightError: Error, Sendable, Equatable {
     /// The card on the machine of a stopped pod is taken. The pod and its disk are kept; start
     /// again later, or on a new card (which builds a new pod and downloads the model again).
     case hostBusy
+    /// The model is starting, stopping or waiting for a card; it can move once it runs or stopped.
+    case busy
 }
 
 /// Where the gateway forwards a request.
@@ -108,6 +110,44 @@ public actor PodManager {
             do { try await client.deleteTemplate(id: recordId) } catch let e as RunpodError where e.isNotFound {} catch {}
         }
         published[id] = nil
+        try? keychain.delete(.podKey(id))
+        try await store.update { state in
+            state.models.removeAll { $0.id == id }
+            state.runs[id] = nil
+        }
+    }
+
+    // MARK: Hand over to a server
+
+    /// Hands a model to a Podlight server with its pod (running, or stopped with its disk) and the
+    /// pod's key, so nothing is downloaded again. `adopt` is the server's call; it renames the pod
+    /// to a server pod. This Mac stops acting on the model first and puts it back if the server
+    /// refuses; once the server has it, the model's record in the account goes (other Macs no
+    /// longer offer it) and the model leaves this Mac. The pod is never touched here.
+    public func handOver(_ id: UUID, toServer serverName: String,
+                         adopt: @Sendable (PodlightModel, String, String?) async throws -> Void) async throws {
+        let state = await store.current()
+        guard let model = state.models.first(where: { $0.id == id }) else { throw PodlightError.unknownModel(id.uuidString) }
+        let run = state.run(id)
+        if let other = run.managedBy { throw PodlightError.managedElsewhere(PodOwner.displayName(of: other)) }
+        guard starts[id] == nil, run.waitingForCard == nil, run.replacing == nil,
+              run.phase == .stopped || run.phase == .failed || run.phase == .ready else { throw PodlightError.busy }
+        let key = try podKey(for: id)
+
+        try await updateRun(id) { $0.managedBy = serverName; $0.engineReady = false }
+        do {
+            try await adopt(model, key, run.podId)
+        } catch {
+            try? await updateRun(id) { $0.managedBy = nil; $0.engineReady = run.engineReady }
+            throw error
+        }
+        account(id: id, run: run) // The server counts from now.
+        if let recordId = run.recordId, let client = try? client() {
+            do { try await client.deleteTemplate(id: recordId) } catch {}
+        }
+        published[id] = nil
+        samples[id] = nil
+        loadProgress[id] = nil
         try? keychain.delete(.podKey(id))
         try await store.update { state in
             state.models.removeAll { $0.id == id }
@@ -787,19 +827,26 @@ public actor PodManager {
     public func refresh(_ id: UUID) async {
         guard let client = try? client() else { return }
         let run = await store.current().run(id)
-        guard let podId = run.podId else { return }
+        guard let podId = run.podId, run.managedBy == nil else { return }
 
         let pod: RunpodPod
         do {
             pod = try await client.pod(id: podId)
         } catch let error as RunpodError where error.isNotFound {
-            account(id: id, run: run)
-            loadProgress[id] = nil
-            try? await updateRun(id) { $0.podId = nil; $0.podStatus = nil; $0.phase = .stopped; $0.lastReason = "pod-gone" }
-            try? await putBackReplacedPod(id)
+            await podGone(id, podId: podId)
             return
         } catch {
             return // RunPod unreachable: keep what we know, try again next tick.
+        }
+        if pod.status == .terminated {
+            await podGone(id, podId: podId)
+            return
+        }
+        // A server took the model over (its pods are named podlight-srv-…): let go, never claim it back.
+        if pod.name.hasPrefix(PodOwner.serverPrefix) {
+            samples[id] = nil
+            try? await updateRun(id) { $0.managedBy = "Podlight server"; $0.engineReady = false; $0.phase = .stopped; $0.podStatus = pod.status }
+            return
         }
 
         // The pod's name says which Mac manages it. Another Mac's tag: it took the model over, so
@@ -901,6 +948,7 @@ public actor PodManager {
         let heartbeatTime = heartbeatAt
         let t = now()
         try? await updateRun(id) {
+            guard $0.podId == podId else { return } // Gone or replaced while we asked.
             $0.podStatus = pod.status
             $0.engineReady = engineReady
             $0.lastHeartbeatAt = heartbeatTime
@@ -921,10 +969,50 @@ public actor PodManager {
         }
     }
 
+    /// RunPod no longer has the pod (deleted, at RunPod or by Podlight): the run lets go of it.
+    private func podGone(_ id: UUID, podId: String) async {
+        let run = await store.current().run(id)
+        guard run.podId == podId else { return } // Someone else got here first.
+        account(id: id, run: run)
+        loadProgress[id] = nil
+        samples[id] = nil
+        try? await updateRun(id) {
+            $0.podId = nil; $0.podStatus = nil; $0.engineReady = false; $0.phase = .stopped; $0.lastReason = "pod-gone"
+        }
+        try? await putBackReplacedPod(id)
+    }
+
+    private var reconciling = false
+
+    /// Compares this Mac's pods with RunPod's list and lets go of every pod RunPod no longer has.
+    /// One list request plus a check per missing pod (the list can lag behind a new pod). It does
+    /// not wait for the tick, which can spend minutes on a start, so a deleted pod goes at once.
+    public func reconcile() async {
+        guard !reconciling, let client = try? client() else { return }
+        reconciling = true
+        defer { reconciling = false }
+        guard let pods = try? await client.listPods() else { return }
+        let listed = Dictionary(pods.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let state = await store.current()
+        for model in state.models where state.run(model.id).managedBy == nil {
+            guard let podId = state.run(model.id).podId else { continue }
+            if let pod = listed[podId] {
+                if pod.status == .terminated { await podGone(model.id, podId: podId) }
+                continue
+            }
+            do {
+                if try await client.pod(id: podId).status == .terminated { await podGone(model.id, podId: podId) }
+            } catch let error as RunpodError where error.isNotFound {
+                await podGone(model.id, podId: podId)
+            } catch {}
+        }
+    }
+
     private func applyRules(_ id: UUID) async {
         let state = await store.current()
         guard let model = state.models.first(where: { $0.id == id }) else { return }
         let run = state.run(id)
+        guard run.managedBy == nil else { return } // Released while the tick ran.
         let podState = PodState(
             status: run.podId == nil ? nil : run.podStatus, startedAt: run.startedAt, lastRequestAt: run.lastRequestAt,
             engineReady: run.engineReady, inFlightRequests: inFlight[id] ?? 0, startedManually: run.startedManually,

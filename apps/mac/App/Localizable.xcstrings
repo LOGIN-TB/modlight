@@ -11,6 +11,16 @@
         }
       }
     },
+    " · disk %lld GB": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " · Festplatte %lld GB"
+          }
+        }
+      }
+    },
     " · suggested": {
       "localizations": {
         "de": {
@@ -393,6 +403,16 @@
         }
       }
     },
+    "%@: can move once it runs or has stopped": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: kann umziehen, sobald es läuft oder gestoppt ist"
+          }
+        }
+      }
+    },
     "%lld GB": {
       "localizations": {
         "de": {
@@ -651,6 +671,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Podlight-Server hält Modelle für Agenten erreichbar, auch wenn dieser Mac aus ist. Er läuft als ein Container, etwa auf einem VPS, einem NAS oder mit Coolify:"
+          }
+        }
+      }
+    },
+    "A model moves with its pod and kept disk, so nothing is downloaded again; a running one keeps running. It leaves this Mac. Agents that use it through this Mac must then connect to the server: its Connection page gives them an address and an access key.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Modell zieht mit seinem Pod und der behaltenen Festplatte um, es wird also nichts neu geladen; ein laufendes läuft weiter. Es verlässt diesen Mac. Agenten, die es über diesen Mac nutzen, verbinden sich danach mit dem Server: Dessen Seite „Verbindung“ gibt ihnen Adresse und Zugangsschlüssel."
           }
         }
       }
@@ -945,6 +975,16 @@
         }
       }
     },
+    "Address and pairing code are in the server's log, in the box PODLIGHT SERVER – CONNECTION. The code works once and for 30 minutes; docker exec <container> podlight-code makes a new one.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse und Kopplungscode stehen im Log des Servers, im Kasten PODLIGHT-SERVER – VERBINDUNG. Der Code gilt einmal und 30 Minuten lang; docker exec <container> podlight-code erzeugt einen neuen."
+          }
+        }
+      }
+    },
     "Address in the network": {
       "localizations": {
         "de": {
@@ -1115,6 +1155,26 @@
         }
       }
     },
+    "As of %@, for the whole account": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stand %@, für das ganze Konto"
+          }
+        }
+      }
+    },
+    "Ask RunPod and the servers now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod und die Server jetzt fragen"
+          }
+        }
+      }
+    },
     "Asking Hugging Face…": {
       "localizations": {
         "de": {
@@ -1201,6 +1261,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unter 4 Bit werden Modelle beim Programmieren und bei Werkzeugaufrufen merklich schlechter."
+          }
+        }
+      }
+    },
+    "Bring Along": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übernehmen"
+          }
+        }
+      }
+    },
+    "Bring This Mac's Setup Along": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von diesem Mac übernehmen"
+          }
+        }
+      }
+    },
+    "Bring This Mac's Setup Along…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von diesem Mac übernehmen …"
           }
         }
       }
@@ -1545,6 +1635,16 @@
         }
       }
     },
+    "Copies this Mac's RunPod key, Hugging Face token, limits and rules to the server, and hands models over with their pods and disks.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überträgt RunPod-Schlüssel, Hugging-Face-Token, Limits und Regeln dieses Macs auf den Server und übergibt Modelle samt Pods und Festplatten."
+          }
+        }
+      }
+    },
     "Copy": {
       "localizations": {
         "de": {
@@ -1601,6 +1701,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kopieren: %@"
+          }
+        }
+      }
+    },
+    "Copying settings…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen werden übertragen …"
           }
         }
       }
@@ -1721,6 +1831,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Token bei Hugging Face anlegen (Leserecht genügt)"
+          }
+        }
+      }
+    },
+    "Credit at RunPod": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guthaben bei RunPod"
           }
         }
       }
@@ -2221,12 +2341,12 @@
         }
       }
     },
-    "Give it an https address before it is reachable from the internet: in Coolify, set a domain for the service; elsewhere, put a reverse proxy such as Caddy in front of it. The server pays RunPod with its own API key, which you enter after pairing.": {
+    "Give it an https address before it is reachable from the internet: in Coolify, set a domain for the service; elsewhere, put a reverse proxy such as Caddy in front of it. After pairing, Podlight offers to bring this Mac's RunPod key, rules and models along.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib ihm eine https-Adresse, bevor er aus dem Internet erreichbar ist: In Coolify trägst du eine Domain für den Dienst ein, sonst stellst du einen Reverse Proxy wie Caddy davor. Der Server bezahlt RunPod mit einem eigenen API-Schlüssel, den du nach dem Koppeln einträgst."
+            "value": "Gib ihm eine https-Adresse, bevor er aus dem Internet erreichbar ist: In Coolify trägst du eine Domain für den Dienst ein, sonst stellst du einen Reverse Proxy wie Caddy davor. Nach dem Koppeln bietet Podlight an, RunPod-Schlüssel, Regeln und Modelle dieses Macs mitzunehmen."
           }
         }
       }
@@ -2247,6 +2367,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Halber Speicher, mehr Platz für Kontext und meist schneller: Auf derselben Karte doppelt so schnell gemessen."
+          }
+        }
+      }
+    },
+    "Hand Over to Server": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An Server übergeben"
+          }
+        }
+      }
+    },
+    "Handing over %@…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wird übergeben …"
           }
         }
       }
@@ -2347,6 +2487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hugging-Face-Token (empfohlen)"
+          }
+        }
+      }
+    },
+    "I Use a Podlight Server…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich nutze einen Podlight-Server …"
           }
         }
       }
@@ -2469,6 +2619,48 @@
           "stringUnit": {
             "state": "translated",
             "value": "Letzte 30 Tage"
+          }
+        }
+      }
+    },
+    "Lasts about %lld days at %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reicht bei %2$@ etwa %1$lld Tage"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Lasts about %1$lld days at %2$@"
+          }
+        }
+      }
+    },
+    "Lasts about %lld hours at %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reicht bei %2$@ etwa %1$lld Stunden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Lasts about %1$lld hours at %2$@"
+          }
+        }
+      }
+    },
+    "Lasts under an hour at %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reicht bei %@ keine Stunde mehr"
           }
         }
       }
@@ -2949,6 +3141,16 @@
         }
       }
     },
+    "No pod right now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade kein Pod"
+          }
+        }
+      }
+    },
     "No weight files found in this repository.": {
       "localizations": {
         "de": {
@@ -2979,12 +3181,32 @@
         }
       }
     },
+    "Not available": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht verfügbar"
+          }
+        }
+      }
+    },
     "Not reachable": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Nicht erreichbar"
+          }
+        }
+      }
+    },
+    "Not reachable · as of %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht erreichbar · Stand %@"
           }
         }
       }
@@ -3035,6 +3257,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nichts gefunden. Versuche einen kürzeren Namen."
+          }
+        }
+      }
+    },
+    "Nothing in the account costs anything right now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Konto kostet gerade nichts"
           }
         }
       }
@@ -3869,6 +4101,16 @@
         }
       }
     },
+    "RunPod API key and Hugging Face token": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod-API-Schlüssel und Hugging-Face-Token"
+          }
+        }
+      }
+    },
     "RunPod Console": {
       "localizations": {
         "de": {
@@ -3905,6 +4147,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "RunPod hat diesen Schlüssel nicht angenommen."
+          }
+        }
+      }
+    },
+    "RunPod did not answer, or the API key may not read the account.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod hat nicht geantwortet, oder der API-Schlüssel darf das Konto nicht lesen."
           }
         }
       }
@@ -3985,6 +4237,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Laufende Modelle kosten GPU und Speicher. Ein gestopptes Modell kostet nichts, außer es behält seine Festplatte: Die berechnet RunPod stundenweise (0,20 USD pro GB und Monat), bis Podlight sie nach %lld Tagen ohne Nutzung löscht. Diese Kosten sind in den Zahlen unten enthalten."
+          }
+        }
+      }
+    },
+    "Running on %@%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Läuft auf %@%@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Running on %1$@%2$@"
           }
         }
       }
@@ -4335,6 +4603,16 @@
         }
       }
     },
+    "Spending limits and rules": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgabenlimits und Regeln"
+          }
+        }
+      }
+    },
     "Spending on this Mac": {
       "localizations": {
         "de": {
@@ -4425,12 +4703,12 @@
         }
       }
     },
-    "Start it with docker compose up -d, then read the code with docker compose logs.": {
+    "Start it with docker compose up -d, then read address and code with docker compose logs.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Starte ihn mit docker compose up -d und lies den Code mit docker compose logs ab."
+            "value": "Starte ihn mit docker compose up -d und lies Adresse und Code mit docker compose logs."
           }
         }
       }
@@ -4741,6 +5019,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gestoppt · derzeit nichts auf der Festplatte"
+          }
+        }
+      }
+    },
+    "Stopped%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestoppt%@"
           }
         }
       }
@@ -5075,6 +5363,16 @@
         }
       }
     },
+    "The model is starting, stopping or waiting for a card. Hand it over once it runs or has stopped.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Modell startet, stoppt oder wartet auf eine Karte. Übergib es, sobald es läuft oder gestoppt ist."
+          }
+        }
+      }
+    },
     "The model is still loading. A new pod can take up to 25 minutes; resuming one takes about a minute.": {
       "localizations": {
         "de": {
@@ -5141,22 +5439,22 @@
         }
       }
     },
-    "The pairing code is in the server's log when it starts for the first time. It works once and for 30 minutes.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Den Kopplungscode schreibt der Server beim ersten Start in sein Log. Er gilt einmal und 30 Minuten lang."
-          }
-        }
-      }
-    },
     "The pod is in an error state at RunPod.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Der Pod meldet bei RunPod einen Fehler."
+          }
+        }
+      }
+    },
+    "The pod is starting or stopping. Hand the model over once it runs or has stopped.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Pod startet oder stoppt gerade. Übergib das Modell, sobald es läuft oder gestoppt ist."
           }
         }
       }
@@ -5171,12 +5469,62 @@
         }
       }
     },
+    "The pod runs outside the server's region, and the server would delete it there. Allow that region on the server first. (%@)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Pod läuft außerhalb der Region des Servers, und der Server würde ihn dort löschen. Erlaube diese Region zuerst auf dem Server. (%@)"
+          }
+        }
+      }
+    },
+    "The pod was not created by Podlight on a Mac, so the server does not take it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Pod stammt nicht von Podlight auf einem Mac, deshalb übernimmt der Server ihn nicht."
+          }
+        }
+      }
+    },
+    "The server already has a RunPod key; ticking the first box replaces it with this Mac's. Rules are the daily and monthly limit, heartbeat, wake on request, deletion of unused disks, region and this Mac's time zone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat schon einen RunPod-Schlüssel; mit dem ersten Haken ersetzt ihn der dieses Macs. Regeln sind Tages- und Monatslimit, Heartbeat, Wecken bei Anfrage, Löschen ungenutzter Festplatten, Region und die Zeitzone dieses Macs."
+          }
+        }
+      }
+    },
+    "The server already has a model with this name. Rename one of them first.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat schon ein Modell mit diesem Namen. Benenne zuerst eines davon um."
+          }
+        }
+      }
+    },
     "The server does not answer: %@": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Der Server antwortet nicht: %@"
+          }
+        }
+      }
+    },
+    "The server has no RunPod API key yet. Copy this Mac's key to it first.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat noch keinen RunPod-API-Schlüssel. Übertrage zuerst den Schlüssel dieses Macs."
           }
         }
       }
@@ -5217,6 +5565,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Server startet und bezahlt seine Pods mit einem eigenen RunPod-Schlüssel, der verschlüsselt auf dem Server liegt. Podlight auf diesem Mac liest ihn nie zurück."
+          }
+        }
+      }
+    },
+    "The server then pays RunPod from the same account. Rules are the daily and monthly limit, heartbeat, wake on request, deletion of unused disks, region and this Mac's time zone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server bezahlt RunPod dann aus demselben Konto. Regeln sind Tages- und Monatslimit, Heartbeat, Wecken bei Anfrage, Löschen ungenutzter Festplatten, Region und die Zeitzone dieses Macs."
           }
         }
       }
@@ -5337,6 +5695,16 @@
         }
       }
     },
+    "This model is already on the server.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Modell ist schon auf dem Server."
+          }
+        }
+      }
+    },
     "This model needs a Hugging Face token, and access approved on its page.": {
       "localizations": {
         "de": {
@@ -5383,6 +5751,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tipp: 4-Bit-Varianten (AWQ, GPTQ, NVFP4 oder GGUF Q4) brauchen halb so viel Speicher und laufen schneller."
+          }
+        }
+      }
+    },
+    "To %@. Nothing has to be typed in twice.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf %@. Nichts muss doppelt eingegeben werden."
           }
         }
       }
@@ -5663,6 +6041,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Was ist dir am wichtigsten?"
+          }
+        }
+      }
+    },
+    "What you see here is from %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was du hier siehst, ist von %@."
           }
         }
       }

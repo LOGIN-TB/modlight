@@ -43,6 +43,8 @@ struct SetupView: View {
             HStack {
                 Button("Later") { dismiss() }.keyboardShortcut(.cancelAction)
                 Spacer()
+                // A server has its own RunPod key: nothing to set up on this Mac.
+                Button("I Use a Podlight Server…") { dismiss(); model.showingAddServer = true }
                 Button("Set Up") { page = 1 }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
             }
         }

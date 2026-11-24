@@ -19,6 +19,10 @@ COPY server/src ./server/src
 # The shared rules: GPU table, regions, the pod's start script and watchdog.
 COPY spec/data ./spec/data
 COPY spec/pod ./spec/pod
+# `docker exec <container> podlight-code`: a new pairing code; `podlight-info`: the connection box.
+RUN printf '#!/bin/sh\nexec node --disable-warning=ExperimentalWarning /app/server/src/cli.ts new-code\n' > /usr/local/bin/podlight-code \
+ && printf '#!/bin/sh\nexec node --disable-warning=ExperimentalWarning /app/server/src/cli.ts info\n' > /usr/local/bin/podlight-info \
+ && chmod 755 /usr/local/bin/podlight-code /usr/local/bin/podlight-info
 RUN mkdir -p /data && chown -R node:node /data
 USER node
 VOLUME ["/data"]

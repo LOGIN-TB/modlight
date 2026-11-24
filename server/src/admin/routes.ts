@@ -4,7 +4,7 @@ import type { Pairing } from '../auth/pairing.ts'
 import type { Identity, TokenStore } from '../auth/tokens.ts'
 import { GatewayFailure, failure } from '../gateway/shape.ts'
 import { iso, podlightModel, settingsPatch } from '../model.ts'
-import type { PodManager } from '../pods/manager.ts'
+import { AdoptRefused, type PodManager } from '../pods/manager.ts'
 import { RunpodClient } from '../runpod/client.ts'
 import { audit, type Db } from '../store/db.ts'
 import type { SettingsStore } from '../store/settings.ts'
@@ -14,7 +14,9 @@ import { presentedKey } from '../gateway/routes.ts'
 // The control API for Podlight apps: pairing, settings, models, runs, client tokens. Every
 // /admin route needs a device token; a client token is refused here, as a device token is on /v1.
 
-export const VERSION = '0.4.0'
+import { VERSION } from '../version.ts'
+
+export { VERSION }
 
 interface Deps {
   db: Db
@@ -40,6 +42,7 @@ const extendBody = z.object({ until: z.string().datetime({ offset: true }) })
 const tokenBody = z.object({ name: z.string().min(1).max(100), models: z.array(z.guid()).nullish() })
 const tokenPatch = z.object({ name: z.string().min(1).max(100).optional(), models: z.array(z.guid()).nullish() })
 const verifyBody = z.object({ runpodApiKey: z.string().optional() })
+const adoptBody = z.object({ model: podlightModel, podKey: z.string().min(16).max(200), podId: z.string().min(1).max(64).nullish() })
 
 function problem(reply: FastifyReply, status: number, message: string, code: string): FastifyReply {
   return reply.code(status).send({ error: { message, code } })
@@ -79,6 +82,7 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
         return problem(reply, f.status, f.message, f.code)
       }
       if (error instanceof NameTakenError) return problem(reply, 409, error.message, 'name_taken')
+      if (error instanceof AdoptRefused) return problem(reply, 409, error.message, error.code)
       if (error instanceof z.ZodError) return problem(reply, 400, z.prettifyError(error), 'invalid_request')
       const status = (error as { statusCode?: number }).statusCode ?? 500
       return problem(reply, status, (error as Error).message, status === 500 ? 'internal' : 'invalid_request')
@@ -89,6 +93,12 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       ...settings.read(),
       hasRunpodKey: settings.secret('runpodApiKey') !== null,
       hasHuggingFaceToken: settings.secret('huggingFaceToken') !== null,
+    })
+
+    // "Refresh" in the app: ask RunPod now instead of waiting for the next round.
+    admin.post('/admin/refresh', async () => {
+      await manager.reconcile()
+      return { ok: true }
     })
 
     admin.get('/admin/state', async () => ({
@@ -102,6 +112,7 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       costPerHour: manager.costPerHour(),
       lastClientRequestAt: store.meta('lastClientRequestAt'),
       telemetry: manager.latestTelemetry(),
+      balance: manager.balance(),
     }))
 
     admin.get('/admin/settings', async () => publicSettings())
@@ -109,6 +120,7 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
     admin.patch('/admin/settings', async (request) => {
       const patch = settingsPatch.parse(request.body ?? {})
       settings.update(patch)
+      if (patch.runpodApiKey !== undefined) manager.accountChanged()
       audit(deps.db, actor(request), 'settings', Object.keys(patch).join(', '))
       return publicSettings()
     })
@@ -130,6 +142,15 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       manager.save(model)
       audit(deps.db, actor(request), 'model saved', model.name)
       return store.model(model.id)
+    })
+
+    // A model handed over from a Mac, with its pod and the pod's key: nothing is downloaded again.
+    admin.post<{ Params: { id: string } }>('/admin/models/:id/adopt', async (request, reply) => {
+      const body = adoptBody.parse(request.body)
+      if (body.model.id.toLowerCase() !== request.params.id.toLowerCase()) return problem(reply, 400, 'The id in the path and the body differ.', 'invalid_request')
+      await manager.adopt(body.model, body.podKey, body.podId ?? null)
+      audit(deps.db, actor(request), 'model handed over', body.model.name)
+      return { model: store.model(body.model.id), run: store.run(body.model.id) }
     })
 
     admin.delete<{ Params: { id: string } }>('/admin/models/:id', async (request, reply) => {

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Podlight server",
-    "version": "0.4.0",
+    "version": "0.8.0",
     "description": "Gateway for agents (/v1, client tokens) and control API for Podlight apps (/admin, device tokens from pairing). Plain HTTP; run it behind a reverse proxy with TLS.",
     "license": {
       "name": "MIT"
@@ -1202,6 +1202,41 @@
               "$ref": "#/components/schemas/PodTelemetry"
             },
             "description": "The latest sample per model whose pod runs, keyed by model id."
+          },
+          "balance": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Balance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The RunPod account, at most about a minute old; null until first read or without a key."
+          }
+        }
+      },
+      "Balance": {
+        "type": "object",
+        "properties": {
+          "usd": {
+            "type": "number",
+            "description": "Credit left in the RunPod account."
+          },
+          "spendPerHourUsd": {
+            "type": "number",
+            "description": "What everything in the account costs per hour now, by RunPod."
+          },
+          "spendLimitUsd": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "RunPod's own spend limit for the account."
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -2192,6 +2227,36 @@
         }
       }
     },
+    "/admin/refresh": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Compare the stored pods with RunPod now and let go of deleted ones",
+        "responses": {
+          "200": {
+            "description": "Done",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/settings": {
       "get": {
         "tags": [
@@ -2448,6 +2513,98 @@
             "description": "Removed"
           },
           "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/models/{id}/adopt": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "summary": "Take a model over from a Mac with its pod and the pod's key; the pod is renamed to a server pod, nothing is downloaded again",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "podKey"
+                ],
+                "properties": {
+                  "model": {
+                    "$ref": "#/components/schemas/PodlightModel"
+                  },
+                  "podKey": {
+                    "type": "string"
+                  },
+                  "podId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Model and run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "model": {
+                      "$ref": "#/components/schemas/PodlightModel"
+                    },
+                    "run": {
+                      "$ref": "#/components/schemas/ModelRun"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
             "description": "Error",
             "content": {
               "application/json": {

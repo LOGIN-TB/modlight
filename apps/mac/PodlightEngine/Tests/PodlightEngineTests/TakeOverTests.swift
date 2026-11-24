@@ -110,6 +110,9 @@ actor SharedRunPod: HTTPTransport {
     func name(of id: String) -> String? { pods[id]?.name }
     func env(of id: String) -> [String: String]? { pods[id]?.env }
     func setEnv(_ id: String, _ key: String, _ value: String) { pods[id]?.env[key] = value }
+    /// Gone at RunPod, as if deleted in its console.
+    func drop(_ id: String) { pods[id] = nil }
+    func rename(_ id: String, to name: String) { pods[id]?.name = name }
     func recordNames() -> [String] { templates.values.map(\.name).sorted() }
     func recordPodId() -> String? { templates.values.first?.env["PODLIGHT_POD_ID"] }
 
@@ -282,6 +285,90 @@ struct TakeOverFlowTests {
         bIds = []
         #expect(await runpod.deleted.isEmpty)
         #expect(await runpod.pods[podId] != nil)
+    }
+
+    static let keptModel = PodlightModel(name: "coder", repoId: "Org/Coder-AWQ", format: .awq, weightBytes: 6e9,
+                                         nativeContextTokens: 131_072, toolCallParser: nil, reasoningParser: nil,
+                                         contextTokens: 16_384, preferredGPU: GPUChoice(gpuId: "NVIDIA RTX A4000", cloud: .community),
+                                         keepDisk: true)
+
+    actor Received {
+        var calls: [(PodlightModel, String, String?)] = []
+        func add(_ m: PodlightModel, _ k: String, _ p: String?) { calls.append((m, k, p)) }
+    }
+
+    @Test func aModelIsHandedToAServerWithItsPodAndKeyAndLeavesThisMac() async throws {
+        let runpod = SharedRunPod()
+        let a = try await Self.mac(runpod, tag: "mac-a-aaaa")
+        let model = Self.keptModel
+        defer { a.cleanUp(models: [model.id]) }
+        try await a.manager.save(model)
+        try await a.manager.start(model.id, until: nil)
+        await a.manager.tick()
+        await a.manager.syncRecords(force: true)
+        let podId = try #require(await a.manager.state().run(model.id).podId)
+        #expect(await a.manager.state().run(model.id).phase == .ready)
+        #expect(await runpod.recordNames() == ["podlight-model-coder@mac-a-aaaa"])
+        let key = try a.keychain.read(.podKey(model.id))
+
+        let received = Received()
+        try await a.manager.handOver(model.id, toServer: "Office") { m, k, p in
+            await received.add(m, k, p)
+            await runpod.rename(podId, to: "podlight-srv-coder") // What the server does.
+        }
+        let call = try #require(await received.calls.first)
+        #expect(call.0 == model && call.1 == key && call.2 == podId)
+        let state = await a.manager.state()
+        #expect(state.models.isEmpty && state.runs[model.id] == nil, "the model left this Mac")
+        #expect(await runpod.pods[podId]?.status == "RUNNING", "the pod runs on, untouched")
+        #expect(await runpod.deleted.isEmpty)
+        #expect(await runpod.recordNames().isEmpty, "other Macs no longer offer it")
+        #expect((try? a.keychain.read(.podKey(model.id))) == nil)
+        #expect(try await a.manager.podsFromOtherMacs().isEmpty, "a server's pod is not another Mac's")
+    }
+
+    @Test func aRefusedHandOverChangesNothingAndABusyModelIsNotHandedOver() async throws {
+        let runpod = SharedRunPod()
+        let a = try await Self.mac(runpod, tag: "mac-a-aaaa")
+        let model = Self.keptModel
+        defer { a.cleanUp(models: [model.id]) }
+        try await a.manager.save(model)
+        try await a.manager.start(model.id, until: nil)
+        await a.manager.tick()
+        struct Refused: Error {}
+        await #expect(throws: Refused.self) {
+            try await a.manager.handOver(model.id, toServer: "Office") { _, _, _ in throw Refused() }
+        }
+        let run = await a.manager.state().run(model.id)
+        #expect(run.managedBy == nil && run.phase == .ready && run.engineReady, "back as it was")
+
+        try await StateStore(url: a.stateURL).update { $0.runs[model.id, default: ModelRun()].phase = .stopping }
+        let reloaded = PodManager(store: StateStore(url: a.stateURL), keychain: a.keychain, transport: runpod,
+                                  podURL: { _, port in URL(string: "http://127.0.0.1:1/\(port)")! })
+        await #expect(throws: PodlightError.busy) {
+            try await reloaded.handOver(model.id, toServer: "Office") { _, _, _ in }
+        }
+    }
+
+    @Test func aPodDeletedAtRunPodIsLetGoAtOnceAndAServerPodIsNeverClaimed() async throws {
+        let runpod = SharedRunPod()
+        let a = try await Self.mac(runpod, tag: "mac-a-aaaa")
+        let model = Self.keptModel
+        defer { a.cleanUp(models: [model.id]) }
+        try await a.manager.save(model)
+        try await a.manager.start(model.id, until: nil)
+        let podId = try #require(await a.manager.state().run(model.id).podId)
+        await runpod.drop(podId)
+        await a.manager.reconcile()
+        let run = await a.manager.state().run(model.id)
+        #expect(run.podId == nil && run.lastReason == "pod-gone" && run.phase == .stopped)
+
+        try await a.manager.start(model.id, until: nil)
+        let second = try #require(await a.manager.state().run(model.id).podId)
+        await runpod.rename(second, to: "podlight-srv-coder")
+        await a.manager.tick()
+        #expect(await a.manager.state().run(model.id).managedBy == "Podlight server")
+        #expect(await runpod.name(of: second) == "podlight-srv-coder", "not renamed back to this Mac")
     }
 
     @Test func aPodFromBeforeTheOwnerTagIsClaimedAndANameClashIsRefused() async throws {

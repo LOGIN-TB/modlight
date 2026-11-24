@@ -241,7 +241,7 @@ public struct LocalGateway: Sendable {
             return Failure(status: 409, message: "\(model) is managed by another Mac (\(mac)) now. Use it there, or take it back in Podlight on this Mac.", code: "managed_elsewhere")
         case .hostBusy:
             return Failure(status: 503, message: "The card on the machine of \(model)'s pod is taken right now, so it could not resume. Its disk with the model is kept, and Podlight keeps trying to resume it for half an hour. Try again in a few minutes, or start it on a new card in Podlight.", code: "host_busy")
-        case .nameTaken, .modelLookup:
+        case .nameTaken, .modelLookup, .busy:
             return Failure(status: 500, message: "Podlight could not serve \(model).", code: "internal")
         }
     }

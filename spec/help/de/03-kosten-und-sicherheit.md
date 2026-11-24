@@ -22,7 +22,9 @@ Unter Einstellungen → Allgemein legst du fest, wie viel Podlight pro Tag und p
 
 ![Die Ansicht „Kosten“](screenshots/de/costs.png)
 
-Die Zahlen unter „Kosten“ zählt Podlight selbst: Preis pro Stunde mal Laufzeit, nur für die Pods dieses Macs. Genau abgerechnet wird bei RunPod.
+Die Zahlen unter „Kosten“ zählt Podlight selbst: Preis pro Stunde mal Laufzeit, nur für die Pods dieses Macs. Genau abgerechnet wird bei RunPod. „Guthaben bei RunPod“ zeigt, was in deinem RunPod-Konto noch übrig ist und wie lange es bei den aktuellen Kosten des ganzen Kontos pro Stunde reicht, andere Pods eingeschlossen. Unter einem Tag wird die Zeile orange, unter drei Stunden rot.
+
+Der Knopf zum Aktualisieren in der Symbolleiste (⌘R) fragt RunPod und alle Server sofort. Ein Pod, den du in der RunPod-Konsole gelöscht hast, verschwindet aus Podlight ohnehin binnen Sekunden.
 
 ## Podlight beenden
 

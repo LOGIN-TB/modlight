@@ -156,6 +156,24 @@ public struct RunpodClient: Sendable {
         _ = try await raw("deletePod", "DELETE", "/v2/pods/\(escape(id))")
     }
 
+    // MARK: Account
+
+    /// The account's credit, what everything in it costs per hour now, and RunPod's own spend
+    /// limit. Only RunPod's GraphQL API has it; the same key works there.
+    public func balance() async throws -> RunpodBalance {
+        struct Answer: Decodable {
+            struct Data: Decodable { var myself: Me? }
+            struct Me: Decodable { var clientBalance: Double?; var currentSpendPerHr: Double?; var spendLimit: Double? }
+            var data: Data?
+        }
+        let query = ["query": "query { myself { clientBalance currentSpendPerHr spendLimit } }"]
+        let answer: Answer = try await call("myself", "POST", "/graphql", body: query)
+        guard let me = answer.data?.myself, let usd = me.clientBalance else {
+            throw RunpodError(status: 200, operation: "myself", body: "no balance in the answer")
+        }
+        return RunpodBalance(usd: usd, spendPerHourUsd: me.currentSpendPerHr ?? 0, spendLimitUsd: me.spendLimit)
+    }
+
     // MARK: Catalog
 
     /// The card catalog. Ask with availability every time before starting: a stored answer goes

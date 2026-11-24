@@ -97,6 +97,8 @@ enum Describe {
                 return String(localized: "This Mac already has a model named \(name). Rename or remove it first, then take the pod over.")
             case .hostBusy:
                 return String(localized: "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept, and Podlight keeps trying to resume it until the end you chose. You can also start on a new card (the model is downloaded again).")
+            case .busy:
+                return String(localized: "The model is starting, stopping or waiting for a card. Hand it over once it runs or has stopped.")
             case .modelLookup(let message):
                 return String(localized: "Hugging Face could not describe the model, so it cannot be taken over yet: \(message)")
             }
@@ -108,6 +110,20 @@ enum Describe {
             return address(e)
         default:
             return error.localizedDescription
+        }
+    }
+
+    /// Why a server would not take a model from this Mac, in the app's language.
+    static func handOverRefused(_ error: ServerError) -> String {
+        guard case .refused(_, let message, let code) = error else { return serverError(error) }
+        switch code {
+        case "name_taken": return String(localized: "The server already has a model with this name. Rename one of them first.")
+        case "already_here": return String(localized: "This model is already on the server.")
+        case "not_a_mac_pod": return String(localized: "The pod was not created by Podlight on a Mac, so the server does not take it.")
+        case "pod_busy": return String(localized: "The pod is starting or stopping. Hand the model over once it runs or has stopped.")
+        case "outside_region": return String(localized: "The pod runs outside the server's region, and the server would delete it there. Allow that region on the server first. (\(message))")
+        case "setup_incomplete": return String(localized: "The server has no RunPod API key yet. Copy this Mac's key to it first.")
+        default: return message
         }
     }
 

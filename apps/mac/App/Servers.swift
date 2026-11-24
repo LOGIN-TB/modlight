@@ -253,7 +253,16 @@ extension AppModel {
         _ = try await manager.store.update { $0.servers.append(entry) }
         await reloadState()
         await refreshServer(entry.id)
+        justPaired = entry.id
         return entry.id
+    }
+
+    /// After pairing: offer to bring this Mac's key, rules and models along, when there is any.
+    func offerTransferAfterPairing() {
+        guard let id = justPaired else { return }
+        justPaired = nil
+        guard hasRunpodKey || !state.models.isEmpty else { return }
+        transfer = TransferRequest(serverID: id)
     }
 
     /// Forgets a server. Its pods keep running under the server's own rules.
@@ -286,6 +295,62 @@ extension AppModel {
         } catch {
             return Describe.serverError(error)
         }
+    }
+
+    // MARK: From this Mac to a server
+
+    /// Copies this Mac's RunPod key and Hugging Face token (`keys`) and its limits and rules
+    /// (`rules`) to a server, so nothing is typed twice. Returns an error sentence, or nil.
+    func copyFromThisMac(to id: UUID, keys: Bool, rules: Bool) async -> String? {
+        var change = ServerSettingsChange()
+        if keys {
+            if let key = try? keychain.read(.runpodAPIKey), !key.isEmpty { change.runpodApiKey(key) }
+            if let token = try? keychain.read(.huggingFaceToken), !token.isEmpty { change.huggingFaceToken(token) }
+        }
+        if rules {
+            let s = state.settings
+            change.dailyLimit(s.dailyLimitUsd)
+            change.monthlyLimit(s.monthlyLimitUsd)
+            // The server's ranges are narrower than what an old state file may hold.
+            change.heartbeatMinutes(min(60, max(5, s.heartbeatMinutes)))
+            change.wakeWaitSeconds(min(900, max(30, s.wakeWaitSeconds)))
+            change.deleteStoppedAfterDays(min(30, max(1, s.deleteStoppedAfterDays)))
+            change.wakeOnRequest(s.wakeOnRequest)
+            change.hosting(s.hosting)
+            change.timezone(TimeZone.current.identifier)
+        }
+        guard !change.values.isEmpty else { return nil }
+        return await updateServer(id, change)
+    }
+
+    /// Models of this Mac that can move to a server right now: not managed elsewhere, and not
+    /// starting, stopping or waiting for a card.
+    var modelsReadyToHandOver: [PodlightModel] {
+        state.models.filter { item in
+            let run = state.run(item.id)
+            return run.managedBy == nil && run.waitingForCard == nil && run.replacing == nil
+                && [.stopped, .failed, .ready].contains(run.phase)
+        }
+    }
+
+    /// Hands one model of this Mac to a server, with its pod and disk. Returns an error sentence, or nil.
+    func handOver(_ modelId: UUID, to serverId: UUID) async -> String? {
+        guard let server = server(serverId) else { return nil }
+        let client = server.client(keychain)
+        do {
+            try await manager.handOver(modelId, toServer: server.entry.name) { model, key, podId in
+                try await client.adopt(model, podKey: key, podId: podId)
+            }
+        } catch let error as ServerError {
+            await reloadState()
+            return Describe.handOverRefused(error)
+        } catch {
+            await reloadState()
+            return Describe.error(error)
+        }
+        await reloadState()
+        await server.refresh(keychain)
+        return nil
     }
 
     func loadTokens(_ id: UUID) async {

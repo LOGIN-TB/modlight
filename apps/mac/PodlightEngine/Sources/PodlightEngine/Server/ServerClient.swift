@@ -121,6 +121,8 @@ public struct ServerSnapshot: Sendable, Equatable {
     public var lastClientRequestAt: Date?
     /// The latest telemetry per model whose pod runs. Empty from a server before 0.5.
     public var telemetry: [UUID: PodTelemetry] = [:]
+    /// The RunPod account's credit, as the server last read it. Nil from a server before 0.8.
+    public var balance: RunpodBalance?
 
     public func run(_ id: UUID) -> ModelRun { runs[id] ?? ModelRun() }
 
@@ -134,7 +136,7 @@ public struct ServerSnapshot: Sendable, Equatable {
 
 extension ServerSnapshot: Decodable {
     private enum Keys: String, CodingKey {
-        case version, serverTime, models, runs, settings, spendByDay, spend, costPerHour, lastClientRequestAt, telemetry
+        case version, serverTime, models, runs, settings, spendByDay, spend, costPerHour, lastClientRequestAt, telemetry, balance
     }
 
     public init(from decoder: Decoder) throws {
@@ -153,6 +155,7 @@ extension ServerSnapshot: Decodable {
         // A sample that does not decode must not cost the whole snapshot.
         let samples = (try? c.decodeIfPresent([String: PodTelemetry].self, forKey: .telemetry)) ?? [:]
         telemetry = Dictionary(uniqueKeysWithValues: samples.compactMap { key, t in UUID(uuidString: key).map { ($0, t) } })
+        balance = try? c.decodeIfPresent(RunpodBalance.self, forKey: .balance)
     }
 }
 
@@ -273,6 +276,20 @@ public struct ServerClient: Sendable {
         let data: Data
         do { data = try Self.encoder.encode(model) } catch { throw .unexpected("\(error)") }
         _ = try await call("PUT", "/admin/models/\(model.id.uuidString)", rawBody: data)
+    }
+
+    /// Hands a model from this Mac to the server, with its pod and the pod's key when it has one:
+    /// the server renames the pod to its own and runs it from now on, disk and all.
+    public func adopt(_ model: PodlightModel, podKey: String, podId: String?) async throws(ServerError) {
+        struct Body: Encodable { var model: PodlightModel; var podKey: String; var podId: String? }
+        let data: Data
+        do { data = try Self.encoder.encode(Body(model: model, podKey: podKey, podId: podId)) } catch { throw .unexpected("\(error)") }
+        _ = try await call("POST", "/admin/models/\(model.id.uuidString)/adopt", rawBody: data, timeout: 60)
+    }
+
+    /// Asks the server to compare its pods with RunPod now (instead of at its next round).
+    public func refresh() async throws(ServerError) {
+        _ = try await call("POST", "/admin/refresh", timeout: 60)
     }
 
     public func remove(_ id: UUID) async throws(ServerError) {

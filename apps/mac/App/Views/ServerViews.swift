@@ -56,7 +56,7 @@ struct AddServerSheet: View {
                     TextField("Pairing code", text: $code, prompt: Text("ABCD-EFGH-JKLM"))
                     TextField("Name", text: $name, prompt: Text("e.g. Office"))
                 } footer: {
-                    Text("The pairing code is in the server's log when it starts for the first time. It works once and for 30 minutes.")
+                    Text("Address and pairing code are in the server's log, in the box PODLIGHT SERVER – CONNECTION. The code works once and for 30 minutes; docker exec <container> podlight-code makes a new one.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Section {
@@ -65,9 +65,9 @@ struct AddServerSheet: View {
                             Text("A Podlight server keeps models reachable for agents while this Mac is off. It runs as one container, for example on a VPS, a NAS or with Coolify:")
                                 .fixedSize(horizontal: false, vertical: true)
                             SnippetBox(snippet: ConfigSnippet(id: "compose", title: String(localized: "docker-compose.yml"),
-                                                              hint: String(localized: "Start it with docker compose up -d, then read the code with docker compose logs."),
+                                                              hint: String(localized: "Start it with docker compose up -d, then read address and code with docker compose logs."),
                                                               content: Self.compose), copied: $copied) { EmptyView() }
-                            Text("Give it an https address before it is reachable from the internet: in Coolify, set a domain for the service; elsewhere, put a reverse proxy such as Caddy in front of it. The server pays RunPod with its own API key, which you enter after pairing.")
+                            Text("Give it an https address before it is reachable from the internet: in Coolify, set a domain for the service; elsewhere, put a reverse proxy such as Caddy in front of it. After pairing, Podlight offers to bring this Mac's RunPod key, rules and models along.")
                                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                             Link("Server documentation", destination: Links.serverDocs)
                         }
@@ -330,6 +330,9 @@ struct ServerStatusLine: View {
                 VStack(alignment: .leading) {
                     Text("Not reachable. Models there keep running under the server's own rules.")
                     Text(message).font(.caption).foregroundStyle(.secondary)
+                    if let last = server.lastContact {
+                        Text("What you see here is from \(Format.time(last)).").font(.caption).foregroundStyle(.secondary)
+                    }
                 }
             } icon: { Image(systemName: "wifi.exclamationmark").foregroundStyle(.orange) }
         case .notPaired:
@@ -393,6 +396,13 @@ struct ServerSettingsView: View {
                         }
                         .disabled(server.status != .online)
                     }
+                }
+                Section {
+                    Button("Bring This Mac's Setup Along…") { model.transfer = TransferRequest(serverID: serverID) }
+                        .disabled(server.status != .online)
+                } footer: {
+                    Text("Copies this Mac's RunPod key, Hugging Face token, limits and rules to the server, and hands models over with their pods and disks.")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
                 Section {
                     Button("Remove Server…", role: .destructive) { confirmingRemove = true }

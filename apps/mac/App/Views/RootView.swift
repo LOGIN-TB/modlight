@@ -25,8 +25,21 @@ struct RootView: View {
                 }
                 .sheet(isPresented: $model.showingAddModel, onDismiss: { model.addSheetDismissed() }) { AddModelSheet(target: model.addingTo) }
                 .sheet(item: $model.editingModel) { AddModelSheet(editing: $0, target: model.source(of: $0.id)) }
-                .sheet(isPresented: $model.showingAddServer) { AddServerSheet() }
+                .sheet(isPresented: $model.showingAddServer, onDismiss: { model.offerTransferAfterPairing() }) { AddServerSheet() }
+                .sheet(item: $model.transfer) { TransferSheet(request: $0) }
                 .sheet(item: $model.startingModel) { StartSheet(model: $0) }
+                .toolbar {
+                    ToolbarItem {
+                        Button {
+                            Task { await model.refreshNow() }
+                        } label: {
+                            Label("Refresh", systemImage: "arrow.clockwise")
+                        }
+                        .keyboardShortcut("r", modifiers: .command)
+                        .disabled(model.refreshing)
+                        .help("Ask RunPod and the servers now")
+                    }
+                }
             }
         }
         .onAppear {
@@ -90,6 +103,15 @@ private struct ModelRows: View {
                 .contextMenu {
                     Button("Edit…") { model.editingModel = item }
                         .disabled(model.run(item.id).phase != .stopped && model.run(item.id).phase != .failed)
+                    if source == .local, !model.servers.isEmpty {
+                        Menu("Hand Over to Server") {
+                            ForEach(model.servers) { server in
+                                Button(server.entry.name) { model.transfer = TransferRequest(serverID: server.id, models: [item.id], forModel: true) }
+                                    .disabled(server.status != .online)
+                            }
+                        }
+                        .disabled(!model.modelsReadyToHandOver.contains { $0.id == item.id })
+                    }
                 }
         }
         Button {
@@ -112,7 +134,8 @@ struct ServerStatusRow: View {
         case .connecting:
             Label("Connecting…", systemImage: "hourglass").font(.caption).foregroundStyle(.secondary)
         case .unreachable:
-            Label("Not reachable", systemImage: "wifi.exclamationmark").font(.caption).foregroundStyle(.orange)
+            Label(server.lastContact.map { String(localized: "Not reachable · as of \(Format.time($0))") } ?? String(localized: "Not reachable"),
+                  systemImage: "wifi.exclamationmark").font(.caption).foregroundStyle(.orange)
         case .notPaired:
             Label("Pairing revoked", systemImage: "key.slash").font(.caption).foregroundStyle(.red)
         }
