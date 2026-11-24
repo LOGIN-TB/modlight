@@ -168,6 +168,8 @@ public struct ModelRun: Codable, Sendable, Equatable {
     public var lastMessage: String?
     /// Fallback attempts of the last start, for "RTX 3090 was taken, started on V100".
     public var fellBackFrom: [String]?
+    /// What the chosen card would have cost per hour, when the start fell back to another one.
+    public var wantedPricePerHour: Double?
     public var lastHeartbeatAt: Date?
     public var persistentGB: Int?
     /// Size of the container disk of the current pod, for the storage share of the cost.
@@ -203,16 +205,36 @@ public struct ModelRun: Codable, Sendable, Equatable {
     public init() {}
 }
 
-/// A start waiting for the card on a stopped pod's machine.
+/// A start waiting for a card: the one on a stopped pod's machine (resume), or, for a new pod,
+/// one within the price ceiling when only pricier cards were free.
 public struct WaitingForCard: Codable, Sendable, Equatable {
     /// Podlight stops trying then: the run's end, or half an hour for a run a request woke.
     public var until: Date
     public var runUntil: Date?
     public var manual: Bool
     public var lastTryAt: Date?
+    /// Set when waiting for a new pod: the most a card may cost per hour (all cards of the pod).
+    public var maxPricePerHour: Double?
+    /// The chosen card that was taken, and what it costs, for "RTX 4090 at 0.79 $/h is taken".
+    public var wanted: PricedChoice?
+    /// Cards that might be free but cost more than the ceiling, cheapest first.
+    public var pricier: [PricedChoice]?
 
-    public init(until: Date, runUntil: Date?, manual: Bool, lastTryAt: Date? = nil) {
+    public init(until: Date, runUntil: Date?, manual: Bool, lastTryAt: Date? = nil,
+                maxPricePerHour: Double? = nil, wanted: PricedChoice? = nil, pricier: [PricedChoice]? = nil) {
         self.until = until; self.runUntil = runUntil; self.manual = manual; self.lastTryAt = lastTryAt
+        self.maxPricePerHour = maxPricePerHour; self.wanted = wanted; self.pricier = pricier
+    }
+}
+
+/// A card choice with its name and price per hour for the whole pod.
+public struct PricedChoice: Codable, Sendable, Equatable, Hashable {
+    public var choice: GPUChoice
+    public var name: String
+    public var pricePerHour: Double
+
+    public init(choice: GPUChoice, name: String, pricePerHour: Double) {
+        self.choice = choice; self.name = name; self.pricePerHour = pricePerHour
     }
 }
 
@@ -261,6 +283,9 @@ public struct PodlightSettings: Codable, Sendable, Equatable {
     public var secureCloudOnly: Bool = false
     /// Accept connections from other computers on the local network, not only from this Mac.
     public var allowLAN: Bool = false
+    /// A replacement card may cost this many percent more than the chosen one before Podlight asks
+    /// (or, without anyone to ask, waits for a cheaper one). 0: ask at any extra cost.
+    public var fallbackPriceStepPercent: Int = 50
 
     public init() {}
 
@@ -268,7 +293,7 @@ public struct PodlightSettings: Codable, Sendable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case dailyLimitUsd, monthlyLimitUsd, heartbeatMinutes, wakeWaitSeconds, gatewayPort, deleteStoppedAfterDays,
-             wakeOnRequest, hostingRegion, secureCloudOnly, allowLAN
+             wakeOnRequest, hostingRegion, secureCloudOnly, allowLAN, fallbackPriceStepPercent
     }
 
     // Every field optional on read, so a settings file from an older version keeps its values.
@@ -285,6 +310,7 @@ public struct PodlightSettings: Codable, Sendable, Equatable {
         hostingRegion = try c.decodeIfPresent(HostingRegion.self, forKey: .hostingRegion) ?? d.hostingRegion
         secureCloudOnly = try c.decodeIfPresent(Bool.self, forKey: .secureCloudOnly) ?? d.secureCloudOnly
         allowLAN = try c.decodeIfPresent(Bool.self, forKey: .allowLAN) ?? d.allowLAN
+        fallbackPriceStepPercent = try c.decodeIfPresent(Int.self, forKey: .fallbackPriceStepPercent) ?? d.fallbackPriceStepPercent
     }
 
     // "No limit" is written as an explicit null: a missing key reads as the default limit.
@@ -300,6 +326,7 @@ public struct PodlightSettings: Codable, Sendable, Equatable {
         try c.encode(hostingRegion, forKey: .hostingRegion)
         try c.encode(secureCloudOnly, forKey: .secureCloudOnly)
         try c.encode(allowLAN, forKey: .allowLAN)
+        try c.encode(fallbackPriceStepPercent, forKey: .fallbackPriceStepPercent)
     }
 }
 

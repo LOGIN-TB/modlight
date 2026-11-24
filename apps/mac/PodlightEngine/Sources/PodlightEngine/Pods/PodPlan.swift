@@ -115,6 +115,38 @@ public enum PodPlan {
         return data
     }
 
+    /// The cards of a start split by price. The first choice (the user's card, or the best
+    /// suggestion) sets the reference; a fallback may cost up to `stepPercent` more, or up to
+    /// `maxPricePerHour` when the user approved a pricier card. Pricier ones are not booked
+    /// without asking: that is how a 0.79 $/h start once ended on a card for 7.99 $/h.
+    /// Prices are per hour for the whole pod (price × cards). A card without a price counts as
+    /// too expensive; without a reference price and no maximum, nothing is held back.
+    public static func priceGuard(choices: [GPUChoice], catalog: [RunpodGPUType], stepPercent: Int,
+                                  maxPricePerHour: Double? = nil) -> PriceGuard {
+        let cards = Dictionary(catalog.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        func priced(_ choice: GPUChoice) -> PricedChoice? {
+            guard let card = cards[choice.gpuId], let price = card.pricePerHour(in: choice.cloud) else { return nil }
+            let name = choice.count > 1 ? "\(choice.count) × \(card.name)" : card.name
+            return PricedChoice(choice: choice, name: name, pricePerHour: (price * Double(choice.count) * 1000).rounded() / 1000)
+        }
+        guard let first = choices.first else { return PriceGuard(wanted: nil, ceiling: nil, within: [], above: []) }
+        let wanted = priced(first)
+        let ceiling = maxPricePerHour ?? wanted.map { ($0.pricePerHour * (1 + Double(max(0, stepPercent)) / 100) * 1000).rounded() / 1000 }
+        guard let ceiling else { return PriceGuard(wanted: wanted, ceiling: nil, within: choices, above: []) }
+        var within: [GPUChoice] = []
+        var above: [PricedChoice] = []
+        for choice in choices {
+            let item = priced(choice)
+            if let item, item.pricePerHour <= ceiling + 1e-9 {
+                within.append(choice)
+            } else if let item {
+                above.append(item)
+            }
+        }
+        above.sort { $0.pricePerHour < $1.pricePerHour }
+        return PriceGuard(wanted: wanted, ceiling: ceiling, within: within, above: above)
+    }
+
     /// The fallback order for a start: the user's card first, then the suggestion for the goal.
     /// Every fallback holds the configured context (vLLM refuses to start otherwise, after the
     /// download) and obeys the hosting rules.
@@ -129,4 +161,16 @@ public enum PodPlan {
         }
         return Array(ordered.prefix(limit))
     }
+}
+
+/// The cards a start may book without asking, and the pricier ones it may only offer.
+public struct PriceGuard: Sendable, Equatable {
+    /// The first choice with its price; nil when the catalog has no price for it.
+    public var wanted: PricedChoice?
+    /// The most a card may cost per hour; nil when there is no reference price.
+    public var ceiling: Double?
+    /// Cards to try, in the original order.
+    public var within: [GPUChoice]
+    /// Cards above the ceiling, cheapest first.
+    public var above: [PricedChoice]
 }

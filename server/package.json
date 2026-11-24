@@ -1,6 +1,6 @@
 {
   "name": "podlight-server",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "private": true,
   "description": "Podlight server mode: the OpenAI/Anthropic-compatible gateway and pod lifecycle as a container, controlled by the Podlight app",
   "license": "MIT",

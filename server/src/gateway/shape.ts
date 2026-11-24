@@ -1,7 +1,12 @@
 // What the gateway changes in a request and what it answers on failure. Port of the pure parts of
 // LocalGateway.swift; held to spec/cases/gateway.json.
 
+import type { PricedChoice } from '../model.ts'
+
 type Json = Record<string, unknown>
+
+/** "$1.19" */
+const dollars = (value: number): string => `$${value.toFixed(2)}`
 
 /**
  * Claude Code puts entries with `role: "system"` into `messages` after the first user turn. The
@@ -38,6 +43,7 @@ export type GatewayError =
   | { kind: 'runpod'; status: number; message: string }
   | { kind: 'notAllowed' }
   | { kind: 'hostBusy' }
+  | { kind: 'cardTooExpensive'; wanted: PricedChoice | null; ceiling: number; pricier: PricedChoice[] }
 
 export class GatewayFailure extends Error {
   readonly error: GatewayError
@@ -75,6 +81,10 @@ export function failure(error: GatewayError, model: string): Failure {
       return { status: 502, code: 'runpod_error', message: `RunPod refused (${error.status}): ${error.message.slice(0, 200)}` }
     case 'notAllowed':
       return { status: 403, code: 'model_not_allowed', message: `This access key may not use ${model}.` }
+    case 'cardTooExpensive': {
+      const card = error.wanted ? `${error.wanted.name} at ${dollars(error.wanted.pricePerHour)}/h` : 'The chosen card'
+      return { status: 503, code: 'card_too_expensive', message: `${card} for ${model} is taken, and the free cards cost more than the server's price step allows. Nothing was booked; the server keeps trying for a card up to ${dollars(error.ceiling)}/h. Start it on a pricier card in the Podlight app, or try again later.` }
+    }
     case 'hostBusy':
       return { status: 503, code: 'host_busy', message: `The card on the machine of ${model}'s pod is taken right now, so it could not resume. Its disk with the model is kept, and the server keeps trying to resume it for half an hour. Try again in a few minutes, or start it on a new card in the Podlight app.` }
   }

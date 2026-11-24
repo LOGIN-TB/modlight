@@ -102,6 +102,8 @@ public struct ServerSettings: Codable, Sendable, Equatable {
     public var hostingRegion: HostingRegion
     public var secureCloudOnly: Bool
     public var timezone: String
+    /// How much more a replacement card may cost before the server waits instead. Nil from a server before 0.9.
+    public var fallbackPriceStepPercent: Int?
     public var hasRunpodKey: Bool
     public var hasHuggingFaceToken: Bool
 
@@ -215,6 +217,7 @@ public struct ServerSettingsChange: Sendable {
         values["secureCloudOnly"] = .bool(policy.secureOnly)
     }
     public mutating func timezone(_ value: String) { values["timezone"] = .string(value) }
+    public mutating func fallbackPriceStepPercent(_ value: Int) { values["fallbackPriceStepPercent"] = .int(value) }
     /// Write-only on the server; an empty string removes it.
     public mutating func runpodApiKey(_ value: String) { values["runpodApiKey"] = .string(value) }
     public mutating func huggingFaceToken(_ value: String) { values["huggingFaceToken"] = .string(value) }
@@ -297,9 +300,12 @@ public struct ServerClient: Sendable {
     }
 
     /// `newPod`: delete a stopped pod with its disk and build a new one (its machine was busy).
-    public func start(_ id: UUID, until: Date?, newPod: Bool = false) async throws(ServerError) {
+    /// `maxPricePerHour`: the user approved a pricier card. Refused with `card_too_expensive` when
+    /// only cards above the price step are free; the run then shows what it waits for.
+    public func start(_ id: UUID, until: Date?, newPod: Bool = false, maxPricePerHour: Double? = nil) async throws(ServerError) {
         var body: [String: Any] = ["until": until.map { Self.iso($0) } ?? NSNull()]
         if newPod { body["newPod"] = true }
+        if let maxPricePerHour { body["maxPricePerHour"] = maxPricePerHour }
         _ = try await call("POST", "/admin/models/\(id.uuidString)/start", body: body, timeout: 120)
     }
 

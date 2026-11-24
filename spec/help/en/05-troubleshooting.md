@@ -8,6 +8,10 @@ The key was not copied completely, or it was revoked. Create a new one at RunPod
 
 Every suitable card was taken at that moment. Try again in a few minutes, or set the model's goal to "Fast", which allows more card types.
 
+## "Your card is taken" with a list of pricier cards
+
+Your card was taken and the free ones cost more than a replacement may (Settings → "Another card may cost more by"). Nothing was booked. Choose one of the cards, wait for Podlight to find one within the price, or allow a higher extra cost.
+
 ## The start takes long
 
 A new pod first downloads the engine (about 9 GB), then the model. Then vLLM starts, which alone takes about two minutes. Up to 25 minutes is normal while Podlight shows "Loading the model". Resuming is faster because the pod keeps its disk.

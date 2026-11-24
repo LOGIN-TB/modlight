@@ -99,6 +99,9 @@ enum Describe {
                 return String(localized: "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept, and Podlight keeps trying to resume it until the end you chose. You can also start on a new card (the model is downloaded again).")
             case .busy:
                 return String(localized: "The model is starting, stopping or waiting for a card. Hand it over once it runs or has stopped.")
+            case .cardTooExpensive(let wanted, let ceiling, _):
+                let card = wanted?.name ?? String(localized: "The chosen card")
+                return String(localized: "\(card) is taken, and the free cards cost more than \(Format.perHour(ceiling)). Nothing was booked.")
             case .modelLookup(let message):
                 return String(localized: "Hugging Face could not describe the model, so it cannot be taken over yet: \(message)")
             }
@@ -169,6 +172,7 @@ enum Describe {
         case "engine-exited": String(localized: "The engine stopped with an error, so Podlight ended the pod:")
         case "outside-region": String(localized: "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions under Edit.")
         case "host-busy": String(localized: "The card on the pod's machine was taken, so it could not resume. Its disk with the model is kept.")
+        case "card-too-expensive": String(localized: "The chosen card was taken, and the free ones cost more than the set extra cost. Nothing was booked.")
         case "engine-stuck": String(localized: "The engine made no progress for 10 minutes while loading (often a stalled download on that machine), so Podlight stopped the pod. Start again, or start on a new card. Its last line:")
         case "gpu-unusable": String(localized: "The RunPod machine could not use its card (a CUDA error before the model was loaded). That is the machine, not the model: start on a new card, or choose another card type under Edit.")
         case "garbage-output": String(localized: "Start test failed: the model answered only with repeated characters, so Podlight stopped it. This build of the model does not work on this card (often a broken quantisation); try another build, such as a GGUF, or another card. Its answer:")

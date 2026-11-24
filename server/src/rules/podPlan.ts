@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
-import { engineOf, type GPUChoice, type HostingPolicy, type InferenceEngine, type PodlightModel, ANYWHERE } from '../model.ts'
+import { engineOf, type GPUChoice, type HostingPolicy, type InferenceEngine, type PodlightModel, type PricedChoice, ANYWHERE } from '../model.ts'
 import type { CreatePodRequest, GPUType } from '../runpod/types.ts'
+import { pricePerHour } from '../runpod/types.ts'
 import { sameChoice } from '../runpod/types.ts'
 import { specPath } from '../spec.ts'
 import { options } from './gpuSuggestion.ts'
@@ -113,4 +114,48 @@ export function choices(model: PodlightModel, catalog: GPUType[], hosting: Hosti
     return [preferred, ...rest].slice(0, limit)
   }
   return ordered.slice(0, limit)
+}
+
+/** The cards a start may book without asking, and the pricier ones it may only offer. */
+export interface PriceGuard {
+  /** The first choice with its price; null when the catalog has no price for it. */
+  wanted: PricedChoice | null
+  /** The most a card may cost per hour; null when there is no reference price. */
+  ceiling: number | null
+  /** Cards to try, in the original order. */
+  within: GPUChoice[]
+  /** Cards above the ceiling, cheapest first. */
+  above: PricedChoice[]
+}
+
+const round3 = (value: number): number => Math.round(value * 1000) / 1000
+
+/**
+ * The cards of a start split by price. The first choice sets the reference; a fallback may cost up
+ * to `stepPercent` more, or up to `maxPricePerHour` when the user approved a pricier card. Prices
+ * are per hour for the whole pod. A card without a price counts as too expensive; without a
+ * reference price and no maximum, nothing is held back. Port of PodPlan.priceGuard.
+ */
+export function priceGuard(choices: GPUChoice[], catalog: GPUType[], stepPercent: number, maxPricePerHour: number | null = null): PriceGuard {
+  const cards = new Map(catalog.map((g) => [g.id, g]))
+  const priced = (choice: GPUChoice): PricedChoice | null => {
+    const card = cards.get(choice.gpuId)
+    const price = card ? pricePerHour(card, choice.cloud) : null
+    if (!card || price == null) return null
+    return { choice, name: choice.count > 1 ? `${choice.count} × ${card.name}` : card.name, pricePerHour: round3(price * choice.count) }
+  }
+  const first = choices[0]
+  if (!first) return { wanted: null, ceiling: null, within: [], above: [] }
+  const wanted = priced(first)
+  const ceiling = maxPricePerHour ?? (wanted ? round3(wanted.pricePerHour * (1 + Math.max(0, stepPercent) / 100)) : null)
+  if (ceiling == null) return { wanted, ceiling: null, within: choices, above: [] }
+  const within: GPUChoice[] = []
+  const above: PricedChoice[] = []
+  for (const choice of choices) {
+    const item = priced(choice)
+    if (item && item.pricePerHour <= ceiling + 1e-9) within.push(choice)
+    else if (item) above.push(item)
+  }
+  above.sort((a, b) => a.pricePerHour - b.pricePerHour)
+  return { wanted, ceiling, within, above }
 }

@@ -24,7 +24,15 @@ Das Tempo ist eine Schätzung aus der Speicherbandbreite der Karte. Sie liegt me
 
 ## Wenn die Karte vergeben ist
 
-Freie Karten sind bei RunPod knapp und wechseln innerhalb von Sekunden. Ist deine Karte beim Start vergeben, probiert Podlight die nächsten aus der Vorschlagsliste, sofern sie den eingestellten Kontext fassen. Danach steht im Modell, welche Karte es geworden ist.
+Freie Karten sind bei RunPod knapp und wechseln innerhalb von Sekunden. Ist deine Karte beim Start vergeben, probiert Podlight die nächsten aus der Vorschlagsliste, sofern sie den eingestellten Kontext fassen. Danach steht im Modell, welche Karte es geworden ist, in Orange, wenn sie mehr kostet als deine.
+
+Ein Ersatz darf höchstens 50 % mehr kosten als deine Karte; einstellbar unter Einstellungen → „Andere Karte darf mehr kosten“ (für einen Server in seinen Server-Einstellungen). Darüber bucht Podlight nichts:
+
+- **Von Hand gestartet:** Das Start-Fenster sagt, dass deine Karte belegt ist, und listet die freien, teureren Karten mit Preis und Aufschlag. Starte auf einer davon oder lass Podlight warten.
+- **Warten:** Podlight versucht es bis zum Ende des Laufs alle 30 Sekunden mit Karten im Preisrahmen und startet dann von selbst. Die Seite des Modells zeigt „Wartet auf eine Karte“ und die günstigste freie Karte, die du weiterhin wählen kannst. „Warten beenden“ bricht ab.
+- **Von einem Agenten geweckt oder vom Server gestartet:** Niemand kann gefragt werden, also wartet Podlight eine halbe Stunde, ohne die teurere Karte zu buchen. Der Agent bekommt eine Fehlermeldung mit dem Grund.
+
+![Der Start fragt vor einer teureren Karte](screenshots/de/start-price.png)
 
 ## Kontext
 

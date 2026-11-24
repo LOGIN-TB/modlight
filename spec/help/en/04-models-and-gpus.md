@@ -24,7 +24,15 @@ The speed is an estimate from the card's memory bandwidth, and usually below wha
 
 ## When the card is taken
 
-Free cards are scarce at RunPod and change within seconds. If your card is taken when you start, Podlight tries the next ones from the suggestion list, as long as they hold the configured context. The model then shows which card it got.
+Free cards are scarce at RunPod and change within seconds. If your card is taken when you start, Podlight tries the next ones from the suggestion list, as long as they hold the configured context. The model then shows which card it got, and in orange when it costs more than yours.
+
+A replacement may cost at most 50 % more than your card; set this under Settings → "Another card may cost more by" (for a server, in its Server Settings). Above that Podlight books nothing:
+
+- **Started by hand:** the start window says your card is taken and lists the free, pricier cards with their price and how much more they cost. Start on one of them, or let Podlight wait.
+- **Waiting:** Podlight tries every 30 seconds until the run's end for a card within the price and then starts by itself. The model's page shows "Waiting for a Card" and the cheapest free card, which you can still choose. "Stop Waiting" ends it.
+- **Woken by an agent, or started by a server:** nobody can be asked, so Podlight waits for half an hour without booking the pricier card. The agent gets an error that says why.
+
+![The start asks before a pricier card](screenshots/en/start-price.png)
 
 ## Context
 

@@ -78,6 +78,8 @@ struct ModelDetailView: View {
     let item: PodlightModel
     @State private var confirmingDelete = false
     @State private var showingEngineLog = false
+    /// A pricier card the user is about to approve while the model waits for one within its price.
+    @State private var pricierStart: PricedChoice?
 
     private var run: ModelRun { model.run(item.id) }
     private var source: Source { model.source(of: item.id) }
@@ -104,10 +106,31 @@ struct ModelDetailView: View {
                 if let waiting = run.waitingForCard {
                     HStack(spacing: 10) {
                         ProgressView().controlSize(.small)
-                        Text("Podlight tries every 30 seconds until \(Format.time(waiting.until)) and then resumes the pod with its disk, without downloading the model again.")
-                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        if let ceiling = waiting.maxPricePerHour {
+                            Text(waiting.wanted.map { String(localized: "\($0.name) (\(Format.perHour($0.pricePerHour))) is taken. Podlight tries every 30 seconds until \(Format.time(waiting.until)) for a card up to \(Format.perHour(ceiling)) and then starts by itself.") }
+                                 ?? String(localized: "Podlight tries every 30 seconds until \(Format.time(waiting.until)) for a card up to \(Format.perHour(ceiling)) and then starts by itself."))
+                                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        } else {
+                            Text("Podlight tries every 30 seconds until \(Format.time(waiting.until)) and then resumes the pod with its disk, without downloading the model again.")
+                                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
                         Spacer(minLength: 0)
                         Button("Stop Waiting") { Task { await model.stop(item) } }
+                    }
+                    if waiting.maxPricePerHour != nil, let cheapest = waiting.pricier?.first {
+                        HStack {
+                            Button("Start on \(cheapest.name) for \(Format.perHour(cheapest.pricePerHour))…") { pricierStart = cheapest }
+                            Text("Free right now, at a higher price.").font(.caption).foregroundStyle(.secondary)
+                        }
+                        .confirmationDialog("Start \(item.name) on \(cheapest.name)?", isPresented: Binding(
+                            get: { pricierStart != nil }, set: { if !$0 { pricierStart = nil } })) {
+                            Button("Start for \(Format.perHour(cheapest.pricePerHour))") {
+                                let end = waiting.runUntil ?? Date.now.addingTimeInterval(2 * 3600)
+                                Task { await model.start(item, until: end, maxPricePerHour: cheapest.pricePerHour) }
+                            }
+                        } message: {
+                            Text(waiting.wanted.map { String(localized: "The card you chose costs \(Format.perHour($0.pricePerHour)).") } ?? "")
+                        }
                     }
                 }
                 if ["host-busy", "gpu-unusable", "engine-stuck"].contains(run.lastReason ?? ""), run.phase == .stopped || run.phase == .failed, run.podId != nil {
@@ -139,9 +162,15 @@ struct ModelDetailView: View {
                         .sheet(isPresented: $showingEngineLog) { EngineLogSheet(name: item.name, lines: lines) }
                 }
                 if let fallback = run.fellBackFrom, !fallback.isEmpty, !isIdle {
-                    Label("\(fallback.joined(separator: ", ")) was taken; Podlight used \(run.gpuName ?? "another card").",
-                          systemImage: "arrow.triangle.branch")
-                        .font(.caption).foregroundStyle(.secondary)
+                    if let wanted = run.wantedPricePerHour, let price = run.pricePerHour, price > wanted + 0.005 {
+                        Label("\(fallback.joined(separator: ", ")) was taken; Podlight used \(run.gpuName ?? "another card") for \(Format.perHour(price)) instead of \(Format.perHour(wanted)).",
+                              systemImage: "arrow.triangle.branch")
+                            .font(.callout).foregroundStyle(.orange)
+                    } else {
+                        Label("\(fallback.joined(separator: ", ")) was taken; Podlight used \(run.gpuName ?? "another card").",
+                              systemImage: "arrow.triangle.branch")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                 }
             }
             }

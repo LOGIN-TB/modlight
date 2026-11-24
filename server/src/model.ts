@@ -101,6 +101,10 @@ export const runPhase = z.enum(['stopped', 'creating', 'loading', 'ready', 'stop
 export type RunPhase = z.infer<typeof runPhase>
 
 /** What the server knows about one model's pod. RunPod is the source of truth for the rest. */
+/** A card choice with its name and price per hour for the whole pod. */
+export const pricedChoice = z.object({ choice: gpuChoice, name: z.string(), pricePerHour: z.number() })
+export type PricedChoice = z.infer<typeof pricedChoice>
+
 export const modelRun = z.object({
   podId: optional(z.string()),
   gpu: optional(gpuChoice),
@@ -119,6 +123,8 @@ export const modelRun = z.object({
   lastReason: optional(z.string()),
   lastMessage: optional(z.string()),
   fellBackFrom: optional(z.array(z.string())),
+  /** What the chosen card would have cost per hour, when the start fell back to another one. */
+  wantedPricePerHour: optional(z.number()),
   lastHeartbeatAt: optional(z.string()),
   persistentGB: optional(z.number().int()),
   containerGB: optional(z.number().int()),
@@ -133,6 +139,12 @@ export const modelRun = z.object({
     runUntil: optional(z.string()),
     manual: z.boolean(),
     lastTryAt: optional(z.string()),
+    /** Waiting for a new pod: the most a card may cost per hour (whole pod). */
+    maxPricePerHour: optional(z.number()),
+    /** The chosen card that was taken, with its price. */
+    wanted: optional(pricedChoice),
+    /** Cards that may be free but cost more than the ceiling, cheapest first. */
+    pricier: optional(z.array(pricedChoice)),
   })),
   /** "Start on a New Card": the old pod, kept until the new one answers, put back if it fails. */
   replacing: optional(z.object({
@@ -206,6 +218,9 @@ export const serverSettings = z.object({
   wakeOnRequest: z.boolean().default(true),
   hostingRegion: hostingRegion.default('anywhere'),
   secureCloudOnly: z.boolean().default(false),
+  /** A replacement card may cost this many percent more than the chosen one; above that the
+   * server books nothing and waits for a cheaper one. 0: no extra cost at all. */
+  fallbackPriceStepPercent: z.number().int().min(0).max(1000).default(50),
   /** Days for the spend ledger and limits are counted in this zone. */
   timezone: z.string().default('UTC'),
 })

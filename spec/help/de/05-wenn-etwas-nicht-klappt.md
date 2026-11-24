@@ -8,6 +8,10 @@ Der Key wurde nicht vollständig kopiert oder ist widerrufen. Lege bei RunPod ei
 
 Alle passenden Karten waren in dem Moment vergeben. Versuche es nach ein paar Minuten noch einmal oder wähle beim Modell das Ziel „Schnell“, dann kommen mehr Kartentypen in Frage.
 
+## „Karte ist belegt“ mit einer Liste teurerer Karten
+
+Deine Karte war belegt, und die freien kosten mehr, als ein Ersatz darf (Einstellungen → „Andere Karte darf mehr kosten“). Gebucht wurde nichts. Wähle eine der Karten, warte, bis Podlight eine im Preisrahmen findet, oder erlaube einen höheren Aufpreis.
+
 ## Der Start dauert lange
 
 Ein neuer Pod lädt zuerst die Engine (etwa 9 GB) und dann das Modell. Danach startet vLLM, was allein rund zwei Minuten braucht. Bis zu 25 Minuten sind normal, solange Podlight „Modell wird geladen“ zeigt. Fortsetzen geht schneller, weil der Pod seine Festplatte behält.

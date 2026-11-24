@@ -21,7 +21,7 @@ interface SpecCase { id: string; title: string; function: string; input: any; ex
 const APP_ONLY = new Set(['kvProfile', 'ggufQuants', 'ggufKvProfile'])
 
 const FILES = ['scheduler.json', 'scheduler-podlight.json', 'capacity.json', 'gpu-suggest.json', 'pod-plan.json',
-  'hosting.json', 'gateway.json', 'kv-profile.json', 'gguf.json']
+  'hosting.json', 'gateway.json', 'kv-profile.json', 'gguf.json', 'price-guard.json']
 
 const catalogs = new Map<string, GPUType[]>()
 function catalog(path: string): GPUType[] {
@@ -80,6 +80,7 @@ function run(c: SpecCase): unknown {
           contextTokens: o.contextTokens, contextCeiling: o.contextCeiling, dataCenters: o.dataCenters }))
     }
     case 'podChoices': return podPlan.choices(podlightModel.parse(i.model), catalog(i.catalog), i.hosting)
+    case 'priceGuard': return podPlan.priceGuard(i.choices, catalog(i.catalog), i.stepPercent, i.maxPricePerHour ?? null)
     case 'podRequest': {
       const model = podlightModel.parse(i.model)
       const request = podPlan.request(model, { podKey: i.podKey, huggingFaceToken: i.huggingFaceToken, runUntil: date(i.runUntil),
