@@ -61,8 +61,8 @@ The built-in help (Help → Podlight Help) explains each step in German and Engl
 
 Both run by the same rules (shared cases in [`spec/`](spec/README.md)) and can be used at the same
 time; the app shows the Mac and every server side by side. Set up a server with
-[`server/`](server/README.md): one `docker compose up`, then **Add Server…** in the app with the
-pairing code from the log.
+[`server/`](server/README.md): one command on the server, which then shows address and pairing
+code, then **Add Server…** in the app.
 
 **Hosting per model:** anywhere, EU only, or EU and EEA, optionally Secure Cloud only. RunPod treats
 regions as a preference, so Podlight checks where each pod landed and deletes it if it is outside.

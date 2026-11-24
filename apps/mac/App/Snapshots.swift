@@ -89,7 +89,7 @@ enum Snapshots {
         await model.reloadState()
         if let server = model.server(entry.id), let sample = sampleServer() {
             server.showForSnapshots(sample.0, tokens: sample.1)
-            render("server-add", size: CGSize(width: 560, height: 640), into: folder) { AddServerSheet(expandedHelp: true).environment(model) }
+            render("server-add", size: CGSize(width: 560, height: 720), into: folder) { AddServerSheet(expandedHelp: true).environment(model) }
             render("server-connection", size: CGSize(width: 720, height: 860), into: folder) {
                 ServerConnectionView(serverID: entry.id).environment(model)
             }

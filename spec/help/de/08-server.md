@@ -6,7 +6,15 @@ Ein Podlight-Server hält deine Modelle für Agenten erreichbar, auch wenn diese
 
 ## Server aufsetzen
 
-Unter „Server hinzufügen …“ → „Wie richte ich einen Server ein?“ steht eine fertige `docker-compose.yml`. Starte sie mit `docker compose up -d`. Nach dem Start schreibt der Server einen Kasten „PODLIGHT-SERVER – VERBINDUNG“ in sein Log (`docker compose logs`, in Coolify unter Logs). Darin stehen die Adresse, die du in Podlight einträgst, und der Kopplungscode. Der Code gilt einmal und 30 Minuten lang, auch über einen Neustart hinweg. `docker exec <container> podlight-code` erzeugt einen neuen, etwa für einen weiteren Mac oder wenn der erste abgelaufen ist (in Coolify im Terminal des Containers).
+Auf einem Server mit Docker installiert ein Befehl den Podlight-Server und zeigt alles, was du zum Koppeln brauchst:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LOGIN-TB/podlight/main/server/install.sh | PODLIGHT_LANG=de sh
+```
+
+Er lädt das aktuelle Image, startet den Server, wartet, bis er antwortet, und zeigt den Kasten „PODLIGHT-SERVER – VERBINDUNG“. Ein erneuter Aufruf aktualisiert den Server; Kopplung und Modelle bleiben.
+
+Alternativ steht unter „Server hinzufügen …“ → „Wie richte ich einen Server ein?“ eine fertige `docker-compose.yml`. `docker compose up -d` startet sie im Hintergrund und zeigt vom Server selbst nichts an: Der Kasten steht in seinem Log (`docker compose logs podlight`, in Coolify unter Logs). Darin stehen die Adresse, die du in Podlight einträgst, und der Kopplungscode. Der Code gilt einmal und 30 Minuten lang, auch über einen Neustart hinweg. `docker exec <container> podlight-code` erzeugt einen neuen, etwa für einen weiteren Mac oder wenn der erste abgelaufen ist (in Coolify im Terminal des Containers).
 
 Die Adresse nimmt der Kasten aus der Domain, die Coolify dem Dienst gibt, oder aus `PUBLIC_URL` bei einem eigenen Reverse Proxy. Ist `HOST_IP` auf die Adresse des Rechners im lokalen Netz gesetzt, steht auch die lokale Adresse dort. Einmal fragt er die öffentliche IP des Servers ab, als Hilfe beim Einrichten einer Domain; `PUBLIC_IP_LOOKUP=false` schaltet das ab. Mit `PODLIGHT_LANG=de` erscheint der Kasten auf Deutsch.
 

@@ -19,10 +19,26 @@ controls the server (models, starts, limits, access keys) but does not have to b
 
 ## Run it
 
+On a machine with Docker, one command installs the server and shows how to connect:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LOGIN-TB/podlight/main/server/install.sh | sh
+```
+
+[`install.sh`](install.sh) uses the current folder when its compose file already runs the Podlight
+server, otherwise `./podlight` with this repository's [`docker-compose.yml`](docker-compose.yml). It
+pulls the current image, starts the server, waits until it answers and prints the box with address
+and pairing code. It writes the machine's private network address to `.env` as `HOST_IP`, so the box
+shows the LAN address. Run it again to update. `PODLIGHT_LANG=de` before `sh` prints the box in
+German; `PODLIGHT_DIR` picks another folder.
+
+By hand:
+
 ```yaml
 services:
   podlight:
     image: ghcr.io/login-tb/podlight-server:latest
+    pull_policy: always
     restart: unless-stopped
     volumes:
       - podlight-data:/data
@@ -33,7 +49,7 @@ volumes:
 ```
 
 ```bash
-docker compose up -d
+docker compose up -d             # starts in the background and shows none of the server's output
 docker compose logs podlight   # the box "PODLIGHT SERVER – CONNECTION": address and pairing code
 ```
 
