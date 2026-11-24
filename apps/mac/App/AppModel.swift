@@ -292,26 +292,44 @@ final class AppModel {
         }
     }
 
-    func start(_ model: PodlightModel, until: Date, newPod: Bool = false) async {
+    /// Starts a model. Returns a question when the chosen card is taken and only pricier ones are
+    /// free: nothing was booked, and the user decides. `maxPricePerHour` is that decision.
+    @discardableResult
+    func start(_ model: PodlightModel, until: Date, newPod: Bool = false, maxPricePerHour: Double? = nil) async -> PriceQuestion? {
         actionError = nil
         notifier.requestPermissionOnce()
+        var question: PriceQuestion?
         do {
             switch source(of: model.id) {
             case .local:
-                try await manager.start(model.id, until: until, manual: true, newPod: newPod)
+                try await manager.start(model.id, until: until, manual: true, newPod: newPod, maxPricePerHour: maxPricePerHour)
             case .server(let id):
-                guard let server = server(id) else { return }
-                try await server.client(keychain).start(model.id, until: until, newPod: newPod)
+                guard let server = server(id) else { return nil }
+                try await server.client(keychain).start(model.id, until: until, newPod: newPod, maxPricePerHour: maxPricePerHour)
                 await server.refresh(keychain)
             }
         } catch PodlightError.hostBusy {
             // The model's page shows the waiting and what the user can do instead.
+        } catch PodlightError.cardTooExpensive(let wanted, let ceiling, let pricier) {
+            question = PriceQuestion(wanted: wanted, ceiling: ceiling, pricier: pricier,
+                                     waitsUntil: state.run(model.id).waitingForCard?.until)
         } catch ServerError.refused(_, _, "host_busy") {
             if case .server(let id) = source(of: model.id) { await server(id)?.refresh(keychain) }
+        } catch ServerError.refused(_, let message, "card_too_expensive") {
+            if case .server(let id) = source(of: model.id), let server = server(id) {
+                await server.refresh(keychain)
+                if let waiting = server.snapshot?.run(model.id).waitingForCard, let ceiling = waiting.maxPricePerHour {
+                    question = PriceQuestion(wanted: waiting.wanted, ceiling: ceiling, pricier: waiting.pricier ?? [],
+                                             waitsUntil: waiting.until)
+                } else {
+                    actionError = message
+                }
+            }
         } catch {
             actionError = Describe.error(error)
         }
         await reloadState()
+        return question
     }
 
     // MARK: Refresh
@@ -481,4 +499,21 @@ final class AppModel {
 
     /// Claude Code needs at least this much context to work; below it compacts constantly.
     static let claudeCodeMinimumContext = AgentConfigs.claudeCodeMinimumContext
+}
+
+/// The chosen card is taken and only pricier ones are free: what to show the user.
+struct PriceQuestion: Equatable {
+    var wanted: PricedChoice?
+    /// The most a card may cost without asking.
+    var ceiling: Double
+    /// Cards that may be free, cheapest first.
+    var pricier: [PricedChoice]
+    /// Podlight keeps trying within the price until then; nil when it does not wait.
+    var waitsUntil: Date?
+
+    /// "+240 %" against the chosen card, or nil without its price.
+    func extra(_ option: PricedChoice) -> String? {
+        guard let base = wanted?.pricePerHour, base > 0 else { return nil }
+        return "+\(Int(((option.pricePerHour / base - 1) * 100).rounded())) %"
+    }
 }

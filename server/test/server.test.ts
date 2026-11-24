@@ -29,6 +29,8 @@ class FakeRunPod {
   hiddenFromList = new Set<string>()
   /** Responses to POST /v2/pods, in order; `capacity` answers RunPod's "no instances" 400. */
   createScript: Array<'ok' | 'capacity'> = []
+  /** Card ids without a free machine: creating a pod on them answers "no instances". */
+  taken = new Set<string>()
   dataCenterId: string | null = 'EU-RO-1'
   catalog = {
     gpus: [
@@ -60,7 +62,7 @@ class FakeRunPod {
       return this.balance ? json(200, { data: { myself: this.balance } }) : json(200, { errors: [{ message: 'not allowed' }] })
     }
     if (req.method === 'POST' && path === '/v2/pods') {
-      const step = this.createScript.shift() ?? 'ok'
+      const step = this.taken.has(body.gpu?.id) ? 'capacity' : (this.createScript.shift() ?? 'ok')
       if (step === 'capacity') {
         return json(400, { detail: 'There are no longer any instances available with the requested specifications.', status: 400 })
       }
@@ -209,6 +211,7 @@ describe('Podlight server', () => {
     runpod.requests = []
     runpod.pods.clear()
     runpod.createScript = []
+    runpod.taken = new Set()
     runpod.dataCenterId = 'EU-RO-1'
     pod.engineRequests = []
     pod.heartbeats = []
@@ -518,6 +521,63 @@ describe('Podlight server', () => {
     assert.equal(runpod.pods.get(podId)!.env.PODLIGHT_WATCHDOG_B64, POD_SCRIPTS.watchdog)
     assert.equal(runpod.pods.get(podId)!.env.PODLIGHT_API_KEY, key, 'the rest stays')
     assert.equal(runpod.pods.get(podId)!.status, 'RUNNING')
+  })
+
+  test('a pricier fallback is offered, not booked; the server waits within the price, and an approved price books it', async () => {
+    // Two A6000 for 0.66 $/h, and no extra cost allowed: every other card is above the price.
+    await admin('PATCH', '/admin/settings', { fallbackPriceStepPercent: 0 })
+    await admin('PUT', `/admin/models/${MODEL_ID}`, model(MODEL_ID, 'coder', { preferredGPU: { gpuId: 'NVIDIA RTX A6000', cloud: 'COMMUNITY', count: 2 } }))
+    runpod.taken = new Set(['NVIDIA RTX A6000'])
+    const creates = () => runpod.requests.filter((r) => r.method === 'POST' && r.path === '/v2/pods')
+
+    const refused = await admin('POST', `/admin/models/${MODEL_ID}/start`, { until: new Date(Date.now() + 3_600_000).toISOString() })
+    assert.equal(refused.statusCode, 503)
+    assert.equal(refused.json().error.code, 'card_too_expensive')
+    assert.ok(creates().every((r) => r.body.gpu.id === 'NVIDIA RTX A6000'), 'only the chosen card was tried')
+    assert.equal(runpod.pods.size, 0, 'nothing booked')
+    let run = s.store.run(MODEL_ID)
+    assert.equal(run.phase, 'stopped')
+    assert.equal(run.lastReason, 'card-too-expensive')
+    assert.equal(run.waitingForCard?.maxPricePerHour, 0.66)
+    assert.equal(run.waitingForCard?.wanted?.pricePerHour, 0.66)
+    const cheapest = run.waitingForCard?.pricier?.[0]
+    assert.ok(cheapest && cheapest.pricePerHour > 0.66)
+
+    // Still taken: still waiting, nothing booked. A request that wakes it is told why.
+    await s.manager.tick()
+    assert.equal(runpod.pods.size, 0)
+    assert.ok(s.store.run(MODEL_ID).waitingForCard)
+
+    // The user approves the cheapest pricier card: it is booked there, and the waiting ends.
+    const approved = await admin('POST', `/admin/models/${MODEL_ID}/start`, { until: new Date(Date.now() + 3_600_000).toISOString(), maxPricePerHour: cheapest.pricePerHour })
+    assert.equal(approved.statusCode, 200)
+    run = s.store.run(MODEL_ID)
+    assert.equal(run.gpu?.gpuId, cheapest.choice.gpuId)
+    assert.equal(run.waitingForCard ?? null, null)
+    assert.equal(run.wantedPricePerHour, 0.66)
+    await admin('POST', `/admin/models/${MODEL_ID}/stop`)
+  })
+
+  test('a woken model waits for a card within the price and starts on one once it is free', async () => {
+    await admin('PATCH', '/admin/settings', { fallbackPriceStepPercent: 0 })
+    await admin('PUT', `/admin/models/${MODEL_ID}`, model(MODEL_ID, 'coder', { preferredGPU: { gpuId: 'NVIDIA RTX A6000', cloud: 'COMMUNITY', count: 2 } }))
+    runpod.taken = new Set(['NVIDIA RTX A6000'])
+    const client = await clientToken()
+    const woken = await s.app.inject({ method: 'POST', url: '/v1/chat/completions', headers: { authorization: `Bearer ${client}` },
+      payload: { model: 'coder', messages: [{ role: 'user', content: 'hi' }] } })
+    assert.equal(woken.statusCode, 503)
+    assert.equal(woken.json().error.code, 'card_too_expensive')
+    const waiting = s.store.run(MODEL_ID).waitingForCard
+    assert.equal(waiting?.manual, false)
+    assert.ok(Date.parse(waiting!.until) - Date.now() > 29 * 60_000, 'half an hour for a woken run')
+
+    // The A6000 comes free: the next tick books it, within the price.
+    runpod.taken = new Set()
+    await s.manager.tick()
+    const run = s.store.run(MODEL_ID)
+    assert.equal(run.gpu?.gpuId, 'NVIDIA RTX A6000')
+    assert.equal(run.waitingForCard ?? null, null)
+    assert.equal(runpod.pods.size, 1)
   })
 
   test('a busy machine keeps the stopped pod and its disk; only a chosen new card replaces it', async () => {

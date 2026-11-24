@@ -82,6 +82,26 @@ enum Snapshots {
         render("model-waiting", size: CGSize(width: 720, height: 640), into: folder) {
             NavigationStack { ModelDetailView(item: waitingModel.state.models[1]) }.environment(waitingModel)
         }
+        // The chosen card taken, only pricier ones free: the start asks, the model waits within its price.
+        let wanted = PricedChoice(choice: GPUChoice(gpuId: "NVIDIA GeForce RTX 4090", cloud: .community), name: "RTX 4090", pricePerHour: 0.34)
+        let pricier = [PricedChoice(choice: GPUChoice(gpuId: "NVIDIA A100 80GB PCIe", cloud: .community), name: "A100 PCIe", pricePerHour: 1.19),
+                       PricedChoice(choice: GPUChoice(gpuId: "NVIDIA H100 80GB HBM3", cloud: .secure), name: "H100 SXM", pricePerHour: 2.69)]
+        let question = PriceQuestion(wanted: wanted, ceiling: 0.51, pricier: pricier, waitsUntil: Date().addingTimeInterval(7200))
+        render("start-price", size: CGSize(width: 460, height: 560), into: folder) {
+            StartSheet(model: model.state.models[1], question: question).environment(model)
+        }
+        _ = try? await store.update {
+            $0.runs[released, default: ModelRun()].podId = nil
+            $0.runs[released, default: ModelRun()].lastReason = "card-too-expensive"
+            $0.runs[released, default: ModelRun()].waitingForCard = WaitingForCard(
+                until: Date().addingTimeInterval(7200), runUntil: Date().addingTimeInterval(7200), manual: true,
+                maxPricePerHour: 0.51, wanted: wanted, pricier: pricier)
+        }
+        let pricedModel = AppModel(storeURL: storeURL, keychainService: service)
+        await pricedModel.reloadState()
+        render("model-waiting-price", size: CGSize(width: 720, height: 640), into: folder) {
+            NavigationStack { ModelDetailView(item: pricedModel.state.models[1]) }.environment(pricedModel)
+        }
 
         // Server mode, with a sample server that is never contacted.
         let entry = ServerEntry(name: "Office", baseURL: URL(string: "https://podlight.example.com")!)
@@ -122,7 +142,7 @@ enum Snapshots {
         let last = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-90))
         let today = PodlightState.dayKey(.now)
         let json = """
-        {"version":"0.8.1","serverTime":"\(started)",
+        {"version":"0.9.0","serverTime":"\(started)",
          "models":[{"id":"6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0001","name":"coder-office","repoId":"Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ",
            "format":"awq","weightBytes":17400000000,"nativeContextTokens":262144,"toolCallParser":"qwen3_xml","contextTokens":131072,
            "concurrency":2,"goal":"balanced","preferredGPU":{"gpuId":"NVIDIA RTX A6000","cloud":"SECURE","count":2},"preferredGPUName":"2 × RTX A6000",
@@ -138,7 +158,7 @@ enum Snapshots {
            "dataCenterId":"EU-SE-1","storagePerHour":0.0137},
           "6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0002":{"phase":"stopped","engineReady":false,"startedManually":false,"lastReason":"idle-timeout"}},
          "settings":{"dailyLimitUsd":15,"monthlyLimitUsd":200,"heartbeatMinutes":15,"wakeWaitSeconds":600,"deleteStoppedAfterDays":3,
-           "wakeOnRequest":true,"hostingRegion":"eu","secureCloudOnly":true,"timezone":"Europe/Berlin","hasRunpodKey":\(!fresh),"hasHuggingFaceToken":true},
+           "wakeOnRequest":true,"hostingRegion":"eu","secureCloudOnly":true,"timezone":"Europe/Berlin","fallbackPriceStepPercent":50,"hasRunpodKey":\(!fresh),"hasHuggingFaceToken":true},
          "spendByDay":{"\(today)":3.4},"spend":{"todayUsd":3.4,"monthUsd":41.2,"dailyLimitUsd":15,"monthlyLimitUsd":200},
          "costPerHour":0.98,"lastClientRequestAt":"\(last)",
          "balance":{"usd":37.8,"spendPerHourUsd":1.21,"spendLimitUsd":80,"checkedAt":"\(last)"}}

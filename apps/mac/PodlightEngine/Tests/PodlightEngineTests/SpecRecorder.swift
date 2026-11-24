@@ -183,6 +183,39 @@ struct SpecRecorder {
         try file.write()
     }
 
+    @Test func recordPriceGuard() throws {
+        let catalog = try SpecFixture.catalog()
+        var file = CaseFile(name: "price-guard.json", description: """
+            Which cards a start may book when the chosen one is taken. The first choice sets the reference price; a \
+            fallback may cost up to `stepPercent` more, or up to `maxPricePerHour` when the user approved a pricier \
+            card. Prices are per hour for the whole pod (price × cards), rounded to 0.001. Expected: the first choice \
+            with its price (`wanted`), the `ceiling`, the cards to try in their order (`within`) and the pricier ones, \
+            cheapest first (`above`). Choices come from `podChoices` for the model.
+            """)
+        let variants: [(String, PodlightModel, Int, Double?)] = [
+            ("balanced-step-50", SpecFixture.models[0], 50, nil),
+            ("balanced-step-0", SpecFixture.models[0], 0, nil),
+            ("balanced-step-100", SpecFixture.models[0], 100, nil),
+            ("preferred-cheap-step-50", { var m = SpecFixture.models[0]
+                                          m.preferredGPU = GPUChoice(gpuId: "NVIDIA GeForce RTX 4090", cloud: .community, count: 2); return m }(), 50, nil),
+            ("preferred-pricey-step-50", { var m = SpecFixture.models[0]
+                                           m.preferredGPU = GPUChoice(gpuId: "NVIDIA H200", cloud: .secure, count: 1); return m }(), 50, nil),
+            ("approved-price", SpecFixture.models[0], 0, 2.5),
+            ("70b-step-25", SpecFixture.models[4], 25, nil),
+            ("gguf-step-50", SpecFixture.models[2], 50, nil),
+        ]
+        for (id, model, step, approved) in variants {
+            let choices = PodPlan.choices(for: model, catalog: catalog, hosting: .anywhere)
+            let g = PodPlan.priceGuard(choices: choices, catalog: catalog, stepPercent: step, maxPricePerHour: approved)
+            file.add(id, "Price guard for \(id)", "priceGuard",
+                     input: ["choices": try json(choices), "catalog": "fixtures/catalog.json", "stepPercent": step,
+                             "maxPricePerHour": approved as Any? ?? NSNull()],
+                     expected: ["wanted": try g.wanted.map { try json($0) } ?? NSNull(), "ceiling": g.ceiling as Any? ?? NSNull(),
+                                "within": try json(g.within), "above": try json(g.above)])
+        }
+        try file.write()
+    }
+
     @Test func recordHosting() throws {
         let catalog = try SpecFixture.catalog()
         var file = CaseFile(name: "hosting.json", description: """

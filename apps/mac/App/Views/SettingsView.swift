@@ -31,10 +31,11 @@ struct SettingsContent: View {
                 Picker("Delete stopped pods after", selection: binding(\.deleteStoppedAfterDays)) {
                     ForEach([1, 3, 7, 14], id: \.self) { Text("\($0) days").tag($0) }
                 }
+                FallbackPricePicker(percent: binding(\.fallbackPriceStepPercent))
             } header: {
                 Text("Costs and safety")
             } footer: {
-                Text("At a limit, Podlight stops this Mac's pods and starts them again only the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps.")
+                Text("At a limit, Podlight stops this Mac's pods and starts them again only the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Podlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
@@ -169,5 +170,21 @@ struct LimitField: View {
         let parsed = Double(trimmed)
         guard trimmed.isEmpty || parsed != nil else { return }
         Task { await save(trimmed.isEmpty ? nil : parsed) }
+    }
+}
+
+/// How much more a replacement card may cost than the chosen one before Podlight asks.
+struct FallbackPricePicker: View {
+    @Binding var percent: Int
+
+    var body: some View {
+        Picker("Another card may cost more by", selection: $percent) {
+            Text("Nothing (always ask)").tag(0)
+            Text("Up to 25 %").tag(25)
+            Text("Up to 50 %").tag(50)
+            Text("Up to 100 %").tag(100)
+            Text("Up to 200 %").tag(200)
+            if ![0, 25, 50, 100, 200].contains(percent) { Text("Up to \(percent) %").tag(percent) }
+        }
     }
 }

@@ -31,6 +31,22 @@
         }
       }
     },
+    "%@ (%@) is taken. Podlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@) ist belegt. Podlight versucht es bis %3$@ alle 30 Sekunden mit Karten bis %4$@ und startet dann von selbst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ (%2$@) is taken. Podlight tries every 30 seconds until %3$@ for a card up to %4$@ and then starts by itself."
+          }
+        }
+      }
+    },
     "%@ (this Mac)": {
       "localizations": {
         "de": {
@@ -53,6 +69,16 @@
           "stringUnit": {
             "state": "new",
             "value": "%1$@ + %2$@ storage"
+          }
+        }
+      }
+    },
+    "%@ Is Taken": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist belegt"
           }
         }
       }
@@ -125,6 +151,22 @@
           "stringUnit": {
             "state": "new",
             "value": "%1$@ is set to %2$@ tokens. These agents send long instructions and need at least 128k, better 200k: choose more context under Edit."
+          }
+        }
+      }
+    },
+    "%@ is taken, and the free cards cost more than %@. Nothing was booked.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ist belegt, und die freien Karten kosten mehr als %2$@. Es wurde nichts gebucht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ is taken, and the free cards cost more than %2$@. Nothing was booked."
           }
         }
       }
@@ -253,6 +295,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ wurde von der Notbremse gestoppt"
+          }
+        }
+      }
+    },
+    "%@ was taken; Podlight used %@ for %@ instead of %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ war belegt; Podlight hat %2$@ für %3$@ statt %4$@ genommen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ was taken; Podlight used %2$@ for %3$@ instead of %4$@."
           }
         }
       }
@@ -715,12 +773,12 @@
         }
       }
     },
-    "A pod stops itself when the server has not been in touch for this long, for example when the server is down.": {
+    "A pod stops itself when the server has not been in touch for this long, for example when the server is down. When the chosen card is taken, the server takes another one only up to the set extra cost; above that it books nothing and waits for a cheaper card, and a start from this app asks.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ein Pod stoppt sich selbst, wenn der Server sich so lange nicht gemeldet hat, etwa weil er ausgefallen ist."
+            "value": "Ein Pod stoppt sich selbst, wenn der Server sich so lange nicht gemeldet hat, etwa weil er ausgefallen ist. Ist die gewählte Karte belegt, nimmt der Server eine andere nur bis zum eingestellten Aufpreis. Darüber bucht er nichts und wartet auf eine günstigere Karte; ein Start aus dieser App fragt nach."
           }
         }
       }
@@ -1095,6 +1153,16 @@
         }
       }
     },
+    "Another card may cost more by": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere Karte darf mehr kosten"
+          }
+        }
+      }
+    },
     "Another computer": {
       "localizations": {
         "de": {
@@ -1215,12 +1283,12 @@
         }
       }
     },
-    "At a limit, Podlight stops this Mac's pods and starts them again only the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps.": {
+    "At a limit, Podlight stops this Mac's pods and starts them again only the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Podlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ist ein Limit erreicht, stoppt Podlight die Pods dieses Macs und startet sie erst am nächsten Tag oder im nächsten Monat wieder. Außerdem stoppt sich jeder Pod selbst, wenn er die eingestellte Zeit nichts von Podlight hört, etwa während dieser Mac schläft."
+            "value": "Bei einem Limit stoppt Podlight die Pods dieses Macs und startet sie erst am nächsten Tag oder im nächsten Monat wieder. Jeder Pod stoppt sich außerdem selbst, wenn er die eingestellte Zeit nichts von Podlight gehört hat, etwa während dieser Mac schläft. Ist die gewählte Karte belegt, nimmt Podlight eine andere nur bis zum eingestellten Aufpreis. Darüber fragt es nach oder wartet, wenn niemand von Hand gestartet hat, auf eine günstigere Karte."
           }
         }
       }
@@ -1785,6 +1853,16 @@
         }
       }
     },
+    "Create Access Key…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangsschlüssel anlegen …"
+          }
+        }
+      }
+    },
     "Create New Podlight Key…": {
       "localizations": {
         "de": {
@@ -1811,16 +1889,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Token bei Hugging Face anlegen"
-          }
-        }
-      }
-    },
-    "Create a new access key first; the files then contain it. Older keys cannot be shown again.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lege zuerst einen neuen Zugangsschlüssel an, dann steht er in den Dateien. Ältere Schlüssel lassen sich nicht noch einmal anzeigen."
           }
         }
       }
@@ -1981,6 +2049,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dokumentation"
+          }
+        }
+      }
+    },
+    "Don't Wait": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht warten"
           }
         }
       }
@@ -2257,6 +2335,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Format %@"
+          }
+        }
+      }
+    },
+    "Free right now are only cards that cost more than %@. Podlight has booked nothing.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frei sind gerade nur Karten, die mehr als %@ kosten. Podlight hat nichts gebucht."
+          }
+        }
+      }
+    },
+    "Free right now, at a higher price.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt frei, zu einem höheren Preis."
           }
         }
       }
@@ -2589,6 +2687,16 @@
           "stringUnit": {
             "state": "new",
             "value": "It stops earlier when no requests come in for %1$lld minutes, and by itself if this Mac sleeps or Podlight quits for more than %2$lld minutes. You can extend it while it runs."
+          }
+        }
+      }
+    },
+    "Keep Waiting": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter warten"
           }
         }
       }
@@ -3261,6 +3369,16 @@
         }
       }
     },
+    "Nothing (always ask)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts (immer fragen)"
+          }
+        }
+      }
+    },
     "Nothing found. Try a shorter name.": {
       "localizations": {
         "de": {
@@ -3487,6 +3605,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "OpenCode"
+          }
+        }
+      }
+    },
+    "Or wait: Podlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself. The model's page shows the waiting; Stop Waiting ends it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oder warten: Podlight versucht es bis %1$@ alle 30 Sekunden mit Karten bis %2$@ und startet dann von selbst. Die Seite des Modells zeigt das Warten; „Warten beenden“ bricht es ab."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Or wait: Podlight tries every 30 seconds until %1$@ for a card up to %2$@ and then starts by itself. The model's page shows the waiting; Stop Waiting ends it."
           }
         }
       }
@@ -3787,6 +3921,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Podlight versucht es bis %@ alle 30 Sekunden und setzt den Pod dann mit seiner Festplatte fort, ohne das Modell neu zu laden."
+          }
+        }
+      }
+    },
+    "Podlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight versucht es bis %1$@ alle 30 Sekunden mit Karten bis %2$@ und startet dann von selbst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Podlight tries every 30 seconds until %1$@ for a card up to %2$@ and then starts by itself."
           }
         }
       }
@@ -4583,6 +4733,16 @@
         }
       }
     },
+    "Show with a Placeholder": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Platzhalter zeigen"
+          }
+        }
+      }
+    },
     "Skip": {
       "localizations": {
         "de": {
@@ -4683,6 +4843,22 @@
         }
       }
     },
+    "Start %@ on %@?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ auf %2$@ starten?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Start %1$@ on %2$@?"
+          }
+        }
+      }
+    },
     "Start %@ on a New Card": {
       "localizations": {
         "de": {
@@ -4723,12 +4899,58 @@
         }
       }
     },
+    "Start for %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für %@ starten"
+          }
+        }
+      }
+    },
+    "Start instead on": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stattdessen starten auf"
+          }
+        }
+      }
+    },
     "Start it once in Podlight": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Einmal in Podlight starten"
+          }
+        }
+      }
+    },
+    "Start on %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf %@ starten"
+          }
+        }
+      }
+    },
+    "Start on %@ for %@…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf %1$@ für %2$@ starten …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Start on %1$@ for %2$@…"
           }
         }
       }
@@ -5303,6 +5525,52 @@
         }
       }
     },
+    "The card you chose costs %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die gewählte Karte kostet %@."
+          }
+        }
+      }
+    },
+    "The card you chose costs %@. Free right now are only cards that cost more than %@, the most a replacement may cost without asking. Podlight has booked nothing.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die gewählte Karte kostet %1$@. Frei sind gerade nur Karten, die mehr als %2$@ kosten – so viel darf ein Ersatz ohne Rückfrage höchstens kosten. Podlight hat nichts gebucht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "The card you chose costs %1$@. Free right now are only cards that cost more than %2$@, the most a replacement may cost without asking. Podlight has booked nothing."
+          }
+        }
+      }
+    },
+    "The chosen card": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die gewählte Karte"
+          }
+        }
+      }
+    },
+    "The chosen card was taken, and the free ones cost more than the set extra cost. Nothing was booked.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die gewählte Karte war belegt, und die freien kosten mehr als der eingestellte Aufpreis. Es wurde nichts gebucht."
+          }
+        }
+      }
+    },
     "The engine made no progress for 10 minutes while loading (often a stalled download on that machine), so Podlight stopped the pod. Start again, or start on a new card. Its last line:": {
       "localizations": {
         "de": {
@@ -5639,6 +5907,16 @@
         }
       }
     },
+    "These files contain PASTE-ACCESS-KEY in place of a key: replace it with one of your keys before using them.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In diesen Dateien steht PASTE-ACCESS-KEY statt eines Schlüssels: Ersetze das durch einen deiner Schlüssel, bevor du sie verwendest."
+          }
+        }
+      }
+    },
     "These files contain an access key. Keep them in your home folder, never in a project repository.": {
       "localizations": {
         "de": {
@@ -5655,6 +5933,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Dateien enthalten deinen Podlight-Schlüssel. Lege sie in deinem Benutzerordner ab, nie in einem Projekt-Repository."
+          }
+        }
+      }
+    },
+    "These files need an access key. Create one, and it is filled in here. The server keeps only a fingerprint of older keys, so they cannot be shown again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Dateien brauchen einen Zugangsschlüssel. Lege einen an, dann wird er hier eingesetzt. Von älteren Schlüsseln kennt der Server nur einen Fingerabdruck, sie lassen sich daher nicht noch einmal anzeigen."
           }
         }
       }
@@ -5911,6 +6199,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bis"
+          }
+        }
+      }
+    },
+    "Up to %lld %%": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis %lld %%"
+          }
+        }
+      }
+    },
+    "Up to 100 %": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis 100 %"
+          }
+        }
+      }
+    },
+    "Up to 200 %": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis 200 %"
+          }
+        }
+      }
+    },
+    "Up to 25 %": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis 25 %"
+          }
+        }
+      }
+    },
+    "Up to 50 %": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis 50 %"
           }
         }
       }

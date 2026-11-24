@@ -318,6 +318,7 @@ extension AppModel {
             change.wakeOnRequest(s.wakeOnRequest)
             change.hosting(s.hosting)
             change.timezone(TimeZone.current.identifier)
+            change.fallbackPriceStepPercent(s.fallbackPriceStepPercent)
         }
         guard !change.values.isEmpty else { return nil }
         return await updateServer(id, change)

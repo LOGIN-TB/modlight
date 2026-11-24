@@ -241,10 +241,16 @@ public struct LocalGateway: Sendable {
             return Failure(status: 409, message: "\(model) is managed by another Mac (\(mac)) now. Use it there, or take it back in Podlight on this Mac.", code: "managed_elsewhere")
         case .hostBusy:
             return Failure(status: 503, message: "The card on the machine of \(model)'s pod is taken right now, so it could not resume. Its disk with the model is kept, and Podlight keeps trying to resume it for half an hour. Try again in a few minutes, or start it on a new card in Podlight.", code: "host_busy")
+        case .cardTooExpensive(let wanted, let ceiling, _):
+            let card = wanted.map { "\($0.name) at \(Self.dollars($0.pricePerHour))/h" } ?? "The chosen card"
+            return Failure(status: 503, message: "\(card) for \(model) is taken, and the free cards cost more than Podlight's price step allows. Nothing was booked; Podlight keeps trying for a card up to \(Self.dollars(ceiling))/h. Start it on a pricier card in Podlight, or try again later.", code: "card_too_expensive")
         case .nameTaken, .modelLookup, .busy:
             return Failure(status: 500, message: "Podlight could not serve \(model).", code: "internal")
         }
     }
+
+    /// "$1.19": two decimals, three below a cent's worth of precision is noise here.
+    static func dollars(_ value: Double) -> String { String(format: "$%.2f", value) }
 
     static func response(for error: PodlightError, model: String, anthropic: Bool = false) -> Response {
         let f = failure(for: error, model: model)

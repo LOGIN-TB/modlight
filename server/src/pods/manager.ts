@@ -1,11 +1,11 @@
 import { generateToken } from '../crypto.ts'
-import { hostingOf, iso, type ModelRun, parseDate, type PodlightModel, podStatus, type PodTelemetry, podTelemetry, type ServerSettings } from '../model.ts'
+import { hostingOf, iso, type ModelRun, parseDate, type PodlightModel, podStatus, type PodTelemetry, podTelemetry, type PricedChoice, type ServerSettings } from '../model.ts'
 import { allows, dataCenterIds, needsPlacementCheck, StoragePricing } from '../rules/hosting.ts'
 import * as podPlan from '../rules/podPlan.ts'
 import { admitWake, decide, type Spend } from '../rules/scheduler.ts'
 import { engineFailureReason, GatewayFailure, looksDegenerate, summarizeEngineLog } from '../gateway/shape.ts'
 import { type AccountBalance, createWithFallback, NoCapacityError, RunpodClient, RunpodError } from '../runpod/client.ts'
-import { type Pod, pricePerHour } from '../runpod/types.ts'
+import { mayBeAvailable, type Pod, pricePerHour } from '../runpod/types.ts'
 import type { SettingsStore } from '../store/settings.ts'
 import { dayKey, type StateStore } from '../store/state.ts'
 
@@ -56,6 +56,8 @@ interface WatchdogStatus { engineAlive?: boolean; engineExitCode?: number; engin
 
 /** How long a start that a request woke waits for a busy machine's card. */
 const WOKEN_WAIT_FOR_CARD_MS = 30 * 60_000
+/** A start waiting for a card: to resume a pod, or a new pod within a price. */
+type WaitingForCard = NonNullable<ModelRun['waitingForCard']>
 
 /** What shows a loading engine at work. Sizes in 64 MB steps, so small noise does not count. */
 export function loadSignature(t: PodTelemetry, logBytes: number | null): string {
@@ -265,15 +267,17 @@ export class PodManager {
 
   /** Starts (or resumes) a model's pod. Returns once RunPod has accepted it. `newPod`: the user
    * chose a new card for a pod whose machine is busy; only then is a stopped pod deleted. */
-  start(id: string, runUntil: Date | null, manual = true, newPod = false): Promise<void> {
+  start(id: string, runUntil: Date | null, manual = true, newPod = false, maxPricePerHour: number | null = null,
+    retrying: WaitingForCard | null = null): Promise<void> {
     const running = this.starts.get(id)
     if (running) return running
-    const task = this.performStart(id, runUntil, manual, newPod).finally(() => this.starts.delete(id))
+    const task = this.performStart(id, runUntil, manual, newPod, maxPricePerHour, retrying).finally(() => this.starts.delete(id))
     this.starts.set(id, task)
     return task
   }
 
-  private async performStart(id: string, runUntil: Date | null, manual: boolean, newPod: boolean): Promise<void> {
+  private async performStart(id: string, runUntil: Date | null, manual: boolean, newPod: boolean,
+    maxPricePerHour: number | null, retrying: WaitingForCard | null): Promise<void> {
     const model = this.store.model(id)
     if (!model) throw new GatewayFailure({ kind: 'unknownModel' })
     const wake = admitWake(this.spend())
@@ -346,7 +350,7 @@ export class PodManager {
     }
 
     try {
-      await this.createPod(id, model, client, podKey, runUntil, manual)
+      await this.createPod(id, model, client, podKey, runUntil, manual, maxPricePerHour, retrying)
     } catch (error) {
       // No new pod came of it: a replaced pod is the model's pod again.
       this.putBackReplacedPod(id)
@@ -354,9 +358,12 @@ export class PodManager {
     }
   }
 
-  private async createPod(id: string, model: PodlightModel, client: RunpodClient, podKey: string, runUntil: Date | null, manual: boolean): Promise<void> {
+  private async createPod(id: string, model: PodlightModel, client: RunpodClient, podKey: string, runUntil: Date | null, manual: boolean,
+    maxPricePerHour: number | null, retrying: WaitingForCard | null): Promise<void> {
     const settings = this.settings.read()
     this.store.updateRun(id, (r) => { r.phase = 'creating'; r.lastReason = null; r.lastMessage = null; r.fellBackFrom = null })
+    let priced: podPlan.PriceGuard | null = null
+    let offered: PricedChoice[] = []
     try {
       const catalog = await client.gpuCatalog()
       const hosting = model.hosting ?? hostingOf(settings)
@@ -366,7 +373,12 @@ export class PodManager {
         podKey, huggingFaceToken: this.settings.secret('huggingFaceToken'), runUntil,
         heartbeatMinutes: settings.heartbeatMinutes, dataCenterIds: dataCenterIds(hosting, catalog), namePrefix: 'podlight-srv-',
       })
-      const created = await createWithFallback(client, request, choices, catalog)
+      // Fallbacks up to the price step only; pricier cards that may be free are offered.
+      const guarded = podPlan.priceGuard(choices, catalog, settings.fallbackPriceStepPercent, maxPricePerHour)
+      priced = guarded
+      const byId = new Map(catalog.map((g) => [g.id, g]))
+      offered = guarded.above.filter((o) => mayBeAvailable(byId.get(o.choice.gpuId)?.availability))
+      const created = await createWithFallback(client, request, guarded.within, catalog)
       const names = new Map(catalog.map((g) => [g.id, g.name]))
       const listed = catalog.find((g) => g.id === created.choice.gpuId)
       const listPrice = listed ? pricePerHour(listed, created.choice.cloud) : null
@@ -383,11 +395,29 @@ export class PodManager {
         r.dataCenterId = created.pod.dataCenterId ?? null
         r.hosting = hosting
         r.fellBackFrom = created.attempts.filter((a) => a.outcome !== 'created').map((a) => names.get(a.choice.gpuId) ?? a.choice.gpuId)
+        r.wantedPricePerHour = created.attempts[0]?.outcome !== 'created' ? (guarded.wanted?.pricePerHour ?? null) : null
       })
       this.markStarted(id, created.pod, runUntil, manual, false)
     } catch (error) {
       if (error instanceof NoCapacityError) {
         const tried = error.attempts.map((a) => a.choice.gpuId)
+        const ceiling = priced?.ceiling ?? null
+        // Nothing booked. Without a replaced pod to put back, keep trying within the price until
+        // the run's end (half an hour for a woken one), as for a busy machine.
+        if (ceiling != null && (offered.length > 0 || retrying)) {
+          const canWait = !this.store.run(id).replacing
+          const waiting: WaitingForCard = {
+            until: retrying?.until ?? iso(runUntil ?? new Date(this.now().getTime() + WOKEN_WAIT_FOR_CARD_MS)),
+            runUntil: runUntil ? iso(runUntil) : null, manual, lastTryAt: iso(this.now()),
+            maxPricePerHour: ceiling, wanted: priced?.wanted ?? null, pricier: offered,
+          }
+          this.store.updateRun(id, (r) => {
+            r.phase = 'stopped'; r.lastReason = 'card-too-expensive'; r.lastMessage = tried.join(', ')
+            r.waitingForCard = canWait ? waiting : null
+          })
+          if (offered.length === 0) throw new GatewayFailure({ kind: 'noCapacity', tried })
+          throw new GatewayFailure({ kind: 'cardTooExpensive', wanted: priced?.wanted ?? null, ceiling, pricier: offered })
+        }
         this.store.updateRun(id, (r) => { r.phase = 'failed'; r.lastReason = 'no-capacity'; r.lastMessage = tried.join(', ') })
         throw new GatewayFailure({ kind: 'noCapacity', tried })
       }
@@ -630,6 +660,10 @@ export class PodManager {
     for (const [id, run] of Object.entries(this.store.runs())) {
       const waiting = run.waitingForCard
       if (!waiting) continue
+      if (!run.podId && waiting.maxPricePerHour != null) {
+        await this.retryAffordableStart(id, run, waiting, t)
+        continue
+      }
       const until = parseDate(waiting.until)
       if (!run.podId || (run.phase !== 'stopped' && run.phase !== 'failed') || !until || t >= until || !admitWake(this.spend()).admit) {
         this.store.updateRun(id, (r) => { r.waitingForCard = null })
@@ -655,6 +689,27 @@ export class PodManager {
           // RunPod unreachable: try again next time.
           this.store.updateRun(id, (r) => { if (r.waitingForCard) r.waitingForCard.lastTryAt = iso(t) })
         }
+      }
+    }
+  }
+
+  /** A new pod waiting for a card within its price: tried again every 30 seconds until its end. */
+  private async retryAffordableStart(id: string, run: ModelRun, waiting: WaitingForCard, t: Date): Promise<void> {
+    const until = parseDate(waiting.until)
+    if ((run.phase !== 'stopped' && run.phase !== 'failed') || !until || t >= until || !this.store.model(id) || !admitWake(this.spend()).admit) {
+      this.store.updateRun(id, (r) => { r.waitingForCard = null })
+      return
+    }
+    const last = parseDate(waiting.lastTryAt)
+    if (last && t.getTime() - last.getTime() < this.cardRetryMs) return
+    try {
+      await this.start(id, parseDate(waiting.runUntil), waiting.manual, false, waiting.maxPricePerHour ?? null, waiting)
+    } catch (error) {
+      if (error instanceof GatewayFailure && (error.error.kind === 'cardTooExpensive' || error.error.kind === 'noCapacity')) return
+      // RunPod unreachable or refused: keep waiting unless the start ended it.
+      const now = this.store.run(id)
+      if (!now.waitingForCard && now.phase !== 'failed') {
+        this.store.updateRun(id, (r) => { r.waitingForCard = { ...waiting, lastTryAt: iso(t) } })
       }
     }
   }

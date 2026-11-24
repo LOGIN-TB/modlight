@@ -28,6 +28,10 @@ public enum PodlightError: Error, Sendable, Equatable {
     case hostBusy
     /// The model is starting, stopping or waiting for a card; it can move once it runs or stopped.
     case busy
+    /// The chosen card is taken and the free ones cost more than the price step allows. Nothing
+    /// was booked; Podlight waits for a card up to `ceiling` (when it may), and the user can
+    /// start on one of `pricier` instead.
+    case cardTooExpensive(wanted: PricedChoice?, ceiling: Double, pricier: [PricedChoice])
 }
 
 /// Where the gateway forwards a request.
@@ -161,15 +165,26 @@ public actor PodManager {
     /// needs minutes to load, which `tick` follows.
     /// `newPod`: the user chose a new card for a pod whose machine is busy. Only then is a stopped
     /// pod with its disk deleted to build a new one.
-    public func start(_ id: UUID, until runUntil: Date?, manual: Bool = true, newPod: Bool = false) async throws {
+    /// `maxPricePerHour`: the user approved a pricier card; cards up to this price may be booked.
+    public func start(_ id: UUID, until runUntil: Date?, manual: Bool = true, newPod: Bool = false,
+                      maxPricePerHour: Double? = nil) async throws {
+        try await start(id, until: runUntil, manual: manual, newPod: newPod, maxPricePerHour: maxPricePerHour, retrying: nil)
+    }
+
+    private func start(_ id: UUID, until runUntil: Date?, manual: Bool, newPod: Bool, maxPricePerHour: Double?,
+                       retrying: WaitingForCard?) async throws {
         if let running = starts[id] { return try await running.value }
-        let task = Task { try await self.performStart(id, until: runUntil, manual: manual, newPod: newPod) }
+        let task = Task {
+            try await self.performStart(id, until: runUntil, manual: manual, newPod: newPod,
+                                        maxPricePerHour: maxPricePerHour, retrying: retrying)
+        }
         starts[id] = task
         defer { starts[id] = nil }
         try await task.value
     }
 
-    private func performStart(_ id: UUID, until runUntil: Date?, manual: Bool, newPod: Bool) async throws {
+    private func performStart(_ id: UUID, until runUntil: Date?, manual: Bool, newPod: Bool,
+                              maxPricePerHour: Double?, retrying: WaitingForCard?) async throws {
         let state = await store.current()
         guard let model = state.models.first(where: { $0.id == id }) else { throw PodlightError.unknownModel(id.uuidString) }
         if let other = state.run(id).managedBy { throw PodlightError.managedElsewhere(PodOwner.displayName(of: other)) }
@@ -235,7 +250,7 @@ public actor PodManager {
 
         do {
             try await createPod(id, model: model, state: state, client: client, podKey: podKey, owner: owner,
-                                runUntil: runUntil, manual: manual)
+                                runUntil: runUntil, manual: manual, maxPricePerHour: maxPricePerHour, retrying: retrying)
         } catch {
             // No new pod came of it: a replaced pod is the model's pod again.
             try? await putBackReplacedPod(id)
@@ -247,8 +262,11 @@ public actor PodManager {
     static let wokenWaitForCard: TimeInterval = 1800
 
     private func createPod(_ id: UUID, model: PodlightModel, state: PodlightState, client: RunpodClient, podKey: String,
-                           owner: String?, runUntil: Date?, manual: Bool) async throws {
+                           owner: String?, runUntil: Date?, manual: Bool, maxPricePerHour: Double?,
+                           retrying: WaitingForCard?) async throws {
         try await updateRun(id) { $0.phase = .creating; $0.lastReason = nil; $0.lastMessage = nil; $0.fellBackFrom = nil }
+        var priced: PriceGuard?
+        var offered: [PricedChoice] = []
         do {
             let catalog = try await client.gpuCatalog()
             let hosting = model.hosting(default: state.settings.hosting)
@@ -258,7 +276,14 @@ public actor PodManager {
             let request = PodPlan.request(for: model, podKey: podKey, huggingFaceToken: token, runUntil: runUntil,
                                           heartbeatMinutes: state.settings.heartbeatMinutes,
                                           dataCenterIds: hosting.dataCenterIds(in: catalog), owner: owner)
-            let created = try await client.createPod(request, tryingInOrder: choices, catalog: catalog)
+            // Fallbacks up to the price step only; pricier cards that may be free are offered.
+            let guarded = PodPlan.priceGuard(choices: choices, catalog: catalog,
+                                             stepPercent: state.settings.fallbackPriceStepPercent,
+                                             maxPricePerHour: maxPricePerHour)
+            priced = guarded
+            let byId = Dictionary(catalog.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+            offered = guarded.above.filter { byId[$0.choice.gpuId]?.availability.map(\.mayBeAvailable) ?? true }
+            let created = try await client.createPod(request, tryingInOrder: guarded.within, catalog: catalog)
             let names = Dictionary(catalog.map { ($0.id, $0.name) }, uniquingKeysWith: { a, _ in a })
             let price = created.pod.cost ?? catalog.first { $0.id == created.choice.gpuId }
                 .flatMap { $0.pricePerHour(in: created.choice.cloud) }.map { $0 * Double(created.choice.count) }
@@ -275,10 +300,25 @@ public actor PodManager {
                 $0.dataCenterId = created.pod.dataCenterId
                 $0.hosting = hosting
                 $0.fellBackFrom = created.attempts.filter { $0.outcome != .created }.map { names[$0.choice.gpuId] ?? $0.choice.gpuId }
+                $0.wantedPricePerHour = created.usedFallback ? guarded.wanted?.pricePerHour : nil
             }
             try await markStarted(id, pod: created.pod, runUntil: runUntil, manual: manual, resumed: false)
         } catch let error as NoCapacityError {
             let tried = error.attempts.map(\.choice.gpuId)
+            // Nothing booked. Without a replaced pod to put back, keep trying within the price,
+            // until the run's end (half an hour for a woken one), as for a busy machine.
+            let canWait = await store.current().run(id).replacing == nil
+            if let ceiling = priced?.ceiling, !offered.isEmpty || retrying != nil {
+                let waiting = WaitingForCard(until: retrying?.until ?? runUntil ?? now().addingTimeInterval(Self.wokenWaitForCard),
+                                             runUntil: runUntil, manual: manual, lastTryAt: now(),
+                                             maxPricePerHour: ceiling, wanted: priced?.wanted, pricier: offered)
+                try await updateRun(id) {
+                    $0.phase = .stopped; $0.lastReason = "card-too-expensive"; $0.lastMessage = tried.joined(separator: ", ")
+                    $0.waitingForCard = canWait ? waiting : nil
+                }
+                if offered.isEmpty { throw PodlightError.noCapacity(tried) }
+                throw PodlightError.cardTooExpensive(wanted: priced?.wanted, ceiling: ceiling, pricier: offered)
+            }
             try await updateRun(id) { $0.phase = .failed; $0.lastReason = "no-capacity"; $0.lastMessage = tried.joined(separator: ", ") }
             throw PodlightError.noCapacity(tried)
         } catch let error as RunpodError {
@@ -783,6 +823,10 @@ public actor PodManager {
         let t = now()
         for (id, run) in state.runs {
             guard let waiting = run.waitingForCard else { continue }
+            if run.podId == nil, waiting.maxPricePerHour != nil {
+                await retryAffordableStart(id, run: run, waiting: waiting, state: state, at: t)
+                continue
+            }
             guard let podId = run.podId, run.managedBy == nil, run.phase == .stopped || run.phase == .failed,
                   t < waiting.until, Scheduler.admitWake(spend: state.spend(on: t)).admit else {
                 try? await updateRun(id) { $0.waitingForCard = nil }
@@ -804,6 +848,27 @@ public actor PodManager {
             } catch {
                 // RunPod unreachable: try again next time.
                 try? await updateRun(id) { $0.waitingForCard?.lastTryAt = t }
+            }
+        }
+    }
+
+    /// A new pod waiting for a card within its price: tried again every 30 seconds until its end.
+    private func retryAffordableStart(_ id: UUID, run: ModelRun, waiting: WaitingForCard, state: PodlightState, at t: Date) async {
+        guard run.managedBy == nil, run.phase == .stopped || run.phase == .failed, t < waiting.until,
+              state.models.contains(where: { $0.id == id }), Scheduler.admitWake(spend: state.spend(on: t)).admit else {
+            try? await updateRun(id) { $0.waitingForCard = nil }
+            return
+        }
+        if let last = waiting.lastTryAt, t.timeIntervalSince(last) < cardRetryInterval { return }
+        do {
+            try await start(id, until: waiting.runUntil, manual: waiting.manual, newPod: false,
+                            maxPricePerHour: waiting.maxPricePerHour, retrying: waiting)
+        } catch PodlightError.cardTooExpensive, PodlightError.noCapacity {
+            // Still waiting: createPod kept the waiting with this try's time.
+        } catch {
+            // RunPod unreachable or refused: keep waiting unless the start cleared it.
+            if await store.current().run(id).waitingForCard == nil, await store.current().run(id).phase != .failed {
+                try? await updateRun(id) { var w = waiting; w.lastTryAt = t; $0.waitingForCard = w }
             }
         }
     }

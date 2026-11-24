@@ -130,6 +130,8 @@ struct ServerConnectionView: View {
     @State private var newKey: ClientToken?
     @State private var copied: String?
     @State private var showFiles = false
+    /// Files with PASTE-ACCESS-KEY, for someone who pastes a key they already have.
+    @State private var showPlaceholder = false
     @State private var error: String?
     @State private var testResult: String?
 
@@ -189,12 +191,29 @@ struct ServerConnectionView: View {
 
                 Section {
                     DisclosureGroup("Configuration files for experts", isExpanded: $showFiles) {
-                        if newKey?.token == nil {
-                            Text("Create a new access key first; the files then contain it. Older keys cannot be shown again.")
-                                .font(.callout).foregroundStyle(.secondary).padding(.top, 6)
-                        }
-                        AgentConfigPanel(configs: configs(server), baseURL: server.entry.gatewayURL)
+                        if newKey?.token != nil || showPlaceholder {
+                            if newKey?.token == nil {
+                                Text("These files contain PASTE-ACCESS-KEY in place of a key: replace it with one of your keys before using them.")
+                                    .font(.callout).foregroundStyle(.orange).padding(.top, 6)
+                            }
+                            AgentConfigPanel(configs: configs(server), baseURL: server.entry.gatewayURL)
+                                .padding(.top, 6)
+                        } else {
+                            // Without a key the files only produce "401 wrong or missing API key":
+                            // create one here, and the files show it.
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("These files need an access key. Create one, and it is filled in here. The server keeps only a fingerprint of older keys, so they cannot be shown again.")
+                                    .font(.callout).foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                HStack {
+                                    Button("Create Access Key…") { creatingKey = true }
+                                        .buttonStyle(.glassProminent)
+                                        .disabled(server.status != .online)
+                                    Button("Show with a Placeholder") { showPlaceholder = true }
+                                }
+                            }
                             .padding(.top, 6)
+                        }
                     }
                 } footer: {
                     Text("These files contain an access key. Keep them in your home folder, never in a project repository.")
@@ -207,6 +226,7 @@ struct ServerConnectionView: View {
             .sheet(isPresented: $creatingKey) {
                 NewAccessKeySheet(server: server) { created in
                     newKey = created
+                    testResult = nil
                     Task { await model.loadTokens(serverID) }
                 }
             }
@@ -477,6 +497,10 @@ struct ServerSettingsView: View {
                                                                           set: { v in Task { await change { $0.deleteStoppedAfterDays(v) } } })) {
                 ForEach([1, 3, 7, 14, 30], id: \.self) { Text("\($0) days").tag($0) }
             }
+            if let percent = settings.fallbackPriceStepPercent {
+                FallbackPricePicker(percent: Binding(get: { percent },
+                                                     set: { v in Task { await change { $0.fallbackPriceStepPercent(v) } } }))
+            }
             Picker("Default location for new models", selection: Binding(get: { settings.hostingRegion },
                                                                          set: { v in Task { await change { $0.hosting(HostingPolicy(region: v, secureOnly: settings.secureCloudOnly || v != .anywhere)) } } })) {
                 Text("Anywhere").tag(HostingRegion.anywhere)
@@ -490,7 +514,7 @@ struct ServerSettingsView: View {
         } header: {
             Text("Rules on the server")
         } footer: {
-            Text("A pod stops itself when the server has not been in touch for this long, for example when the server is down.")
+            Text("A pod stops itself when the server has not been in touch for this long, for example when the server is down. When the chosen card is taken, the server takes another one only up to the set extra cost; above that it books nothing and waits for a cheaper card, and a start from this app asks.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

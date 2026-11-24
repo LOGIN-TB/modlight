@@ -56,6 +56,12 @@ enum SpecRuntime {
             let model = try decode(PodlightModel.self, input["model"])
             got = try json(PodPlan.choices(for: model, catalog: try catalog(input["catalog"]),
                                            hosting: try decode(HostingPolicy.self, input["hosting"])))
+        case "priceGuard":
+            let g = PodPlan.priceGuard(choices: try decode([GPUChoice].self, input["choices"]), catalog: try catalog(input["catalog"]),
+                                       stepPercent: try decode(Int.self, input["stepPercent"]),
+                                       maxPricePerHour: try decode(Double?.self, input["maxPricePerHour"]))
+            got = ["wanted": try g.wanted.map { try json($0) } ?? NSNull(), "ceiling": g.ceiling as Any? ?? NSNull(),
+                   "within": try json(g.within), "above": try json(g.above)]
         case "podRequest":
             let model = try decode(PodlightModel.self, input["model"])
             var request = PodPlan.request(

@@ -104,6 +104,14 @@ actor SharedRunPod: HTTPTransport {
     var engineLogBytes = 1000
     func growEngineLog() { engineLogBytes += 500 }
     var renames: [String] = []
+    /// The catalog's "gpus" array, when a test needs more than the one RTX A4000.
+    var catalogGPUs: String?
+    func setCatalog(_ gpus: String) { catalogGPUs = gpus }
+    /// Card ids RunPod has no free machine for: creating a pod on them is refused.
+    var taken: Set<String> = []
+    func setTaken(_ ids: Set<String>) { taken = ids }
+    /// The card id of each pod created, in order.
+    var createdOn: [String] = []
     private var next = 0
 
     func add(id: String, name: String, status: String, env: [String: String]) { pods[id] = Pod(name: name, status: status, env: env) }
@@ -168,10 +176,16 @@ actor SharedRunPod: HTTPTransport {
         }
         switch (request.httpMethod ?? "GET", parts.count) {
         case ("GET", 3) where parts[1] == "catalog":
+            if let catalogGPUs { return reply(200, #"{"gpus":\#(catalogGPUs)}"#) }
             return reply(200, #"{"gpus":[{"id":"NVIDIA RTX A4000","name":"RTX A4000","manufacturer":"NVIDIA","memory":16,"secure":true,"community":true,"price":{"secure":0.25,"community":0.17},"availability":"HIGH"}]}"#)
         case ("GET", 2):
             return reply(200, #"{"pods":[\#(pods.map { json($0.key, $0.value) }.joined(separator: ","))],"pagination":{"hasNextPage":false}}"#)
         case ("POST", 2):
+            let card = (body?["gpu"] as? [String: Any])?["id"] as? String ?? "?"
+            if taken.contains(card) {
+                return reply(400, #"{"detail":"There are no longer any instances available with the requested specifications. Please refresh and try again.","status":400,"title":"Bad Request"}"#)
+            }
+            createdOn.append(card)
             next += 1
             let id = "pod\(next)"
             pods[id] = Pod(name: body?["name"] as? String ?? "?", status: "RUNNING", env: body?["env"] as? [String: String] ?? [:])

@@ -1,0 +1,771 @@
+{
+  "cases" : [
+    {
+      "expected" : {
+        "above" : [
+          {
+            "choice" : {
+              "cloud" : "COMMUNITY",
+              "count" : 1,
+              "gpuId" : "NVIDIA A100 80GB PCIe"
+            },
+            "name" : "A100 PCIe",
+            "pricePerHour" : 1.1899999999999999
+          },
+          {
+            "choice" : {
+              "cloud" : "COMMUNITY",
+              "count" : 1,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "H100 SXM",
+            "pricePerHour" : 2.3900000000000001
+          },
+          {
+            "choice" : {
+              "cloud" : "SECURE",
+              "count" : 1,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "H100 SXM",
+            "pricePerHour" : 2.6899999999999999
+          }
+        ],
+        "ceiling" : 1.02,
+        "wanted" : {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "name" : "2 × RTX 4090",
+          "pricePerHour" : 0.68000000000000005
+        },
+        "within" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          }
+        ]
+      },
+      "function" : "priceGuard",
+      "id" : "balanced-step-50",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "choices" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          }
+        ],
+        "maxPricePerHour" : null,
+        "stepPercent" : 50
+      },
+      "title" : "Price guard for balanced-step-50"
+    },
+    {
+      "expected" : {
+        "above" : [
+          {
+            "choice" : {
+              "cloud" : "COMMUNITY",
+              "count" : 1,
+              "gpuId" : "NVIDIA A100 80GB PCIe"
+            },
+            "name" : "A100 PCIe",
+            "pricePerHour" : 1.1899999999999999
+          },
+          {
+            "choice" : {
+              "cloud" : "COMMUNITY",
+              "count" : 1,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "H100 SXM",
+            "pricePerHour" : 2.3900000000000001
+          },
+          {
+            "choice" : {
+              "cloud" : "SECURE",
+              "count" : 1,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "H100 SXM",
+            "pricePerHour" : 2.6899999999999999
+          }
+        ],
+        "ceiling" : 0.68000000000000005,
+        "wanted" : {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "name" : "2 × RTX 4090",
+          "pricePerHour" : 0.68000000000000005
+        },
+        "within" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          }
+        ]
+      },
+      "function" : "priceGuard",
+      "id" : "balanced-step-0",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "choices" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          }
+        ],
+        "maxPricePerHour" : null,
+        "stepPercent" : 0
+      },
+      "title" : "Price guard for balanced-step-0"
+    },
+    {
+      "expected" : {
+        "above" : [
+          {
+            "choice" : {
+              "cloud" : "COMMUNITY",
+              "count" : 1,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "H100 SXM",
+            "pricePerHour" : 2.3900000000000001
+          },
+          {
+            "choice" : {
+              "cloud" : "SECURE",
+              "count" : 1,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "H100 SXM",
+            "pricePerHour" : 2.6899999999999999
+          }
+        ],
+        "ceiling" : 1.3600000000000001,
+        "wanted" : {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "name" : "2 × RTX 4090",
+          "pricePerHour" : 0.68000000000000005
+        },
+        "within" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          }
+        ]
+      },
+      "function" : "priceGuard",
+      "id" : "balanced-step-100",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "choices" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          }
+        ],
+        "maxPricePerHour" : null,
+        "stepPercent" : 100
+      },
+      "title" : "Price guard for balanced-step-100"
+    },
+    {
+      "expected" : {
+        "above" : [
+          {
+            "choice" : {
+              "cloud" : "COMMUNITY",
+              "count" : 1,
+              "gpuId" : "NVIDIA A100 80GB PCIe"
+            },
+            "name" : "A100 PCIe",
+            "pricePerHour" : 1.1899999999999999
+          },
+          {
+            "choice" : {
+              "cloud" : "COMMUNITY",
+              "count" : 1,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "H100 SXM",
+            "pricePerHour" : 2.3900000000000001
+          },
+          {
+            "choice" : {
+              "cloud" : "SECURE",
+              "count" : 1,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "H100 SXM",
+            "pricePerHour" : 2.6899999999999999
+          }
+        ],
+        "ceiling" : 1.02,
+        "wanted" : {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "name" : "2 × RTX 4090",
+          "pricePerHour" : 0.68000000000000005
+        },
+        "within" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          }
+        ]
+      },
+      "function" : "priceGuard",
+      "id" : "preferred-cheap-step-50",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "choices" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          }
+        ],
+        "maxPricePerHour" : null,
+        "stepPercent" : 50
+      },
+      "title" : "Price guard for preferred-cheap-step-50"
+    },
+    {
+      "expected" : {
+        "above" : [
+
+        ],
+        "ceiling" : 5.3849999999999998,
+        "wanted" : {
+          "choice" : {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H200"
+          },
+          "name" : "H200 SXM",
+          "pricePerHour" : 3.5899999999999999
+        },
+        "within" : [
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H200"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          }
+        ]
+      },
+      "function" : "priceGuard",
+      "id" : "preferred-pricey-step-50",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "choices" : [
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H200"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          }
+        ],
+        "maxPricePerHour" : null,
+        "stepPercent" : 50
+      },
+      "title" : "Price guard for preferred-pricey-step-50"
+    },
+    {
+      "expected" : {
+        "above" : [
+          {
+            "choice" : {
+              "cloud" : "SECURE",
+              "count" : 1,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "H100 SXM",
+            "pricePerHour" : 2.6899999999999999
+          }
+        ],
+        "ceiling" : 2.5,
+        "wanted" : {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "name" : "2 × RTX 4090",
+          "pricePerHour" : 0.68000000000000005
+        },
+        "within" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          }
+        ]
+      },
+      "function" : "priceGuard",
+      "id" : "approved-price",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "choices" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          }
+        ],
+        "maxPricePerHour" : 2.5,
+        "stepPercent" : 0
+      },
+      "title" : "Price guard for approved-price"
+    },
+    {
+      "expected" : {
+        "above" : [
+          {
+            "choice" : {
+              "cloud" : "COMMUNITY",
+              "count" : 2,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "2 × H100 SXM",
+            "pricePerHour" : 4.7800000000000002
+          },
+          {
+            "choice" : {
+              "cloud" : "SECURE",
+              "count" : 2,
+              "gpuId" : "NVIDIA H100 80GB HBM3"
+            },
+            "name" : "2 × H100 SXM",
+            "pricePerHour" : 5.3799999999999999
+          }
+        ],
+        "ceiling" : 3.3999999999999999,
+        "wanted" : {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          "name" : "8 × RTX 4090",
+          "pricePerHour" : 2.7200000000000002
+        },
+        "within" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          }
+        ]
+      },
+      "function" : "priceGuard",
+      "id" : "70b-step-25",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "choices" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 8,
+            "gpuId" : "NVIDIA GeForce RTX 4090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 4,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 2,
+            "gpuId" : "NVIDIA H100 80GB HBM3"
+          }
+        ],
+        "maxPricePerHour" : null,
+        "stepPercent" : 25
+      },
+      "title" : "Price guard for 70b-step-25"
+    },
+    {
+      "expected" : {
+        "above" : [
+          {
+            "choice" : {
+              "cloud" : "COMMUNITY",
+              "count" : 1,
+              "gpuId" : "NVIDIA A100 80GB PCIe"
+            },
+            "name" : "A100 PCIe",
+            "pricePerHour" : 1.1899999999999999
+          }
+        ],
+        "ceiling" : 0.56999999999999995,
+        "wanted" : {
+          "choice" : {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "Tesla V100-SXM2-32GB"
+          },
+          "name" : "2 × V100 SXM2 32GB",
+          "pricePerHour" : 0.38
+        },
+        "within" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "Tesla V100-SXM2-32GB"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 3090"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A40"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          }
+        ]
+      },
+      "function" : "priceGuard",
+      "id" : "gguf-step-50",
+      "input" : {
+        "catalog" : "fixtures/catalog.json",
+        "choices" : [
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "Tesla V100-SXM2-32GB"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 2,
+            "gpuId" : "NVIDIA GeForce RTX 3090"
+          },
+          {
+            "cloud" : "COMMUNITY",
+            "count" : 1,
+            "gpuId" : "NVIDIA A100 80GB PCIe"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA A40"
+          },
+          {
+            "cloud" : "SECURE",
+            "count" : 1,
+            "gpuId" : "NVIDIA RTX A6000"
+          }
+        ],
+        "maxPricePerHour" : null,
+        "stepPercent" : 50
+      },
+      "title" : "Price guard for gguf-step-50"
+    }
+  ],
+  "description" : "Which cards a start may book when the chosen one is taken. The first choice sets the reference price; a fallback may cost up to `stepPercent` more, or up to `maxPricePerHour` when the user approved a pricier card. Prices are per hour for the whole pod (price × cards), rounded to 0.001. Expected: the first choice with its price (`wanted`), the `ceiling`, the cards to try in their order (`within`) and the pricier ones, cheapest first (`above`). Choices come from `podChoices` for the model.",
+  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+}

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Podlight server",
-    "version": "0.8.1",
+    "version": "0.9.0",
     "description": "Gateway for agents (/v1, client tokens) and control API for Podlight apps (/admin, device tokens from pairing). Plain HTTP; run it behind a reverse proxy with TLS.",
     "license": {
       "name": "MIT"
@@ -447,6 +447,12 @@
               }
             ]
           },
+          "wantedPricePerHour": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
           "lastHeartbeatAt": {
             "type": [
               "string",
@@ -549,6 +555,113 @@
                     "type": [
                       "string",
                       "null"
+                    ]
+                  },
+                  "maxPricePerHour": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "wanted": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "choice": {
+                            "type": "object",
+                            "properties": {
+                              "gpuId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "cloud": {
+                                "type": "string",
+                                "enum": [
+                                  "SECURE",
+                                  "COMMUNITY"
+                                ]
+                              },
+                              "count": {
+                                "default": 1,
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "gpuId",
+                              "cloud"
+                            ]
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "pricePerHour": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "choice",
+                          "name",
+                          "pricePerHour"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "pricier": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "choice": {
+                              "type": "object",
+                              "properties": {
+                                "gpuId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "cloud": {
+                                  "type": "string",
+                                  "enum": [
+                                    "SECURE",
+                                    "COMMUNITY"
+                                  ]
+                                },
+                                "count": {
+                                  "default": 1,
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "gpuId",
+                                "cloud"
+                              ]
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "pricePerHour": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "choice",
+                            "name",
+                            "pricePerHour"
+                          ]
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 },
@@ -1035,6 +1148,12 @@
                 "default": false,
                 "type": "boolean"
               },
+              "fallbackPriceStepPercent": {
+                "default": 50,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
               "timezone": {
                 "default": "UTC",
                 "type": "string"
@@ -1116,6 +1235,12 @@
           "secureCloudOnly": {
             "default": false,
             "type": "boolean"
+          },
+          "fallbackPriceStepPercent": {
+            "default": 50,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000
           },
           "timezone": {
             "default": "UTC",
@@ -2655,6 +2780,13 @@
                   "newPod": {
                     "type": "boolean",
                     "description": "Delete a stopped pod with its disk and build a new one (when its machine has no free card)."
+                  },
+                  "maxPricePerHour": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "description": "The user approved a pricier card: cards up to this price per hour (whole pod) may be booked. Without it, a fallback may cost at most fallbackPriceStepPercent more than the chosen card; above that the start answers 503 card_too_expensive and the run waits for a card within the price."
                   }
                 }
               }

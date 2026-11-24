@@ -7,12 +7,19 @@ struct StartSheet: View {
     @Environment(\.dismiss) private var dismiss
     let model_: PodlightModel
 
-    init(model: PodlightModel) { model_ = model }
+    init(model: PodlightModel, question: PriceQuestion? = nil) {
+        model_ = model
+        _question = State(initialValue: question)
+        _pick = State(initialValue: question?.pricier.first)
+    }
 
     enum Length: Hashable { case hours(Int), until }
     @State private var length: Length = .hours(2)
     @State private var untilTime = Calendar.current.date(bySettingHour: 18, minute: 0, second: 0, of: .now) ?? .now
     @State private var starting = false
+    /// Set when the chosen card was taken and only pricier ones are free.
+    @State private var question: PriceQuestion?
+    @State private var pick: PricedChoice?
 
     private var end: Date {
         switch length {
@@ -34,6 +41,70 @@ struct StartSheet: View {
     }
 
     var body: some View {
+        if let question {
+            priceBody(question)
+        } else {
+            startBody
+        }
+    }
+
+    /// The chosen card is taken: nothing is booked until the user picks a pricier card.
+    private func priceBody(_ q: PriceQuestion) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("\(q.wanted?.name ?? String(localized: "The chosen card")) Is Taken").font(.title2.weight(.semibold))
+            Text(q.wanted.map { String(localized: "The card you chose costs \(Format.perHour($0.pricePerHour)). Free right now are only cards that cost more than \(Format.perHour(q.ceiling)), the most a replacement may cost without asking. Podlight has booked nothing.") }
+                 ?? String(localized: "Free right now are only cards that cost more than \(Format.perHour(q.ceiling)). Podlight has booked nothing."))
+                .font(.callout).fixedSize(horizontal: false, vertical: true)
+            Form {
+                Picker("Start instead on", selection: $pick) {
+                    ForEach(q.pricier, id: \.self) { option in
+                        Text([option.name, Format.perHour(option.pricePerHour), q.extra(option)].compactMap { $0 }.joined(separator: " · "))
+                            .tag(Optional(option))
+                    }
+                }
+                .pickerStyle(.radioGroup)
+                if let pick {
+                    LabeledContent("Costs at most", value: Format.money(pick.pricePerHour * max(0, end.timeIntervalSinceNow) / 3600))
+                }
+            }
+            .formStyle(.grouped)
+            if let until = q.waitsUntil {
+                Text("Or wait: Podlight tries every 30 seconds until \(Format.time(until)) for a card up to \(Format.perHour(q.ceiling)) and then starts by itself. The model's page shows the waiting; Stop Waiting ends it.")
+                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            HStack {
+                if q.waitsUntil != nil {
+                    Button("Don't Wait") {
+                        Task { await model.stop(model_); finish() }
+                    }
+                }
+                Spacer()
+                Button(q.waitsUntil != nil ? "Keep Waiting" : "Cancel") { finish() }
+                    .keyboardShortcut(.cancelAction)
+                Button(pick.map { String(localized: "Start on \($0.name)") } ?? String(localized: "Start")) {
+                    guard let pick else { return }
+                    starting = true
+                    Task {
+                        let again = await model.start(model_, until: end, newPod: model.startingOnNewCard, maxPricePerHour: pick.pricePerHour)
+                        starting = false
+                        if let again { question = again; self.pick = again.pricier.first } else { finish() }
+                    }
+                }
+                .keyboardShortcut(.defaultAction)
+                .buttonStyle(.glassProminent)
+                .disabled(starting || pick == nil)
+            }
+        }
+        .padding(20)
+        .frame(width: 460)
+    }
+
+    private func finish() {
+        model.startingOnNewCard = false
+        dismiss()
+    }
+
+    private var startBody: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(model.startingOnNewCard ? "Start \(model_.name) on a New Card" : "Start \(model_.name)").font(.title2.weight(.semibold))
             if model.startingOnNewCard {
@@ -76,10 +147,14 @@ struct StartSheet: View {
                 Button("Start") {
                     starting = true
                     Task {
-                        await model.start(model_, until: end, newPod: model.startingOnNewCard)
-                        model.startingOnNewCard = false
+                        let asked = await model.start(model_, until: end, newPod: model.startingOnNewCard)
                         starting = false
-                        dismiss()
+                        if let asked {
+                            question = asked
+                            pick = asked.pricier.first
+                        } else {
+                            finish()
+                        }
                     }
                 }
                 .keyboardShortcut(.defaultAction)
