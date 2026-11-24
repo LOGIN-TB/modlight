@@ -47,8 +47,11 @@ Passt ein langer Kontext nicht auf eine einzelne Karte, schlägt Podlight 2, 4 o
 ## Auslastung
 
 Solange ein Modell läuft, zeigt seine Seite unter „Auslastung“, was der Pod gerade tut:
-- **Ringe** für GPU-Last, belegten Grafikspeicher (VRAM), CPU, Arbeitsspeicher und Festplatte, bei mehreren Karten für jede einzeln.
-- **Werte der Engine:** laufende und wartende Anfragen, Token pro Sekunde und wie voll der Kontext-Cache ist.
+- **Ringe** für GPU-Last, belegten Grafikspeicher (VRAM), CPU, Arbeitsspeicher und Festplatten, bei mehreren Karten für jede einzeln. Arbeitsspeicher und Festplatten werden ab 85 % orange und ab 95 % rot.
+- **Kacheln mit den Werten der Engine:**
+  - **Schreiben** und **Lesen:** Token pro Sekunde beim Antworten und beim Einlesen des Prompts, gemessen an den letzten Anfragen. Zwischen Anfragen bleibt der letzte Wert stehen.
+  - **Prompt-Cache:** welcher Anteil der Prompt-Tokens aus dem Cache kam, statt neu gelesen zu werden. Agenten wie Claude Code schicken bei jeder Anfrage den ganzen bisherigen Verlauf; ein hoher Wert macht die Antworten schnell.
+  - **Anfragen** (laufend und wartend), bei vLLM der **Kontext-Cache**, **Seit dem Start** (gelesene und geschriebene Tokens) und die **Karte** mit Temperatur und Leistung.
 - **Verlauf** der letzten 30 Minuten.
 
 In der Modellliste, der Übersicht und der Menüleiste steht die GPU-Last neben jedem laufenden Modell.

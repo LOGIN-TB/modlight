@@ -206,14 +206,18 @@ struct LimitRow: View {
     let spent: Double
     let limit: Double?
 
+    /// Like every other row: the name on the left, the amount on the right, the bar beneath. The
+    /// grouped form centres a Gauge's labels, which read as a heading over each bar.
     var body: some View {
         if let limit, limit > 0 {
-            Gauge(value: min(spent, limit), in: 0...limit) {
-                Text(title)
-            } currentValueLabel: {
-                Text("\(Format.money(spent)) of \(Format.money(limit))")
+            VStack(alignment: .leading, spacing: 6) {
+                LabeledContent(title) { Text("\(Format.money(spent)) of \(Format.money(limit))").monospacedDigit() }
+                ProgressView(value: min(spent, limit), total: limit)
+                    .progressViewStyle(.linear)
+                    .tint(spent >= limit ? .red : spent >= limit * 0.8 ? .orange : .accentColor)
+                    .accessibilityHidden(true)
             }
-            .tint(spent >= limit ? .red : spent >= limit * 0.8 ? .orange : .accentColor)
+            .accessibilityElement(children: .combine)
         } else {
             LabeledContent(title) { Text("\(Format.money(spent)), no limit") }
         }

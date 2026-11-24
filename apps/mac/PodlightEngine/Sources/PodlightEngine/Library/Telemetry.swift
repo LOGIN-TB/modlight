@@ -41,11 +41,24 @@ public struct PodTelemetry: Codable, Sendable, Equatable {
         public var kvCachePercent: Double?
         public var promptTokensPerSecond: Double?
         public var generationTokensPerSecond: Double?
+        /// Since the engine started: prompt tokens read (reused ones included) and tokens written.
+        public var promptTokensTotal: Int?
+        public var generationTokensTotal: Int?
+        /// Share of prompt tokens taken from the engine's cache instead of being read again.
+        public var promptCacheHitPercent: Double?
+        /// Tokens per second while reading a prompt and while writing an answer, over the latest
+        /// requests; they stay between requests. From 0.10 watchdogs.
+        public var promptSpeed: Double?
+        public var generationSpeed: Double?
 
         public init(running: Int? = nil, waiting: Int? = nil, kvCachePercent: Double? = nil,
-                    promptTokensPerSecond: Double? = nil, generationTokensPerSecond: Double? = nil) {
+                    promptTokensPerSecond: Double? = nil, generationTokensPerSecond: Double? = nil,
+                    promptTokensTotal: Int? = nil, generationTokensTotal: Int? = nil, promptCacheHitPercent: Double? = nil,
+                    promptSpeed: Double? = nil, generationSpeed: Double? = nil) {
             self.running = running; self.waiting = waiting; self.kvCachePercent = kvCachePercent
             self.promptTokensPerSecond = promptTokensPerSecond; self.generationTokensPerSecond = generationTokensPerSecond
+            self.promptTokensTotal = promptTokensTotal; self.generationTokensTotal = generationTokensTotal
+            self.promptCacheHitPercent = promptCacheHitPercent; self.promptSpeed = promptSpeed; self.generationSpeed = generationSpeed
         }
     }
 

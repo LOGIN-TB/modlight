@@ -185,6 +185,14 @@ export const engineTelemetry = z.object({
   kvCachePercent: optional(z.number()),
   promptTokensPerSecond: optional(z.number()),
   generationTokensPerSecond: optional(z.number()),
+  /** Since the engine started: prompt tokens read (reused ones included) and tokens written. */
+  promptTokensTotal: optional(z.number()),
+  generationTokensTotal: optional(z.number()),
+  /** Share of prompt tokens taken from the engine's cache. */
+  promptCacheHitPercent: optional(z.number()),
+  /** Tokens per second while reading and while writing, over the latest requests. */
+  promptSpeed: optional(z.number()),
+  generationSpeed: optional(z.number()),
 })
 
 /**

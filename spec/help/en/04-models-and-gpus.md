@@ -47,8 +47,11 @@ If a long context does not fit on one card, Podlight suggests 2, 4 or 8 cards in
 ## Usage
 
 While a model runs, its page shows what the pod is doing under "Usage":
-- **Rings** for GPU load, graphics memory in use (VRAM), CPU, memory and disk, one set per card when there are several.
-- **The engine's figures:** running and waiting requests, tokens per second, and how full the context cache is.
+- **Rings** for GPU load, graphics memory in use (VRAM), CPU, memory and disks, one set per card when there are several. Memory and disks turn orange from 85 % and red from 95 %.
+- **Tiles with the engine's figures:**
+  - **Writing** and **Reading:** tokens per second while answering and while reading the prompt, over the latest requests. Between requests the last value stays.
+  - **Prompt cache:** the share of prompt tokens taken from the cache instead of being read again. Agents such as Claude Code send the whole conversation with every request; a high share makes answers quick.
+  - **Requests** (running and waiting), with vLLM the **Context cache**, **Since the start** (tokens read and written) and the **Card** with temperature and power.
 - **A chart** of the last 30 minutes.
 
 The model list, the overview and the menu bar show the GPU load beside every running model.

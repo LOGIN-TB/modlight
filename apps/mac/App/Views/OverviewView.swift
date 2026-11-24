@@ -14,7 +14,8 @@ struct OverviewView: View {
             nowSection
             // Models waiting to be taken over go near the top, where they are seen.
             if model.hasRunpodKey && !model.otherMacsPods.isEmpty { OtherMacsSection() }
-            if !steps.allSatisfy(\.done) { nextSteps }
+            // Gone once every required step is done; the optional token alone keeps no checklist up.
+            if steps.contains(where: { !$0.done && !$0.optional }) { nextSteps }
             spendingSection
             modelsSection
             if model.hasRunpodKey && model.otherMacsPods.isEmpty { OtherMacsSection() }
@@ -45,6 +46,7 @@ struct OverviewView: View {
                             Text(PhaseText.summary(run)).foregroundStyle(.secondary)
                         }
                         HStack(spacing: 16) {
+                            if let gpu = run.gpuName { Label(gpu, systemImage: "cpu").labelStyle(.titleAndIcon) }
                             if let price = run.pricePerHour { Text(Format.perHour(price)) }
                             if let started = run.startedAt, let price = run.pricePerHour {
                                 Text("\(Format.money(GPUSuggestion.cost(pricePerHour: price, from: started, until: .now))) so far")
@@ -83,49 +85,64 @@ struct OverviewView: View {
         let run: @MainActor () -> Void
     }
 
+    /// Done counts on this Mac or on any paired server: someone who works through a server has
+    /// set up RunPod, added and started a model and connected an agent there.
     private var steps: [Step] {
-        let started = model.state.models.contains { model.state.run($0.id).startedAt != nil }
+        let snapshots = model.servers.compactMap(\.snapshot)
+        let localStarted = model.state.models.contains { model.state.run($0.id).startedAt != nil }
+        let serverStarted = snapshots.contains { s in s.models.contains { s.run($0.id).startedAt != nil || s.run($0.id).podId != nil } }
+        let firstModel = model.state.models.first?.id ?? snapshots.lazy.compactMap(\.models.first?.id).first
+        let agentSeen = model.state.lastClientRequestAt != nil || snapshots.contains { $0.lastClientRequestAt != nil }
         return [
             Step(id: "runpod", title: "Connect RunPod", detail: "Podlight needs your RunPod API key to start pods.",
-                 done: model.hasRunpodKey, optional: false, action: "Set Up…") { model.showingSetup = true },
+                 done: model.hasRunpodKey || snapshots.contains { $0.settings.hasRunpodKey }, optional: false,
+                 action: "Set Up…") { model.showingSetup = true },
             Step(id: "hf", title: "Add a Hugging Face token", detail: "Recommended: downloads are limited more strictly without one, and gated models need it.",
-                 done: model.hasHuggingFaceToken, optional: true, action: "Open Settings") { model.selection = .settings },
+                 done: model.hasHuggingFaceToken || snapshots.contains { $0.settings.hasHuggingFaceToken }, optional: true,
+                 action: "Open Settings") { model.selection = .settings },
             Step(id: "model", title: "Add a model", detail: "Choose one on Hugging Face; Podlight suggests a GPU and shows the price.",
-                 done: !model.state.models.isEmpty, optional: false, action: "Add Model…") { model.addModel(to: .local) },
+                 done: firstModel != nil, optional: false, action: "Add Model…") { model.addModel(to: .local) },
             Step(id: "start", title: "Start it once in Podlight", detail: "The first start takes 10–25 minutes, longer than an agent waits.",
-                 done: started, optional: false, action: "Show Model") {
-                     if let first = model.state.models.first { model.selection = .model(first.id) }
+                 done: localStarted || serverStarted, optional: false, action: "Show Model") {
+                     if let firstModel { model.selection = .model(firstModel) }
                  },
             Step(id: "agent", title: "Connect your agent", detail: "Enter the address, key and model name in your coding agent.",
-                 done: model.state.lastClientRequestAt != nil, optional: false, action: "Show Connection") { model.selection = .connection },
+                 done: agentSeen, optional: false, action: "Show Connection") { model.selection = .connection },
         ]
     }
 
+    /// Only what is still open, with how far along the setup is: done steps say nothing new.
     private var nextSteps: some View {
-        Section {
-            ForEach(steps) { step in
+        let all = steps
+        let open = all.filter { !$0.done }
+        return Section {
+            ForEach(open) { step in
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Image(systemName: step.done ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(step.done ? Color.green : Color.secondary)
-                        .accessibilityLabel(step.done ? Text("Done") : Text("To do"))
+                    Image(systemName: "circle")
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 6) {
-                            Text(step.title).strikethrough(step.done, color: .secondary)
+                            Text(step.title)
                             if step.optional { Text("optional").font(.caption).foregroundStyle(.secondary) }
                         }
-                        if !step.done { Text(step.detail).font(.callout).foregroundStyle(.secondary) }
+                        Text(step.detail).font(.callout).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    if !step.done && isNext(step) {
+                    if isNext(step) {
                         Button(step.action) { step.run() }.buttonStyle(.borderedProminent)
-                    } else if !step.done {
+                    } else {
                         Button(step.action) { step.run() }
                     }
                 }
                 .accessibilityElement(children: .combine)
             }
         } header: {
-            Text("Next steps")
+            HStack {
+                Text("Next steps")
+                Spacer()
+                Text("\(all.count - open.count) of \(all.count) done").font(.callout).foregroundStyle(.secondary)
+            }
         }
     }
 
