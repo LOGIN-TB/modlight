@@ -76,7 +76,7 @@ struct AddServerSheet: View {
                                                               hint: String(localized: "On the server, as root or a user in the docker group. It fetches the current image, starts the server and shows address and pairing code. Run it again to update."),
                                                               content: Self.install), copied: $copied) { EmptyView() }
                             SnippetBox(snippet: ConfigSnippet(id: "compose", title: String(localized: "Or: docker-compose.yml"),
-                                                              hint: String(localized: "docker compose up -d starts it in the background and shows nothing of the server; address and code are then in docker compose logs podlight. In Coolify, use this file as a Docker Compose resource."),
+                                                              hint: String(localized: "docker compose up -d starts it in the background and shows nothing of the server. Then docker compose exec podlight podlight-info shows address and pairing code. In Coolify, use this file as a Docker Compose resource and run podlight-info in the container's terminal."),
                                                               content: Self.compose), copied: $copied) { EmptyView() }
                             Text("Give it an https address before it is reachable from the internet: in Coolify, set a domain for the service; elsewhere, put a reverse proxy such as Caddy in front of it. After pairing, Podlight offers to bring this Mac's RunPod key, rules and models along.")
                                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
