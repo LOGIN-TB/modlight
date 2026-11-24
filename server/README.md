@@ -49,8 +49,9 @@ volumes:
 ```
 
 ```bash
-docker compose up -d             # starts in the background and shows none of the server's output
-docker compose logs podlight   # the box "PODLIGHT SERVER – CONNECTION": address and pairing code
+docker compose up -d                          # starts in the background and shows none of the server's output
+docker compose exec podlight podlight-info   # the box: address and pairing code
+docker compose logs podlight                 # the same box in the log; its code may have expired since
 ```
 
 After the start the log shows a box with everything the app needs: the address (the Coolify
@@ -62,7 +63,7 @@ or after it expired, without a paired app:
 
 ```bash
 docker exec <container> podlight-code   # a new code, printed in the same box
-docker exec <container> podlight-info   # the box again, with the open code if there is one
+docker exec <container> podlight-info   # the box again; while nothing is paired, with a valid code
 ```
 
 In the Podlight app choose **Add Server…** and enter the address and the code. Podlight then offers

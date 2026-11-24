@@ -5,7 +5,8 @@ import { openDatabase } from './store/db.ts'
 import { VERSION } from './version.ts'
 
 // Run inside the container: `podlight-code` (a new pairing code, for another Mac or when the
-// first code expired) and `podlight-info` (the connection box again, with the open code if any).
+// first code expired) and `podlight-info` (the connection box again, with a code while nothing is
+// paired).
 // Works next to the running server: SQLite in WAL mode takes the one short write.
 
 const env = process.env
@@ -17,7 +18,9 @@ if (command !== 'new-code' && command !== 'info') {
 const dataDir = env.DATA_DIR ?? '/data'
 const db = openDatabase(env.DATABASE_PATH ?? `${dataDir}/podlight.db`)
 const pairing = new Pairing(db, new TokenStore(db))
-const code = command === 'new-code' ? pairing.issue() : pairing.openCode()
+// `info` follows the start's rule: while no device is paired, an expired code is replaced, so the
+// box never claims a pairing that has not happened. Once one is paired, it only shows an open code.
+const code = command === 'new-code' ? pairing.issue() : pairing.codeAtStart(null)
 const port = Number.parseInt(env.PORT ?? '8080', 10)
 console.log(connectionInfo({ env, version: VERSION, port, code, publicIp: await lookupPublicIp(env) }).join('\n'))
 db.close()

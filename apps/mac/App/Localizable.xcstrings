@@ -6221,12 +6221,12 @@
         }
       }
     },
-    "docker compose up -d starts it in the background and shows nothing of the server; address and code are then in docker compose logs podlight. In Coolify, use this file as a Docker Compose resource.": {
+    "docker compose up -d starts it in the background and shows nothing of the server. Then docker compose exec podlight podlight-info shows address and pairing code. In Coolify, use this file as a Docker Compose resource and run podlight-info in the container's terminal.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "docker compose up -d startet ihn im Hintergrund und zeigt vom Server nichts an; Adresse und Code stehen dann in docker compose logs podlight. In Coolify diese Datei als Docker-Compose-Ressource verwenden."
+            "value": "docker compose up -d startet ihn im Hintergrund und zeigt vom Server nichts an. Danach zeigt docker compose exec podlight podlight-info Adresse und Kopplungscode. In Coolify diese Datei als Docker-Compose-Ressource verwenden und podlight-info im Terminal des Containers aufrufen."
           }
         }
       }
