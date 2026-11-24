@@ -56,11 +56,21 @@ export class StateStore {
     return key
   }
 
+  /** Sets the pod's key, for a pod that came with its key (a model handed over from a Mac). */
+  setPodKey(id: string, key: string): void {
+    this.db.prepare('UPDATE models SET pod_key = ? WHERE id = ? COLLATE NOCASE').run(this.sealer.seal(key), id)
+  }
+
   run(id: string): ModelRun {
     const row = this.db.prepare('SELECT json FROM runs WHERE model_id = ? COLLATE NOCASE').get(id) as { json: string } | undefined
     if (!row) return emptyRun()
-    const parsed = modelRun.safeParse(JSON.parse(row.json))
-    return parsed.success ? parsed.data : emptyRun()
+    const raw = JSON.parse(row.json) as Record<string, unknown>
+    const parsed = modelRun.safeParse(raw)
+    if (parsed.success) return parsed.data
+    // A field that no longer parses (a pod status RunPod added, say) must not cost the whole run,
+    // above all its pod id: without it the pod would bill on, unseen.
+    const broken = new Set(parsed.error.issues.map((issue) => String(issue.path[0])))
+    return modelRun.safeParse(Object.fromEntries(Object.entries(raw).filter(([key]) => !broken.has(key)))).data ?? emptyRun()
   }
 
   runs(): Record<string, ModelRun> {

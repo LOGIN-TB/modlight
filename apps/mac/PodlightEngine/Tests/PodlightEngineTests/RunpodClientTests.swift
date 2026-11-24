@@ -86,6 +86,24 @@ struct RunpodClientTests {
         #expect((json["env"] as? [String: String])?["LAUNCHER_API_KEY"] == "gateway-secret")
     }
 
+    @Test func balanceComesFromGraphQL() async throws {
+        // Shape measured 2026-11-24 with a REST key: floats for credit and rate, an int limit.
+        let transport = FakeTransport([.status(200, #"{"data":{"myself":{"clientBalance":42.5,"currentSpendPerHr":0.86,"spendLimit":80}}}"#)])
+        let balance = try await RunpodClient(apiKey: "k", transport: transport).balance()
+        #expect(balance == RunpodBalance(usd: 42.5, spendPerHourUsd: 0.86, spendLimitUsd: 80))
+        #expect(abs((balance.hoursLeft ?? 0) - 49.4186) < 0.001)
+        let sent = try #require(await transport.requests.first)
+        #expect(sent.httpMethod == "POST")
+        #expect(sent.url?.absoluteString == "https://api.runpod.io/graphql")
+        #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer k")
+    }
+
+    @Test func balanceWithoutAnswerIsAnError() async throws {
+        let transport = FakeTransport([.status(200, #"{"errors":[{"message":"not allowed"}]}"#)])
+        await #expect(throws: RunpodError.self) { try await RunpodClient(apiKey: "k", transport: transport).balance() }
+        #expect(RunpodBalance(usd: 5, spendPerHourUsd: 0, spendLimitUsd: nil).hoursLeft == nil)
+    }
+
     @Test func fallsBackWhenACardIsTaken() async throws {
         let transport = FakeTransport([
             .status(400, Fixture.noCapacity),

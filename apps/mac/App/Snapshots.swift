@@ -36,6 +36,7 @@ enum Snapshots {
         let running = model.state.models[0]
         model.sampleTelemetry = [running.id: sampleTelemetry(gpu: "NVIDIA L40S", memoryGB: 48)]
         model.showOtherMacsPodsForSnapshots(sampleOtherMacsPods())
+        model.showBalanceForSnapshots(RunpodBalance(usd: 37.8, spendPerHourUsd: 1.21, spendLimitUsd: 80, checkedAt: .now))
         // Content views without the sidebar: its material does not render offscreen, and the help
         // pages are about the content anyway.
         render("overview", size: CGSize(width: 720, height: 900), into: folder) { NavigationStack { OverviewView() }.environment(model) }
@@ -96,7 +97,7 @@ enum Snapshots {
                 ServerSettingsView(serverID: entry.id).environment(model)
             }
             render("overview-server", size: CGSize(width: 720, height: 1180), into: folder) { NavigationStack { OverviewView() }.environment(model) }
-            render("server-costs", size: CGSize(width: 720, height: 700), into: folder) { CostsView(source: .server(entry.id)).environment(model) }
+            render("server-costs", size: CGSize(width: 720, height: 760), into: folder) { CostsView(source: .server(entry.id)).environment(model) }
             if let remote = sample.0.models.first {
                 model.sampleTelemetry?[remote.id] = sampleTelemetry(gpu: "NVIDIA RTX A6000", memoryGB: 48, cards: 2)
                 render("server-model", size: CGSize(width: 720, height: 1180), into: folder) {
@@ -104,17 +105,24 @@ enum Snapshots {
                 }
                 render("server-start", size: CGSize(width: 460, height: 560), into: folder) { StartSheet(model: remote).environment(model) }
             }
+            // Right after pairing a new server: bring this Mac's key, rules and models along.
+            if let fresh = sampleServer(fresh: true) {
+                server.showForSnapshots(fresh.0, tokens: fresh.1)
+                render("server-transfer", size: CGSize(width: 560, height: 600), into: folder) {
+                    TransferSheet(request: TransferRequest(serverID: entry.id, models: [model.state.models[1].id])).environment(model)
+                }
+            }
         }
     }
 
     /// A server with one running model, as `/admin/state` reports it.
-    private static func sampleServer() -> (ServerSnapshot, [ClientToken])? {
+    private static func sampleServer(fresh: Bool = false) -> (ServerSnapshot, [ClientToken])? {
         let started = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-25 * 60))
         let until = ISO8601DateFormatter().string(from: Date().addingTimeInterval(3 * 3600))
         let last = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-90))
         let today = PodlightState.dayKey(.now)
         let json = """
-        {"version":"0.4.0","serverTime":"\(started)",
+        {"version":"0.8.0","serverTime":"\(started)",
          "models":[{"id":"6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0001","name":"coder-office","repoId":"Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ",
            "format":"awq","weightBytes":17400000000,"nativeContextTokens":262144,"toolCallParser":"qwen3_xml","contextTokens":131072,
            "concurrency":2,"goal":"balanced","preferredGPU":{"gpuId":"NVIDIA RTX A6000","cloud":"SECURE","count":2},"preferredGPUName":"2 × RTX A6000",
@@ -130,9 +138,10 @@ enum Snapshots {
            "dataCenterId":"EU-SE-1","storagePerHour":0.0137},
           "6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0002":{"phase":"stopped","engineReady":false,"startedManually":false,"lastReason":"idle-timeout"}},
          "settings":{"dailyLimitUsd":15,"monthlyLimitUsd":200,"heartbeatMinutes":15,"wakeWaitSeconds":600,"deleteStoppedAfterDays":3,
-           "wakeOnRequest":true,"hostingRegion":"eu","secureCloudOnly":true,"timezone":"Europe/Berlin","hasRunpodKey":true,"hasHuggingFaceToken":true},
+           "wakeOnRequest":true,"hostingRegion":"eu","secureCloudOnly":true,"timezone":"Europe/Berlin","hasRunpodKey":\(!fresh),"hasHuggingFaceToken":true},
          "spendByDay":{"\(today)":3.4},"spend":{"todayUsd":3.4,"monthUsd":41.2,"dailyLimitUsd":15,"monthlyLimitUsd":200},
-         "costPerHour":0.98,"lastClientRequestAt":"\(last)"}
+         "costPerHour":0.98,"lastClientRequestAt":"\(last)",
+         "balance":{"usd":37.8,"spendPerHourUsd":1.21,"spendLimitUsd":80,"checkedAt":"\(last)"}}
         """
         let tokensJSON = """
         [{"id":"t1","name":"OpenCode on the laptop","createdAt":"2026-11-21T10:05:00Z","lastUsedAt":"\(last)","revokedAt":null,"models":null},

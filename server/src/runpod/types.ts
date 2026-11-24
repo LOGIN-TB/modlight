@@ -40,6 +40,9 @@ export interface Pod {
   dataCenterId?: string | null
   /** The pod's environment; Podlight's pods carry their start script and watchdog here. */
   env?: Record<string, string> | null
+  /** Container disk in GB. */
+  disk?: number | null
+  mounts?: { persistent?: { size?: number | null } | null } | null
 }
 
 export interface CreatePodRequest {

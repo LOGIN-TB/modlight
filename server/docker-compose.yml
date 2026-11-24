@@ -4,7 +4,9 @@
 # (Coolify does this when you give the service a domain) before it is reachable from the internet:
 # the Podlight app only connects to https:// addresses, except localhost and private LAN addresses.
 #
-# First start: the pairing code is printed in the log. In the Podlight app: Add Server…
+# After the start the log shows a box "PODLIGHT SERVER – CONNECTION" with the address to enter in
+# the app and the pairing code. In the Podlight app: Add Server…
+# A new pairing code later: docker exec <container> podlight-code (Coolify: the container's terminal).
 services:
   podlight:
     image: ghcr.io/login-tb/podlight-server:latest
@@ -13,8 +15,17 @@ services:
       # Optional: a fixed pairing code instead of the generated one, e.g. from Coolify's
       # generated secrets (SERVICE_PASSWORD_PAIRING). Single use, 30 minutes.
       - PAIRING_CODE=${PAIRING_CODE:-}
-      # Coolify: makes the service reachable under the domain you set for it.
+      # Coolify: makes the service reachable under the domain you set for it; the box shows it.
       - SERVICE_FQDN_PODLIGHT_8080
+      - SERVICE_URL_PODLIGHT_8080
+      # Optional: the address of this machine in your network, so the box shows the LAN address.
+      - HOST_IP=${HOST_IP:-}
+      # Optional: the https address when you run your own reverse proxy (not needed in Coolify).
+      - PUBLIC_URL=${PUBLIC_URL:-}
+      # Language of the connection box: en or de.
+      - PODLIGHT_LANG=${PODLIGHT_LANG:-en}
+      # The box asks api.ipify.org once for the public IP; false turns that off.
+      - PUBLIC_IP_LOOKUP=${PUBLIC_IP_LOOKUP:-true}
     volumes:
       # Database and master key. Back it up; losing it means pairing again and re-adding models.
       - podlight-data:/data

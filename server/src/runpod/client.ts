@@ -26,6 +26,10 @@ export class RunpodError extends Error {
   }
 }
 
+interface PodList { pods?: Pod[]; pagination?: { hasNextPage?: boolean; nextCursor?: string | null } | null }
+
+export interface AccountBalance { usd: number; spendPerHourUsd: number; spendLimitUsd: number | null }
+
 export type KeyCheck = 'valid' | 'invalid' | 'missingPermission' | 'unreachable'
 
 export class RunpodClient {
@@ -66,6 +70,37 @@ export class RunpodClient {
 
   pod(id: string): Promise<Pod> {
     return this.call('GET', `/v2/pods/${encodeURIComponent(id)}`)
+  }
+
+  /** Every pod of the account, following RunPod's pages. */
+  async listPods(): Promise<Pod[]> {
+    const pods: Pod[] = []
+    let cursor: string | null = null
+    for (let page = 0; page < 20; page++) {
+      const path: string = cursor ? `/v2/pods?cursor=${encodeURIComponent(cursor)}` : '/v2/pods'
+      const list: PodList = await this.call<PodList>('GET', path)
+      pods.push(...(list.pods ?? []))
+      if (!list.pagination?.hasNextPage || !list.pagination.nextCursor) break
+      cursor = list.pagination.nextCursor
+    }
+    return pods
+  }
+
+  /** Renames a pod. RunPod applies it without restarting the pod, running or stopped. */
+  async rename(id: string, name: string): Promise<void> {
+    await this.call('PATCH', `/v2/pods/${encodeURIComponent(id)}`, { name })
+  }
+
+  /**
+   * The account's credit, what everything in it costs per hour right now, and RunPod's own spend
+   * limit. Only RunPod's GraphQL API has it; the same key works there.
+   */
+  async balance(): Promise<AccountBalance> {
+    const result = await this.call<{ data?: { myself?: { clientBalance?: number; currentSpendPerHr?: number; spendLimit?: number | null } | null }; errors?: unknown[] }>(
+      'POST', '/graphql', { query: 'query { myself { clientBalance currentSpendPerHr spendLimit } }' })
+    const me = result.data?.myself
+    if (!me || typeof me.clientBalance !== 'number') throw new RunpodError(200, `no balance in answer: ${JSON.stringify(result.errors ?? result).slice(0, 200)}`)
+    return { usd: me.clientBalance, spendPerHourUsd: me.currentSpendPerHr ?? 0, spendLimitUsd: me.spendLimit ?? null }
   }
 
   createPod(body: CreatePodRequest): Promise<Pod> {

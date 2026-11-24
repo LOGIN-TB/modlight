@@ -70,6 +70,16 @@ export function openapi(): object {
             settings: ref('Settings'), spendByDay: { type: 'object', additionalProperties: { type: 'number' } },
             spend: ref('Spend'), costPerHour: { type: 'number' }, lastClientRequestAt: { type: ['string', 'null'] },
             telemetry: { type: 'object', additionalProperties: ref('PodTelemetry'), description: 'The latest sample per model whose pod runs, keyed by model id.' },
+            balance: { oneOf: [ref('Balance'), { type: 'null' }], description: 'The RunPod account, at most about a minute old; null until first read or without a key.' },
+          },
+        },
+        Balance: {
+          type: 'object',
+          properties: {
+            usd: { type: 'number', description: 'Credit left in the RunPod account.' },
+            spendPerHourUsd: { type: 'number', description: 'What everything in the account costs per hour now, by RunPod.' },
+            spendLimitUsd: { type: ['number', 'null'], description: "RunPod's own spend limit for the account." },
+            checkedAt: { type: 'string', format: 'date-time' },
           },
         },
         ClientToken: {
@@ -93,6 +103,7 @@ export function openapi(): object {
       '/v1/models': { get: { tags: ['gateway'], security: client, summary: 'Models this key may use (OpenAI and Anthropic fields)', responses: { 200: ok('List'), 401: error } } },
       ...forwarded,
       '/admin/state': { get: { tags: ['admin'], security: device, summary: 'Everything the app shows: models, runs, settings, spend', responses: { 200: ok('State', ref('State')), 401: error } } },
+      '/admin/refresh': { post: { tags: ['admin'], security: device, summary: 'Compare the stored pods with RunPod now and let go of deleted ones', responses: { 200: ok('Done', { type: 'object', properties: { ok: { type: 'boolean' } } }) } } },
       '/admin/settings': {
         get: { tags: ['admin'], security: device, summary: 'Settings (secrets only as has… flags)', responses: { 200: ok('Settings', ref('Settings')) } },
         patch: { tags: ['admin'], security: device, summary: 'Change settings; secrets are write-only, "" removes one', requestBody: { content: json(ref('SettingsPatch')) }, responses: { 200: ok('Settings', ref('Settings')), 400: error } },
@@ -104,6 +115,12 @@ export function openapi(): object {
         put: { tags: ['admin'], security: device, summary: 'Add or replace a model', parameters: idParam, requestBody: { required: true, content: json(ref('PodlightModel')) }, responses: { 200: ok('Model', ref('PodlightModel')), 400: error, 409: error } },
         delete: { tags: ['admin'], security: device, summary: 'Remove a model, deleting its pod and disk', parameters: idParam, responses: { 204: { description: 'Removed' }, 404: error } },
       },
+      '/admin/models/{id}/adopt': { post: {
+        tags: ['admin'], security: device, parameters: idParam,
+        summary: "Take a model over from a Mac with its pod and the pod's key; the pod is renamed to a server pod, nothing is downloaded again",
+        requestBody: { required: true, content: json({ type: 'object', required: ['model', 'podKey'], properties: { model: ref('PodlightModel'), podKey: { type: 'string' }, podId: { type: ['string', 'null'] } } }) },
+        responses: { 200: ok('Model and run', { type: 'object', properties: { model: ref('PodlightModel'), run: ref('ModelRun') } }), 400: error, 409: error },
+      } },
       '/admin/models/{id}/start': { post: { tags: ['admin'], security: device, summary: 'Start until a time ("Läuft bis"); without one, idle stop ends it', parameters: idParam,
         requestBody: { content: json({ type: 'object', properties: { until: { type: ['string', 'null'], format: 'date-time' }, newPod: { type: 'boolean', description: 'Delete a stopped pod with its disk and build a new one (when its machine has no free card).' } } }) }, responses: { 200: ok('Run', ref('ModelRun')), 429: error, 503: error } } },
       '/admin/models/{id}/stop': { post: { tags: ['admin'], security: device, summary: 'Stop (kept disk) or delete the pod', parameters: idParam, responses: { 200: ok('Run', ref('ModelRun')) } } },

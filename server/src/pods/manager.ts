@@ -1,10 +1,10 @@
 import { generateToken } from '../crypto.ts'
-import { hostingOf, iso, type ModelRun, parseDate, type PodlightModel, type PodTelemetry, podTelemetry, type ServerSettings } from '../model.ts'
+import { hostingOf, iso, type ModelRun, parseDate, type PodlightModel, podStatus, type PodTelemetry, podTelemetry, type ServerSettings } from '../model.ts'
 import { allows, dataCenterIds, needsPlacementCheck, StoragePricing } from '../rules/hosting.ts'
 import * as podPlan from '../rules/podPlan.ts'
 import { admitWake, decide, type Spend } from '../rules/scheduler.ts'
 import { engineFailureReason, GatewayFailure, looksDegenerate, summarizeEngineLog } from '../gateway/shape.ts'
-import { createWithFallback, NoCapacityError, RunpodClient, RunpodError } from '../runpod/client.ts'
+import { type AccountBalance, createWithFallback, NoCapacityError, RunpodClient, RunpodError } from '../runpod/client.ts'
 import { type Pod, pricePerHour } from '../runpod/types.ts'
 import type { SettingsStore } from '../store/settings.ts'
 import { dayKey, type StateStore } from '../store/state.ts'
@@ -40,6 +40,15 @@ export interface ManagerOptions {
   /** A loading engine with no sign of progress for this long is taken as hung. */
   loadStallMs?: number
   log?: (message: string) => void
+}
+
+/** Why a model from a Mac cannot come over; the app shows the message. */
+export class AdoptRefused extends Error {
+  readonly code: string
+  constructor(message: string, code: string) {
+    super(message)
+    this.code = code
+  }
 }
 
 /** What the watchdog reports with each heartbeat. `engineLogBytes` grows while the engine works. */
@@ -112,10 +121,117 @@ export class PodManager {
     return dayKey(this.now(), this.settings.read().timezone)
   }
 
+  // MARK: Account balance
+
+  private balanceCache: (AccountBalance & { checkedAt: string }) | null = null
+  private balanceFetch: Promise<void> | null = null
+
+  /**
+   * The RunPod account's credit as last read, at most a minute old in use: an older answer is
+   * returned as it is and a new one fetched in the background, so /admin/state never waits on it.
+   */
+  balance(): (AccountBalance & { checkedAt: string }) | null {
+    const checked = this.balanceCache ? Date.parse(this.balanceCache.checkedAt) : 0
+    if (this.now().getTime() - checked >= 60_000) void this.refreshBalance()
+    return this.balanceCache
+  }
+
+  /** Another RunPod key: the old account's balance is not this one's. */
+  accountChanged(): void {
+    this.balanceCache = null
+    void this.refreshBalance()
+  }
+
+  refreshBalance(): Promise<void> {
+    this.balanceFetch ??= (async () => {
+      const client = this.clientOrNull()
+      if (!client) { this.balanceCache = null; return }
+      try {
+        this.balanceCache = { ...(await client.balance()), checkedAt: iso(this.now()) }
+      } catch (error) {
+        this.log(`balance: ${error}`)
+      }
+    })().finally(() => { this.balanceFetch = null })
+    return this.balanceFetch
+  }
+
   // MARK: Models
 
   save(model: PodlightModel): void {
     this.store.saveModel({ ...model, schedule: { ...model.schedule, idleStopMinutes: Math.max(5, model.schedule.idleStopMinutes) } })
+  }
+
+  /**
+   * Takes a model over from a Mac, with its pod (running or stopped with its disk) and the pod's
+   * key, so nothing is downloaded again. The pod is renamed to a server pod: the Mac sees that
+   * and lets go, other Macs no longer offer it. Without a pod (or one RunPod no longer has) only
+   * the model comes over.
+   */
+  async adopt(model: PodlightModel, podKey: string, podId: string | null): Promise<void> {
+    if (this.store.model(model.id)) throw new AdoptRefused('This model is already on the server.', 'already_here')
+    let pod: Pod | null = null
+    const client = podId ? this.client() : null
+    if (client && podId) {
+      try {
+        pod = await client.pod(podId)
+      } catch (error) {
+        if (!(error instanceof RunpodError && error.isNotFound)) throw this.asFailure(error)
+      }
+      if (pod?.status === 'TERMINATED') pod = null
+    }
+    if (pod) {
+      if (!pod.name.startsWith('podlight-') || pod.name.startsWith('podlight-srv-')) {
+        throw new AdoptRefused('That pod was not created by Podlight on a Mac.', 'not_a_mac_pod')
+      }
+      if (!['RUNNING', 'EXITED'].includes(pod.status)) {
+        throw new AdoptRefused('The pod is starting or stopping. Try again when it runs or has stopped.', 'pod_busy')
+      }
+      // The server deletes pods outside its region at once; it must not do that to a disk it was given.
+      const hosting = model.hosting ?? hostingOf(this.settings.read())
+      if ((needsPlacementCheck(hosting) && !pod.dataCenterId) || (pod.dataCenterId && !allows(hosting, pod.dataCenterId))) {
+        throw new AdoptRefused(`The pod is in ${pod.dataCenterId ?? 'an unknown data center'}, outside the server's region. Allow that region for the model or on the server first.`, 'outside_region')
+      }
+    }
+
+    this.save(model) // Throws NameTakenError on a name clash, before anything changes at RunPod.
+    this.store.setPodKey(model.id, podKey)
+    if (!pod || !client) return
+
+    try {
+      await client.rename(pod.id, `podlight-srv-${model.name}`.slice(0, 60))
+    } catch (error) {
+      this.store.removeModel(model.id)
+      throw this.asFailure(error)
+    }
+    const catalog = await client.gpuCatalog().catch(() => [])
+    const t = iso(this.now())
+    const running = pod.status === 'RUNNING'
+    const count = pod.gpu?.count ?? 1
+    const cardName = catalog.find((g) => g.id === pod.gpu?.id)?.name ?? pod.gpu?.id ?? null
+    const volume = pod.mounts?.persistent?.size ?? null
+    const container = pod.disk ?? null
+    const adopted = pod
+    this.store.updateRun(model.id, (r) => {
+      r.podId = adopted.id
+      r.podStatus = adopted.status
+      r.phase = running ? 'loading' : 'stopped'
+      r.gpu = adopted.gpu ? { gpuId: adopted.gpu.id, cloud: adopted.cloud ?? 'COMMUNITY', count } : (model.preferredGPU ?? null)
+      r.gpuName = cardName ? (count > 1 ? `${count} × ${cardName}` : cardName) : null
+      r.pricePerHour = adopted.cost ?? model.expectedPricePerHour ?? null
+      r.persistentGB = volume
+      r.containerGB = container
+      r.storagePerHour = StoragePricing.runningPerHour(container ?? 0, volume ?? 0)
+      r.dataCenterId = adopted.dataCenterId ?? null
+      // Costs, idle stop and deletion of unused pods count from now on the server.
+      r.startedAt = running ? t : null
+      r.accountedUntil = t
+      r.storageAccountedUntil = t
+      r.lastRequestAt = t
+      r.stoppedAt = running ? null : t
+      r.lastReason = 'handed-over'
+    })
+    this.log(`took over ${model.name} with pod ${adopted.id} from a Mac`)
+    if (running) await this.refresh(model.id)
   }
 
   /** Removes a model, deleting its pod and disk at RunPod first. */
@@ -583,14 +699,10 @@ export class PodManager {
     try {
       pod = await client.pod(podId)
     } catch (error) {
-      if (error instanceof RunpodError && error.isNotFound) {
-        this.account(id, run)
-        this.loadProgress.delete(id)
-        this.store.updateRun(id, (r) => { r.podId = null; r.podStatus = null; r.phase = 'stopped'; r.lastReason = 'pod-gone' })
-        this.putBackReplacedPod(id)
-      }
+      if (error instanceof RunpodError && error.isNotFound) this.podGone(id, podId)
       return // RunPod unreachable: keep what we know, try again next tick.
     }
+    if (pod.status === 'TERMINATED') return this.podGone(id, podId)
 
     this.account(id, run)
 
@@ -661,8 +773,10 @@ export class PodManager {
     const wasRunning = run.podStatus === 'RUNNING'
     const t = iso(this.now())
     this.store.updateRun(id, (r) => {
+      if (r.podId !== podId) return // Gone or replaced while we asked.
       const before = r.phase
-      r.podStatus = pod.status
+      // A status RunPod added since: keep the last known one rather than guess.
+      if (podStatus.safeParse(pod.status).success) r.podStatus = pod.status
       r.engineReady = ready
       r.lastHeartbeatAt = heartbeatAt ?? null
       if (pod.dataCenterId) r.dataCenterId = pod.dataCenterId
@@ -681,6 +795,51 @@ export class PodManager {
         case 'ERROR': r.phase = 'failed'; r.lastReason = 'pod-error'; break
       }
     })
+  }
+
+  /** RunPod no longer has the pod (deleted, at RunPod or by Podlight): the run lets go of it. */
+  private podGone(id: string, podId: string): void {
+    const run = this.store.run(id)
+    if (run.podId !== podId) return // Someone else got here first.
+    this.account(id, run)
+    this.loadProgress.delete(id)
+    this.samples.delete(id)
+    this.store.updateRun(id, (r) => { r.podId = null; r.podStatus = null; r.engineReady = false; r.phase = 'stopped'; r.lastReason = 'pod-gone' })
+    this.putBackReplacedPod(id)
+  }
+
+  private reconciling: Promise<void> | null = null
+
+  /**
+   * Compares the stored pods with RunPod's list and lets go of every pod RunPod no longer has.
+   * One list request plus a check per missing pod (the list can lag behind a new pod), and it
+   * never waits for a start or a start test, so a deleted pod is gone within seconds.
+   */
+  reconcile(): Promise<void> {
+    this.reconciling ??= (async () => {
+      const client = this.clientOrNull()
+      if (!client) return
+      let listed: Map<string, Pod>
+      try {
+        listed = new Map((await client.listPods()).map((p) => [p.id, p]))
+      } catch {
+        return // RunPod unreachable: the next round tries again.
+      }
+      for (const model of this.store.models()) {
+        const podId = this.store.run(model.id).podId
+        if (!podId) continue
+        const pod = listed.get(podId)
+        if (pod && pod.status !== 'TERMINATED') continue
+        if (pod?.status === 'TERMINATED') { this.podGone(model.id, podId); continue }
+        try {
+          const fresh = await client.pod(podId)
+          if (fresh.status === 'TERMINATED') this.podGone(model.id, podId)
+        } catch (error) {
+          if (error instanceof RunpodError && error.isNotFound) this.podGone(model.id, podId)
+        }
+      }
+    })().finally(() => { this.reconciling = null })
+    return this.reconciling
   }
 
   private async applyRules(id: string): Promise<void> {

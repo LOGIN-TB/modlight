@@ -22,7 +22,9 @@ Under Settings → General you set how much Podlight may spend per day and per m
 
 ![The Costs view](screenshots/en/costs.png)
 
-The figures under "Costs" are Podlight's own count: price per hour times running time, for this Mac's pods only. RunPod's billing is authoritative.
+The figures under "Costs" are Podlight's own count: price per hour times running time, for this Mac's pods only. RunPod's billing is authoritative. "Credit at RunPod" shows what is left in your RunPod account and how long it lasts at what the whole account costs per hour right now, other pods included. Under a day it turns orange, under three hours red.
+
+The refresh button in the toolbar (⌘R) asks RunPod and every server at once. A pod you deleted in RunPod's console disappears from Podlight within seconds anyway.
 
 ## Quitting Podlight
 

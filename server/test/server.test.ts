@@ -13,11 +13,20 @@ import { POD_SCRIPTS } from '../src/rules/podPlan.ts'
 
 interface Recorded { method: string; path: string; body: any }
 
+interface FakeRunpodPod {
+  id: string; name: string; status: string; cost: number; dataCenterId: string | null; env: Record<string, string>
+  gpu?: { id: string; count: number }; disk?: number; mounts?: { persistent?: { size: number } }
+}
+
 class FakeRunPod {
   requests: Recorded[] = []
   /** Resumes refused with "not enough free GPUs on the host machine" before one succeeds. */
   hostBusyFor = 0
-  pods = new Map<string, { id: string; status: string; cost: number; dataCenterId: string | null; env: Record<string, string> }>()
+  pods = new Map<string, FakeRunpodPod>()
+  /** What POST /graphql answers for `myself`; null answers with a GraphQL error. */
+  balance: { clientBalance: number; currentSpendPerHr: number; spendLimit: number } | null = { clientBalance: 42.5, currentSpendPerHr: 0.86, spendLimit: 80 }
+  /** Pod ids GET /v2/pods leaves out, as RunPod's list can lag. */
+  hiddenFromList = new Set<string>()
   /** Responses to POST /v2/pods, in order; `capacity` answers RunPod's "no instances" 400. */
   createScript: Array<'ok' | 'capacity'> = []
   dataCenterId: string | null = 'EU-RO-1'
@@ -44,32 +53,37 @@ class FakeRunPod {
       res.end(value === undefined ? '' : JSON.stringify(value))
     }
     if (path.startsWith('/v2/catalog/gpus')) return json(200, this.catalog)
-    if (req.method === 'GET' && path.startsWith('/v2/pods?')) return json(200, { pods: [] })
+    if (req.method === 'GET' && (path === '/v2/pods' || path.startsWith('/v2/pods?'))) {
+      return json(200, { pods: [...this.pods.values()].filter((p) => !this.hiddenFromList.has(p.id)) })
+    }
+    if (req.method === 'POST' && path === '/graphql') {
+      return this.balance ? json(200, { data: { myself: this.balance } }) : json(200, { errors: [{ message: 'not allowed' }] })
+    }
     if (req.method === 'POST' && path === '/v2/pods') {
       const step = this.createScript.shift() ?? 'ok'
       if (step === 'capacity') {
         return json(400, { detail: 'There are no longer any instances available with the requested specifications.', status: 400 })
       }
       const id = `pod${++this.counter}`
-      const pod = { id, status: 'RUNNING', cost: 0.86, dataCenterId: this.dataCenterId, env: body.env }
+      const pod: FakeRunpodPod = { id, name: body.name, status: 'RUNNING', cost: 0.86, dataCenterId: this.dataCenterId, env: body.env }
       this.pods.set(id, pod)
-      return json(201, { ...pod, name: body.name })
+      return json(201, pod)
     }
     const match = /^\/v2\/pods\/([^/]+)(\/action)?$/.exec(path)
     if (match) {
       const pod = this.pods.get(match[1]!)
       if (!pod) return json(404, { error: 'pod not found' })
       if (req.method === 'DELETE') { this.pods.delete(pod.id); return json(204, undefined) }
-      if (req.method === 'PATCH') { if (body.env) pod.env = body.env; return json(200, { ...pod, name: 'x' }) }
+      if (req.method === 'PATCH') { if (body.env) pod.env = body.env; if (body.name) pod.name = body.name; return json(200, pod) }
       if (match[2]) {
         if (body.action === 'start' && this.hostBusyFor > 0) {
           this.hostBusyFor--
           return json(400, { detail: 'There are not enough free GPUs on the host machine to start this pod.', status: 400 })
         }
         pod.status = body.action === 'stop' ? 'EXITED' : 'RUNNING'
-        return json(200, { ...pod, name: 'x' })
+        return json(200, pod)
       }
-      return json(200, { ...pod, name: 'x' })
+      return json(200, pod)
     }
     json(404, { error: `unhandled ${req.method} ${path}` })
   }
@@ -79,6 +93,7 @@ class FakeRunPod {
 class FakePod {
   engineRequests: Array<{ path: string; headers: Record<string, string | string[] | undefined>; body: any }> = []
   heartbeats: any[] = []
+  heartbeatKeys: string[] = []
   engineAlive = true
   /** Answers like RunPod's proxy before it routes to the pod: 404, no JSON. */
   proxyNotReadyFor = 0
@@ -134,7 +149,10 @@ class FakePod {
   watchdog = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     const chunks: Buffer[] = []
     for await (const chunk of req) chunks.push(chunk as Buffer)
-    if (req.url === '/heartbeat') this.heartbeats.push(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}'))
+    if (req.url === '/heartbeat') {
+      this.heartbeats.push(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}'))
+      this.heartbeatKeys.push(String(req.headers.authorization ?? ''))
+    }
     res.writeHead(200, { 'content-type': 'application/json' })
     if (req.url === '/log') return void res.end(JSON.stringify({ lines: ['loading', 'torch.OutOfMemoryError: CUDA out of memory'] }))
     const telemetry = { time: this.telemetryTime++, cpuPercent: 12.5, gpus: [{ index: 0, name: 'NVIDIA A40', utilPercent: 87, memoryUsedBytes: 4.5e10, memoryTotalBytes: 4.8e10, temperatureC: 55, powerW: 250.3, powerLimitW: null }],
@@ -243,6 +261,126 @@ describe('Podlight server', () => {
     const late = await s.app.inject({ method: 'POST', url: '/pair', payload: { code } })
     assert.equal(late.statusCode, 403)
     assert.match(late.json().error.message, /Too many/)
+  })
+
+  test('the state carries the RunPod balance, read in the background and kept a minute', async () => {
+    const first = (await admin('GET', '/admin/state')).json()
+    assert.equal(first.balance, null, 'not read yet: the state does not wait for it')
+    await s.manager.refreshBalance()
+    const second = (await admin('GET', '/admin/state')).json()
+    assert.deepEqual({ ...second.balance, checkedAt: undefined }, { usd: 42.5, spendPerHourUsd: 0.86, spendLimitUsd: 80, checkedAt: undefined })
+    const asked = runpod.requests.filter((r) => r.path === '/graphql').length
+    await admin('GET', '/admin/state')
+    assert.equal(runpod.requests.filter((r) => r.path === '/graphql').length, asked, 'fresh: no new question')
+
+    runpod.balance = null
+    await s.manager.accountChanged()
+    await s.manager.refreshBalance()
+    assert.equal((await admin('GET', '/admin/state')).json().balance, null, 'a key without GraphQL access shows none')
+    runpod.balance = { clientBalance: 42.5, currentSpendPerHr: 0.86, spendLimit: 80 }
+  })
+
+  test('a pod deleted at RunPod is let go at once by refresh', async () => {
+    await admin('POST', `/admin/models/${MODEL_ID}/start`, { until: new Date(Date.now() + 3600_000).toISOString() })
+    const podId = s.store.run(MODEL_ID).podId!
+    runpod.pods.delete(podId)
+    const response = await admin('POST', '/admin/refresh')
+    assert.equal(response.statusCode, 200)
+    const run = (await admin('GET', '/admin/state')).json().runs[MODEL_ID]
+    assert.equal(run.podId, undefined)
+    assert.equal(run.lastReason, 'pod-gone')
+  })
+
+  test('a pod missing from the lagging list but still there is kept', async () => {
+    await admin('POST', `/admin/models/${MODEL_ID}/start`, { until: new Date(Date.now() + 3600_000).toISOString() })
+    const podId = s.store.run(MODEL_ID).podId!
+    runpod.hiddenFromList.add(podId)
+    await s.manager.reconcile()
+    runpod.hiddenFromList.clear()
+    assert.equal(s.store.run(MODEL_ID).podId, podId)
+    runpod.pods.get(podId)!.status = 'TERMINATED'
+    await s.manager.reconcile()
+    assert.equal(s.store.run(MODEL_ID).podId ?? null, null)
+  })
+
+  test('a pod status RunPod added since does not cost the run its pod', async () => {
+    await admin('POST', `/admin/models/${MODEL_ID}/start`, { until: new Date(Date.now() + 3600_000).toISOString() })
+    const podId = s.store.run(MODEL_ID).podId!
+    runpod.pods.get(podId)!.status = 'PAUSED'
+    await s.manager.tick()
+    const run = s.store.run(MODEL_ID)
+    assert.equal(run.podId, podId)
+    assert.equal(run.podStatus, 'RUNNING', 'the last known status stays')
+    s.db.prepare('UPDATE runs SET json = json_set(json, \'$.podStatus\', \'PAUSED\') WHERE model_id = ?').run(MODEL_ID)
+    assert.equal(s.store.run(MODEL_ID).podId, podId, 'an unreadable field drops alone')
+  })
+
+  const MAC_KEY = 'mac-pod-key-0123456789abcdef'
+  const macPod = (status: string, extra: Partial<FakeRunpodPod> = {}): FakeRunpodPod => {
+    const p: FakeRunpodPod = {
+      id: 'macpod1', name: 'podlight-small@studio-mac-7c1e', status, cost: 0.44, dataCenterId: 'EU-RO-1',
+      env: { PODLIGHT_API_KEY: MAC_KEY, PODLIGHT_MODEL: 'Qwen/Qwen3-8B-AWQ', HF_HOME: '/workspace/hf' },
+      gpu: { id: 'NVIDIA L40S', count: 1 }, disk: 20, mounts: { persistent: { size: 30 } }, ...extra,
+    }
+    runpod.pods.set(p.id, p)
+    return p
+  }
+  const handOver = (podId: string | null, name = 'small', extra: Record<string, unknown> = {}) =>
+    admin('POST', `/admin/models/${OTHER_ID}/adopt`, { model: model(OTHER_ID, name, { keepDisk: true, preferredGPU: { gpuId: 'NVIDIA L40S', cloud: 'SECURE', count: 1 }, ...extra }), podKey: MAC_KEY, podId })
+
+  test('a running model from a Mac comes over with its pod and key, renamed, nothing built anew', async () => {
+    macPod('RUNNING')
+    const response = await handOver('macpod1')
+    assert.equal(response.statusCode, 200, response.body)
+    assert.equal(runpod.pods.get('macpod1')!.name, 'podlight-srv-small')
+    assert.equal(runpod.requests.some((r) => r.method === 'POST' && r.path === '/v2/pods'), false)
+    const run = s.store.run(OTHER_ID)
+    assert.equal(run.podId, 'macpod1')
+    assert.equal(run.persistentGB, 30)
+    assert.equal(run.containerGB, 20)
+    assert.equal(run.gpuName, 'L40S')
+    assert.equal(run.lastReason, 'handed-over')
+    assert.equal(pod.heartbeatKeys.at(-1), `Bearer ${MAC_KEY}`, "the watchdog gets the Mac's pod key")
+    assert.equal(run.phase, 'ready', 'the engine answered the start test')
+    // Agents reach it through the server with the pod's own key.
+    const client = await clientToken()
+    const reply = await s.app.inject({ method: 'POST', url: '/v1/chat/completions', headers: { authorization: `Bearer ${client}` }, payload: { model: 'small', messages: [{ role: 'user', content: 'x' }] } })
+    assert.equal(reply.statusCode, 200)
+    assert.equal(pod.engineRequests.at(-1)!.headers.authorization, `Bearer ${MAC_KEY}`)
+  })
+
+  test('a stopped model from a Mac keeps its disk: the next start resumes the same pod', async () => {
+    macPod('EXITED')
+    assert.equal((await handOver('macpod1')).statusCode, 200)
+    assert.equal(s.store.run(OTHER_ID).phase, 'stopped')
+    assert.equal((await admin('POST', `/admin/models/${OTHER_ID}/start`, {})).statusCode, 200)
+    assert.equal(runpod.requests.some((r) => r.method === 'POST' && r.path === '/v2/pods'), false, 'no new pod, no new download')
+    assert.equal(runpod.pods.get('macpod1')!.status, 'RUNNING')
+    assert.equal(runpod.pods.get('macpod1')!.env.PODLIGHT_API_KEY, MAC_KEY)
+    assert.equal(s.store.run(OTHER_ID).podId, 'macpod1')
+  })
+
+  test('handing over is refused for server pods, name clashes, pods outside the region, and busy pods', async () => {
+    macPod('RUNNING', { name: 'podlight-srv-small' })
+    assert.equal((await handOver('macpod1')).json().error.code, 'not_a_mac_pod')
+    macPod('RUNNING')
+    const clash = await handOver('macpod1', 'coder')
+    assert.equal(clash.statusCode, 409)
+    assert.equal(clash.json().error.code, 'name_taken')
+    assert.equal(runpod.pods.get('macpod1')!.name, 'podlight-small@studio-mac-7c1e', 'nothing renamed')
+    macPod('RUNNING', { dataCenterId: 'US-TX-3' })
+    assert.equal((await handOver('macpod1', 'small', { hosting: { region: 'eu', secureOnly: true } })).json().error.code, 'outside_region')
+    macPod('STARTING')
+    assert.equal((await handOver('macpod1')).json().error.code, 'pod_busy')
+    assert.equal(s.store.model(OTHER_ID), null, 'nothing stayed behind')
+  })
+
+  test('a model whose pod is gone comes over without one', async () => {
+    const response = await handOver('nosuchpod')
+    assert.equal(response.statusCode, 200)
+    assert.equal(s.store.model(OTHER_ID)?.name, 'small')
+    assert.equal(s.store.run(OTHER_ID).podId ?? null, null)
+    assert.equal((await handOver(null)).json().error.code, 'already_here')
   })
 
   test('secrets are write-only', async () => {
@@ -510,7 +648,7 @@ describe('Podlight server', () => {
   })
 
   test('the server never touches a pod it did not create', async () => {
-    runpod.pods.set('foreign1', { id: 'foreign1', status: 'RUNNING', cost: 1, dataCenterId: null, env: {} })
+    runpod.pods.set('foreign1', { id: 'foreign1', name: 'someone-else', status: 'RUNNING', cost: 1, dataCenterId: null, env: {} })
     await admin('POST', `/admin/models/${MODEL_ID}/start`, { until: new Date(Date.now() + 3600_000).toISOString() })
     await s.manager.tick()
     await admin('POST', `/admin/models/${MODEL_ID}/stop`)

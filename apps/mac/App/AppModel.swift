@@ -35,6 +35,8 @@ final class AppModel {
     /// When the account was last searched for other Macs' models, and why that failed, if it did.
     private(set) var otherMacsCheckedAt: Date?
     private(set) var otherMacsError: String?
+    /// The RunPod account's credit, read with this Mac's key; nil without a key or an answer.
+    private(set) var localBalance: RunpodBalance?
     /// Telemetry for the screenshots, instead of live pods.
     var sampleTelemetry: [UUID: [PodTelemetry]]?
     private(set) var hasRunpodKey = false
@@ -57,6 +59,10 @@ final class AppModel {
     /// Where the add sheet puts a new model.
     var addingTo: Source = .local
     var showingAddServer = false
+    /// The "Bring This Mac's Setup Along" sheet, for one server.
+    var transfer: TransferRequest?
+    /// The server paired a moment ago, for the transfer offer once the pairing sheet is gone.
+    var justPaired: UUID?
     /// The Podlight servers this app controls, in the order the user added them.
     var servers: [ServerMirror] = []
     var selection: SidebarItem?
@@ -103,12 +109,21 @@ final class AppModel {
                 try? await Task.sleep(for: .seconds(5))
             }
         })
-        // Other Macs' pods: one list request a minute, and after every take-over.
+        // Other Macs' pods and the account's credit: one request each a minute.
         loops.append(Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
                 await self.refreshOtherMacsPods()
+                await self.refreshBalance()
                 try? await Task.sleep(for: .seconds(60))
+            }
+        })
+        // Apart from the tick, which can wait minutes on a start: let go of deleted pods at once.
+        loops.append(Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                await self.manager.reconcile()
+                try? await Task.sleep(for: .seconds(10))
             }
         })
         loops.append(Task { [weak self] in
@@ -297,6 +312,44 @@ final class AppModel {
             actionError = Describe.error(error)
         }
         await reloadState()
+    }
+
+    // MARK: Refresh
+
+    private(set) var refreshing = false
+
+    /// "Refresh": asks RunPod now, here and on every server, instead of at the next round.
+    func refreshNow() async {
+        guard !refreshing else { return }
+        refreshing = true
+        defer { refreshing = false }
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await self.manager.reconcile() }
+            for server in servers {
+                let keychain = keychain
+                group.addTask {
+                    try? await server.client(keychain).refresh()
+                    await server.refresh(keychain)
+                }
+            }
+        }
+        await reloadState()
+        await refreshOtherMacsPods()
+        await refreshBalance()
+    }
+
+    // MARK: Account
+
+    /// Sample credit for the help snapshots.
+    func showBalanceForSnapshots(_ balance: RunpodBalance) { localBalance = balance }
+
+    /// Reads the account's credit. A failure keeps the last answer (it shows its time).
+    func refreshBalance() async {
+        guard let client = runpod() else { localBalance = nil; return }
+        if var balance = try? await client.balance() {
+            balance.checkedAt = .now
+            localBalance = balance
+        }
     }
 
     // MARK: Other Macs

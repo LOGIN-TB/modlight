@@ -13,8 +13,9 @@ controls the server (models, starts, limits, access keys) but does not have to b
   [`spec/cases`](../spec/README.md).
 - **Safety stop in every pod**: the server sends a heartbeat every 10–20 seconds. A pod that hears
   nothing for the configured minutes (default 15) stops itself, also when the whole server is gone.
-- **Only its own pods**: the server acts on pods whose id it stored itself. Other pods in the same
-  RunPod account, including the ones your Mac runs, are never listed, stopped or deleted.
+- **Only its own pods**: the server acts on pods whose id it stored itself, and on a Mac's pod only
+  when that Mac hands the model over. Other pods in the same RunPod account are never stopped or
+  deleted; the server lists the account's pods only to notice when one of its own is gone.
 
 ## Run it
 
@@ -33,17 +34,31 @@ volumes:
 
 ```bash
 docker compose up -d
-docker compose logs podlight   # shows the pairing code
+docker compose logs podlight   # the box "PODLIGHT SERVER – CONNECTION": address and pairing code
 ```
 
-The pairing code works once and for 30 minutes, and survives a restart. In the Podlight app choose
-**Add Server…**, enter the address and the code, then enter the server's RunPod API key under
-**Server Settings**. The key is stored encrypted on the server (AES-256-GCM, master key in the data
-volume) and never sent back to an app.
+After the start the log shows a box with everything the app needs: the address (the Coolify
+domain, `PUBLIC_URL`, the LAN address from `HOST_IP`, or how to find it), the server's public IP
+with a hint on putting a domain and a reverse proxy in front of it, and the pairing code.
+
+The pairing code works once and for 30 minutes, and survives a restart. A new one, for another Mac
+or after it expired, without a paired app:
+
+```bash
+docker exec <container> podlight-code   # a new code, printed in the same box
+docker exec <container> podlight-info   # the box again, with the open code if there is one
+```
+
+In the Podlight app choose **Add Server…** and enter the address and the code. Podlight then offers
+to bring the Mac's setup along: the RunPod API key and Hugging Face token, the limits and rules,
+and models with their pods (renamed to server pods, disk and all, so nothing is downloaded again).
+The RunPod key is stored encrypted on the server (AES-256-GCM, master key in the data volume) and
+never sent back to an app.
 
 **Coolify:** add a Docker Compose resource with [`docker-compose.yml`](docker-compose.yml) and give
-the service a domain; Coolify then serves it over HTTPS. `PAIRING_CODE` can be set from Coolify's
-generated secrets instead of reading it from the log.
+the service a domain; Coolify then serves it over HTTPS and the box shows that domain.
+`PAIRING_CODE` can be set from Coolify's generated secrets instead of reading it from the log. A
+new code: `podlight-code` in the container's terminal.
 
 ## HTTPS
 
@@ -68,8 +83,15 @@ Tokens are stored as SHA-256 hashes. A wrong key costs one second, so guessing i
 | Variable | Default | |
 |---|---|---|
 | `PORT` | `8080` | |
+| `HOST` | `0.0.0.0` | the address to listen on |
 | `DATA_DIR` | `/data` | database `podlight.db` and `keys/master.key` |
+| `DATABASE_PATH`, `MASTER_KEY_PATH` | in `DATA_DIR` | |
 | `PAIRING_CODE` | generated | a fixed code for the first pairing |
+| `PUBLIC_URL` | | the https address behind your own reverse proxy, for the connection box |
+| `SERVICE_URL_*`, `SERVICE_FQDN_*` | set by Coolify | the service's domain, for the connection box |
+| `HOST_IP`, `HOST_PORT` | | the machine's LAN address and published port, for the connection box |
+| `PUBLIC_IP_LOOKUP` | `true` | `false`: do not ask api.ipify.org for the public IP at start |
+| `PODLIGHT_LANG` | `en` | `de`: the connection box in German |
 | `TRUST_PROXY` | `true` | read the client address from `X-Forwarded-For` |
 | `LOG_LEVEL` | `info` | |
 

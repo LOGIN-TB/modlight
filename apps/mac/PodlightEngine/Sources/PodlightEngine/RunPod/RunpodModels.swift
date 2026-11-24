@@ -268,3 +268,25 @@ public struct RunpodGPUType: Codable, Sendable, Equatable, Identifiable {
 public struct RunpodGPUCatalog: Codable, Sendable {
     public var gpus: [RunpodGPUType]
 }
+
+/// The RunPod account's credit (`myself` in RunPod's GraphQL API).
+public struct RunpodBalance: Codable, Sendable, Equatable {
+    /// Credit left, USD.
+    public var usd: Double
+    /// What everything in the account costs per hour right now, by RunPod.
+    public var spendPerHourUsd: Double
+    /// RunPod's own spend limit for the account.
+    public var spendLimitUsd: Double?
+    /// When it was read (set by whoever reads it).
+    public var checkedAt: Date?
+
+    public init(usd: Double, spendPerHourUsd: Double, spendLimitUsd: Double?, checkedAt: Date? = nil) {
+        self.usd = usd
+        self.spendPerHourUsd = spendPerHourUsd
+        self.spendLimitUsd = spendLimitUsd
+        self.checkedAt = checkedAt
+    }
+
+    /// Hours the credit lasts at the current rate; nil while nothing costs anything.
+    public var hoursLeft: Double? { spendPerHourUsd > 0 ? usd / spendPerHourUsd : nil }
+}

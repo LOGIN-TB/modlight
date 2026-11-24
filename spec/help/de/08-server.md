@@ -6,15 +6,21 @@ Ein Podlight-Server hält deine Modelle für Agenten erreichbar, auch wenn diese
 
 ## Server aufsetzen
 
-Unter „Server hinzufügen …“ → „Wie richte ich einen Server ein?“ steht eine fertige `docker-compose.yml`. Starte sie mit `docker compose up -d`. Beim ersten Start schreibt der Server einen Kopplungscode in sein Log (`docker compose logs`). Der Code gilt einmal und 30 Minuten lang, auch über einen Neustart hinweg.
+Unter „Server hinzufügen …“ → „Wie richte ich einen Server ein?“ steht eine fertige `docker-compose.yml`. Starte sie mit `docker compose up -d`. Nach dem Start schreibt der Server einen Kasten „PODLIGHT-SERVER – VERBINDUNG“ in sein Log (`docker compose logs`, in Coolify unter Logs). Darin stehen die Adresse, die du in Podlight einträgst, und der Kopplungscode. Der Code gilt einmal und 30 Minuten lang, auch über einen Neustart hinweg. `docker exec <container> podlight-code` erzeugt einen neuen, etwa für einen weiteren Mac oder wenn der erste abgelaufen ist (in Coolify im Terminal des Containers).
+
+Die Adresse nimmt der Kasten aus der Domain, die Coolify dem Dienst gibt, oder aus `PUBLIC_URL` bei einem eigenen Reverse Proxy. Ist `HOST_IP` auf die Adresse des Rechners im lokalen Netz gesetzt, steht auch die lokale Adresse dort. Einmal fragt er die öffentliche IP des Servers ab, als Hilfe beim Einrichten einer Domain; `PUBLIC_IP_LOOKUP=false` schaltet das ab. Mit `PODLIGHT_LANG=de` erscheint der Kasten auf Deutsch.
 
 Bevor der Server aus dem Internet erreichbar ist, braucht er eine https-Adresse. In Coolify trägst du dafür eine Domain für den Dienst ein, sonst stellst du einen Reverse Proxy wie Caddy davor. Podlight verbindet sich nur mit https-Adressen. Ausnahmen sind dieser Mac und das lokale Netz, dort warnt Podlight, dass die Verbindung unverschlüsselt ist.
 
 ## Koppeln
 
-In der Seitenleiste unter „Podlight“ → „Server hinzufügen …“ gibst du die Adresse und den Kopplungscode ein. Danach erscheint der Server als eigener Abschnitt in der Seitenleiste.
+In der Seitenleiste unter „Podlight“ → „Server hinzufügen …“ gibst du die Adresse und den Kopplungscode ein. Danach erscheint der Server als eigener Abschnitt in der Seitenleiste. Wer nur einen Server nutzt, wählt im Willkommensbildschirm „Ich nutze einen Podlight-Server …“; dieser Mac braucht dann keinen eigenen RunPod-Schlüssel.
 
-Unter „Server-Einstellungen“ trägst du den RunPod-API-Key des Servers ein. Der Server bezahlt seine Pods damit selbst. Der Schlüssel liegt verschlüsselt auf dem Server, Podlight auf dem Mac liest ihn nie zurück. Dort stellst du auch die Limits pro Tag und Monat, die Notbremse und den Standard-Standort ein.
+Direkt nach dem Koppeln bietet Podlight an, die Einrichtung dieses Macs mitzunehmen: RunPod-API-Schlüssel und Hugging-Face-Token, Ausgabenlimits und Regeln sowie Modelle mit ihren Pods. Ein Modell zieht mit Pod und behaltener Festplatte um, es wird also nichts neu geladen, und ein laufendes läuft weiter. Danach verlässt es diesen Mac. Dasselbe gibt es unter „Server-Einstellungen“ → „Von diesem Mac übernehmen …“ und für ein einzelnes Modell in seinem Kontextmenü unter „An Server übergeben“.
+
+![Von diesem Mac übernehmen](screenshots/de/server-transfer.png)
+
+Der Server bezahlt seine Pods mit dem RunPod-API-Schlüssel. Er liegt verschlüsselt auf dem Server, Podlight auf dem Mac liest ihn nie zurück. Unter „Server-Einstellungen“ kannst du ihn auch dort eintragen oder ändern und die Limits pro Tag und Monat, die Notbremse und den Standard-Standort einstellen.
 
 ![Server-Einstellungen](screenshots/de/server-settings.png)
 
@@ -23,6 +29,8 @@ Unter „Server-Einstellungen“ trägst du den RunPod-API-Key des Servers ein. 
 „Modell hinzufügen …“ im Abschnitt des Servers führt durch dieselben Schritte wie auf dem Mac. Die Kartenliste kommt dabei vom Server. Starten, Stoppen und Verlängern funktionieren wie gewohnt. Im Modell steht „Läuft auf“ mit dem Namen des Servers.
 
 ## Agenten verbinden
+
+Agenten, die ein Modell über diesen Mac genutzt haben, verbinden sich nach dem Umzug mit dem Server.
 
 Agenten sprechen mit dem Server über einen eigenen Zugangsschlüssel, nicht über den Schlüssel dieses Macs. Unter „Verbindung“ im Abschnitt des Servers legst du mit „Neuer Zugangsschlüssel …“ einen an, am besten einen pro Agent oder Rechner. Ein Schlüssel lässt sich auf einzelne Modelle beschränken. Der Schlüssel wird nur direkt nach dem Anlegen angezeigt. Kopiere ihn dann, der Server speichert nur einen Fingerabdruck.
 
