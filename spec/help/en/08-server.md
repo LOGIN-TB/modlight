@@ -6,7 +6,15 @@ A Podlight server keeps your models reachable for agents while this Mac is off: 
 
 ## Set up a server
 
-Under "Add Server…" → "How do I set up a server?" there is a ready `docker-compose.yml`. Start it with `docker compose up -d`. After the start the server writes a box "PODLIGHT SERVER – CONNECTION" to its log (`docker compose logs`, in Coolify under Logs). It shows the address to enter in Podlight and the pairing code. The code works once and for 30 minutes, also across a restart. `docker exec <container> podlight-code` makes a new one, for example for another Mac or when the first one expired (in Coolify in the container's terminal).
+On a server with Docker, one command installs it and shows everything needed for pairing:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LOGIN-TB/podlight/main/server/install.sh | sh
+```
+
+It fetches the current image, starts the server, waits until it answers and shows the box "PODLIGHT SERVER – CONNECTION". Run it again to update; pairing and models stay. With `PODLIGHT_LANG=de` in front of `sh` the box is in German.
+
+Instead, under "Add Server…" → "How do I set up a server?" there is a ready `docker-compose.yml`. `docker compose up -d` starts it in the background and shows nothing of the server itself: the box is in its log (`docker compose logs podlight`, in Coolify under Logs). It shows the address to enter in Podlight and the pairing code. The code works once and for 30 minutes, also across a restart. `docker exec <container> podlight-code` makes a new one, for example for another Mac or when the first one expired (in Coolify in the container's terminal).
 
 The box takes the address from the domain Coolify gives the service, or from `PUBLIC_URL` with your own reverse proxy. With `HOST_IP` set to the machine's address in your network, it also shows the local address. It looks up the server's public IP once, for setting up a domain; `PUBLIC_IP_LOOKUP=false` turns that off. `PODLIGHT_LANG=de` writes the box in German.
 

@@ -2551,6 +2551,16 @@
         }
       }
     },
+    "Install with one command": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit einem Befehl installieren"
+          }
+        }
+      }
+    },
     "It stops earlier when no requests come in for %lld minutes, and by itself if the server %@ is unreachable for more than %lld minutes. It keeps running when this Mac sleeps or Podlight quits. You can extend it while it runs.": {
       "localizations": {
         "de": {
@@ -3331,6 +3341,16 @@
         }
       }
     },
+    "On the server, as root or a user in the docker group. It fetches the current image, starts the server and shows address and pairing code. Run it again to update.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf dem Server, als root oder als Benutzer der Gruppe docker. Er lädt das aktuelle Image, startet den Server und zeigt Adresse und Kopplungscode. Ein erneuter Aufruf aktualisiert ihn."
+          }
+        }
+      }
+    },
     "On · %@ while stopped": {
       "localizations": {
         "de": {
@@ -3467,6 +3487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "OpenCode"
+          }
+        }
+      }
+    },
+    "Or: docker-compose.yml": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oder: docker-compose.yml"
           }
         }
       }
@@ -4699,16 +4729,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einmal in Podlight starten"
-          }
-        }
-      }
-    },
-    "Start it with docker compose up -d, then read address and code with docker compose logs.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starte ihn mit docker compose up -d und lies Adresse und Code mit docker compose logs."
           }
         }
       }
@@ -6201,12 +6221,12 @@
         }
       }
     },
-    "docker-compose.yml": {
+    "docker compose up -d starts it in the background and shows nothing of the server; address and code are then in docker compose logs podlight. In Coolify, use this file as a Docker Compose resource.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "docker-compose.yml"
+            "value": "docker compose up -d startet ihn im Hintergrund und zeigt vom Server nichts an; Adresse und Code stehen dann in docker compose logs podlight. In Coolify diese Datei als Docker-Compose-Ressource verwenden."
           }
         }
       }

@@ -47,6 +47,10 @@ jobs:
       - name: pod start script parses
         run: bash -n spec/pod/boot.sh
 
+      # Piped into sh on Debian, where sh is dash: no bash-only syntax.
+      - name: server install script parses
+        run: dash -n server/install.sh
+
       # spec/ is the contract between implementations; a file that does not parse would let
       # every runner skip it silently.
       - name: spec files are valid JSON
