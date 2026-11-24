@@ -87,51 +87,49 @@ struct UsageSection: View {
 
     /// What the engine and the card report, as tiles: speeds of the requests themselves (not the
     /// rate of the last few seconds, which is 0 between requests), the cache, the load, the totals.
-    @ViewBuilder private func figures(_ s: PodTelemetry) -> some View {
-        let tiles = Self.tiles(s)
-        if !tiles.isEmpty {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10, alignment: .top)], alignment: .leading, spacing: 10) {
-                ForEach(tiles) { FigureTile(tile: $0) }
-            }
-            .padding(.vertical, 4)
-        } else if run.phase == .ready {
-            LabeledContent("Engine", value: String(localized: "No figures from the engine"))
+    /// Always the same tiles for a model, a figure not known yet shows "–": tiles that came and
+    /// went with each sample made the section jump.
+    private func figures(_ s: PodTelemetry) -> some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10, alignment: .top)], alignment: .leading, spacing: 10) {
+            ForEach(Self.tiles(s, engine: item.engine)) { FigureTile(tile: $0) }
         }
+        .padding(.vertical, 4)
     }
 
-    static func tiles(_ s: PodTelemetry) -> [FigureTile.Tile] {
-        var out: [FigureTile.Tile] = []
+    static func tiles(_ s: PodTelemetry, engine kind: InferenceEngine) -> [FigureTile.Tile] {
         let engine = s.engine
-        if let speed = engine?.generationSpeed ?? engine?.generationTokensPerSecond.flatMap({ $0 > 0 ? $0 : nil }) {
-            out.append(.init(id: "writing", symbol: "text.cursor", title: String(localized: "Writing"),
-                             value: String(localized: "\(rate(speed)) tokens/s"), detail: String(localized: "while it answers")))
-        }
-        if let speed = engine?.promptSpeed ?? engine?.promptTokensPerSecond.flatMap({ $0 > 0 ? $0 : nil }) {
-            out.append(.init(id: "reading", symbol: "doc.text.magnifyingglass", title: String(localized: "Reading"),
-                             value: String(localized: "\(rate(speed)) tokens/s"), detail: String(localized: "while it reads the prompt")))
-        }
-        if let hit = engine?.promptCacheHitPercent {
-            out.append(.init(id: "cache", symbol: "arrow.triangle.2.circlepath", title: String(localized: "Prompt cache"),
-                             value: (hit / 100).formatted(.percent.precision(.fractionLength(0))),
-                             detail: String(localized: "of prompt tokens reused")))
-        }
-        if let running = engine?.running {
-            out.append(.init(id: "requests", symbol: "arrow.left.arrow.right", title: String(localized: "Requests"),
-                             value: String(localized: "\(running) running"), detail: String(localized: "\(engine?.waiting ?? 0) waiting")))
-        }
-        if let kv = engine?.kvCachePercent {
+        let none = "–"
+        func percent(_ value: Double?) -> String { value.map { ($0 / 100).formatted(.percent.precision(.fractionLength(0))) } ?? none }
+        func speed(_ value: Double?) -> String { value.map { String(localized: "\(rate($0)) tokens/s") } ?? none }
+        // A watchdog before 0.10 reports only the rate of the last seconds: shown while it is above 0.
+        let writing = engine?.generationSpeed ?? engine?.generationTokensPerSecond.flatMap { $0 > 0 ? $0 : nil }
+        let reading = engine?.promptSpeed ?? engine?.promptTokensPerSecond.flatMap { $0 > 0 ? $0 : nil }
+        var out: [FigureTile.Tile] = [
+            .init(id: "writing", symbol: "text.cursor", title: String(localized: "Writing"),
+                  value: speed(writing), detail: String(localized: "while it answers")),
+            .init(id: "reading", symbol: "doc.text.magnifyingglass", title: String(localized: "Reading"),
+                  value: speed(reading), detail: String(localized: "while it reads the prompt")),
+            .init(id: "cache", symbol: "arrow.triangle.2.circlepath", title: String(localized: "Prompt cache"),
+                  value: percent(engine?.promptCacheHitPercent), detail: String(localized: "of prompt tokens reused")),
+            .init(id: "requests", symbol: "arrow.left.arrow.right", title: String(localized: "Requests"),
+                  value: engine?.running.map { String(localized: "\($0) running") } ?? none,
+                  detail: engine?.waiting.map { String(localized: "\($0) waiting") } ?? String(localized: "waiting: –")),
+        ]
+        // Only vLLM reports how full its context cache is; for llama.cpp the tile would never fill.
+        if kind == .vllm {
             out.append(.init(id: "kv", symbol: "memorychip", title: String(localized: "Context cache"),
-                             value: (kv / 100).formatted(.percent.precision(.fractionLength(0))), detail: String(localized: "in use")))
+                             value: percent(engine?.kvCachePercent), detail: String(localized: "in use")))
         }
-        if let read = engine?.promptTokensTotal, let written = engine?.generationTokensTotal {
-            out.append(.init(id: "totals", symbol: "sum", title: String(localized: "Since the start"),
-                             value: String(localized: "\(compact(read)) read"), detail: String(localized: "\(compact(written)) written")))
-        }
-        for (offset, gpu) in (s.gpus ?? []).enumerated() {
-            guard let t = gpu.temperatureC else { continue }
-            let suffix = (s.gpus?.count ?? 0) > 1 ? " \(offset + 1)" : ""
+        out.append(.init(id: "totals", symbol: "sum", title: String(localized: "Since the start"),
+                         value: engine?.promptTokensTotal.map { String(localized: "\(compact($0)) read") } ?? none,
+                         detail: engine?.generationTokensTotal.map { String(localized: "\(compact($0)) written") } ?? String(localized: "written: –")))
+        let gpus = s.gpus ?? []
+        for offset in 0..<max(1, gpus.count) {
+            let gpu = offset < gpus.count ? gpus[offset] : nil
+            let suffix = gpus.count > 1 ? " \(offset + 1)" : ""
             out.append(.init(id: "card\(offset)", symbol: "thermometer.medium", title: String(localized: "Card\(suffix)"),
-                             value: "\(Int(t.rounded())) °C", detail: power(gpu)))
+                             value: gpu?.temperatureC.map { "\(Int($0.rounded())) °C" } ?? none,
+                             detail: gpu.flatMap(power) ?? String(localized: "power: –")))
         }
         return out
     }

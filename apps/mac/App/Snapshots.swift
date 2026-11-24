@@ -142,7 +142,7 @@ enum Snapshots {
         let last = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-90))
         let today = PodlightState.dayKey(.now)
         let json = """
-        {"version":"0.10.0","serverTime":"\(started)",
+        {"version":"0.10.1","serverTime":"\(started)",
          "models":[{"id":"6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0001","name":"coder-office","repoId":"Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ",
            "format":"awq","weightBytes":17400000000,"nativeContextTokens":262144,"toolCallParser":"qwen3_xml","contextTokens":131072,
            "concurrency":2,"goal":"balanced","preferredGPU":{"gpuId":"NVIDIA RTX A6000","cloud":"SECURE","count":2},"preferredGPUName":"2 × RTX A6000",
