@@ -17,7 +17,7 @@ struct UsageSection: View {
         Section {
             if let sample {
                 rings(sample)
-                engineRows(sample)
+                figures(sample)
                 if history.count >= 2 { UsageChart(samples: history) }
             } else {
                 Text(waitingText).foregroundStyle(.secondary)
@@ -47,61 +47,115 @@ struct UsageSection: View {
         return String(localized: "Usage appears once the pod answers.")
     }
 
+    /// The card first, then the pod. Spread over the whole width; they wrap onto a second row
+    /// when the window is narrow or the pod has several cards.
     @ViewBuilder private func rings(_ s: PodTelemetry) -> some View {
-        let gpus = s.gpus ?? []
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(alignment: .top, spacing: 18) {
-                ForEach(Array(gpus.enumerated()), id: \.offset) { offset, gpu in
-                    let suffix = gpus.count > 1 ? " \(offset + 1)" : ""
-                    UsageRing(title: String(localized: "GPU\(suffix)"), fraction: gpu.utilPercent.map { $0 / 100 })
-                    UsageRing(title: String(localized: "VRAM\(suffix)"),
-                              fraction: fraction(gpu.memoryUsedBytes, gpu.memoryTotalBytes),
-                              detail: amount(gpu.memoryUsedBytes, gpu.memoryTotalBytes))
-                }
-                UsageRing(title: String(localized: "CPU"), fraction: s.cpuPercent.map { $0 / 100 })
-                UsageRing(title: String(localized: "RAM"), fraction: fraction(s.memoryUsedBytes, s.memoryTotalBytes),
-                          detail: amount(s.memoryUsedBytes, s.memoryTotalBytes))
-                UsageRing(title: String(localized: "Disk"), fraction: fraction(s.diskUsedBytes, s.diskTotalBytes),
-                          detail: amount(s.diskUsedBytes, s.diskTotalBytes))
-                if s.volumeTotalBytes != nil {
-                    UsageRing(title: String(localized: "Volume"), fraction: fraction(s.volumeUsedBytes, s.volumeTotalBytes),
-                              detail: amount(s.volumeUsedBytes, s.volumeTotalBytes))
-                }
+        let all = Self.rings(s)
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 8) {
+                ForEach(all) { ring in UsageRing(ring: ring).frame(maxWidth: .infinity) }
             }
-            .padding(.vertical, 4)
-        }
-        ForEach(Array(gpus.enumerated()), id: \.offset) { offset, gpu in
-            if let line = Self.gpuLine(gpu) {
-                LabeledContent(gpus.count > 1 ? String(localized: "Temperature and power, card \(offset + 1)") : String(localized: "Temperature and power"), value: line)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 84), spacing: 8)], spacing: 14) {
+                ForEach(all) { ring in UsageRing(ring: ring) }
             }
         }
+        .padding(.vertical, 6)
     }
 
-    @ViewBuilder private func engineRows(_ s: PodTelemetry) -> some View {
-        if let engine = s.engine {
-            if engine.running != nil || engine.waiting != nil {
-                LabeledContent("Requests", value: String(localized: "\(engine.running ?? 0) running · \(engine.waiting ?? 0) waiting"))
+    static func rings(_ s: PodTelemetry) -> [UsageRing.Figure] {
+        let gpus = s.gpus ?? []
+        var out: [UsageRing.Figure] = []
+        for (offset, gpu) in gpus.enumerated() {
+            let suffix = gpus.count > 1 ? " \(offset + 1)" : ""
+            out.append(.init(id: "gpu\(offset)", title: String(localized: "GPU\(suffix)"), fraction: gpu.utilPercent.map { $0 / 100 }))
+            // A full card memory is normal (vLLM takes it all on purpose), so it never warns.
+            out.append(.init(id: "vram\(offset)", title: String(localized: "VRAM\(suffix)"),
+                             fraction: fraction(gpu.memoryUsedBytes, gpu.memoryTotalBytes),
+                             detail: amount(gpu.memoryUsedBytes, gpu.memoryTotalBytes)))
+        }
+        out.append(.init(id: "cpu", title: String(localized: "CPU"), fraction: s.cpuPercent.map { $0 / 100 }))
+        out.append(.init(id: "ram", title: String(localized: "RAM"), fraction: fraction(s.memoryUsedBytes, s.memoryTotalBytes),
+                         detail: amount(s.memoryUsedBytes, s.memoryTotalBytes), warns: true))
+        out.append(.init(id: "disk", title: String(localized: "Disk"), fraction: fraction(s.diskUsedBytes, s.diskTotalBytes),
+                         detail: amount(s.diskUsedBytes, s.diskTotalBytes), warns: true))
+        if s.volumeTotalBytes != nil {
+            out.append(.init(id: "volume", title: String(localized: "Volume"), fraction: fraction(s.volumeUsedBytes, s.volumeTotalBytes),
+                             detail: amount(s.volumeUsedBytes, s.volumeTotalBytes), warns: true))
+        }
+        return out
+    }
+
+    /// What the engine and the card report, as tiles: speeds of the requests themselves (not the
+    /// rate of the last few seconds, which is 0 between requests), the cache, the load, the totals.
+    @ViewBuilder private func figures(_ s: PodTelemetry) -> some View {
+        let tiles = Self.tiles(s)
+        if !tiles.isEmpty {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10, alignment: .top)], alignment: .leading, spacing: 10) {
+                ForEach(tiles) { FigureTile(tile: $0) }
             }
-            if let output = engine.generationTokensPerSecond {
-                LabeledContent("Output", value: String(localized: "\(Self.rate(output)) tokens/s"))
-            }
-            if let prompt = engine.promptTokensPerSecond {
-                LabeledContent("Prompt processing", value: String(localized: "\(Self.rate(prompt)) tokens/s"))
-            }
-            if let kv = engine.kvCachePercent {
-                LabeledContent("Context cache in use", value: (kv / 100).formatted(.percent.precision(.fractionLength(0))))
-            }
+            .padding(.vertical, 4)
         } else if run.phase == .ready {
             LabeledContent("Engine", value: String(localized: "No figures from the engine"))
         }
     }
 
-    private func fraction(_ used: Double?, _ total: Double?) -> Double? {
+    static func tiles(_ s: PodTelemetry) -> [FigureTile.Tile] {
+        var out: [FigureTile.Tile] = []
+        let engine = s.engine
+        if let speed = engine?.generationSpeed ?? engine?.generationTokensPerSecond.flatMap({ $0 > 0 ? $0 : nil }) {
+            out.append(.init(id: "writing", symbol: "text.cursor", title: String(localized: "Writing"),
+                             value: String(localized: "\(rate(speed)) tokens/s"), detail: String(localized: "while it answers")))
+        }
+        if let speed = engine?.promptSpeed ?? engine?.promptTokensPerSecond.flatMap({ $0 > 0 ? $0 : nil }) {
+            out.append(.init(id: "reading", symbol: "doc.text.magnifyingglass", title: String(localized: "Reading"),
+                             value: String(localized: "\(rate(speed)) tokens/s"), detail: String(localized: "while it reads the prompt")))
+        }
+        if let hit = engine?.promptCacheHitPercent {
+            out.append(.init(id: "cache", symbol: "arrow.triangle.2.circlepath", title: String(localized: "Prompt cache"),
+                             value: (hit / 100).formatted(.percent.precision(.fractionLength(0))),
+                             detail: String(localized: "of prompt tokens reused")))
+        }
+        if let running = engine?.running {
+            out.append(.init(id: "requests", symbol: "arrow.left.arrow.right", title: String(localized: "Requests"),
+                             value: String(localized: "\(running) running"), detail: String(localized: "\(engine?.waiting ?? 0) waiting")))
+        }
+        if let kv = engine?.kvCachePercent {
+            out.append(.init(id: "kv", symbol: "memorychip", title: String(localized: "Context cache"),
+                             value: (kv / 100).formatted(.percent.precision(.fractionLength(0))), detail: String(localized: "in use")))
+        }
+        if let read = engine?.promptTokensTotal, let written = engine?.generationTokensTotal {
+            out.append(.init(id: "totals", symbol: "sum", title: String(localized: "Since the start"),
+                             value: String(localized: "\(compact(read)) read"), detail: String(localized: "\(compact(written)) written")))
+        }
+        for (offset, gpu) in (s.gpus ?? []).enumerated() {
+            guard let t = gpu.temperatureC else { continue }
+            let suffix = (s.gpus?.count ?? 0) > 1 ? " \(offset + 1)" : ""
+            out.append(.init(id: "card\(offset)", symbol: "thermometer.medium", title: String(localized: "Card\(suffix)"),
+                             value: "\(Int(t.rounded())) °C", detail: power(gpu)))
+        }
+        return out
+    }
+
+    private static func power(_ gpu: PodTelemetry.GPU) -> String? {
+        guard let w = gpu.powerW else { return nil }
+        return gpu.powerLimitW.map { String(localized: "\(Int(w.rounded())) of \(Int($0.rounded())) W") } ?? "\(Int(w.rounded())) W"
+    }
+
+    /// "842k", "1.2M": short in every language (German compact names would spell out "Tsd.").
+    static func compact(_ value: Int) -> String {
+        switch value {
+        case ..<1_000: return value.formatted()
+        case ..<1_000_000: return "\(Int((Double(value) / 1_000).rounded()))k"
+        default: return "\((Double(value) / 1_000_000).formatted(.number.precision(.fractionLength(1))))M"
+        }
+    }
+
+    private static func fraction(_ used: Double?, _ total: Double?) -> Double? {
         guard let used, let total, total > 0 else { return nil }
         return used / total
     }
 
-    private func amount(_ used: Double?, _ total: Double?) -> String? {
+    private static func amount(_ used: Double?, _ total: Double?) -> String? {
         guard let used, let total else { return nil }
         return "\(Self.number(used / 1e9)) / \(Format.gigabytes(total))"
     }
@@ -109,45 +163,82 @@ struct UsageSection: View {
     static func number(_ gb: Double) -> String { gb.formatted(.number.precision(.fractionLength(1))) }
     static func rate(_ value: Double) -> String { Int(value.rounded()).formatted() }
 
-    /// "55 °C · 250 of 300 W"
-    static func gpuLine(_ gpu: PodTelemetry.GPU) -> String? {
-        var parts: [String] = []
-        if let t = gpu.temperatureC { parts.append("\(Int(t.rounded())) °C") }
-        if let w = gpu.powerW {
-            parts.append(gpu.powerLimitW.map { String(localized: "\(Int(w.rounded())) of \(Int($0.rounded())) W") } ?? "\(Int(w.rounded())) W")
-        }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
-    }
 }
 
 /// One figure as a ring, the way RunPod's console shows it: percent inside, name and amount below.
+/// Memory and disks that run full turn orange, then red; the percent inside says the same, so
+/// colour is never the only signal.
 struct UsageRing: View {
-    let title: String
-    let fraction: Double?
-    var detail: String? = nil
+    struct Figure: Identifiable {
+        let id: String
+        let title: String
+        let fraction: Double?
+        var detail: String? = nil
+        var warns = false
+    }
+
+    let ring: Figure
+
+    private var color: Color {
+        guard ring.warns, let f = ring.fraction else { return .accentColor }
+        return f >= 0.95 ? .red : f >= 0.85 ? .orange : .accentColor
+    }
 
     var body: some View {
         VStack(spacing: 4) {
             ZStack {
                 Circle().stroke(.quaternary, lineWidth: 6)
-                if let fraction {
+                if let fraction = ring.fraction {
                     Circle()
                         .trim(from: 0, to: min(1, max(0, fraction)))
-                        .stroke(.tint, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                 }
-                Text(fraction.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? "–")
+                Text(ring.fraction.map { $0.formatted(.percent.precision(.fractionLength(0))) } ?? "–")
                     .font(.callout.monospacedDigit().weight(.medium))
             }
             .frame(width: 58, height: 58)
-            Text(title).font(.caption.weight(.medium))
-            Text(detail ?? " ").font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+            Text(ring.title).font(.caption.weight(.medium))
+            Text(ring.detail ?? " ").font(.caption2.monospacedDigit()).foregroundStyle(.secondary).lineLimit(1)
         }
-        .frame(minWidth: 72)
+        .frame(minWidth: 76)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(title))
-        .accessibilityValue(Text([fraction.map { $0.formatted(.percent.precision(.fractionLength(0))) }, detail]
+        .accessibilityLabel(Text(ring.title))
+        .accessibilityValue(Text([ring.fraction.map { $0.formatted(.percent.precision(.fractionLength(0))) }, ring.detail]
             .compactMap { $0 }.joined(separator: ", ")))
+    }
+}
+
+/// One figure as a small tile: what it is, the value, and what the value means.
+struct FigureTile: View {
+    struct Tile: Identifiable {
+        let id: String
+        let symbol: String
+        let title: String
+        let value: String
+        let detail: String?
+    }
+
+    let tile: Tile
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Label(tile.title, systemImage: tile.symbol)
+                .font(.caption).foregroundStyle(.secondary)
+                .labelStyle(.titleAndIcon)
+            Text(tile.value)
+                .font(.title3.monospacedDigit().weight(.semibold))
+                .lineLimit(1).minimumScaleFactor(0.8)
+            if let detail = tile.detail {
+                Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 8))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(tile.title))
+        .accessibilityValue(Text([tile.value, tile.detail].compactMap { $0 }.joined(separator: ", ")))
     }
 }
 

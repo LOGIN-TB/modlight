@@ -251,6 +251,17 @@ ENGINE_METRICS = {
     "kvCache": (["vllm:kv_cache_usage_perc", "vllm:gpu_cache_usage_perc", "llamacpp:kv_cache_usage_ratio"], max),
     "promptTokens": (["vllm:prompt_tokens_total", "llamacpp:prompt_tokens_total"], sum),
     "generationTokens": (["vllm:generation_tokens_total", "llamacpp:tokens_predicted_total"], sum),
+    # llama.cpp counts reused prompt tokens apart (its prompt_tokens_total leaves them out);
+    # vLLM counts prefix-cache lookups and hits in tokens.
+    "cachedPromptTokens": (["llamacpp:prompt_tokens_cached_total"], sum),
+    "cacheQueries": (["vllm:prefix_cache_queries_total", "vllm:gpu_prefix_cache_queries_total"], sum),
+    "cacheHits": (["vllm:prefix_cache_hits_total", "vllm:gpu_prefix_cache_hits_total"], sum),
+    # Time spent reading prompts and writing answers, for the speed of one request rather than
+    # the throughput of the last few seconds (which is 0 between requests).
+    "promptSeconds": (["vllm:request_prefill_time_seconds_sum", "llamacpp:prompt_seconds_total"], sum),
+    "generationSeconds": (["vllm:inter_token_latency_seconds_sum", "vllm:time_per_output_token_seconds_sum",
+                           "llamacpp:tokens_predicted_seconds_total"], sum),
+    "generationIntervals": (["vllm:inter_token_latency_seconds_count", "vllm:time_per_output_token_seconds_count"], sum),
 }
 
 
@@ -276,6 +287,29 @@ def engine_telemetry(values, previous, seconds):
     for key, field in (("promptTokens", "promptTokensPerSecond"), ("generationTokens", "generationTokensPerSecond")):
         if previous and seconds and seconds > 0 and key in values and key in previous and values[key] >= previous[key]:
             out[field] = round((values[key] - previous[key]) / seconds, 1)
+    # Since the engine started: prompt tokens read (reused ones included) and tokens written.
+    if "promptTokens" in values:
+        out["promptTokensTotal"] = int(values["promptTokens"] + values.get("cachedPromptTokens", 0))
+    if "generationTokens" in values:
+        out["generationTokensTotal"] = int(values["generationTokens"])
+    # Share of prompt tokens the engine took from its cache instead of reading them again.
+    if "cachedPromptTokens" in values and "promptTokens" in values:
+        looked = values["cachedPromptTokens"] + values["promptTokens"]
+        if looked > 0:
+            out["promptCacheHitPercent"] = round(values["cachedPromptTokens"] / looked * 100, 1)
+    elif values.get("cacheQueries", 0) > 0 and "cacheHits" in values:
+        out["promptCacheHitPercent"] = round(values["cacheHits"] / values["cacheQueries"] * 100, 1)
+    # Speed while working, over the requests since the previous sample.
+    if previous:
+        def delta(key):
+            return values[key] - previous[key] if key in values and key in previous and values[key] >= previous[key] else None
+        prompt_tokens, prompt_seconds = delta("promptTokens"), delta("promptSeconds")
+        if prompt_tokens and prompt_seconds and prompt_seconds > 0.05:
+            out["promptSpeed"] = round(prompt_tokens / prompt_seconds, 1)
+        written = delta("generationIntervals") if "generationIntervals" in values else delta("generationTokens")
+        writing = delta("generationSeconds")
+        if written and writing and writing > 0.05:
+            out["generationSpeed"] = round(written / writing, 1)
     return out
 
 
@@ -336,7 +370,7 @@ def disk(path):
         return None, None
 
 
-telemetry_state = {"latest": None, "cpu": None, "engine": None, "time": None}
+telemetry_state = {"latest": None, "cpu": None, "engine": None, "time": None, "speeds": {}}
 GPU_QUERY = "index,name,utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,power.limit"
 # One long-running nvidia-smi, read every second. Starting nvidia-smi for every sample
 # re-initialises the driver's counters, and the first reading after that often says 0 % load even
@@ -420,7 +454,17 @@ def measure():
         req = urllib.request.Request(f"{ENGINE_URL}/metrics", headers={"Authorization": f"Bearer {GATEWAY_KEY}"})
         with opener.open(req, timeout=2) as r:
             values = engine_values(parse_prometheus(r.read().decode("utf-8", "replace")))
-        sample["engine"] = engine_telemetry(values, telemetry_state["engine"], seconds)
+        engine = engine_telemetry(values, telemetry_state["engine"], seconds)
+        # Between requests the speeds of the last ones stay, until the engine restarts.
+        restarted = telemetry_state["engine"] and values.get("generationTokens", 0) < telemetry_state["engine"].get("generationTokens", 0)
+        if restarted:
+            telemetry_state["speeds"] = {}
+        for field in ("promptSpeed", "generationSpeed"):
+            if field in engine:
+                telemetry_state["speeds"][field] = engine[field]
+            elif field in telemetry_state["speeds"]:
+                engine[field] = telemetry_state["speeds"][field]
+        sample["engine"] = engine
         telemetry_state["engine"] = values
     except Exception:
         telemetry_state["engine"] = None  # engine still loading, or no metrics

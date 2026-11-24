@@ -142,7 +142,7 @@ enum Snapshots {
         let last = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-90))
         let today = PodlightState.dayKey(.now)
         let json = """
-        {"version":"0.9.1","serverTime":"\(started)",
+        {"version":"0.10.0","serverTime":"\(started)",
          "models":[{"id":"6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0001","name":"coder-office","repoId":"Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ",
            "format":"awq","weightBytes":17400000000,"nativeContextTokens":262144,"toolCallParser":"qwen3_xml","contextTokens":131072,
            "concurrency":2,"goal":"balanced","preferredGPU":{"gpuId":"NVIDIA RTX A6000","cloud":"SECURE","count":2},"preferredGPUName":"2 × RTX A6000",
@@ -210,7 +210,9 @@ enum Snapshots {
                                      temperatureC: busy ? 61 - Double(card) * 3 : 38, powerW: busy ? 210 + 80 * wave : 32, powerLimitW: 300)
                 },
                 engine: PodTelemetry.Engine(running: busy ? 1 + Int(wave * 2) : 0, waiting: 0, kvCachePercent: busy ? 18 + 30 * wave : 0,
-                                            promptTokensPerSecond: busy ? 900 * wave : 0, generationTokensPerSecond: busy ? 48 + 14 * wave : 0))
+                                            promptTokensPerSecond: busy ? 900 * wave : 0, generationTokensPerSecond: busy ? 48 + 14 * wave : 0,
+                                            promptTokensTotal: 412_000 + i * 2_400, generationTokensTotal: 18_300 + i * 90,
+                                            promptCacheHitPercent: 91.4, promptSpeed: 2_740, generationSpeed: 81))
         }
     }
 

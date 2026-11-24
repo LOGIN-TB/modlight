@@ -1,5 +1,5 @@
 {
-  "description": "Pod telemetry (Podlight 0.5, 2026-11-22): what the watchdog in every pod reads from nvidia-smi and from the engine's /metrics, and sends back with each heartbeat. RunPod's API reports no GPU memory in use and no disk, so the pod measures itself. Parsed in spec/pod/watchdog.py only (status: pod), tested by tools/test_watchdog.py; the app and the server only store and show the result.",
+  "description": "Pod telemetry (Podlight 0.5, 2026-11-22): what the watchdog in every pod reads from nvidia-smi and from the engine's /metrics, and sends back with each heartbeat. RunPod's API reports no GPU memory in use and no disk, so the pod measures itself. Parsed in spec/pod/watchdog.py only (status: pod), tested by tools/test_watchdog.py; the app and the server only store and show the result. Podlight 0.10 adds the totals since the engine started, the share of prompt tokens taken from the engine's cache and the speed of the requests themselves (tokens per second while reading or writing); the earlier cases gained the totals.",
   "cases": [
     {
       "id": "nvidiaSmi/one-card",
@@ -78,7 +78,9 @@
         "waiting": 1,
         "kvCachePercent": 41.5,
         "promptTokensPerSecond": 1000.0,
-        "generationTokensPerSecond": 50.0
+        "generationTokensPerSecond": 50.0,
+        "generationTokensTotal": 1500,
+        "promptTokensTotal": 12000
       }
     },
     {
@@ -92,7 +94,9 @@
       "expected": {
         "running": 2,
         "waiting": 1,
-        "kvCachePercent": 41.5
+        "kvCachePercent": 41.5,
+        "generationTokensTotal": 1500,
+        "promptTokensTotal": 12000
       }
     },
     {
@@ -105,7 +109,10 @@
         "previousMetrics": "vllm:num_requests_running{engine=\"0\",model_name=\"m\"} 2.0\nvllm:num_requests_waiting{engine=\"0\",model_name=\"m\"} 1.0\nvllm:kv_cache_usage_perc{engine=\"0\",model_name=\"m\"} 0.415\nvllm:prompt_tokens_total{engine=\"0\",model_name=\"m\"} 12000.0\nvllm:generation_tokens_total{engine=\"0\",model_name=\"m\"} 1500.0\nvllm:generation_tokens_created{engine=\"0\",model_name=\"m\"} 1.7e9\n",
         "seconds": 10
       },
-      "expected": {}
+      "expected": {
+        "generationTokensTotal": 1000,
+        "promptTokensTotal": 2000
+      }
     },
     {
       "id": "engineTelemetry/llamacpp",
@@ -121,7 +128,9 @@
         "running": 1,
         "waiting": 0,
         "promptTokensPerSecond": 100.0,
-        "generationTokensPerSecond": 60.0
+        "generationTokensPerSecond": 60.0,
+        "generationTokensTotal": 400,
+        "promptTokensTotal": 900
       }
     },
     {
@@ -134,6 +143,49 @@
       },
       "expected": {
         "kvCachePercent": 90.0
+      }
+    },
+    {
+      "id": "engineTelemetry/llamacpp-cache-and-speed",
+      "status": "pod",
+      "title": "llama.cpp: reused prompt tokens count apart, so the cache share is cached / (cached + read); speeds come from the time it spent reading and writing",
+      "function": "engineTelemetry",
+      "input": {
+        "metrics": "llamacpp:prompt_tokens_total 4000\nllamacpp:prompt_tokens_cached_total 36000\nllamacpp:prompt_seconds_total 3.5\nllamacpp:tokens_predicted_total 900\nllamacpp:tokens_predicted_seconds_total 12.5\nllamacpp:requests_processing 0\nllamacpp:requests_deferred 0\n",
+        "previousMetrics": "llamacpp:prompt_tokens_total 1300\nllamacpp:prompt_tokens_cached_total 20000\nllamacpp:prompt_seconds_total 2.5\nllamacpp:tokens_predicted_total 500\nllamacpp:tokens_predicted_seconds_total 7.5\n",
+        "seconds": 10
+      },
+      "expected": {
+        "generationSpeed": 80.0,
+        "generationTokensPerSecond": 40.0,
+        "generationTokensTotal": 900,
+        "promptCacheHitPercent": 90.0,
+        "promptSpeed": 2700.0,
+        "promptTokensPerSecond": 270.0,
+        "promptTokensTotal": 40000,
+        "running": 0,
+        "waiting": 0
+      }
+    },
+    {
+      "id": "engineTelemetry/vllm-prefix-cache-and-latency",
+      "status": "pod",
+      "title": "vLLM: prefix-cache hits over lookups (in tokens); writing speed from the inter-token latency histogram, reading speed from the prefill time",
+      "function": "engineTelemetry",
+      "input": {
+        "metrics": "vllm:num_requests_running{engine=\"0\",model_name=\"m\"} 0.0\nvllm:prompt_tokens_total{engine=\"0\",model_name=\"m\"} 50000.0\nvllm:generation_tokens_total{engine=\"0\",model_name=\"m\"} 2000.0\nvllm:prefix_cache_queries_total{engine=\"0\",model_name=\"m\"} 50000.0\nvllm:prefix_cache_hits_total{engine=\"0\",model_name=\"m\"} 40000.0\nvllm:request_prefill_time_seconds_sum{engine=\"0\",model_name=\"m\"} 4.0\nvllm:inter_token_latency_seconds_sum{engine=\"0\",model_name=\"m\"} 20.0\nvllm:inter_token_latency_seconds_count{engine=\"0\",model_name=\"m\"} 1990.0\n",
+        "previousMetrics": "vllm:prompt_tokens_total{engine=\"0\",model_name=\"m\"} 30000.0\nvllm:generation_tokens_total{engine=\"0\",model_name=\"m\"} 1000.0\nvllm:request_prefill_time_seconds_sum{engine=\"0\",model_name=\"m\"} 2.0\nvllm:inter_token_latency_seconds_sum{engine=\"0\",model_name=\"m\"} 10.0\nvllm:inter_token_latency_seconds_count{engine=\"0\",model_name=\"m\"} 995.0\n",
+        "seconds": 10
+      },
+      "expected": {
+        "generationSpeed": 99.5,
+        "generationTokensPerSecond": 100.0,
+        "generationTokensTotal": 2000,
+        "promptCacheHitPercent": 80.0,
+        "promptSpeed": 10000.0,
+        "promptTokensPerSecond": 2000.0,
+        "promptTokensTotal": 50000,
+        "running": 0
       }
     }
   ]
