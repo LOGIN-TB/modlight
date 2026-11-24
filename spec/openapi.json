@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Podlight server",
-    "version": "0.9.0",
+    "version": "0.9.1",
     "description": "Gateway for agents (/v1, client tokens) and control API for Podlight apps (/admin, device tokens from pairing). Plain HTTP; run it behind a reverse proxy with TLS.",
     "license": {
       "name": "MIT"

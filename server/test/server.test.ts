@@ -108,6 +108,8 @@ class FakePod {
   garbage = false
   /** The engine is still loading: /v1/models does not answer yet. */
   loading = false
+  /** What the watchdog says of its warm-up; null leaves the field out, as before 0.9.1. */
+  warm: boolean | null = null
   /** The loading engine has hung: no CPU, and log, disks and GPU memory stand still. */
   stuck = false
 
@@ -163,7 +165,7 @@ class FakePod {
       const still = { time: this.telemetryTime++, cpuPercent: 0, diskUsedBytes: 1.6e7, volumeUsedBytes: 2.1e10, gpus: [{ memoryUsedBytes: 4e6 }] }
       return void res.end(JSON.stringify({ engineAlive: true, engineExitCode: null, engineLogBytes: 300, telemetry: still }))
     }
-    res.end(JSON.stringify({ engineAlive: this.engineAlive, engineExitCode: this.engineAlive ? null : 1, telemetry }))
+    res.end(JSON.stringify({ engineAlive: this.engineAlive, engineExitCode: this.engineAlive ? null : 1, ...(this.warm === null ? {} : { engineWarm: this.warm }), telemetry }))
   }
 }
 
@@ -220,6 +222,7 @@ describe('Podlight server', () => {
     pod.loading = false
     pod.stuck = false
     pod.garbage = false
+    pod.warm = null
     s = await buildServer({
       db: openDatabase(':memory:'), sealer: sealer(randomBytes(32)), wrongKeyDelayMs: 0, proxyRetryDelayMs: 10,
       manager: { runpodBase: runpodURL, wakePollMs: 20, hostBusyTries: 3, hostBusyDelayMs: 5, cardRetryMs: 0, loadStallMs: 0, podURL: (_id, port) => (port === 8000 ? engineURL : watchdogURL) },
@@ -665,6 +668,16 @@ describe('Podlight server', () => {
     assert.equal(run.phase, 'failed')
     assert.equal(run.lastReason, 'engine-stuck')
     assert.equal(run.podStatus, 'EXITED')
+  })
+
+  test('a model is ready only once the watchdog has warmed the engine up', async () => {
+    pod.warm = false
+    assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
+    await s.manager.tick()
+    assert.equal(s.store.run(MODEL_ID).phase, 'loading', 'the engine answers, but the warm-up still runs')
+    pod.warm = true
+    await s.manager.tick()
+    assert.equal(s.store.run(MODEL_ID).phase, 'ready')
   })
 
   test('the start test stops a model that only repeats one character', async () => {

@@ -9,6 +9,15 @@ set -uo pipefail
 
 log() { printf '[podlight] %s\n' "$*" >&2; }
 
+# GPU code the engine image lacks for this card (llama.cpp on A100, H100, H200, B200) is compiled
+# on first use, which took two minutes on an H200. Keep it on the kept disk, so a resumed pod on
+# the same machine skips that; the default cache is small and lives in the container.
+export CUDA_CACHE_MAXSIZE=4294967296
+if [[ -d /workspace && -w /workspace ]]; then
+  export CUDA_CACHE_PATH=/workspace/.cache/nv-compute
+  mkdir -p "$CUDA_CACHE_PATH"
+fi
+
 echo "$PODLIGHT_WATCHDOG_B64" | base64 -d > /tmp/podlight-watchdog.py
 python3 /tmp/podlight-watchdog.py &
 log "watchdog started"

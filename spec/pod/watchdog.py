@@ -35,6 +35,11 @@ CGROUP = os.environ.get("PODLIGHT_CGROUP", "/sys/fs/cgroup")
 PROC = os.environ.get("PODLIGHT_PROC", "/proc")
 ENGINE_URL = os.environ.get("PODLIGHT_ENGINE_URL", "http://127.0.0.1:8000")
 DISKS = {"disk": os.environ.get("PODLIGHT_DISK_PATH", "/"), "volume": os.environ.get("PODLIGHT_VOLUME_PATH", "/workspace")}
+# Warm-up prompt length; 0 turns the warm-up off.
+WARMUP_TOKENS = int(os.environ.get("PODLIGHT_WARMUP_TOKENS", "3000"))
+WARMUP_TIMEOUT = float(os.environ.get("PODLIGHT_WARMUP_TIMEOUT", "900"))
+SERVED_NAME = os.environ.get("PODLIGHT_SERVED_NAME", "")
+MAX_LEN = int(os.environ.get("PODLIGHT_MAX_LEN") or 0)
 
 state = {
     "started": time.time(),
@@ -113,6 +118,59 @@ def engine_alive():
         return True
     except (OSError, ValueError):
         return None if not os.path.exists(ENGINE_PID_FILE) else False
+
+
+# Until the warm-up has run, Podlight does not report the engine as ready.
+warm_state = {"warm": WARMUP_TOKENS <= 0}
+
+
+def warmup_prompt(tokens, max_len):
+    """About `tokens` tokens of plain text (ten per sentence), at most half the context."""
+    budget = min(tokens, max_len // 2) if max_len > 0 else tokens
+    return "The quick brown fox jumps over the lazy dog. " * max(1, budget // 10)
+
+
+def engine_log_line(text):
+    try:
+        with open(ENGINE_LOG, "a") as f:
+            f.write(f"[podlight] {text}\n")
+    except OSError:
+        pass
+
+
+def warm_up():
+    """Sends one long prompt as soon as the engine answers, before Podlight calls it ready.
+
+    The stock llama.cpp image carries finished GPU code only for some cards. On others (A100,
+    H100, H200, B200) the driver compiles it on first use: on an H200 the first 2048 tokens of
+    Claude Code's first request took 85 seconds, every further 2048 under one. A long prompt here
+    makes that happen while the model is still shown as loading. The compiled code is kept on
+    the pod's disk (CUDA_CACHE_PATH in boot.sh), so a resumed pod is quick. Never fails a start:
+    whatever happens, the engine counts as warm afterwards."""
+    headers = {"Authorization": f"Bearer {GATEWAY_KEY}", "Content-Type": "application/json"}
+    while True:
+        if engine_alive() is False:
+            break
+        try:
+            with opener.open(urllib.request.Request(f"{ENGINE_URL}/v1/models", headers=headers), timeout=10) as r:
+                if r.status == 200:
+                    break
+        except Exception:
+            pass
+        time.sleep(2)
+    if engine_alive() is not False:
+        started = time.time()
+        body = json.dumps({"model": SERVED_NAME, "prompt": warmup_prompt(WARMUP_TOKENS, MAX_LEN),
+                           "max_tokens": 16, "temperature": 0}).encode()
+        try:
+            req = urllib.request.Request(f"{ENGINE_URL}/v1/completions", data=body, headers=headers, method="POST")
+            with opener.open(req, timeout=WARMUP_TIMEOUT) as r:
+                r.read()
+            engine_log_line(f"warm-up done in {time.time() - started:.0f} s")
+        except Exception as e:
+            engine_log_line(f"warm-up did not finish ({e}) after {time.time() - started:.0f} s")
+    with lock:
+        warm_state["warm"] = True
 
 
 def check_loop():
@@ -404,6 +462,8 @@ class Handler(BaseHTTPRequestHandler):
                 # Grows while the engine works; Podlight takes a loading engine whose log, disks,
                 # GPU memory and CPU all stand still for ten minutes as hung.
                 "engineLogBytes": engine_log_bytes(),
+                # False while the warm-up runs; Podlight waits for it before calling the model ready.
+                "engineWarm": warm_state["warm"],
                 "telemetry": telemetry_state["latest"],
             }
 
@@ -484,6 +544,8 @@ if __name__ == "__main__":
     if not POD_ID or not RUNPOD_KEY:
         log("RUNPOD_POD_ID or RUNPOD_API_KEY missing: the pod cannot stop itself")
     threading.Thread(target=check_loop, daemon=True).start()
+    if not warm_state["warm"]:
+        threading.Thread(target=warm_up, daemon=True).start()
     if TELEMETRY_SECONDS > 0:
         threading.Thread(target=gpu_reader, daemon=True).start()
         threading.Thread(target=telemetry_loop, daemon=True).start()
