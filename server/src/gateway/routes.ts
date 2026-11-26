@@ -7,6 +7,7 @@ import type { StateStore } from '../store/state.ts'
 import { errorBody, failure, GatewayFailure, systemMessagesAsReminders } from './shape.ts'
 import * as bridge from './anthropicBridge.ts'
 import { type APIUsage, providerFailure, rewriteForProvider, supportsPath, usageFrom } from '../providers/api.ts'
+import { hasContent, rateLimitFromHeaders } from '../providers/telemetry.ts'
 
 // The endpoint agents talk to: OpenAI-compatible, plus the Responses API (Codex) and the
 // Anthropic Messages API (Claude Code), passed through to the engine. Port of LocalGateway.swift.
@@ -209,6 +210,7 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
     // A provider's base URL ends in its own version (`…/api/v1`); a pod's is the engine's root.
     const target = api ? `${endpoint.baseURL}${upstreamPath.slice('/v1'.length)}${query}` : `${endpoint.baseURL}${path}${query}`
     const tries = api ? 0 : PROXY_RETRIES
+    const started = Date.now()
     let upstream: Response | null = null
     for (let attempt = 0; attempt <= tries; attempt++) {
       try {
@@ -233,13 +235,15 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
       return send(reply, f.status, f.message, f.code, anthropic)
     }
 
+    const rateLimit = api ? rateLimitFromHeaders(Object.fromEntries(upstream.headers.entries()), new Date()) : null
     if (api && upstream.status >= 400) {
       const text = await upstream.text().catch(() => '')
-      end()
       const f = failure({ kind: 'provider', failure: providerFailure(api.provider, upstream.status, text.slice(0, 65_536)) }, name)
+      deps.manager.finishAPIRequest(endpoint.modelId, { usage: null, started, firstContent: null, ended: Date.now(), status: f.status, streamed: false, rateLimit })
+      end()
       return send(reply, f.status, f.message, f.code, anthropic)
     }
-    if (api) return relayMetered(reply, upstream, { bridged, dropUsageChunk, model: name, modelId: endpoint.modelId, end })
+    if (api) return relayMetered(reply, upstream, { bridged, dropUsageChunk, model: name, modelId: endpoint.modelId, end, started, rateLimit })
 
     reply.code(upstream.status)
     reply.header('content-type', upstream.headers.get('content-type') ?? 'application/json')
@@ -261,12 +265,17 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
    * Messages, a stream event by event or one message. The usage is booked at the end.
    */
   async function relayMetered(reply: FastifyReply, upstream: Response,
-    o: { bridged: boolean; dropUsageChunk: boolean; model: string; modelId: string; end: () => void }): Promise<FastifyReply> {
+    o: { bridged: boolean; dropUsageChunk: boolean; model: string; modelId: string; end: () => void; started: number;
+      rateLimit: ReturnType<typeof rateLimitFromHeaders> }): Promise<FastifyReply> {
     const streamed = (upstream.headers.get('content-type') ?? '').includes('text/event-stream')
     let usage: APIUsage | null = null
+    let firstContent: number | null = null
+    let booked = false
     const book = (): void => {
-      if (usage) deps.manager.recordAPIUsage(o.modelId, usage)
-      usage = null
+      if (booked) return
+      booked = true
+      deps.manager.finishAPIRequest(o.modelId, { usage, started: o.started, firstContent, ended: Date.now(),
+        status: upstream.status, streamed, rateLimit: o.rateLimit })
       o.end()
     }
     reply.code(upstream.status)
@@ -308,6 +317,7 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
           }
           const found = chunk ? usageFrom(chunk) : null
           if (found) usage = found
+          if (chunk && firstContent === null && hasContent(chunk)) firstContent = Date.now()
           if (translator) {
             if (chunk) {
               const out = events(translator.feed(chunk))

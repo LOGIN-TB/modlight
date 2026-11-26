@@ -113,8 +113,16 @@ export class StateStore {
   }
 
   /** Books one API request: its tokens for the model, its cost into the day's spend. */
-  addApiUsage(day: string, modelId: string, usage: APIUsage, usd: number): void {
+  addApiUsage(day: string, modelId: string, usage: APIUsage, usd: number, hour?: string): void {
     this.db.transaction(() => {
+      if (hour) {
+        this.db.prepare(`INSERT INTO api_usage_hourly (hour, model_id, requests, prompt_tokens, completion_tokens, cached_tokens, usd)
+          VALUES (?, ?, 1, ?, ?, ?, ?)
+          ON CONFLICT(hour, model_id) DO UPDATE SET requests = requests + 1, prompt_tokens = prompt_tokens + excluded.prompt_tokens,
+            completion_tokens = completion_tokens + excluded.completion_tokens, cached_tokens = cached_tokens + excluded.cached_tokens,
+            usd = usd + excluded.usd`).run(hour, modelId, usage.promptTokens, usage.completionTokens, usage.cachedTokens, usd)
+        this.db.prepare(`DELETE FROM api_usage_hourly WHERE hour NOT IN (SELECT DISTINCT hour FROM api_usage_hourly ORDER BY hour DESC LIMIT 48)`).run()
+      }
       this.db.prepare(`INSERT INTO api_usage (day, model_id, requests, prompt_tokens, completion_tokens, cached_tokens, usd)
         VALUES (?, ?, 1, ?, ?, ?, ?)
         ON CONFLICT(day, model_id) DO UPDATE SET requests = requests + 1, prompt_tokens = prompt_tokens + excluded.prompt_tokens,
@@ -131,6 +139,18 @@ export class StateStore {
     const out: Record<string, Record<string, APIUsageTotals>> = {}
     for (const r of rows) {
       (out[r.day] ??= {})[r.model_id.toUpperCase()] = { requests: r.requests, promptTokens: r.prompt_tokens,
+        completionTokens: r.completion_tokens, cachedTokens: r.cached_tokens, usd: r.usd }
+    }
+    return out
+  }
+
+  /** `{hour: {modelId: totals}}`, hours as `yyyy-MM-ddTHH` in the server's time zone, the last 48. */
+  apiUsageByHour(): Record<string, Record<string, APIUsageTotals>> {
+    const rows = this.db.prepare('SELECT * FROM api_usage_hourly ORDER BY hour').all() as Array<{ hour: string; model_id: string; requests: number;
+      prompt_tokens: number; completion_tokens: number; cached_tokens: number; usd: number }>
+    const out: Record<string, Record<string, APIUsageTotals>> = {}
+    for (const r of rows) {
+      (out[r.hour] ??= {})[r.model_id.toUpperCase()] = { requests: r.requests, promptTokens: r.prompt_tokens,
         completionTokens: r.completion_tokens, cachedTokens: r.cached_tokens, usd: r.usd }
     }
     return out
@@ -154,6 +174,15 @@ export class NameTakenError extends Error {
 }
 
 /** `yyyy-MM-dd` of an instant in a time zone (unknown zones fall back to UTC). */
+/** `yyyy-MM-ddTHH` in the given time zone. */
+export function hourKey(date: Date, timeZone: string): string {
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }
+  let fmt: Intl.DateTimeFormat
+  try { fmt = new Intl.DateTimeFormat('en-CA', { ...options, timeZone }) } catch { fmt = new Intl.DateTimeFormat('en-CA', { ...options, timeZone: 'UTC' }) }
+  const parts = Object.fromEntries(fmt.formatToParts(date).map((p) => [p.type, p.value]))
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}`
+}
+
 export function dayKey(date: Date, timeZone: string): string {
   let fmt: Intl.DateTimeFormat
   try {

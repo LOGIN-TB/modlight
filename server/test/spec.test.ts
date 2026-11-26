@@ -14,6 +14,7 @@ import * as bridge from '../src/gateway/anthropicBridge.ts'
 import type { GPUType } from '../src/runpod/types.ts'
 import { costOf, providerFailure, rewriteForProvider, supportsPath, usageFrom } from '../src/providers/api.ts'
 import * as venice from '../src/providers/venice.ts'
+import * as telemetry from '../src/providers/telemetry.ts'
 
 // Every case in spec/cases that applies to the server. The spec is the source of truth: when a
 // case fails, fix the code, never the expected value.
@@ -25,7 +26,7 @@ const APP_ONLY = new Set(['kvProfile', 'ggufQuants', 'ggufKvProfile'])
 
 const FILES = ['scheduler.json', 'scheduler-podlight.json', 'capacity.json', 'gpu-suggest.json', 'pod-plan.json',
   'hosting.json', 'gateway.json', 'kv-profile.json', 'gguf.json', 'price-guard.json', 'api-provider.json',
-  'anthropic-bridge.json']
+  'anthropic-bridge.json', 'api-telemetry.json']
 
 const catalogs = new Map<string, GPUType[]>()
 function catalog(path: string): GPUType[] {
@@ -119,6 +120,10 @@ function run(c: SpecCase): unknown {
       return i.anthropic ? { status: f.status, type: anthropicType(f.status) } : { status: f.status, code: f.code }
     }
     case 'veniceAccount': return venice.account(i.body)
+    case 'apiTelemetrySummary': return telemetry.summary(i.samples, new Date(i.now), i.balanceUsd ?? null)
+    case 'apiRateLimitHeaders': return telemetry.rateLimitFromHeaders(i.headers, new Date(i.at))
+    case 'apiChunkHasContent': return telemetry.hasContent(i.chunk)
+    case 'apiCacheKey': return telemetry.cacheKey(i.body, i.providerModelId)
     case 'anthropicRequest':
       try { return bridge.request(i.body) } catch (e) { if (e instanceof bridge.BridgeError) return { thrown: e.message }; throw e }
     case 'anthropicResponse': return bridge.response(i.body, i.requestModel)

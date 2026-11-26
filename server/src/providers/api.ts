@@ -2,6 +2,7 @@
 // Providers/APIProvider.swift; held to spec/cases/api-provider.json.
 
 import type { APIPricing, APIRates, ModelProvider } from '../model.ts'
+import { cacheKey } from './telemetry.ts'
 
 type Json = Record<string, unknown>
 const isObject = (value: unknown): value is Json => typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -74,6 +75,11 @@ export function rewriteForProvider(body: Json, path: string, provider: ModelProv
       out.stream_options = options
     }
     if (provider === 'venice' && out.venice_parameters === undefined) out.venice_parameters = { include_venice_system_prompt: false }
+  }
+  // Without a routing hint Venice spreads requests over backends and its cache rarely hits.
+  if (provider === 'venice' && (path === '/v1/chat/completions' || path === '/v1/responses') && out.prompt_cache_key === undefined) {
+    const key = cacheKey(out, providerModelId)
+    if (key) out.prompt_cache_key = key
   }
   return { body: out, clientWantsUsage: wantsUsage }
 }

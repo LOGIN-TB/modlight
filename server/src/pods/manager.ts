@@ -7,7 +7,8 @@ import { engineFailureReason, GatewayFailure, looksDegenerate, summarizeEngineLo
 import { type AccountBalance, createWithFallback, NoCapacityError, RunpodClient, RunpodError } from '../runpod/client.ts'
 import { mayBeAvailable, type Pod, pricePerHour } from '../runpod/types.ts'
 import type { SettingsStore } from '../store/settings.ts'
-import { dayKey, type StateStore } from '../store/state.ts'
+import { dayKey, hourKey, type StateStore } from '../store/state.ts'
+import { type APIRateLimit, type APIRequestSample, isoSeconds, WINDOW_MS } from '../providers/telemetry.ts'
 import { type APIUsage, costOf, providerBaseURL } from '../providers/api.ts'
 import { type APIAccount, VeniceClient } from '../providers/venice.ts'
 
@@ -207,10 +208,45 @@ export class PodManager {
     const pricing = this.store.model(id)?.api?.pricing
     if (!pricing) return null
     const { usd } = costOf(usage, pricing)
-    this.store.addApiUsage(this.today(), id, usage, usd)
+    this.store.addApiUsage(this.today(), id, usage, usd, hourKey(this.now(), this.settings.read().timezone))
     // The balance follows use: read it again soon.
     if (this.veniceCache && this.now().getTime() - Date.parse(this.veniceCache.checkedAt) > 5_000) void this.refreshVeniceAccount()
     return usd
+  }
+
+  private readonly apiSamples = new Map<string, APIRequestSample[]>()
+  private readonly apiRateLimits = new Map<string, APIRateLimit>()
+
+  /** Everything the gateway learned from one request to an API model: usage and cost booked,
+   * the sample and the provider's rate limit kept for the live view. */
+  finishAPIRequest(id: string, r: { usage: APIUsage | null; started: number; firstContent: number | null; ended: number;
+    status: number; streamed: boolean; rateLimit: APIRateLimit | null }): void {
+    const usd = r.usage ? (this.recordAPIUsage(id, r.usage) ?? 0) : 0
+    const sample: APIRequestSample = {
+      time: isoSeconds(new Date(r.ended)), promptTokens: r.usage?.promptTokens ?? 0, cachedTokens: r.usage?.cachedTokens ?? 0,
+      completionTokens: r.usage?.completionTokens ?? 0, usd, durationMs: Math.max(0, r.ended - r.started), status: r.status, streamed: r.streamed,
+    }
+    if (r.firstContent !== null) sample.ttftMs = Math.max(0, r.firstContent - r.started)
+    const cutoff = r.ended - WINDOW_MS
+    const list = (this.apiSamples.get(id) ?? []).filter((s) => Date.parse(s.time) > cutoff)
+    list.push(sample)
+    this.apiSamples.set(id, list.slice(-5000))
+    if (r.rateLimit) this.apiRateLimits.set(id, r.rateLimit)
+  }
+
+  /** Every API model's last half hour of requests and its latest rate limit, keyed by model id. */
+  apiTelemetry(): Record<string, { samples: APIRequestSample[]; rateLimit?: APIRateLimit }> {
+    const cutoff = this.now().getTime() - WINDOW_MS
+    const out: Record<string, { samples: APIRequestSample[]; rateLimit?: APIRateLimit }> = {}
+    for (const [id, list] of this.apiSamples) {
+      const samples = list.filter((s) => Date.parse(s.time) > cutoff)
+      if (!samples.length) continue
+      const entry: { samples: APIRequestSample[]; rateLimit?: APIRateLimit } = { samples }
+      const limit = this.apiRateLimits.get(id)
+      if (limit) entry.rateLimit = limit
+      out[id.toUpperCase()] = entry
+    }
+    return out
   }
 
   // MARK: Models

@@ -28,6 +28,10 @@ const MIGRATIONS: string[] = [
   `CREATE TABLE api_usage (day TEXT NOT NULL, model_id TEXT NOT NULL, requests INTEGER NOT NULL DEFAULT 0,
      prompt_tokens INTEGER NOT NULL DEFAULT 0, completion_tokens INTEGER NOT NULL DEFAULT 0,
      cached_tokens INTEGER NOT NULL DEFAULT 0, usd REAL NOT NULL DEFAULT 0, PRIMARY KEY (day, model_id));`,
+  // 0.12: the same per hour, kept for 48 hours, for "today by hour".
+  `CREATE TABLE api_usage_hourly (hour TEXT NOT NULL, model_id TEXT NOT NULL, requests INTEGER NOT NULL DEFAULT 0,
+     prompt_tokens INTEGER NOT NULL DEFAULT 0, completion_tokens INTEGER NOT NULL DEFAULT 0,
+     cached_tokens INTEGER NOT NULL DEFAULT 0, usd REAL NOT NULL DEFAULT 0, PRIMARY KEY (hour, model_id));`,
 ]
 
 export function openDatabase(path: string): Db {
