@@ -50,6 +50,13 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
     /// Podlight starts and stops a pod for this model. False: an API provider serves it, always ready.
     public var isPod: Bool { !provider.isAPI }
 
+    /// The model can call tools, which coding agents need to edit files and run commands. A pod
+    /// knows it from its tool-call parser; an API model from the provider's catalog.
+    public var supportsTools: Bool { isPod ? toolCallParser != nil : api?.capabilities.contains("tools") == true }
+
+    /// The model reads images: an API model whose provider says so. Pods are set up for text.
+    public var supportsImages: Bool { !isPod && api?.capabilities.contains("vision") == true }
+
     /// Which engine serves this model: GGUF runs on llama.cpp, everything else on vLLM.
     public var engine: InferenceEngine { format == .gguf ? .llamaCpp : .vllm }
 

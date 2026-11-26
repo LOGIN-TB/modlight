@@ -329,6 +329,16 @@
         }
       }
     },
+    "%@ takes at most %@ tokens at %@. These agents send long instructions and need at least 128k, better 200k: choose a model with more context.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nimmt bei %3$@ höchstens %2$@ Token. Diese Agenten schicken lange Anweisungen und brauchen mindestens 128k, besser 200k: Wähle ein Modell mit mehr Kontext."
+          }
+        }
+      }
+    },
     "%@ tokens": {
       "localizations": {
         "de": {
