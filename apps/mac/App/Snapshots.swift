@@ -51,7 +51,7 @@ enum Snapshots {
         }
         // Content views without the sidebar: its material does not render offscreen, and the help
         // pages are about the content anyway.
-        render("overview", size: CGSize(width: 720, height: 900), into: folder) { NavigationStack { OverviewView() }.environment(model) }
+        render("overview", size: CGSize(width: 820, height: 1100), into: folder) { NavigationStack { OverviewView() }.environment(model) }
         render("model-stopped", size: CGSize(width: 720, height: 640), into: folder) {
             NavigationStack { ModelDetailView(item: model.state.models[1]) }.environment(model)
         }
@@ -321,7 +321,7 @@ enum Snapshots {
         let glm = sampleVeniceOffers()[1].model(named: "glm-5.3", at: Date().addingTimeInterval(-3600))
         state.models = [coder, small, glm]
         var glmRun = ModelRun()
-        glmRun.lastRequestAt = Date().addingTimeInterval(-12)
+        glmRun.lastRequestAt = Date().addingTimeInterval(-2)
         state.runs[glm.id] = glmRun
         var run = ModelRun()
         run.podId = "sample"

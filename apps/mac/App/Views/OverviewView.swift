@@ -31,9 +31,15 @@ struct OverviewView: View {
     @ViewBuilder private var nowSection: some View {
         Section("Now") {
             let active = model.allActiveRuns
-            if active.isEmpty {
+            let apiActive = model.activeAPIModels
+            nowTiles
+            if active.isEmpty && apiActive.isEmpty {
                 Label("Nothing is running, so nothing is billed for GPUs.", systemImage: "moon.zzz")
-            } else {
+            }
+            ForEach(apiActive, id: \.model.id) { entry in
+                APIActivityRow(source: entry.source, item: entry.model, inFlight: entry.inFlight)
+            }
+            if !active.isEmpty {
                 ForEach(active, id: \.1.id) { source, item, run in
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
@@ -59,19 +65,6 @@ struct OverviewView: View {
                     }
                     .padding(.vertical, 2)
                 }
-                LabeledContent("Together", value: Format.perHour(model.totalCostPerHour))
-            }
-            let apiModels = model.state.models.filter { !$0.isPod }
-            if !apiModels.isEmpty {
-                LabeledContent {
-                    Text(Format.smallMoney(model.state.apiSpend(period: AppModel.todayKey)))
-                } label: {
-                    Text("Venice models, ready · today")
-                    Text(apiModels.map(\.name).joined(separator: ", "))
-                }
-                if let account = model.veniceAccount {
-                    LabeledContent("Venice balance", value: VeniceText.balances(account))
-                }
             }
             let disks = model.allKeptDisks
             if !disks.isEmpty {
@@ -83,6 +76,30 @@ struct OverviewView: View {
                 }
             }
         }
+    }
+
+    /// The few numbers that matter at a glance: what runs, what it costs now, today, and Venice.
+    private var nowTiles: some View {
+        let apiPerHour = model.state.models.filter { !$0.isPod }.map { model.apiSummary($0.id).usdPerHour }.reduce(0, +)
+        let pods = model.allActiveRuns.count
+        let venice = model.veniceAccount
+        return MetricGrid(minimumTileWidth: 140) {
+            MetricTile("Running pods", value: "\(pods)", symbol: "cpu",
+                       caption: pods == 0 ? String(localized: "nothing billed for GPUs") : String(localized: "\(Format.perHour(model.totalCostPerHour))"),
+                       tint: .green)
+            MetricTile("Cost per hour now", value: Format.perHour(model.totalCostPerHour + apiPerHour), symbol: "speedometer",
+                       caption: String(localized: "pods and Venice"))
+            MetricTile("Today", value: Format.money(spend.todayUsd), symbol: "calendar",
+                       caption: spend.dailyLimitUsd.map { String(localized: "of \(Format.money($0))") } ?? String(localized: "no limit"),
+                       status: CostsView.limitStatus(spend.todayUsd, spend.dailyLimitUsd))
+            if let venice {
+                MetricTile("Venice credit", value: venice.usd.map(Format.money) ?? VeniceText.balances(venice), symbol: "sparkles",
+                           caption: apiPerHour > 0 ? String(localized: "lasts about \(APIModelDetailView.runway((venice.usd ?? 0) / apiPerHour))")
+                                                   : String(localized: "nothing in use"),
+                           tint: Color(nsColor: ModelProvider.venice.activityColor))
+            }
+        }
+        .padding(.vertical, 4)
     }
 
     // MARK: Next steps
@@ -167,9 +184,17 @@ struct OverviewView: View {
     // MARK: Spending
 
     private var spendingSection: some View {
-        Section {
-            LimitRow(title: "Today", spent: spend.todayUsd, limit: spend.dailyLimitUsd)
-            LimitRow(title: "This month", spent: spend.monthUsd, limit: spend.monthlyLimitUsd)
+        let split = model.spendSplitByDay(in: .local)
+        let today = split[AppModel.todayKey] ?? (0, 0)
+        let month = split.filter { $0.key.hasPrefix(AppModel.monthKey) }.values
+            .reduce((pods: 0.0, api: 0.0)) { ($0.pods + $1.pods, $0.api + $1.api) }
+        func segments(_ s: (pods: Double, api: Double)) -> [MeterRow.Segment] {
+            s.api > 0 ? [.init(String(localized: "Pods"), value: s.pods, color: .green),
+                         .init("Venice", value: s.api, color: Color(nsColor: ModelProvider.venice.activityColor))] : []
+        }
+        return Section {
+            MeterRow("Today", value: spend.todayUsd, limit: spend.dailyLimitUsd, segments: segments(today))
+            MeterRow("This month", value: spend.monthUsd, limit: spend.monthlyLimitUsd, segments: segments(month))
         } header: {
             HStack {
                 Text(model.servers.isEmpty ? "Spending" : "Spending on this Mac")
@@ -278,5 +303,48 @@ private struct ServerOverviewSection: View {
                 Button("Connection") { model.selection = .serverConnection(server.id) }.buttonStyle(.link).font(.callout)
             }
         }
+    }
+}
+
+/// An API model answering now: its live token flow, requests in flight and what it costs per hour.
+struct APIActivityRow: View {
+    @Environment(AppModel.self) private var model
+    let source: Source
+    let item: PodlightModel
+    let inFlight: Int
+
+    var body: some View {
+        let live = model.apiSummary(item.id)
+        let tint = Color(nsColor: item.provider.activityColor)
+        Button { model.selection = .model(item.id) } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles").foregroundStyle(tint).frame(width: 20).accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(item.name).font(.headline)
+                        if case .server = source {
+                            Label(model.name(of: source), systemImage: "server.rack").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    Text(line(live)).font(.callout).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Sparkline(values: live.minutes.map { Double($0.newInput + $0.cachedInput + $0.output) }, color: tint)
+                    .frame(width: 120, height: 28)
+                StatusPill(inFlight > 0 ? .active(inFlight) : .ready, tint: tint,
+                           label: inFlight > 0 ? String(localized: "\(inFlight) requests running") : String(localized: "just used"))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func line(_ live: APITelemetrySummary) -> String {
+        var parts = [item.provider.displayName]
+        if live.usdPerHour > 0 { parts.append(Format.perHour(live.usdPerHour)) }
+        if let speed = live.tokensPerSecondMedian { parts.append(String(localized: "\(Int(speed.rounded())) tok/s")) }
+        if let cache = live.cacheShare { parts.append(String(localized: "cache \(APIModelDetailView.percent(cache))")) }
+        return parts.joined(separator: " · ")
     }
 }
