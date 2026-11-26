@@ -90,14 +90,15 @@ struct PodlightApp: App {
     }
 }
 
-/// The menu bar icon: a lit bulb while anything runs, so a running pod is never invisible.
+/// The menu bar icon: a lit bulb while anything runs or answers, so neither a running pod nor
+/// paid use of an API model is ever invisible. Green for pods, the provider's colour for API models.
 struct MenuBarLabel: View {
     let model: AppModel
 
     var body: some View {
-        let active = !model.state.activeRuns.isEmpty
-        Image(systemName: active ? "lightbulb.max.fill" : "lightbulb")
-            .accessibilityLabel(active ? Text("Podlight: pods running") : Text("Podlight: nothing running"))
+        let lamp = model.menuBarLamp
+        Image(nsImage: lamp.image())
+            .accessibilityLabel(Text(lamp.accessibilityText))
     }
 }
 

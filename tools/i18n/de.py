@@ -880,4 +880,10 @@ DE = {
     "The server starts and pays for its pods with its own RunPod key, and for Venice models with its own Venice key, both stored encrypted on the server. Podlight on this Mac never reads them back.": "Der Server startet und bezahlt seine Pods mit seinem eigenen RunPod-Key und Venice-Modelle mit seinem eigenen Venice-Key; beide liegen verschlüsselt auf dem Server. Podlight auf diesem Mac liest sie nie zurück.",
     "Venice did not accept this key.": "Venice hat diesen Key nicht angenommen.",
     "%@ takes at most %@ tokens at %@. These agents send long instructions and need at least 128k, better 200k: choose a model with more context.": "%1$@ nimmt bei %3$@ höchstens %2$@ Token. Diese Agenten schicken lange Anweisungen und brauchen mindestens 128k, besser 200k: Wähle ein Modell mit mehr Kontext.",
+    # Menu bar activity (0.11.1)
+    "%lld requests running": "%lld Anfragen laufen",
+    "Podlight: pods running, requests to %@ running": "Podlight: Pods laufen, Anfragen an %@ laufen",
+    "Podlight: requests to %@ running": "Podlight: Anfragen an %@ laufen",
+    "just used": "gerade benutzt",
+    "today %@": "heute %@",
 }

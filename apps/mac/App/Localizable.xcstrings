@@ -713,6 +713,16 @@
         }
       }
     },
+    "%lld requests running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Anfragen laufen"
+          }
+        }
+      }
+    },
     "%lld running": {
       "localizations": {
         "de": {
@@ -4581,6 +4591,26 @@
         }
       }
     },
+    "Podlight: pods running, requests to %@ running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight: Pods laufen, Anfragen an %@ laufen"
+          }
+        }
+      }
+    },
+    "Podlight: requests to %@ running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight: Anfragen an %@ laufen"
+          }
+        }
+      }
+    },
     "Pods": {
       "localizations": {
         "de": {
@@ -7719,6 +7749,16 @@
         }
       }
     },
+    "just used": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gerade benutzt"
+          }
+        }
+      }
+    },
     "no limit": {
       "localizations": {
         "de": {
@@ -7815,6 +7855,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "der Pod wird gelöscht, nichts wird berechnet"
+          }
+        }
+      }
+    },
+    "today %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "heute %@"
           }
         }
       }

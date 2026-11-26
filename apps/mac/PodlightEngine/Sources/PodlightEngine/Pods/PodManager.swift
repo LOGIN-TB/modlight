@@ -836,6 +836,9 @@ public actor PodManager {
 
     public func requestsInFlight(_ id: UUID) -> Int { inFlight[id] ?? 0 }
 
+    /// Requests in flight per model, only models with at least one: what the menu bar lights up for.
+    public func inFlightCounts() -> [UUID: Int] { inFlight.filter { $0.value > 0 } }
+
     // MARK: Tick
 
     /// Re-reads every pod from RunPod, keeps the watchdogs fed, and applies the rules.
