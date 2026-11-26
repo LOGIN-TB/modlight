@@ -66,7 +66,7 @@ enum Snapshots {
         render("connection-codex", size: CGSize(width: 720, height: 1000), into: folder) {
             ConnectionView(agent: .codex, showFiles: true).environment(model)
         }
-        render("costs", size: CGSize(width: 720, height: 760), into: folder) { CostsView().environment(model) }
+        render("costs", size: CGSize(width: 900, height: 1250), into: folder) { CostsView().environment(model) }
         render("start", size: CGSize(width: 460, height: 520), into: folder) { StartSheet(model: running).environment(model) }
         render("setup-key", size: CGSize(width: 600, height: 520), into: folder) {
             RunpodKeyStep(onDone: {}).environment(model).padding(24).frame(width: 600, height: 520)
