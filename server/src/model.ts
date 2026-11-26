@@ -282,6 +282,8 @@ export const settingsPatch = serverSettings.partial().extend({
   /** Write-only. Empty string removes it. */
   runpodApiKey: z.string().optional(),
   huggingFaceToken: z.string().optional(),
+  /** Venice's API key for API models; an Inference key is enough. Empty removes it. */
+  veniceApiKey: z.string().optional(),
 })
 export type SettingsPatch = z.infer<typeof settingsPatch>
 

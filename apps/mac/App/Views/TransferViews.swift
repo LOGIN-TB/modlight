@@ -42,7 +42,7 @@ struct TransferSheet: View {
             Divider()
             Form {
                 Section {
-                    Toggle("RunPod API key and Hugging Face token", isOn: $keys)
+                    Toggle("RunPod and Venice API keys and Hugging Face token", isOn: $keys)
                         .disabled(!model.hasRunpodKey)
                     Toggle("Spending limits and rules", isOn: $rules)
                 } footer: {

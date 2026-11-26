@@ -238,6 +238,8 @@ public struct ServerSettingsChange: Sendable {
     /// Write-only on the server; an empty string removes it.
     public mutating func runpodApiKey(_ value: String) { values["runpodApiKey"] = .string(value) }
     public mutating func huggingFaceToken(_ value: String) { values["huggingFaceToken"] = .string(value) }
+    /// The server's Venice key; empty removes it.
+    public mutating func veniceApiKey(_ value: String) { values["veniceApiKey"] = .string(value) }
 }
 
 public struct ServerClient: Sendable {
@@ -283,6 +285,18 @@ public struct ServerClient: Sendable {
         case "invalid": return .invalid
         case "missingPermission": return .missingPermission
         default: return .unreachable(String(localized: "The server could not reach RunPod."))
+        }
+    }
+
+    /// Checks a Venice key through the server (from a server before 0.11: unreachable).
+    public func verifyVeniceKey(_ key: String?) async throws(ServerError) -> APIKeyCheck {
+        struct Answer: Decodable { var result: String; var account: APIAccount? }
+        let body: [String: Any] = key.map { ["veniceApiKey": $0] } ?? [:]
+        let answer = try decode(Answer.self, from: try await call("POST", "/admin/settings/verify-venice", body: body, timeout: 30))
+        switch answer.result {
+        case "valid": return .valid(answer.account ?? APIAccount(balances: []))
+        case "invalid": return .invalid
+        default: return .unreachable(String(localized: "The server could not reach Venice."))
         }
     }
 

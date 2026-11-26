@@ -873,4 +873,10 @@ DE = {
     "none": "keins",
     "• At Venice: a private model that can use tools and is marked for code.": "• Bei Venice: ein privates Modell, das Tools nutzen kann und für Code gekennzeichnet ist.",
     "• Optional: a Hugging Face token, only for gated models (Settings → Providers).": "• Optional: ein Hugging-Face-Token, nur für gesperrte Modelle (Einstellungen → Anbieter).",
+    "Copies this Mac's RunPod and Venice keys, Hugging Face token, limits and rules to the server, and hands models over with their pods and disks.": "Kopiert die RunPod- und Venice-Keys, den Hugging-Face-Token, die Limits und Regeln dieses Macs auf den Server und übergibt Modelle mit ihren Pods und Festplatten.",
+    "Create a Venice API key": "Venice-API-Key anlegen",
+    "RunPod and Venice API keys and Hugging Face token": "RunPod- und Venice-API-Keys und Hugging-Face-Token",
+    "Saved. Balance: %@. Venice models can be added to the server now.": "Gespeichert. Guthaben: %@. Venice-Modelle lassen sich jetzt auf dem Server hinzufügen.",
+    "The server starts and pays for its pods with its own RunPod key, and for Venice models with its own Venice key, both stored encrypted on the server. Podlight on this Mac never reads them back.": "Der Server startet und bezahlt seine Pods mit seinem eigenen RunPod-Key und Venice-Modelle mit seinem eigenen Venice-Key; beide liegen verschlüsselt auf dem Server. Podlight auf diesem Mac liest sie nie zurück.",
+    "Venice did not accept this key.": "Venice hat diesen Key nicht angenommen.",
 }

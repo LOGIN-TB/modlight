@@ -379,6 +379,7 @@ struct ServerSettingsView: View {
     let serverID: UUID
     @State private var runpodKey = ""
     @State private var huggingFaceToken = ""
+    @State private var veniceKey = ""
     @State private var message: String?
     @State private var busy = false
     @State private var name = ""
@@ -432,7 +433,7 @@ struct ServerSettingsView: View {
                     Button("Bring This Mac's Setup Along…") { model.transfer = TransferRequest(serverID: serverID) }
                         .disabled(server.status != .online)
                 } footer: {
-                    Text("Copies this Mac's RunPod key, Hugging Face token, limits and rules to the server, and hands models over with their pods and disks.")
+                    Text("Copies this Mac's RunPod and Venice keys, Hugging Face token, limits and rules to the server, and hands models over with their pods and disks.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Section {
@@ -473,12 +474,25 @@ struct ServerSettingsView: View {
                     Button("Remove") { Task { await saveToken(remove: true) } }
                 }
             }
+            LabeledContent("Venice API key", value: settings.hasVeniceKey == true ? String(localized: "Saved on the server") : String(localized: "Not set (optional)"))
+            HStack {
+                SecureField(settings.hasVeniceKey == true ? "Replace key" : "Venice API key", text: $veniceKey)
+                Button("Check and Save") { Task { await saveVeniceKey() } }
+                    .disabled(veniceKey.trimmingCharacters(in: .whitespaces).isEmpty || busy)
+                if settings.hasVeniceKey == true {
+                    Button("Remove") { Task { await saveVeniceKey(remove: true) } }
+                }
+            }
+            if let account = server?.snapshot?.veniceAccount {
+                LabeledContent("Venice balance", value: VeniceText.balances(account))
+            }
             if let message { Text(message).font(.callout).foregroundStyle(.secondary) }
             Link("Create a RunPod API key", destination: Links.runpodAPIKeys)
+            Link("Create a Venice API key", destination: Links.veniceAPIKeys)
         } header: {
             Text("Access")
         } footer: {
-            Text("The server starts and pays for its pods with its own RunPod key, stored encrypted on the server. Podlight on this Mac never reads it back.")
+            Text("The server starts and pays for its pods with its own RunPod key, and for Venice models with its own Venice key, both stored encrypted on the server. Podlight on this Mac never reads them back.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -539,6 +553,33 @@ struct ServerSettingsView: View {
                 runpodKey = ""
             case .invalid: message = String(localized: "RunPod did not accept this key.")
             case .missingPermission: message = String(localized: "This key may not manage pods. Create one with read and write access.")
+            case .unreachable(let why): message = why
+            }
+        } catch {
+            message = Describe.serverError(error)
+        }
+    }
+
+    private func saveVeniceKey(remove: Bool = false) async {
+        guard let server else { return }
+        busy = true
+        defer { busy = false }
+        if remove {
+            var change = ServerSettingsChange()
+            change.veniceApiKey("")
+            message = await model.updateServer(serverID, change) ?? String(localized: "Removed.")
+            return
+        }
+        let key = veniceKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        do {
+            switch try await server.client(model.keychain).verifyVeniceKey(key) {
+            case .valid(let account):
+                var change = ServerSettingsChange()
+                change.veniceApiKey(key)
+                message = await model.updateServer(serverID, change)
+                    ?? String(localized: "Saved. Balance: \(VeniceText.balances(account)). Venice models can be added to the server now.")
+                veniceKey = ""
+            case .invalid: message = String(localized: "Venice did not accept this key.")
             case .unreachable(let why): message = why
             }
         } catch {

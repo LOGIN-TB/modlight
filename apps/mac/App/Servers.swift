@@ -309,13 +309,14 @@ extension AppModel {
 
     // MARK: From this Mac to a server
 
-    /// Copies this Mac's RunPod key and Hugging Face token (`keys`) and its limits and rules
+    /// Copies this Mac's RunPod and Venice keys and Hugging Face token (`keys`) and its limits and rules
     /// (`rules`) to a server, so nothing is typed twice. Returns an error sentence, or nil.
     func copyFromThisMac(to id: UUID, keys: Bool, rules: Bool) async -> String? {
         var change = ServerSettingsChange()
         if keys {
             if let key = try? keychain.read(.runpodAPIKey), !key.isEmpty { change.runpodApiKey(key) }
             if let token = try? keychain.read(.huggingFaceToken), !token.isEmpty { change.huggingFaceToken(token) }
+            if let venice = try? keychain.read(.veniceAPIKey), !venice.isEmpty { change.veniceApiKey(venice) }
         }
         if rules {
             let s = state.settings

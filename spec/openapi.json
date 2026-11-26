@@ -1364,6 +1364,9 @@
               },
               "hasHuggingFaceToken": {
                 "type": "boolean"
+              },
+              "hasVeniceKey": {
+                "type": "boolean"
               }
             }
           }
@@ -1446,6 +1449,9 @@
             "type": "string"
           },
           "huggingFaceToken": {
+            "type": "string"
+          },
+          "veniceApiKey": {
             "type": "string"
           }
         }
@@ -1534,6 +1540,98 @@
               }
             ],
             "description": "The RunPod account, at most about a minute old; null until first read or without a key."
+          },
+          "apiUsage": {
+            "type": "object",
+            "description": "Tokens and cost of API models: day (yyyy-MM-dd) → model id → totals.",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/APIUsageTotals"
+              }
+            }
+          },
+          "veniceAccount": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/APIAccount"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The Venice account, at most about a minute old; null until first read or without a key."
+          }
+        }
+      },
+      "APIUsageTotals": {
+        "type": "object",
+        "properties": {
+          "requests": {
+            "type": "integer"
+          },
+          "promptTokens": {
+            "type": "integer"
+          },
+          "completionTokens": {
+            "type": "integer"
+          },
+          "cachedTokens": {
+            "type": "integer"
+          },
+          "usd": {
+            "type": "number"
+          }
+        }
+      },
+      "APIAccount": {
+        "type": "object",
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "tier": {
+            "type": "string"
+          },
+          "keyExpiration": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nextEpochBegins": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rateLimits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "model": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -2673,6 +2771,78 @@
                       ]
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/settings/verify-venice": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Check a Venice key (the given one, or the stored one); with the account when valid",
+        "responses": {
+          "200": {
+            "description": "Result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "enum": [
+                        "valid",
+                        "invalid",
+                        "unreachable"
+                      ]
+                    },
+                    "account": {
+                      "$ref": "#/components/schemas/APIAccount"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/catalog/venice": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Venice's text models with prices, privacy tier and capabilities",
+        "responses": {
+          "200": {
+            "description": "Catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
