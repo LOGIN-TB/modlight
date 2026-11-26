@@ -39,6 +39,16 @@ enum Snapshots {
         model.showOtherMacsPodsForSnapshots(sampleOtherMacsPods())
         model.showBalanceForSnapshots(RunpodBalance(usd: 37.8, spendPerHourUsd: 1.21, spendLimitUsd: 80, checkedAt: .now))
         model.showVeniceForSnapshots(account: sampleVeniceAccount(), catalog: sampleVeniceOffers())
+        if let venice = model.state.models.first(where: { !$0.isPod }), let pricing = venice.api?.pricing {
+            model.showAPITelemetryForSnapshots(
+                samples: [venice.id: sampleAPISamples(pricing: pricing)],
+                rateLimits: [venice.id: APIRateLimit(limitRequests: 50, remainingRequests: 33, limitTokens: 1_000_000,
+                                                     remainingTokens: 380_000, at: .now)],
+                performance: [venice.api!.providerModelId: VenicePerformance(
+                    uptime24hPercent: 99.6, deprecated: false,
+                    lastHour: .init(ttftP50Ms: 1232, ttftP90Ms: 4461, tokensPerSecond: 200.8),
+                    lastDay: .init(ttftP50Ms: 1232, ttftP90Ms: 4393, tokensPerSecond: 217))])
+        }
         // Content views without the sidebar: its material does not render offscreen, and the help
         // pages are about the content anyway.
         render("overview", size: CGSize(width: 720, height: 900), into: folder) { NavigationStack { OverviewView() }.environment(model) }
@@ -67,7 +77,7 @@ enum Snapshots {
         render("move", size: CGSize(width: 460, height: 360), into: folder) { MoveToApplicationsView() }
         // Venice: a ready model, the catalog to add from, the key step.
         if let venice = model.state.models.first(where: { !$0.isPod }) {
-            render("venice-model", size: CGSize(width: 720, height: 900), into: folder) {
+            render("venice-model", size: CGSize(width: 900, height: 1500), into: folder) {
                 NavigationStack { APIModelDetailView(item: venice) }.environment(model)
             }
         }
@@ -270,6 +280,26 @@ enum Snapshots {
         ]
     }
 
+    /// Half an hour of an agent on a Venice model: requests every few seconds with idle gaps, a
+    /// growing conversation, the cache catching on in the last ten minutes.
+    nonisolated static func sampleAPISamples(pricing: APIPricing) -> [APIRequestSample] {
+        let now = Date()
+        return (0..<160).compactMap { i in
+            let secondsAgo = Double(160 - i) * 11
+            if Int(secondsAgo / 60) % 9 == 4 { return nil }
+            let prompt = 40_000 + i * 380
+            let cached = secondsAgo < 600 ? Int(Double(prompt) * 0.82) : Int(Double(prompt) * 0.08)
+            let output = 250 + (i * 37) % 900
+            let usage = APIUsage(promptTokens: prompt, completionTokens: output, cachedTokens: cached)
+            let ttft = 900 + (i * 53) % 1400
+            let speed = 160.0 + Double((i * 17) % 60)
+            return APIRequestSample(time: now.addingTimeInterval(-secondsAgo), promptTokens: prompt, cachedTokens: cached,
+                                    completionTokens: output, usd: APICost.of(usage, pricing: pricing).usd,
+                                    ttftMs: ttft, durationMs: ttft + Int(Double(output) / speed * 1000),
+                                    status: i == 97 ? 429 : 200, streamed: true)
+        }
+    }
+
     nonisolated static func sampleVeniceAccount() -> APIAccount {
         APIAccount(balances: [.init(currency: "USD", amount: 18.42), .init(currency: "DIEM", amount: 2), .init(currency: "BUNDLED_CREDITS", amount: 0)],
                    tier: "paid", keyExpiration: nil, nextEpochBegins: Calendar.current.startOfDay(for: .now).addingTimeInterval(86_400),
@@ -320,11 +350,14 @@ enum Snapshots {
             let amount = weekday == 1 || weekday == 7 ? 0 : [1.2, 2.6, 0.9, 3.4, 1.8][offset % 5]
             state.spendByDay[PodlightState.dayKey(day)] = amount
         }
-        for (offset, requests) in [(0, 64), (1, 120), (2, 18)] {
+        for (offset, requests) in [(0, 640), (1, 1200), (2, 180)] {
             guard let day = calendar.date(byAdding: .day, value: -offset, to: .now) else { continue }
-            for _ in 0..<requests {
-                state.recordAPIUsage(APIUsage(promptTokens: 24_000, completionTokens: 900, cachedTokens: 20_000), cost: APICost.of(
-                    APIUsage(promptTokens: 24_000, completionTokens: 900, cachedTokens: 20_000), pricing: glm.api!.pricing), model: glm.id, at: day)
+            let start = calendar.startOfDay(for: day).addingTimeInterval(8 * 3600)
+            let span = max(3600, (offset == 0 ? Date.now : start.addingTimeInterval(10 * 3600)).timeIntervalSince(start))
+            for i in 0..<requests {
+                let usage = APIUsage(promptTokens: 60_000 + (i % 40) * 1_000, completionTokens: 700, cachedTokens: i % 3 == 0 ? 50_000 : 4_000)
+                let at = start.addingTimeInterval(span * Double(i) / Double(requests))
+                state.recordAPIUsage(usage, cost: APICost.of(usage, pricing: glm.api!.pricing), model: glm.id, at: at)
             }
         }
         return state

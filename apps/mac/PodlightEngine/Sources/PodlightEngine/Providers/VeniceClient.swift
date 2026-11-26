@@ -190,9 +190,21 @@ public struct VenicePerformance: Codable, Sendable, Equatable {
         public var ttftP50Ms: Int?
         public var ttftP90Ms: Int?
         public var tokensPerSecond: Double?
+        public init(ttftP50Ms: Int?, ttftP90Ms: Int?, tokensPerSecond: Double?) {
+            self.ttftP50Ms = ttftP50Ms
+            self.ttftP90Ms = ttftP90Ms
+            self.tokensPerSecond = tokensPerSecond
+        }
     }
     public var uptime24hPercent: Double?
     public var deprecated: Bool
     public var lastHour: Window?
     public var lastDay: Window?
+
+    public init(uptime24hPercent: Double?, deprecated: Bool, lastHour: Window?, lastDay: Window?) {
+        self.uptime24hPercent = uptime24hPercent
+        self.deprecated = deprecated
+        self.lastHour = lastHour
+        self.lastDay = lastDay
+    }
 }
