@@ -151,6 +151,23 @@ struct VeniceGatewayTests {
         let (legacy, legacyBody) = try await post("/v1/completions", #"{"model":"uncensored","prompt":"Hi"}"#)
         #expect(legacy == 404 && legacyBody.contains("unsupported_endpoint"))
 
+        // Claude Code: Messages become a chat completion and the answer comes back as Anthropic events.
+        let (messages, messagesBody) = try await post("/v1/messages", #"{"model":"uncensored","max_tokens":100,"stream":true,"system":"Be brief.","messages":[{"role":"user","content":"Hi"}]}"#)
+        #expect(messages == 200)
+        #expect(messagesBody.contains("event: message_start") && messagesBody.contains(#""text":"Hal""#) && messagesBody.contains("event: message_stop"))
+        let sent = await log.last()
+        #expect(await log.paths.last == "/api/v1/chat/completions")
+        #expect(sent?["model"] as? String == "venice-uncensored-1-2")
+        #expect((sent?["messages"] as? [[String: Any]])?.first?["role"] as? String == "system")
+        let (plainMessage, plainMessageBody) = try await post("/v1/messages", #"{"model":"uncensored","max_tokens":100,"messages":[{"role":"user","content":"Hi"}]}"#)
+        #expect(plainMessage == 200 && plainMessageBody.contains(#""type":"message""#) && plainMessageBody.contains("Hallo"))
+        let (count, countBody) = try await post("/v1/messages/count_tokens", #"{"model":"uncensored","messages":[{"role":"user","content":"Hello there"}]}"#)
+        #expect(count == 200 && countBody.contains("input_tokens"))
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(await manager.state().apiTotals(model.id, period: today).requests == 5, "both Messages requests were counted")
+        let (brokeMessage, brokeMessageBody) = try await post("/v1/messages", #"{"model":"uncensored","max_tokens":10,"messages":[{"role":"user","content":"broke"}]}"#)
+        #expect(brokeMessage == 402 && brokeMessageBody.contains("billing_error"))
+
         // At the spending limit API models are refused like pods.
         _ = try await manager.store.update { $0.settings.dailyLimitUsd = 0.01 }
         let before = await log.count

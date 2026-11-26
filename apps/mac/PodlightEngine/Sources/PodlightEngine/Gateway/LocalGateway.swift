@@ -141,6 +141,9 @@ public struct LocalGateway: Sendable {
         // What goes upstream: a pod gets the body as it came (system entries fixed for the Messages
         // API); an API provider gets its own model id and a request for usage.
         var meter: UsageMeter?
+        var upstreamPath = path
+        /// Claude Code's Messages request, sent to the provider as a chat completion.
+        var bridged = false
         switch endpoint.upstream {
         case .pod:
             if anthropic, let fixed = Self.systemMessagesAsReminders(json),
@@ -148,10 +151,24 @@ public struct LocalGateway: Sendable {
                 data = encoded
             }
         case .api(let provider, let providerModelId):
-            guard APIForward.supports(path, provider: provider), !anthropic else {
+            guard APIForward.supports(path, provider: provider) else {
                 return Self.response(for: .unsupportedPath(path, provider), model: name, anthropic: anthropic)
             }
-            let rewritten = APIForward.rewrite(json, path: path, provider: provider, providerModelId: providerModelId)
+            var outgoing = json
+            if path == "/v1/messages/count_tokens" {
+                // OpenAI-style providers cannot count; Claude Code only needs an estimate.
+                return Self.json(200, ["input_tokens": AnthropicBridge.estimateTokens(json)])
+            }
+            if path == "/v1/messages" {
+                do {
+                    outgoing = try AnthropicBridge.request(json)
+                } catch let error as AnthropicBridge.InvalidRequest {
+                    return Self.error(400, error.message, code: "invalid_request", anthropic: true)
+                }
+                upstreamPath = "/v1/chat/completions"
+                bridged = true
+            }
+            let rewritten = APIForward.rewrite(outgoing, path: upstreamPath, provider: provider, providerModelId: providerModelId)
             data = (try? JSONSerialization.data(withJSONObject: rewritten.body)) ?? data
             meter = UsageMeter(dropUsageChunk: !rewritten.clientWantsUsage)
         }
@@ -159,7 +176,7 @@ public struct LocalGateway: Sendable {
         await manager.requestBegan(endpoint.modelId)
         // A pod's address is its engine's root (`…/v1/…` follows); a provider's ends in its own
         // version (`https://api.venice.ai/api/v1`), so only the rest of the path follows.
-        let relative = endpoint.upstream == .pod ? String(path.dropFirst()) : String(path.dropFirst("/v1/".count))
+        let relative = endpoint.upstream == .pod ? String(path.dropFirst()) : String(upstreamPath.dropFirst("/v1/".count))
         var target = endpoint.baseURL.appendingPathComponent(relative)
         // Claude Code sends `?beta=true`; keep any query as it came.
         if let query = incoming.uri.query, !query.isEmpty, var parts = URLComponents(url: target, resolvingAgainstBaseURL: false) {
@@ -223,6 +240,12 @@ public struct LocalGateway: Sendable {
 
         let manager = self.manager
         let modelId = endpoint.modelId
+        if bridged {
+            let streamed = (http?.value(forHTTPHeaderField: "Content-Type") ?? "").contains("text/event-stream")
+            headers[.contentType] = streamed ? "text/event-stream" : "application/json"
+            return Response(status: .init(code: status), headers: headers,
+                            body: Self.bridgedBody(bytes, streamed: streamed, model: name, manager: manager, modelId: modelId))
+        }
         let startingMeter = meter
         let responseBody = ResponseBody { writer in
             var meter = startingMeter
@@ -258,6 +281,55 @@ public struct LocalGateway: Sendable {
             try await writer.finish(nil)
         }
         return Response(status: .init(code: status), headers: headers, body: responseBody)
+    }
+
+    /// A provider's chat completion answer as Anthropic Messages: a stream event by event, or one
+    /// message. Usage is booked from the provider's answer either way.
+    static func bridgedBody(_ bytes: URLSession.AsyncBytes, streamed: Bool, model: String,
+                            manager: PodManager, modelId: UUID) -> ResponseBody {
+        ResponseBody { writer in
+            var usage: APIUsage?
+            defer {
+                let booked = usage
+                Task {
+                    if let booked { await manager.recordAPIUsage(modelId, usage: booked) }
+                    await manager.requestEnded(modelId)
+                }
+            }
+            func send(_ events: [[String: Any]]) async throws {
+                for event in events {
+                    let type = event["type"] as? String ?? "message"
+                    try await writer.write(ByteBuffer(string: "event: \(type)\ndata: \(AnthropicBridge.canonicalJSON(event))\n\n"))
+                }
+            }
+            if streamed {
+                var translator = AnthropicBridge.StreamTranslator(requestModel: model)
+                var line = Data()
+                func take(_ line: Data) async throws {
+                    guard line.starts(with: Data("data:".utf8)) else { return }
+                    let payload = Data(line.dropFirst(5))
+                    guard let chunk = (try? JSONSerialization.jsonObject(with: payload)) as? [String: Any] else { return }
+                    if let found = APIUsage.from(chunk) { usage = found }
+                    try await send(translator.feed(chunk))
+                }
+                for try await byte in bytes {
+                    line.append(byte)
+                    guard byte == UInt8(ascii: "\n") else { continue }
+                    try await take(line)
+                    line.removeAll(keepingCapacity: true)
+                }
+                if !line.isEmpty { try await take(line) }
+                try await send(translator.finish())
+            } else {
+                var body = Data()
+                for try await byte in bytes { body.append(byte) }
+                let json = (try? JSONSerialization.jsonObject(with: body)) as? [String: Any] ?? [:]
+                usage = APIUsage.from(json)
+                let message = AnthropicBridge.response(json, requestModel: model)
+                try await writer.write(ByteBuffer(bytes: (try? JSONSerialization.data(withJSONObject: message)) ?? Data("{}".utf8)))
+            }
+            try await writer.finish(nil)
+        }
     }
 
     static func upstreamName(_ endpoint: PodEndpoint) -> String {
