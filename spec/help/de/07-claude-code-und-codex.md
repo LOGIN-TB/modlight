@@ -8,6 +8,10 @@ Claude Code von Anthropic und Codex von OpenAI laufen im Terminal. Beide lassen 
 - Beide Agenten schicken lange Anweisungen mit. Stell mindestens 128.000 Token Kontext ein, besser 200.000. Ist es weniger, warnt Podlight bei den Konfigurationen.
 - Starte das Modell vorher in Podlight. Ein neuer Pod braucht länger, als die Agenten warten.
 
+## Modelle von Venice
+
+Auch ein Venice-Modell funktioniert mit beiden Agenten, ohne Pod und ohne Wartezeit. Für Claude Code übersetzt Podlight zwischen der Anthropic-Schnittstelle und der von Venice. Wähle beim Hinzufügen ein Modell mit Werkzeugaufrufen und genug Kontext. Mehr dazu unter „Venice“.
+
 ## Claude Code
 
 Installieren im Terminal:

@@ -95,6 +95,7 @@ struct MarkdownText: View {
             }
             if code != nil { code?.append(raw); continue }
             if line.isEmpty { flush(); continue }
+            if line.hasPrefix("<!--") && line.hasSuffix("-->") { continue }  // authoring notes, e.g. screenshot TODOs
             if line.hasPrefix("#") {
                 flush()
                 let level = line.prefix { $0 == "#" }.count

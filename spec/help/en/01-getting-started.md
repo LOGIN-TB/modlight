@@ -46,3 +46,7 @@ You find "Start" with the model, right below its status, on the overview, and at
 
 
 ![Starting with "Runs until"](screenshots/en/start.png)
+
+## Without a pod: Venice
+
+Instead of renting a card, you can also use a ready model from Venice.ai. It answers right away and is billed per token instead of per hour. You need an account and an API key at Venice. "Venice" explains how.
