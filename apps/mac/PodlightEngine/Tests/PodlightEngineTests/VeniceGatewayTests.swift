@@ -214,6 +214,19 @@ struct VeniceGatewayTests {
     }
 }
 
+@Suite("Venice metrics")
+struct VeniceMetricsTests {
+    @Test func readsThePublicIndex() throws {
+        let data = try Data(contentsOf: Spec.root.appendingPathComponent("fixtures/venice-performance.json"))
+        let figures = try VeniceClient.performance(from: data)
+        let glm = try #require(figures["glm-5-3-flash-uncensored"])
+        #expect(glm.uptime24hPercent == 99.6)
+        #expect(glm.lastHour?.ttftP50Ms == 1232)
+        #expect(glm.lastHour?.tokensPerSecond == 200.8)
+        #expect(glm.lastDay?.ttftP90Ms == 4393)
+    }
+}
+
 @Suite("Usage meter")
 struct UsageMeterTests {
     @Test func dropsTheUsageChunkOnlyWhenAsked() {

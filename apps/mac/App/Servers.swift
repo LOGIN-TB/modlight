@@ -458,3 +458,70 @@ extension AppModel {
         return MenuBarLamp(podActive: !allActiveRuns.isEmpty, apiProviders: providers)
     }
 }
+
+// MARK: Live figures of API models
+
+extension AppModel {
+    /// An API model's requests of the last half hour, wherever it lives.
+    func apiSamples(_ id: UUID) -> [APIRequestSample] {
+        switch source(of: id) {
+        case .local: localAPISamples[id] ?? []
+        case .server(let server): self.server(server)?.snapshot?.apiSamples[id] ?? []
+        }
+    }
+
+    /// The provider's rate limit for an API model, from its latest answer.
+    func apiRateLimit(_ id: UUID) -> APIRateLimit? {
+        switch source(of: id) {
+        case .local: localAPIRateLimits[id]
+        case .server(let server): self.server(server)?.snapshot?.apiRateLimits[id]
+        }
+    }
+
+    /// The half-hour summary of an API model, with the runway of the balance that pays for it.
+    func apiSummary(_ id: UUID) -> APITelemetrySummary {
+        let source = source(of: id)
+        return APITelemetry.summary(apiSamples(id), now: now, balanceUsd: veniceAccount(in: source)?.usd)
+    }
+
+    /// Cost per hour of today for an API model (or all of a source's API models with nil), 0…23.
+    func apiCostByHour(_ id: UUID?, in source: Source) -> [(hour: Int, usd: Double)] {
+        let byHour: [String: [String: APIUsageTotals]] = switch source {
+        case .local: state.apiUsageByHour
+        case .server(let server): self.server(server)?.snapshot?.apiUsageByHour ?? [:]
+        }
+        let today = AppModel.todayKey
+        return (0..<24).map { hour in
+            let key = String(format: "%@T%02d", today, hour)
+            let entries = byHour[key] ?? [:]
+            let usd = id.map { entries[$0.uuidString]?.usd ?? 0 } ?? entries.values.map(\.usd).reduce(0, +)
+            return (hour, usd)
+        }
+    }
+
+    /// What a source spent per day, split into pods and API models (pods are the rest of the day's spend).
+    func spendSplitByDay(in source: Source) -> [String: (pods: Double, api: Double)] {
+        let total: [String: Double]
+        let api: [String: [String: APIUsageTotals]]
+        switch source {
+        case .local:
+            total = state.spendByDay
+            api = state.apiUsage
+        case .server(let id):
+            total = server(id)?.snapshot?.spendByDay ?? [:]
+            api = server(id)?.snapshot?.apiUsage ?? [:]
+        }
+        var out: [String: (pods: Double, api: Double)] = [:]
+        for (day, usd) in total {
+            let apiUsd = api[day]?.values.map(\.usd).reduce(0, +) ?? 0
+            out[day] = (max(0, usd - apiUsd), apiUsd)
+        }
+        return out
+    }
+
+    /// Venice's public figures for an API model.
+    func performance(of item: PodlightModel) -> VenicePerformance? {
+        guard item.provider == .venice, let id = item.api?.providerModelId else { return nil }
+        return venicePerformance[id]
+    }
+}

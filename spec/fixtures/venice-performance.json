@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-11-26T19:51:30.503Z",
+  "models": [
+    {
+      "deprecated": false,
+      "detail_path": "models/glm-5-3-flash-uncensored.json",
+      "id": "glm-5-3-flash-uncensored",
+      "name": "GLM 5.3 Flash Uncensored",
+      "performance": {
+        "1h": {
+          "tokens_per_second": 200.8,
+          "ttft_ms": {
+            "p50": 1232,
+            "p75": 2120,
+            "p90": 4461,
+            "p95": 7215,
+            "p99": 14052
+          }
+        },
+        "24h": {
+          "tokens_per_second": 217,
+          "ttft_ms": {
+            "p50": 1232,
+            "p75": 2153,
+            "p90": 4393,
+            "p95": 7215,
+            "p99": 14721
+          }
+        },
+        "4h": {
+          "tokens_per_second": 197.7,
+          "ttft_ms": {
+            "p50": 1232,
+            "p75": 2221,
+            "p90": 4531,
+            "p95": 7215,
+            "p99": 14495
+          }
+        }
+      },
+      "uptime_24h_percent": 99.6
+    },
+    {
+      "deprecated": false,
+      "detail_path": "models/venice-uncensored-1-2.json",
+      "id": "venice-uncensored-1-2",
+      "name": "Venice Uncensored 1.2",
+      "performance": {
+        "1h": {
+          "tokens_per_second": 113.2,
+          "ttft_ms": {
+            "p50": 684,
+            "p75": 932,
+            "p90": 1461,
+            "p95": 2291,
+            "p99": 4393
+          }
+        },
+        "24h": {
+          "tokens_per_second": 126.1,
+          "ttft_ms": {
+            "p50": 694,
+            "p75": 904,
+            "p90": 1232,
+            "p95": 1680,
+            "p99": 3762
+          }
+        },
+        "4h": {
+          "tokens_per_second": 111.4,
+          "ttft_ms": {
+            "p50": 694,
+            "p75": 947,
+            "p90": 1331,
+            "p95": 1844,
+            "p99": 3941
+          }
+        }
+      },
+      "uptime_24h_percent": 99.8
+    }
+  ],
+  "schema_version": 1,
+  "window": {
+    "bucket_seconds": 900,
+    "end": "2026-11-26T19:45:00.000Z",
+    "start": "2026-11-25T19:45:00.000Z"
+  }
+}

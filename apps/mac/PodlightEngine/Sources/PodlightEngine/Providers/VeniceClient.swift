@@ -43,6 +43,39 @@ public struct VeniceClient: Sendable {
         return try Self.account(from: data)
     }
 
+    /// Venice's public figures per model (uptime, time to first token, output speed), refreshed by
+    /// Venice every five minutes. No key needed.
+    public static let performanceIndex = URL(string: "https://metrics.venice.ai/v1/index.json")!
+
+    public func performance(from url: URL = VeniceClient.performanceIndex) async throws -> [String: VenicePerformance] {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 20
+        let (data, response) = try await transport.send(request)
+        guard (200..<300).contains(response.statusCode) else { throw VeniceError(status: response.statusCode, body: "") }
+        return try Self.performance(from: data)
+    }
+
+    /// `{models: [{id, uptime_24h_percent, deprecated, performance: {1h|4h|24h: {ttft_ms: {p50, p90}, tokens_per_second}}}]}`.
+    public static func performance(from data: Data) throws -> [String: VenicePerformance] {
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let models = json["models"] as? [[String: Any]] else { throw VeniceError(status: 200, body: "no models in the metrics") }
+        var out: [String: VenicePerformance] = [:]
+        for model in models {
+            guard let id = model["id"] as? String else { continue }
+            let figures = model["performance"] as? [String: Any] ?? [:]
+            func window(_ key: String) -> VenicePerformance.Window? {
+                guard let w = figures[key] as? [String: Any] else { return nil }
+                let ttft = w["ttft_ms"] as? [String: Any] ?? [:]
+                return VenicePerformance.Window(ttftP50Ms: APIUsage.int(ttft["p50"]), ttftP90Ms: APIUsage.int(ttft["p90"]),
+                                                tokensPerSecond: APIUsage.double(w["tokens_per_second"]))
+            }
+            out[id] = VenicePerformance(uptime24hPercent: APIUsage.double(model["uptime_24h_percent"]),
+                                        deprecated: model["deprecated"] as? Bool ?? false,
+                                        lastHour: window("1h"), lastDay: window("24h"))
+        }
+        return out
+    }
+
     private func get(_ path: String, query: [String: String], auth: Bool) async throws -> (Data, HTTPURLResponse) {
         var parts = URLComponents(url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if !query.isEmpty { parts.queryItems = query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) } }
@@ -149,4 +182,17 @@ public struct VeniceError: Error, Sendable, Equatable, CustomStringConvertible {
     public var status: Int
     public var body: String
     public var description: String { "Venice answered \(status): \(body.prefix(200))" }
+}
+
+/// How a Venice model performs for everyone, from Venice's public metrics.
+public struct VenicePerformance: Codable, Sendable, Equatable {
+    public struct Window: Codable, Sendable, Equatable {
+        public var ttftP50Ms: Int?
+        public var ttftP90Ms: Int?
+        public var tokensPerSecond: Double?
+    }
+    public var uptime24hPercent: Double?
+    public var deprecated: Bool
+    public var lastHour: Window?
+    public var lastDay: Window?
 }
