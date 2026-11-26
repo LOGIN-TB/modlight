@@ -10,6 +10,7 @@ import * as scheduler from '../src/rules/scheduler.ts'
 import { failure, anthropicType, looksDegenerate, summarizeEngineLog, systemMessagesAsReminders, type GatewayError } from '../src/gateway/shape.ts'
 import { MODEL_NAME } from '../src/model.ts'
 import { specPath } from '../src/spec.ts'
+import * as bridge from '../src/gateway/anthropicBridge.ts'
 import type { GPUType } from '../src/runpod/types.ts'
 
 // Every case in spec/cases that applies to the server. The spec is the source of truth: when a
@@ -21,7 +22,7 @@ interface SpecCase { id: string; title: string; function: string; input: any; ex
 const APP_ONLY = new Set(['kvProfile', 'ggufQuants', 'ggufKvProfile'])
 
 const FILES = ['scheduler.json', 'scheduler-podlight.json', 'capacity.json', 'gpu-suggest.json', 'pod-plan.json',
-  'hosting.json', 'gateway.json', 'kv-profile.json', 'gguf.json', 'price-guard.json']
+  'hosting.json', 'gateway.json', 'kv-profile.json', 'gguf.json', 'price-guard.json', 'anthropic-bridge.json']
 
 const catalogs = new Map<string, GPUType[]>()
 function catalog(path: string): GPUType[] {
@@ -104,6 +105,15 @@ function run(c: SpecCase): unknown {
     case 'isValidName': return MODEL_NAME.test(i.name)
     case 'summarizeEngineLog': return summarizeEngineLog(i.lines)
     case 'looksDegenerate': return looksDegenerate(i.text)
+    case 'anthropicRequest':
+      try { return bridge.request(i.body) } catch (e) { if (e instanceof bridge.BridgeError) return { thrown: e.message }; throw e }
+    case 'anthropicResponse': return bridge.response(i.body, i.requestModel)
+    case 'anthropicStream': {
+      const t = new bridge.StreamTranslator(i.requestModel)
+      return [...(i.chunks as Record<string, unknown>[]).flatMap((c) => t.feed(c)), ...t.finish()]
+    }
+    case 'anthropicError': return bridge.error(i.status, i.body)
+    case 'anthropicTokenEstimate': return bridge.estimateTokens(i.body)
     default: throw new Error(`no server implementation for ${c.function}`)
   }
 }

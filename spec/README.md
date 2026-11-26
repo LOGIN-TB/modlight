@@ -14,6 +14,7 @@ against each other.
 | `cases/pod-plan.json` | The pod request (image, env, disks, command) and the order of cards tried. | Recorded from Swift; Swift and the server |
 | `cases/hosting.json` | Regions, Secure Cloud, placement check, data centers to request, storage prices. | Recorded from Swift; Swift and the server |
 | `cases/gateway.json` | System entries rewritten for the Messages API, error status and codes, the served-name rule, the engine-log summary. | Recorded from Swift; Swift and the server |
+| `cases/anthropic-bridge.json` | Anthropic Messages ⇄ Chat Completions for per-token providers without `/messages` (Venice): the request, the response, the stream events, errors, the `count_tokens` estimate. 41 cases. | Written by hand (0.11.0); Swift and the server |
 | `cases/kv-profile.json`, `cases/gguf.json` | KV cache per token from `config.json` or a GGUF header; GGUF quantisations. | Planning, done in the app only (`status: swift`) |
 | `cases/telemetry.json` | What the pod's watchdog reads from `nvidia-smi` and the engine's `/metrics` (requests, KV cache, token rates). | Parsed in the pod only (`status: pod`), run by `tools/test_watchdog.py`; the app and the server store and show the result |
 | `fixtures/catalog.json` | A RunPod GPU catalog the card cases are computed against. | |
