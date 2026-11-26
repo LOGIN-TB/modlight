@@ -8,6 +8,10 @@ Anthropic's Claude Code and OpenAI's Codex run in the terminal. Both can use a m
 - Both agents send long instructions. Set at least 128,000 tokens of context, better 200,000. With less, Podlight warns next to the configuration.
 - Start the model in Podlight first. A new pod takes longer than the agents wait.
 
+## Models from Venice
+
+A Venice model works with both agents too, without a pod and without waiting. For Claude Code, Podlight translates between the Anthropic interface and Venice's. When you add it, pick a model with tool calls and enough context. More under "Venice".
+
 ## Claude Code
 
 Install in Terminal:

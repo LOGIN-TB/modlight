@@ -46,3 +46,7 @@ Den Knopf „Starten“ findest du beim Modell direkt unter seinem Status, in de
 
 
 ![Starten mit „Läuft bis“](screenshots/de/start.png)
+
+## Ohne Pod: Venice
+
+Statt eine Karte zu mieten, kannst du auch ein fertiges Modell von Venice.ai verwenden. Es antwortet sofort und kostet pro Token statt pro Stunde. Dafür brauchst du ein Konto und einen API-Key bei Venice. Wie das geht, steht unter „Venice“.
