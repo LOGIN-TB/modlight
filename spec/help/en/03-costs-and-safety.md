@@ -20,6 +20,8 @@ Every pod runs a small watchdog. If it hears nothing from Podlight for 15 minute
 
 Under Settings → General you set how much Podlight may spend per day and per month. At a limit, Podlight stops the pods and does not start them again until the next day or month, not even when an agent asks.
 
+Models at Venice count too: Podlight adds their per-token costs to the same limits and sends no more requests to Venice once a limit is reached. More under "Venice".
+
 ![The Costs view](screenshots/en/costs.png)
 
 The figures under "Costs" are Podlight's own count: price per hour times running time, for this Mac's pods only. RunPod's billing is authoritative. "Credit at RunPod" shows what is left in your RunPod account and how long it lasts at what the whole account costs per hour right now, other pods included. Under a day it turns orange, under three hours red.

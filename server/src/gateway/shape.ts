@@ -1,7 +1,8 @@
 // What the gateway changes in a request and what it answers on failure. Port of the pure parts of
 // LocalGateway.swift; held to spec/cases/gateway.json.
 
-import type { PricedChoice } from '../model.ts'
+import type { ModelProvider, PricedChoice } from '../model.ts'
+import { providerName, type ProviderFailure } from '../providers/api.ts'
 
 type Json = Record<string, unknown>
 
@@ -44,6 +45,9 @@ export type GatewayError =
   | { kind: 'notAllowed' }
   | { kind: 'hostBusy' }
   | { kind: 'cardTooExpensive'; wanted: PricedChoice | null; ceiling: number; pricier: PricedChoice[] }
+  | { kind: 'missingProviderKey'; provider: ModelProvider }
+  | { kind: 'provider'; failure: ProviderFailure }
+  | { kind: 'unsupportedPath'; path: string; provider: ModelProvider }
 
 export class GatewayFailure extends Error {
   readonly error: GatewayError
@@ -87,6 +91,12 @@ export function failure(error: GatewayError, model: string): Failure {
     }
     case 'hostBusy':
       return { status: 503, code: 'host_busy', message: `The card on the machine of ${model}'s pod is taken right now, so it could not resume. Its disk with the model is kept, and the server keeps trying to resume it for half an hour. Try again in a few minutes, or start it on a new card in the Podlight app.` }
+    case 'missingProviderKey':
+      return { status: 503, code: 'setup_incomplete', message: `This Podlight server has no ${providerName(error.provider)} API key yet. Add it in the Podlight app under this server.` }
+    case 'provider':
+      return { status: error.failure.status, code: error.failure.code, message: error.failure.message }
+    case 'unsupportedPath':
+      return { status: 404, code: 'unsupported_endpoint', message: `${model} runs at ${providerName(error.provider)}, which does not serve ${error.path}. Use /v1/chat/completions, /v1/responses or /v1/messages.` }
   }
 }
 
@@ -94,6 +104,7 @@ export function anthropicType(status: number): string {
   switch (status) {
     case 400: return 'invalid_request_error'
     case 401: return 'authentication_error'
+    case 402: return 'billing_error'
     case 403: return 'permission_error'
     case 404: return 'not_found_error'
     case 429: return 'rate_limit_error'

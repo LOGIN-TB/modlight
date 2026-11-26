@@ -58,7 +58,7 @@ export function openapi(): object {
         HostingPolicy: schema(hostingPolicy),
         GPUChoice: schema(gpuChoice),
         PodTelemetry: { ...schema(podTelemetry), description: 'One sample of what a pod is doing, measured by its watchdog. `time` is Unix seconds; a missing source leaves out its fields.' },
-        Settings: { allOf: [schema(serverSettings), { type: 'object', properties: { hasRunpodKey: { type: 'boolean' }, hasHuggingFaceToken: { type: 'boolean' } } }] },
+        Settings: { allOf: [schema(serverSettings), { type: 'object', properties: { hasRunpodKey: { type: 'boolean' }, hasHuggingFaceToken: { type: 'boolean' }, hasVeniceKey: { type: 'boolean' } } }] },
         SettingsPatch: schema(settingsPatch),
         Spend: { type: 'object', properties: { todayUsd: { type: 'number' }, monthUsd: { type: 'number' }, dailyLimitUsd: { type: ['number', 'null'] }, monthlyLimitUsd: { type: ['number', 'null'] } } },
         State: {
@@ -71,6 +71,22 @@ export function openapi(): object {
             spend: ref('Spend'), costPerHour: { type: 'number' }, lastClientRequestAt: { type: ['string', 'null'] },
             telemetry: { type: 'object', additionalProperties: ref('PodTelemetry'), description: 'The latest sample per model whose pod runs, keyed by model id.' },
             balance: { oneOf: [ref('Balance'), { type: 'null' }], description: 'The RunPod account, at most about a minute old; null until first read or without a key.' },
+            apiUsage: { type: 'object', description: 'Tokens and cost of API models: day (yyyy-MM-dd) → model id → totals.',
+              additionalProperties: { type: 'object', additionalProperties: ref('APIUsageTotals') } },
+            veniceAccount: { oneOf: [ref('APIAccount'), { type: 'null' }], description: 'The Venice account, at most about a minute old; null until first read or without a key.' },
+          },
+        },
+        APIUsageTotals: {
+          type: 'object',
+          properties: { requests: { type: 'integer' }, promptTokens: { type: 'integer' }, completionTokens: { type: 'integer' }, cachedTokens: { type: 'integer' }, usd: { type: 'number' } },
+        },
+        APIAccount: {
+          type: 'object',
+          properties: {
+            balances: { type: 'array', items: { type: 'object', properties: { currency: { type: 'string' }, amount: { type: 'number' } } } },
+            tier: { type: 'string' }, keyExpiration: { type: 'string', format: 'date-time' }, nextEpochBegins: { type: 'string', format: 'date-time' },
+            rateLimits: { type: 'array', items: { type: 'object', properties: { model: { type: 'string' }, type: { type: 'string' }, amount: { type: 'number' } } } },
+            checkedAt: { type: 'string', format: 'date-time' },
           },
         },
         Balance: {
@@ -109,6 +125,8 @@ export function openapi(): object {
         patch: { tags: ['admin'], security: device, summary: 'Change settings; secrets are write-only, "" removes one', requestBody: { content: json(ref('SettingsPatch')) }, responses: { 200: ok('Settings', ref('Settings')), 400: error } },
       },
       '/admin/settings/verify-runpod': { post: { tags: ['admin'], security: device, summary: 'Check a RunPod key (the given one, or the stored one)', responses: { 200: ok('Result', { type: 'object', properties: { result: { enum: ['valid', 'invalid', 'missingPermission', 'unreachable'] } } }) } } },
+      '/admin/settings/verify-venice': { post: { tags: ['admin'], security: device, summary: 'Check a Venice key (the given one, or the stored one); with the account when valid', responses: { 200: ok('Result', { type: 'object', properties: { result: { enum: ['valid', 'invalid', 'unreachable'] }, account: ref('APIAccount') } }) } } },
+      '/admin/catalog/venice': { get: { tags: ['admin'], security: device, summary: 'Venice\'s text models with prices, privacy tier and capabilities', responses: { 200: ok('Catalog'), 502: error } } },
       '/admin/catalog/gpus': { get: { tags: ['admin'], security: device, summary: 'RunPod\'s GPU catalog with availability, through the server\'s key', responses: { 200: ok('Catalog'), 503: error } } },
       '/admin/models': { get: { tags: ['admin'], security: device, summary: 'Models', responses: { 200: ok('Models', { type: 'array', items: ref('PodlightModel') }) } } },
       '/admin/models/{id}': {

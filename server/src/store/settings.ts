@@ -19,18 +19,19 @@ export class SettingsStore {
   }
 
   update(patch: SettingsPatch): ServerSettings {
-    const { runpodApiKey, huggingFaceToken, ...plain } = patch
+    const { runpodApiKey, huggingFaceToken, veniceApiKey, ...plain } = patch
     const next = serverSettings.parse({ ...this.read(), ...plain })
     this.db.transaction(() => {
       this.db.prepare(`INSERT INTO settings (key, value) VALUES ('settings', ?)
         ON CONFLICT(key) DO UPDATE SET value = excluded.value`).run(JSON.stringify(next))
       if (runpodApiKey !== undefined) this.setSecret('runpodApiKey', runpodApiKey)
       if (huggingFaceToken !== undefined) this.setSecret('huggingFaceToken', huggingFaceToken)
+      if (veniceApiKey !== undefined) this.setSecret('veniceApiKey', veniceApiKey)
     })()
     return next
   }
 
-  secret(name: 'runpodApiKey' | 'huggingFaceToken'): string | null {
+  secret(name: 'runpodApiKey' | 'huggingFaceToken' | 'veniceApiKey'): string | null {
     const row = this.db.prepare('SELECT value FROM settings WHERE key = ? AND encrypted = 1').get(name) as { value: string } | undefined
     if (!row) return null
     try {

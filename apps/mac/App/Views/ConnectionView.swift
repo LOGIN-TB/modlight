@@ -209,9 +209,11 @@ struct AgentConfigPanel<Accessory: View>: View {
         guard agent == .claudeCode || agent == .codex else { return [] }
         var warnings: [String] = []
         if let item = agentModel, item.contextTokens < AgentConfigs.claudeCodeMinimumContext {
-            warnings.append(String(localized: "\(item.name) is set to \(Format.tokens(item.contextTokens)) tokens. These agents send long instructions and need at least 128k, better 200k: choose more context under Edit."))
+            warnings.append(item.isPod
+                ? String(localized: "\(item.name) is set to \(Format.tokens(item.contextTokens)) tokens. These agents send long instructions and need at least 128k, better 200k: choose more context under Edit.")
+                : String(localized: "\(item.name) takes at most \(Format.tokens(item.contextTokens)) tokens at \(item.provider.displayName). These agents send long instructions and need at least 128k, better 200k: choose a model with more context."))
         }
-        if let item = agentModel, item.toolCallParser == nil {
+        if let item = agentModel, !item.supportsTools {
             warnings.append(String(localized: "\(item.name) has no tool calls, so the agent cannot edit files or run commands with it."))
         }
         if agent == .claudeCode {

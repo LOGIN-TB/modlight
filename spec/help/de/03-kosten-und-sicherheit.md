@@ -20,6 +20,8 @@ In jedem Pod läuft ein kleiner Wächter. Hört er 15 Minuten nichts von Podligh
 
 Unter Einstellungen → Allgemein legst du fest, wie viel Podlight pro Tag und pro Monat ausgeben darf. Ist ein Limit erreicht, stoppt Podlight die Pods und startet sie bis zum nächsten Tag oder Monat nicht wieder, auch nicht auf Anfrage eines Agenten.
 
+Modelle bei Venice zählen mit: Podlight rechnet ihre Kosten pro Token in dieselben Limits ein und schickt am Limit keine Anfragen mehr an Venice. Mehr dazu unter „Venice“.
+
 ![Die Ansicht „Kosten“](screenshots/de/costs.png)
 
 Die Zahlen unter „Kosten“ zählt Podlight selbst: Preis pro Stunde mal Laufzeit, nur für die Pods dieses Macs. Genau abgerechnet wird bei RunPod. „Guthaben bei RunPod“ zeigt, was in deinem RunPod-Konto noch übrig ist und wie lange es bei den aktuellen Kosten des ganzen Kontos pro Stunde reicht, andere Pods eingeschlossen. Unter einem Tag wird die Zeile orange, unter drei Stunden rot.

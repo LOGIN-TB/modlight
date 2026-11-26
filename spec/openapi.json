@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Podlight server",
-    "version": "0.10.1",
+    "version": "0.11.0",
     "description": "Gateway for agents (/v1, client tokens) and control API for Podlight apps (/admin, device tokens from pairing). Plain HTTP; run it behind a reverse proxy with TLS.",
     "license": {
       "name": "MIT"
@@ -60,7 +60,7 @@
           },
           "weightBytes": {
             "type": "number",
-            "exclusiveMinimum": 0
+            "minimum": 0
           },
           "nativeContextTokens": {
             "anyOf": [
@@ -285,6 +285,172 @@
             "type": [
               "string",
               "null"
+            ]
+          },
+          "provider": {
+            "default": "runpod",
+            "type": "string",
+            "enum": [
+              "runpod",
+              "venice"
+            ]
+          },
+          "api": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "providerModelId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "privacy": {
+                    "type": "string",
+                    "enum": [
+                      "private",
+                      "anonymized"
+                    ]
+                  },
+                  "capabilities": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "maxCompletionTokens": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "pricing": {
+                    "type": "object",
+                    "properties": {
+                      "input": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "output": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "cacheRead": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "cacheWrite": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "extendedAboveTokens": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "extended": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "input": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "output": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "cacheRead": {
+                                "anyOf": [
+                                  {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "cacheWrite": {
+                                "anyOf": [
+                                  {
+                                    "type": "number",
+                                    "minimum": 0
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "input",
+                              "output"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "input",
+                      "output"
+                    ]
+                  },
+                  "pricedAt": {
+                    "type": "string"
+                  },
+                  "removesAt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "providerModelId",
+                  "displayName",
+                  "privacy",
+                  "capabilities",
+                  "pricing",
+                  "pricedAt"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ]
           }
         },
@@ -1198,6 +1364,9 @@
               },
               "hasHuggingFaceToken": {
                 "type": "boolean"
+              },
+              "hasVeniceKey": {
+                "type": "boolean"
               }
             }
           }
@@ -1280,6 +1449,9 @@
             "type": "string"
           },
           "huggingFaceToken": {
+            "type": "string"
+          },
+          "veniceApiKey": {
             "type": "string"
           }
         }
@@ -1368,6 +1540,98 @@
               }
             ],
             "description": "The RunPod account, at most about a minute old; null until first read or without a key."
+          },
+          "apiUsage": {
+            "type": "object",
+            "description": "Tokens and cost of API models: day (yyyy-MM-dd) → model id → totals.",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/APIUsageTotals"
+              }
+            }
+          },
+          "veniceAccount": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/APIAccount"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The Venice account, at most about a minute old; null until first read or without a key."
+          }
+        }
+      },
+      "APIUsageTotals": {
+        "type": "object",
+        "properties": {
+          "requests": {
+            "type": "integer"
+          },
+          "promptTokens": {
+            "type": "integer"
+          },
+          "completionTokens": {
+            "type": "integer"
+          },
+          "cachedTokens": {
+            "type": "integer"
+          },
+          "usd": {
+            "type": "number"
+          }
+        }
+      },
+      "APIAccount": {
+        "type": "object",
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "tier": {
+            "type": "string"
+          },
+          "keyExpiration": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nextEpochBegins": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rateLimits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "model": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -2507,6 +2771,78 @@
                       ]
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/settings/verify-venice": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Check a Venice key (the given one, or the stored one); with the account when valid",
+        "responses": {
+          "200": {
+            "description": "Result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "enum": [
+                        "valid",
+                        "invalid",
+                        "unreachable"
+                      ]
+                    },
+                    "account": {
+                      "$ref": "#/components/schemas/APIAccount"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/catalog/venice": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "device": []
+          }
+        ],
+        "summary": "Venice's text models with prices, privacy tier and capabilities",
+        "responses": {
+          "200": {
+            "description": "Catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

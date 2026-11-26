@@ -106,6 +106,8 @@ public struct ServerSettings: Codable, Sendable, Equatable {
     public var fallbackPriceStepPercent: Int?
     public var hasRunpodKey: Bool
     public var hasHuggingFaceToken: Bool
+    /// The server has a Venice key for API models. Nil from a server before 0.11.
+    public var hasVeniceKey: Bool?
 
     public var hosting: HostingPolicy { HostingPolicy(region: hostingRegion, secureOnly: secureCloudOnly) }
 }
@@ -125,8 +127,21 @@ public struct ServerSnapshot: Sendable, Equatable {
     public var telemetry: [UUID: PodTelemetry] = [:]
     /// The RunPod account's credit, as the server last read it. Nil from a server before 0.8.
     public var balance: RunpodBalance?
+    /// Tokens and cost of the server's API models per day and model id. Empty before 0.11.
+    public var apiUsage: [String: [String: APIUsageTotals]] = [:]
+    /// The server's Venice account, as it last read it. Nil without a key or before 0.11.
+    public var veniceAccount: APIAccount?
 
     public func run(_ id: UUID) -> ModelRun { runs[id] ?? ModelRun() }
+
+    /// One API model's totals for a day (`yyyy-MM-dd`) or a month (`yyyy-MM`).
+    public func apiTotals(_ model: UUID, period: String) -> APIUsageTotals {
+        apiUsage.filter { $0.key.hasPrefix(period) }.compactMap { $0.value[model.uuidString] }.reduce(APIUsageTotals(), +)
+    }
+
+    public func apiSpend(period: String) -> Double {
+        apiUsage.filter { $0.key.hasPrefix(period) }.flatMap(\.value.values).map(\.usd).reduce(0, +)
+    }
 
     public var activeRuns: [(PodlightModel, ModelRun)] {
         models.compactMap { m in
@@ -138,7 +153,7 @@ public struct ServerSnapshot: Sendable, Equatable {
 
 extension ServerSnapshot: Decodable {
     private enum Keys: String, CodingKey {
-        case version, serverTime, models, runs, settings, spendByDay, spend, costPerHour, lastClientRequestAt, telemetry, balance
+        case version, serverTime, models, runs, settings, spendByDay, spend, costPerHour, lastClientRequestAt, telemetry, balance, apiUsage, veniceAccount
     }
 
     public init(from decoder: Decoder) throws {
@@ -158,6 +173,8 @@ extension ServerSnapshot: Decodable {
         let samples = (try? c.decodeIfPresent([String: PodTelemetry].self, forKey: .telemetry)) ?? [:]
         telemetry = Dictionary(uniqueKeysWithValues: samples.compactMap { key, t in UUID(uuidString: key).map { ($0, t) } })
         balance = try? c.decodeIfPresent(RunpodBalance.self, forKey: .balance)
+        apiUsage = (try? c.decodeIfPresent([String: [String: APIUsageTotals]].self, forKey: .apiUsage)) ?? [:]
+        veniceAccount = try? c.decodeIfPresent(APIAccount.self, forKey: .veniceAccount)
     }
 }
 
@@ -221,6 +238,8 @@ public struct ServerSettingsChange: Sendable {
     /// Write-only on the server; an empty string removes it.
     public mutating func runpodApiKey(_ value: String) { values["runpodApiKey"] = .string(value) }
     public mutating func huggingFaceToken(_ value: String) { values["huggingFaceToken"] = .string(value) }
+    /// The server's Venice key; empty removes it.
+    public mutating func veniceApiKey(_ value: String) { values["veniceApiKey"] = .string(value) }
 }
 
 public struct ServerClient: Sendable {
@@ -266,6 +285,18 @@ public struct ServerClient: Sendable {
         case "invalid": return .invalid
         case "missingPermission": return .missingPermission
         default: return .unreachable(String(localized: "The server could not reach RunPod."))
+        }
+    }
+
+    /// Checks a Venice key through the server (from a server before 0.11: unreachable).
+    public func verifyVeniceKey(_ key: String?) async throws(ServerError) -> APIKeyCheck {
+        struct Answer: Decodable { var result: String; var account: APIAccount? }
+        let body: [String: Any] = key.map { ["veniceApiKey": $0] } ?? [:]
+        let answer = try decode(Answer.self, from: try await call("POST", "/admin/settings/verify-venice", body: body, timeout: 30))
+        switch answer.result {
+        case "valid": return .valid(answer.account ?? APIAccount(balances: []))
+        case "invalid": return .invalid
+        default: return .unreachable(String(localized: "The server could not reach Venice."))
         }
     }
 

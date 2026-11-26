@@ -2,7 +2,7 @@
 
 ## "RunPod does not know this key"
 
-The key was not copied completely, or it was revoked. Create a new one at RunPod and paste it under Settings → Access.
+The key was not copied completely, or it was revoked. Create a new one at RunPod and paste it under Settings → Providers and access.
 
 ## "No free card at RunPod"
 
@@ -18,7 +18,7 @@ A new pod first downloads the engine (about 9 GB), then the model. Then vLLM sta
 
 ## "This model needs a Hugging Face token"
 
-Some publishers release their models only after you agree to their terms. Open the model page on huggingface.co, accept the terms, and add a token with read access under Settings → Access.
+Some publishers release their models only after you agree to their terms. Open the model page on huggingface.co, accept the terms, and add a token with read access under Settings → Providers and access.
 
 ## "RunPod placed the pod outside your chosen region"
 

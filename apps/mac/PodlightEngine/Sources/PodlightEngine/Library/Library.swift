@@ -42,6 +42,20 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
     public var preferredGPUName: String?
     /// For GGUF repositories: which quantisation to run, e.g. `Q4_K_M` (llama.cpp's `-hf repo:quant`).
     public var quant: String?
+    /// Where the model runs: a pod Podlight starts (`runpod`) or an API provider that serves it.
+    public var provider: ModelProvider = .runpod
+    /// For API models: the provider's id, prices and traits. Nil for pods.
+    public var api: APIModelSpec?
+
+    /// Podlight starts and stops a pod for this model. False: an API provider serves it, always ready.
+    public var isPod: Bool { !provider.isAPI }
+
+    /// The model can call tools, which coding agents need to edit files and run commands. A pod
+    /// knows it from its tool-call parser; an API model from the provider's catalog.
+    public var supportsTools: Bool { isPod ? toolCallParser != nil : api?.capabilities.contains("tools") == true }
+
+    /// The model reads images: an API model whose provider says so. Pods are set up for text.
+    public var supportsImages: Bool { !isPod && api?.capabilities.contains("vision") == true }
 
     /// Which engine serves this model: GGUF runs on llama.cpp, everything else on vLLM.
     public var engine: InferenceEngine { format == .gguf ? .llamaCpp : .vllm }
@@ -91,7 +105,7 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
     private enum CodingKeys: String, CodingKey {
         case id, name, repoId, format, weightBytes, nativeContextTokens, toolCallParser, reasoningParser,
              contextTokens, concurrency, goal, preferredGPU, expectedPricePerHour, schedule, createdAt,
-             kvProfile, keepDisk, hosting, preferredGPUName, quant
+             kvProfile, keepDisk, hosting, preferredGPUName, quant, provider, api
     }
 
     public init(from decoder: Decoder) throws {
@@ -117,6 +131,9 @@ public struct PodlightModel: Codable, Sendable, Equatable, Identifiable {
         hosting = try c.decodeIfPresent(HostingPolicy.self, forKey: .hosting)
         preferredGPUName = try c.decodeIfPresent(String.self, forKey: .preferredGPUName)
         quant = try c.decodeIfPresent(String.self, forKey: .quant)
+        // Models from before 0.11 have no provider: they are pods.
+        provider = try c.decodeIfPresent(ModelProvider.self, forKey: .provider) ?? .runpod
+        api = try c.decodeIfPresent(APIModelSpec.self, forKey: .api)
     }
 
     /// A served name derived from a repo id: `Qwen/Qwen3-8B-AWQ` → `qwen3-8b-awq`.
@@ -343,11 +360,14 @@ public struct PodlightState: Codable, Sendable, Equatable {
     public var servers: [ServerEntry] = []
     /// This Mac's tag in pod names (`podlight-<model>@<tag>`), made once.
     public var deviceTag: String?
+    /// Tokens and cost of API models, per local day (`yyyy-MM-dd`) and model id (UUID string).
+    /// Their cost is in `spendByDay` too, so the limits cover pods and API models together.
+    public var apiUsage: [String: [String: APIUsageTotals]] = [:]
 
     public init() {}
 
     private enum CodingKeys: String, CodingKey {
-        case models, runs, settings, spendByDay, lastClientRequestAt, servers, deviceTag
+        case models, runs, settings, spendByDay, lastClientRequestAt, servers, deviceTag, apiUsage
     }
 
     // Every field optional on read, so a state file from an older version still loads.
@@ -360,11 +380,33 @@ public struct PodlightState: Codable, Sendable, Equatable {
         lastClientRequestAt = try c.decodeIfPresent(Date.self, forKey: .lastClientRequestAt)
         servers = try c.decodeIfPresent([ServerEntry].self, forKey: .servers) ?? []
         deviceTag = try c.decodeIfPresent(String.self, forKey: .deviceTag)
+        apiUsage = try c.decodeIfPresent([String: [String: APIUsageTotals]].self, forKey: .apiUsage) ?? [:]
+    }
+
+    /// Books one API request: its tokens for the model, its cost into the day's spend.
+    public mutating func recordAPIUsage(_ usage: APIUsage, cost: APICost, model: UUID, at date: Date,
+                                        calendar: Calendar = .current) {
+        let day = Self.dayKey(date, calendar: calendar)
+        apiUsage[day, default: [:]][model.uuidString, default: APIUsageTotals()].add(usage, cost: cost)
+        spendByDay[day, default: 0] += cost.usd
+    }
+
+    /// One API model's totals for a day, or for a month when `period` is `yyyy-MM`.
+    public func apiTotals(_ model: UUID, period: String) -> APIUsageTotals {
+        apiUsage.filter { $0.key.hasPrefix(period) }.compactMap { $0.value[model.uuidString] }.reduce(APIUsageTotals(), +)
+    }
+
+    /// Every API model's cost for a day or month (`yyyy-MM-dd` or `yyyy-MM`).
+    public func apiSpend(period: String) -> Double {
+        apiUsage.filter { $0.key.hasPrefix(period) }.flatMap(\.value.values).map(\.usd).reduce(0, +)
     }
 
     public func run(_ id: UUID) -> ModelRun { runs[id] ?? ModelRun() }
 
     public func model(named name: String) -> PodlightModel? { models.first { $0.name == name } }
+
+    /// Models Podlight runs on pods; API models have no pod to start, stop or watch.
+    public var podModels: [PodlightModel] { models.filter(\.isPod) }
 
     public static func dayKey(_ date: Date, calendar: Calendar = .current) -> String {
         let c = calendar.dateComponents([.year, .month, .day], from: date)

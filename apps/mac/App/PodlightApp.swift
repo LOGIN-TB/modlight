@@ -105,6 +105,9 @@ enum Links {
     static let runpodConsole = URL(string: "https://console.runpod.io")!
     static let runpodAPIKeys = URL(string: "https://console.runpod.io/user/settings")!
     static let runpodBilling = URL(string: "https://console.runpod.io/user/billing")!
+    static let veniceAPIKeys = URL(string: "https://venice.ai/settings/api")!
+    static let veniceSignUp = URL(string: "https://venice.ai/sign-up")!
+    static let venicePricing = URL(string: "https://docs.venice.ai/overview/pricing")!
     static let huggingFaceTokens = URL(string: "https://huggingface.co/settings/tokens")!
     static let huggingFace = URL(string: "https://huggingface.co/models?pipeline_tag=text-generation&sort=trending")!
     static let repository = URL(string: "https://github.com/LOGIN-TB/podlight")!

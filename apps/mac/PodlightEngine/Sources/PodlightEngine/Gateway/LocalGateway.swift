@@ -126,10 +126,6 @@ public struct LocalGateway: Sendable {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return Self.error(400, "The request body is not JSON.", code: "invalid_json", anthropic: anthropic)
         }
-        if anthropic, let fixed = Self.systemMessagesAsReminders(json),
-           let encoded = try? JSONSerialization.data(withJSONObject: fixed) {
-            data = encoded
-        }
         guard let name = json["model"] as? String, !name.isEmpty else {
             let names = await manager.state().models.map(\.name)
             return Self.error(400, "Set \"model\" to one of: \(names.joined(separator: ", ")).", code: "model_missing", anthropic: anthropic)
@@ -142,8 +138,46 @@ public struct LocalGateway: Sendable {
             return Self.response(for: error, model: name, anthropic: anthropic)
         }
 
+        // What goes upstream: a pod gets the body as it came (system entries fixed for the Messages
+        // API); an API provider gets its own model id and a request for usage.
+        var meter: UsageMeter?
+        var upstreamPath = path
+        /// Claude Code's Messages request, sent to the provider as a chat completion.
+        var bridged = false
+        switch endpoint.upstream {
+        case .pod:
+            if anthropic, let fixed = Self.systemMessagesAsReminders(json),
+               let encoded = try? JSONSerialization.data(withJSONObject: fixed) {
+                data = encoded
+            }
+        case .api(let provider, let providerModelId):
+            guard APIForward.supports(path, provider: provider) else {
+                return Self.response(for: .unsupportedPath(path, provider), model: name, anthropic: anthropic)
+            }
+            var outgoing = json
+            if path == "/v1/messages/count_tokens" {
+                // OpenAI-style providers cannot count; Claude Code only needs an estimate.
+                return Self.json(200, ["input_tokens": AnthropicBridge.estimateTokens(json)])
+            }
+            if path == "/v1/messages" {
+                do {
+                    outgoing = try AnthropicBridge.request(json)
+                } catch let error as AnthropicBridge.InvalidRequest {
+                    return Self.error(400, error.message, code: "invalid_request", anthropic: true)
+                }
+                upstreamPath = "/v1/chat/completions"
+                bridged = true
+            }
+            let rewritten = APIForward.rewrite(outgoing, path: upstreamPath, provider: provider, providerModelId: providerModelId)
+            data = (try? JSONSerialization.data(withJSONObject: rewritten.body)) ?? data
+            meter = UsageMeter(dropUsageChunk: !rewritten.clientWantsUsage)
+        }
+
         await manager.requestBegan(endpoint.modelId)
-        var target = endpoint.baseURL.appendingPathComponent(String(path.dropFirst()))
+        // A pod's address is its engine's root (`…/v1/…` follows); a provider's ends in its own
+        // version (`https://api.venice.ai/api/v1`), so only the rest of the path follows.
+        let relative = endpoint.upstream == .pod ? String(path.dropFirst()) : String(upstreamPath.dropFirst("/v1/".count))
+        var target = endpoint.baseURL.appendingPathComponent(relative)
         // Claude Code sends `?beta=true`; keep any query as it came.
         if let query = incoming.uri.query, !query.isEmpty, var parts = URLComponents(url: target, resolvingAgainstBaseURL: false) {
             parts.percentEncodedQuery = query
@@ -163,35 +197,77 @@ public struct LocalGateway: Sendable {
         // RunPod's proxy answers 404 without JSON while it is not yet routing to a freshly started
         // pod, even after the engine reported ready (seen live 2026-11-21 on the first request
         // after a wake). The request is held anyway, so it is tried again for up to 30 seconds.
+        // An API provider is always routed: one try.
+        let tries = endpoint.upstream == .pod ? Self.proxyRetries : 0
         var bytes: URLSession.AsyncBytes?
         var response: URLResponse?
-        for attempt in 0...Self.proxyRetries {
+        for attempt in 0...tries {
             do {
                 (bytes, response) = try await URLSession.shared.bytes(for: upstream)
             } catch {
                 await manager.requestEnded(endpoint.modelId)
-                return Self.error(502, "The pod for \(name) did not answer: \(error.localizedDescription)", code: "upstream_unreachable", anthropic: anthropic)
+                let what = endpoint.upstream == .pod ? "The pod for \(name)" : "\(Self.upstreamName(endpoint)) for \(name)"
+                return Self.error(502, "\(what) did not answer: \(error.localizedDescription)", code: "upstream_unreachable", anthropic: anthropic)
             }
-            guard let r = response, Self.isProxyNotReady(r) else { break }
+            guard endpoint.upstream == .pod, let r = response, Self.isProxyNotReady(r) else { break }
             bytes?.task.cancel()
-            if attempt < Self.proxyRetries { try? await Task.sleep(for: proxyRetryDelay) }
+            if attempt < tries { try? await Task.sleep(for: proxyRetryDelay) }
         }
-        guard let bytes, let response, !Self.isProxyNotReady(response) else {
+        guard let bytes, let response, endpoint.upstream != .pod || !Self.isProxyNotReady(response) else {
             await manager.requestEnded(endpoint.modelId)
             return Self.response(for: .notReadyInTime, model: name, anthropic: anthropic)
         }
         let http = response as? HTTPURLResponse
+        let status = http?.statusCode ?? 502
+
+        // A provider's error becomes Podlight's own, in the agent's API shape.
+        if case .api(let provider, _) = endpoint.upstream, status >= 400 {
+            var body = Data()
+            do {
+                for try await byte in bytes {
+                    body.append(byte)
+                    if body.count >= 64 * 1024 { break }
+                }
+            } catch {}
+            await manager.requestEnded(endpoint.modelId)
+            return Self.response(for: .provider(APIForward.failure(provider: provider, status: status, body: body)),
+                                 model: name, anthropic: anthropic)
+        }
+
         var headers = HTTPFields()
         headers[.contentType] = http?.value(forHTTPHeaderField: "Content-Type") ?? "application/json"
         headers[.cacheControl] = "no-cache"
 
         let manager = self.manager
         let modelId = endpoint.modelId
+        if bridged {
+            let streamed = (http?.value(forHTTPHeaderField: "Content-Type") ?? "").contains("text/event-stream")
+            headers[.contentType] = streamed ? "text/event-stream" : "application/json"
+            return Response(status: .init(code: status), headers: headers,
+                            body: Self.bridgedBody(bytes, streamed: streamed, model: name, manager: manager, modelId: modelId))
+        }
+        let startingMeter = meter
         let responseBody = ResponseBody { writer in
-            defer { Task { await manager.requestEnded(modelId) } }
+            var meter = startingMeter
+            defer {
+                let usage = meter?.finish()
+                Task {
+                    if let usage { await manager.recordAPIUsage(modelId, usage: usage) }
+                    await manager.requestEnded(modelId)
+                }
+            }
             var buffer = ByteBuffer()
             buffer.reserveCapacity(4096)
+            var line = Data()
             for try await byte in bytes {
+                if meter != nil {
+                    // Metered: whole lines, so the usage chunk can be read and, if wanted, dropped.
+                    line.append(byte)
+                    guard byte == UInt8(ascii: "\n") || line.count >= 1_048_576 else { continue }
+                    if let passed = meter?.pass(line) { try await writer.write(ByteBuffer(bytes: passed)) }
+                    line.removeAll(keepingCapacity: true)
+                    continue
+                }
                 buffer.writeInteger(byte)
                 // Server-sent events: pass every line on at once, so tokens reach the agent as
                 // they are produced rather than in 16 KB lumps.
@@ -200,10 +276,65 @@ public struct LocalGateway: Sendable {
                     buffer.clear()
                 }
             }
+            if !line.isEmpty, let passed = meter?.pass(line) { try await writer.write(ByteBuffer(bytes: passed)) }
             if buffer.readableBytes > 0 { try await writer.write(buffer) }
             try await writer.finish(nil)
         }
-        return Response(status: .init(code: http?.statusCode ?? 502), headers: headers, body: responseBody)
+        return Response(status: .init(code: status), headers: headers, body: responseBody)
+    }
+
+    /// A provider's chat completion answer as Anthropic Messages: a stream event by event, or one
+    /// message. Usage is booked from the provider's answer either way.
+    static func bridgedBody(_ bytes: URLSession.AsyncBytes, streamed: Bool, model: String,
+                            manager: PodManager, modelId: UUID) -> ResponseBody {
+        ResponseBody { writer in
+            var usage: APIUsage?
+            defer {
+                let booked = usage
+                Task {
+                    if let booked { await manager.recordAPIUsage(modelId, usage: booked) }
+                    await manager.requestEnded(modelId)
+                }
+            }
+            func send(_ events: [[String: Any]]) async throws {
+                for event in events {
+                    let type = event["type"] as? String ?? "message"
+                    try await writer.write(ByteBuffer(string: "event: \(type)\ndata: \(AnthropicBridge.canonicalJSON(event))\n\n"))
+                }
+            }
+            if streamed {
+                var translator = AnthropicBridge.StreamTranslator(requestModel: model)
+                var line = Data()
+                func take(_ line: Data) async throws {
+                    guard line.starts(with: Data("data:".utf8)) else { return }
+                    let payload = Data(line.dropFirst(5))
+                    guard let chunk = (try? JSONSerialization.jsonObject(with: payload)) as? [String: Any] else { return }
+                    if let found = APIUsage.from(chunk) { usage = found }
+                    try await send(translator.feed(chunk))
+                }
+                for try await byte in bytes {
+                    line.append(byte)
+                    guard byte == UInt8(ascii: "\n") else { continue }
+                    try await take(line)
+                    line.removeAll(keepingCapacity: true)
+                }
+                if !line.isEmpty { try await take(line) }
+                try await send(translator.finish())
+            } else {
+                var body = Data()
+                for try await byte in bytes { body.append(byte) }
+                let json = (try? JSONSerialization.jsonObject(with: body)) as? [String: Any] ?? [:]
+                usage = APIUsage.from(json)
+                let message = AnthropicBridge.response(json, requestModel: model)
+                try await writer.write(ByteBuffer(bytes: (try? JSONSerialization.data(withJSONObject: message)) ?? Data("{}".utf8)))
+            }
+            try await writer.finish(nil)
+        }
+    }
+
+    static func upstreamName(_ endpoint: PodEndpoint) -> String {
+        if case .api(let provider, _) = endpoint.upstream { return provider.displayName }
+        return "The pod"
     }
 
     // MARK: Responses
@@ -244,6 +375,12 @@ public struct LocalGateway: Sendable {
         case .cardTooExpensive(let wanted, let ceiling, _):
             let card = wanted.map { "\($0.name) at \(Self.dollars($0.pricePerHour))/h" } ?? "The chosen card"
             return Failure(status: 503, message: "\(card) for \(model) is taken, and the free cards cost more than Podlight's price step allows. Nothing was booked; Podlight keeps trying for a card up to \(Self.dollars(ceiling))/h. Start it on a pricier card in Podlight, or try again later.", code: "card_too_expensive")
+        case .missingProviderKey(let provider):
+            return Failure(status: 503, message: "Podlight has no \(provider.displayName) API key yet. Add it in Podlight → Settings → Providers.", code: "setup_incomplete")
+        case .provider(let failure):
+            return Failure(status: failure.status, message: failure.message, code: failure.code)
+        case .unsupportedPath(let path, let provider):
+            return Failure(status: 404, message: "\(model) runs at \(provider.displayName), which does not serve \(path). Use /v1/chat/completions, /v1/responses or /v1/messages.", code: "unsupported_endpoint")
         case .nameTaken, .modelLookup, .busy:
             return Failure(status: 500, message: "Podlight could not serve \(model).", code: "internal")
         }
@@ -262,6 +399,7 @@ public struct LocalGateway: Sendable {
         switch status {
         case 400: "invalid_request_error"
         case 401: "authentication_error"
+        case 402: "billing_error"
         case 403: "permission_error"
         case 404: "not_found_error"
         case 429: "rate_limit_error"

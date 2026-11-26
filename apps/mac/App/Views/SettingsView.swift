@@ -35,7 +35,7 @@ struct SettingsContent: View {
             } header: {
                 Text("Costs and safety")
             } footer: {
-                Text("At a limit, Podlight stops this Mac's pods and starts them again only the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Podlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.")
+                Text("At a limit, Podlight stops this Mac's pods and refuses requests to Venice models until the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Podlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
@@ -86,6 +86,7 @@ struct SettingsContent: View {
             }
 
             Section {
+                VeniceKeySettings()
                 LabeledContent("RunPod API key", value: model.hasRunpodKey ? String(localized: "Saved in the keychain") : String(localized: "Not set"))
                 Button(model.hasRunpodKey ? "Replace API Key…" : "Add API Key…") { editingKey = true }
                 LabeledContent("Hugging Face token", value: model.hasHuggingFaceToken ? String(localized: "Saved in the keychain") : String(localized: "Not set"))
@@ -101,9 +102,9 @@ struct SettingsContent: View {
                 Link("Create a token at Hugging Face (Read access is enough)", destination: Links.huggingFaceTokens)
                 Button("Create New Podlight Key…") { model.newGatewayKey() }
             } header: {
-                Text("Access")
+                Text("Providers and access")
             } footer: {
-                Text("A Hugging Face token is recommended: pods download over addresses RunPod shares with others, and Hugging Face limits anonymous downloads more strictly. It is required for gated models. After a new Podlight key, paste it into your agents' configuration.")
+                Text("Venice serves ready models per token; an \"Inference Only\" key is enough. A Hugging Face token is recommended: pods download over addresses RunPod shares with others, and Hugging Face limits anonymous downloads more strictly. It is required for gated models. After a new Podlight key, paste it into your agents' configuration.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 

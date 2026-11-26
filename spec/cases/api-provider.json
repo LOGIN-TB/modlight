@@ -1,0 +1,1121 @@
+{
+  "cases": [
+    {
+      "expected": [
+        {
+          "capabilities": [
+            "tools",
+            "vision"
+          ],
+          "contextTokens": 128000,
+          "description": "Venice Uncensored 1.2 is designed for maximum creative freedom and authentic interaction. Built for open-ended exploration, roleplay, and unfiltered dialogue with improved capabilities over 1.1.",
+          "displayName": "Venice Uncensored 1.2",
+          "maxCompletionTokens": 8192,
+          "pricing": {
+            "input": 0.2,
+            "output": 0.9
+          },
+          "privacy": "private",
+          "provider": "venice",
+          "providerModelId": "venice-uncensored-1-2",
+          "suggestedName": "venice-uncensored-1-2",
+          "traits": [
+            "most_uncensored"
+          ]
+        },
+        {
+          "capabilities": [
+            "tools",
+            "reasoning",
+            "code"
+          ],
+          "contextTokens": 1000000,
+          "description": "GLM-5.3 is a large-scale reasoning model from Z.ai, built for complex software engineering and long-horizon agent tasks. It supports text input and output with a 1M-token context window, and improves on GLM-5.2 in coding and in the balance between performance and token efficiency.",
+          "displayName": "GLM 5.3",
+          "maxCompletionTokens": 131072,
+          "pricing": {
+            "cacheRead": 0.325,
+            "input": 1.75,
+            "output": 5.5
+          },
+          "privacy": "private",
+          "provider": "venice",
+          "providerModelId": "z-ai-glm-5-3",
+          "suggestedName": "z-ai-glm-5-3",
+          "traits": []
+        },
+        {
+          "capabilities": [
+            "tools",
+            "vision",
+            "reasoning",
+            "code"
+          ],
+          "contextTokens": 1000000,
+          "description": "Qwen 3.7 Plus, the successor to Qwen 3.6 Plus, is a reasoning model from Alibaba with exceptional performance across coding, reasoning, and general knowledge tasks. Features mixed reasoning, function calling, and multimodal input support.",
+          "displayName": "Qwen 3.7 Plus",
+          "maxCompletionTokens": 65536,
+          "pricing": {
+            "cacheRead": 0.05,
+            "cacheWrite": 0.625,
+            "extended": {
+              "cacheRead": 0.15,
+              "cacheWrite": 1.875,
+              "input": 1.5,
+              "output": 6
+            },
+            "extendedAboveTokens": 256000,
+            "input": 0.5,
+            "output": 2
+          },
+          "privacy": "anonymized",
+          "provider": "venice",
+          "providerModelId": "qwen-3-7-plus",
+          "suggestedName": "qwen-3-7-plus",
+          "traits": []
+        },
+        {
+          "capabilities": [
+            "tools",
+            "vision",
+            "reasoning",
+            "code"
+          ],
+          "contextTokens": 1000000,
+          "description": "Qwen 3.8 Max is Alibaba's flagship 2.4-trillion-parameter MoE model, with major gains over Qwen 3.7 Max in software engineering and office-productivity workflows and strong long-horizon, multi-agent performance. It accepts both text and vision-language input (images and video), operates in thinking mode only, and supports a 1M-token context window.",
+          "displayName": "Qwen 3.8 Max",
+          "maxCompletionTokens": 131072,
+          "pricing": {
+            "cacheRead": 0.3125,
+            "cacheWrite": 3.125,
+            "input": 2.5,
+            "output": 7.5
+          },
+          "privacy": "anonymized",
+          "provider": "venice",
+          "providerModelId": "qwen-3-8-max",
+          "suggestedName": "qwen-3-8-max",
+          "traits": []
+        },
+        {
+          "capabilities": [
+            "tools",
+            "reasoning"
+          ],
+          "contextTokens": 200000,
+          "description": "GLM-5.1, the successor to GLM-5, is a large language model developed by Z.ai, featuring significantly enhanced reasoning capabilities, improved instruction following, and support for multiple languages. Supports large context windows for processing extensive text and detailed analysis with fast inference speed.",
+          "displayName": "GLM 5.1",
+          "maxCompletionTokens": 80000,
+          "pricing": {
+            "cacheRead": 0.247,
+            "input": 1.33,
+            "output": 4.18
+          },
+          "privacy": "private",
+          "provider": "venice",
+          "providerModelId": "zai-org-glm-5-1",
+          "removesAt": "2026-12-01T16:38:00Z",
+          "suggestedName": "zai-org-glm-5-1",
+          "traits": []
+        }
+      ],
+      "function": "veniceOffers",
+      "id": "venice-catalog",
+      "input": {
+        "catalog": "fixtures/venice-models.json"
+      },
+      "title": "Venice's text catalog as offers: USD prices per 1M tokens (cache_input → cacheRead, cache_write → cacheWrite, extended above context_token_threshold), capabilities reduced to tools/vision/reasoning/code, privacy kept, deprecation date shown, the id as suggested name. Recorded from api.venice.ai on 2026-11-26."
+    },
+    {
+      "expected": null,
+      "function": "veniceOffer",
+      "id": "venice-offline-model",
+      "input": {
+        "entry": {
+          "context_length": 128000,
+          "created": 1775001600,
+          "id": "venice-uncensored-1-2",
+          "model_spec": {
+            "availableContextTokens": 128000,
+            "capabilities": {
+              "maxImages": 10,
+              "optimizedForCode": false,
+              "quantization": "fp16",
+              "supportsAudioInput": false,
+              "supportsE2EE": false,
+              "supportsFunctionCalling": true,
+              "supportsLogProbs": false,
+              "supportsMultipleImages": true,
+              "supportsReasoning": false,
+              "supportsReasoningEffort": false,
+              "supportsResponseSchema": true,
+              "supportsTeeAttestation": false,
+              "supportsVideoInput": false,
+              "supportsVision": true,
+              "supportsWebSearch": true,
+              "supportsXSearch": false
+            },
+            "description": "Venice Uncensored 1.2 is designed for maximum creative freedom and authentic interaction. Built for open-ended exploration, roleplay, and unfiltered dialogue with improved capabilities over 1.1.",
+            "maxCompletionTokens": 8192,
+            "modelSource": "https://huggingface.co/cognitivecomputations/Dolphin-Mistral-24B-Venice-Edition",
+            "model_sets": [
+              "venice_recommendations"
+            ],
+            "name": "Venice Uncensored 1.2",
+            "offline": true,
+            "pricing": {
+              "input": {
+                "diem": 0.2,
+                "usd": 0.2
+              },
+              "output": {
+                "diem": 0.9,
+                "usd": 0.9
+              }
+            },
+            "privacy": "private",
+            "traits": [
+              "most_uncensored"
+            ],
+            "uncensored": true
+          },
+          "object": "model",
+          "owned_by": "venice.ai",
+          "type": "text"
+        }
+      },
+      "title": "An offline model is not offered: requests to it would fail."
+    },
+    {
+      "expected": null,
+      "function": "veniceOffer",
+      "id": "venice-not-text",
+      "input": {
+        "entry": {
+          "context_length": 128000,
+          "created": 1775001600,
+          "id": "venice-uncensored-1-2",
+          "model_spec": {
+            "availableContextTokens": 128000,
+            "capabilities": {
+              "maxImages": 10,
+              "optimizedForCode": false,
+              "quantization": "fp16",
+              "supportsAudioInput": false,
+              "supportsE2EE": false,
+              "supportsFunctionCalling": true,
+              "supportsLogProbs": false,
+              "supportsMultipleImages": true,
+              "supportsReasoning": false,
+              "supportsReasoningEffort": false,
+              "supportsResponseSchema": true,
+              "supportsTeeAttestation": false,
+              "supportsVideoInput": false,
+              "supportsVision": true,
+              "supportsWebSearch": true,
+              "supportsXSearch": false
+            },
+            "description": "Venice Uncensored 1.2 is designed for maximum creative freedom and authentic interaction. Built for open-ended exploration, roleplay, and unfiltered dialogue with improved capabilities over 1.1.",
+            "maxCompletionTokens": 8192,
+            "modelSource": "https://huggingface.co/cognitivecomputations/Dolphin-Mistral-24B-Venice-Edition",
+            "model_sets": [
+              "venice_recommendations"
+            ],
+            "name": "Venice Uncensored 1.2",
+            "offline": false,
+            "pricing": {
+              "input": {
+                "diem": 0.2,
+                "usd": 0.2
+              },
+              "output": {
+                "diem": 0.9,
+                "usd": 0.9
+              }
+            },
+            "privacy": "private",
+            "traits": [
+              "most_uncensored"
+            ],
+            "uncensored": true
+          },
+          "object": "model",
+          "owned_by": "venice.ai",
+          "type": "image"
+        }
+      },
+      "title": "Only text models are offered; image, audio and embedding models are not chat models."
+    },
+    {
+      "expected": null,
+      "function": "veniceOffer",
+      "id": "venice-no-price",
+      "input": {
+        "entry": {
+          "context_length": 128000,
+          "created": 1775001600,
+          "id": "venice-uncensored-1-2",
+          "model_spec": {
+            "availableContextTokens": 128000,
+            "capabilities": {
+              "maxImages": 10,
+              "optimizedForCode": false,
+              "quantization": "fp16",
+              "supportsAudioInput": false,
+              "supportsE2EE": false,
+              "supportsFunctionCalling": true,
+              "supportsLogProbs": false,
+              "supportsMultipleImages": true,
+              "supportsReasoning": false,
+              "supportsReasoningEffort": false,
+              "supportsResponseSchema": true,
+              "supportsTeeAttestation": false,
+              "supportsVideoInput": false,
+              "supportsVision": true,
+              "supportsWebSearch": true,
+              "supportsXSearch": false
+            },
+            "description": "Venice Uncensored 1.2 is designed for maximum creative freedom and authentic interaction. Built for open-ended exploration, roleplay, and unfiltered dialogue with improved capabilities over 1.1.",
+            "maxCompletionTokens": 8192,
+            "modelSource": "https://huggingface.co/cognitivecomputations/Dolphin-Mistral-24B-Venice-Edition",
+            "model_sets": [
+              "venice_recommendations"
+            ],
+            "name": "Venice Uncensored 1.2",
+            "offline": false,
+            "privacy": "private",
+            "traits": [
+              "most_uncensored"
+            ],
+            "uncensored": true
+          },
+          "object": "model",
+          "owned_by": "venice.ai",
+          "type": "text"
+        }
+      },
+      "title": "A model without token prices is not offered: Podlight could not show or limit its cost."
+    },
+    {
+      "expected": {
+        "capabilities": [],
+        "contextTokens": 32768,
+        "displayName": "Some/Odd_Model V2",
+        "pricing": {
+          "input": 1,
+          "output": 2
+        },
+        "privacy": "anonymized",
+        "provider": "venice",
+        "providerModelId": "Some/Odd_Model V2",
+        "suggestedName": "odd_model-v2",
+        "traits": []
+      },
+      "function": "veniceOffer",
+      "id": "venice-odd-entry",
+      "input": {
+        "entry": {
+          "context_length": 32768,
+          "id": "Some/Odd_Model V2",
+          "model_spec": {
+            "name": "",
+            "pricing": {
+              "input": {
+                "usd": 1
+              },
+              "output": {
+                "usd": 2
+              }
+            },
+            "privacy": "tee"
+          },
+          "type": "text"
+        }
+      },
+      "title": "Missing name → the id; unknown privacy tier → anonymized (the cautious reading); the suggested name is made a valid served name."
+    },
+    {
+      "expected": {
+        "source": "computed",
+        "usd": 0.0076
+      },
+      "function": "apiCost",
+      "id": "cost-plain",
+      "input": {
+        "pricing": {
+          "input": 0.5,
+          "output": 2
+        },
+        "usage": {
+          "cacheWriteTokens": 0,
+          "cachedTokens": 0,
+          "completionTokens": 800,
+          "promptTokens": 12000
+        }
+      },
+      "title": "Tokens × price per million: 12 000 in at 0.50, 800 out at 2.00."
+    },
+    {
+      "expected": {
+        "source": "provider",
+        "usd": 0.00731
+      },
+      "function": "apiCost",
+      "id": "cost-provider-wins",
+      "input": {
+        "pricing": {
+          "input": 0.5,
+          "output": 2
+        },
+        "usage": {
+          "cacheWriteTokens": 0,
+          "cachedTokens": 0,
+          "completionTokens": 800,
+          "promptTokens": 12000,
+          "providerCostUsd": 0.00731
+        }
+      },
+      "title": "The answer's own cost.usd wins over Podlight's arithmetic: Venice knows discounts and DIEM."
+    },
+    {
+      "expected": {
+        "source": "computed",
+        "usd": 0.009
+      },
+      "function": "apiCost",
+      "id": "cost-cached",
+      "input": {
+        "pricing": {
+          "cacheRead": 0.05,
+          "cacheWrite": 0.625,
+          "extended": {
+            "cacheRead": 0.15,
+            "cacheWrite": 1.875,
+            "input": 1.5,
+            "output": 6
+          },
+          "extendedAboveTokens": 256000,
+          "input": 0.5,
+          "output": 2
+        },
+        "usage": {
+          "cacheWriteTokens": 0,
+          "cachedTokens": 40000,
+          "completionTokens": 1000,
+          "promptTokens": 50000
+        }
+      },
+      "title": "Cached prompt tokens come out of the plain input and are billed at the cache rate."
+    },
+    {
+      "expected": {
+        "source": "computed",
+        "usd": 0.02625
+      },
+      "function": "apiCost",
+      "id": "cost-cache-write",
+      "input": {
+        "pricing": {
+          "cacheRead": 0.05,
+          "cacheWrite": 0.625,
+          "extended": {
+            "cacheRead": 0.15,
+            "cacheWrite": 1.875,
+            "input": 1.5,
+            "output": 6
+          },
+          "extendedAboveTokens": 256000,
+          "input": 0.5,
+          "output": 2
+        },
+        "usage": {
+          "cacheWriteTokens": 30000,
+          "cachedTokens": 10000,
+          "completionTokens": 1000,
+          "promptTokens": 50000
+        }
+      },
+      "title": "Tokens written to the cache are billed at the write rate."
+    },
+    {
+      "expected": {
+        "source": "computed",
+        "usd": 0.005
+      },
+      "function": "apiCost",
+      "id": "cost-no-cache-rate",
+      "input": {
+        "pricing": {
+          "input": 0.5,
+          "output": 2
+        },
+        "usage": {
+          "cacheWriteTokens": 0,
+          "cachedTokens": 8000,
+          "completionTokens": 0,
+          "promptTokens": 10000
+        }
+      },
+      "title": "Without a cache rate, cached tokens cost the plain input price."
+    },
+    {
+      "expected": {
+        "source": "computed",
+        "usd": 0.327
+      },
+      "function": "apiCost",
+      "id": "cost-extended",
+      "input": {
+        "pricing": {
+          "cacheRead": 0.05,
+          "cacheWrite": 0.625,
+          "extended": {
+            "cacheRead": 0.15,
+            "cacheWrite": 1.875,
+            "input": 1.5,
+            "output": 6
+          },
+          "extendedAboveTokens": 256000,
+          "input": 0.5,
+          "output": 2
+        },
+        "usage": {
+          "cacheWriteTokens": 0,
+          "cachedTokens": 100000,
+          "completionTokens": 2000,
+          "promptTokens": 300000
+        }
+      },
+      "title": "A prompt longer than the threshold is billed entirely at the extended rates."
+    },
+    {
+      "expected": {
+        "source": "computed",
+        "usd": 0.132
+      },
+      "function": "apiCost",
+      "id": "cost-at-threshold",
+      "input": {
+        "pricing": {
+          "cacheRead": 0.05,
+          "cacheWrite": 0.625,
+          "extended": {
+            "cacheRead": 0.15,
+            "cacheWrite": 1.875,
+            "input": 1.5,
+            "output": 6
+          },
+          "extendedAboveTokens": 256000,
+          "input": 0.5,
+          "output": 2
+        },
+        "usage": {
+          "cacheWriteTokens": 0,
+          "cachedTokens": 0,
+          "completionTokens": 2000,
+          "promptTokens": 256000
+        }
+      },
+      "title": "Exactly at the threshold still costs the normal rates."
+    },
+    {
+      "expected": {
+        "source": "computed",
+        "usd": 0.0
+      },
+      "function": "apiCost",
+      "id": "cost-zero",
+      "input": {
+        "pricing": {
+          "input": 0.5,
+          "output": 2
+        },
+        "usage": {
+          "cacheWriteTokens": 0,
+          "cachedTokens": 0,
+          "completionTokens": 0,
+          "promptTokens": 0
+        }
+      },
+      "title": "No tokens, no cost."
+    },
+    {
+      "expected": {
+        "cacheWriteTokens": 0,
+        "cachedTokens": 1000,
+        "completionTokens": 300,
+        "promptTokens": 1200,
+        "providerCostUsd": 0.0012
+      },
+      "function": "apiUsage",
+      "id": "usage-chat",
+      "input": {
+        "body": {
+          "choices": [],
+          "cost": {
+            "diem": 0.0012,
+            "usd": 0.0012
+          },
+          "id": "x",
+          "usage": {
+            "completion_tokens": 300,
+            "prompt_tokens": 1200,
+            "prompt_tokens_details": {
+              "cached_tokens": 1000
+            },
+            "total_tokens": 1500
+          }
+        }
+      },
+      "title": "Chat Completions: usage, cached tokens from prompt_tokens_details, Venice's cost.usd."
+    },
+    {
+      "expected": {
+        "cacheWriteTokens": 0,
+        "cachedTokens": 0,
+        "completionTokens": 7,
+        "promptTokens": 50
+      },
+      "function": "apiUsage",
+      "id": "usage-stream-final-chunk",
+      "input": {
+        "body": {
+          "choices": [],
+          "object": "chat.completion.chunk",
+          "usage": {
+            "completion_tokens": 7,
+            "prompt_tokens": 50
+          }
+        }
+      },
+      "title": "The last chunk of a stream with include_usage: empty choices, usage set."
+    },
+    {
+      "expected": null,
+      "function": "apiUsage",
+      "id": "usage-stream-chunk-without",
+      "input": {
+        "body": {
+          "choices": [
+            {
+              "delta": {
+                "content": "Hi"
+              },
+              "index": 0
+            }
+          ],
+          "object": "chat.completion.chunk"
+        }
+      },
+      "title": "Ordinary stream chunks carry no usage."
+    },
+    {
+      "expected": {
+        "cacheWriteTokens": 0,
+        "cachedTokens": 512,
+        "completionTokens": 120,
+        "promptTokens": 900
+      },
+      "function": "apiUsage",
+      "id": "usage-responses",
+      "input": {
+        "body": {
+          "object": "response",
+          "usage": {
+            "input_tokens": 900,
+            "input_tokens_details": {
+              "cached_tokens": 512
+            },
+            "output_tokens": 120
+          }
+        }
+      },
+      "title": "Responses API: input_tokens/output_tokens and input_tokens_details.cached_tokens."
+    },
+    {
+      "expected": {
+        "cacheWriteTokens": 0,
+        "cachedTokens": 0,
+        "completionTokens": 2,
+        "promptTokens": 10
+      },
+      "function": "apiUsage",
+      "id": "usage-responses-completed",
+      "input": {
+        "body": {
+          "response": {
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          },
+          "type": "response.completed"
+        }
+      },
+      "title": "Responses stream: the usage is inside response.completed's response."
+    },
+    {
+      "expected": {
+        "body": {
+          "messages": [
+            {
+              "content": "hi",
+              "role": "user"
+            }
+          ],
+          "model": "zai-org-glm-5-3",
+          "venice_parameters": {
+            "include_venice_system_prompt": false
+          }
+        },
+        "clientWantsUsage": true
+      },
+      "function": "apiForward",
+      "id": "forward-chat",
+      "input": {
+        "body": {
+          "messages": [
+            {
+              "content": "hi",
+              "role": "user"
+            }
+          ],
+          "model": "glm"
+        },
+        "path": "/v1/chat/completions",
+        "provider": "venice",
+        "providerModelId": "zai-org-glm-5-3"
+      },
+      "title": "The served name becomes Venice's id; Venice's own system prompt is turned off, the agent brings its own."
+    },
+    {
+      "expected": {
+        "body": {
+          "messages": [],
+          "model": "zai-org-glm-5-3",
+          "stream": true,
+          "stream_options": {
+            "include_usage": true
+          },
+          "venice_parameters": {
+            "include_venice_system_prompt": false
+          }
+        },
+        "clientWantsUsage": false
+      },
+      "function": "apiForward",
+      "id": "forward-chat-stream",
+      "input": {
+        "body": {
+          "messages": [],
+          "model": "glm",
+          "stream": true
+        },
+        "path": "/v1/chat/completions",
+        "provider": "venice",
+        "providerModelId": "zai-org-glm-5-3"
+      },
+      "title": "A stream always asks for usage so Podlight can count tokens; the agent did not ask, so Podlight drops that chunk."
+    },
+    {
+      "expected": {
+        "body": {
+          "messages": [],
+          "model": "zai-org-glm-5-3",
+          "stream": true,
+          "stream_options": {
+            "include_usage": true
+          },
+          "venice_parameters": {
+            "include_venice_system_prompt": false
+          }
+        },
+        "clientWantsUsage": true
+      },
+      "function": "apiForward",
+      "id": "forward-chat-stream-usage",
+      "input": {
+        "body": {
+          "messages": [],
+          "model": "glm",
+          "stream": true,
+          "stream_options": {
+            "include_usage": true
+          }
+        },
+        "path": "/v1/chat/completions",
+        "provider": "venice",
+        "providerModelId": "zai-org-glm-5-3"
+      },
+      "title": "The agent asked for usage itself: it gets the chunk."
+    },
+    {
+      "expected": {
+        "body": {
+          "messages": [],
+          "model": "zai-org-glm-5-3",
+          "venice_parameters": {
+            "enable_web_search": "on"
+          }
+        },
+        "clientWantsUsage": true
+      },
+      "function": "apiForward",
+      "id": "forward-chat-venice-params",
+      "input": {
+        "body": {
+          "messages": [],
+          "model": "glm",
+          "venice_parameters": {
+            "enable_web_search": "on"
+          }
+        },
+        "path": "/v1/chat/completions",
+        "provider": "venice",
+        "providerModelId": "zai-org-glm-5-3"
+      },
+      "title": "An agent that sets venice_parameters keeps exactly what it set."
+    },
+    {
+      "expected": {
+        "body": {
+          "input": "hi",
+          "model": "zai-org-glm-5-3",
+          "stream": true
+        },
+        "clientWantsUsage": true
+      },
+      "function": "apiForward",
+      "id": "forward-responses",
+      "input": {
+        "body": {
+          "input": "hi",
+          "model": "glm",
+          "stream": true
+        },
+        "path": "/v1/responses",
+        "provider": "venice",
+        "providerModelId": "zai-org-glm-5-3"
+      },
+      "title": "Responses: only the model changes."
+    },
+    {
+      "expected": true,
+      "function": "apiPathSupported",
+      "id": "venice-path-v1-chat-completions",
+      "input": {
+        "path": "/v1/chat/completions",
+        "provider": "venice"
+      },
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+    },
+    {
+      "expected": true,
+      "function": "apiPathSupported",
+      "id": "venice-path-v1-responses",
+      "input": {
+        "path": "/v1/responses",
+        "provider": "venice"
+      },
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+    },
+    {
+      "expected": true,
+      "function": "apiPathSupported",
+      "id": "venice-path-v1-embeddings",
+      "input": {
+        "path": "/v1/embeddings",
+        "provider": "venice"
+      },
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+    },
+    {
+      "expected": true,
+      "function": "apiPathSupported",
+      "id": "venice-path-v1-messages",
+      "input": {
+        "path": "/v1/messages",
+        "provider": "venice"
+      },
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+    },
+    {
+      "expected": true,
+      "function": "apiPathSupported",
+      "id": "venice-path-v1-messages-count_tokens",
+      "input": {
+        "path": "/v1/messages/count_tokens",
+        "provider": "venice"
+      },
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+    },
+    {
+      "expected": false,
+      "function": "apiPathSupported",
+      "id": "venice-path-v1-completions",
+      "input": {
+        "path": "/v1/completions",
+        "provider": "venice"
+      },
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+    },
+    {
+      "expected": false,
+      "function": "apiPathSupported",
+      "id": "venice-path-v1-responses-input_tokens",
+      "input": {
+        "path": "/v1/responses/input_tokens",
+        "provider": "venice"
+      },
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+    },
+    {
+      "expected": {
+        "code": "provider_balance",
+        "status": 402
+      },
+      "function": "providerFailure",
+      "id": "failure-balance",
+      "input": {
+        "anthropic": false,
+        "body": "{\"error\":\"Insufficient balance\",\"code\":\"INSUFFICIENT_BALANCE\"}",
+        "provider": "venice",
+        "status": 402
+      },
+      "title": "402 INSUFFICIENT_BALANCE: the account is empty."
+    },
+    {
+      "expected": {
+        "code": "provider_key_limit",
+        "status": 402
+      },
+      "function": "providerFailure",
+      "id": "failure-key-usd-limit",
+      "input": {
+        "anthropic": false,
+        "body": "{\"error\":{\"code\":\"API_KEY_USD_SPEND_LIMIT_EXCEEDED\",\"message\":\"limit\"}}",
+        "provider": "venice",
+        "status": 402
+      },
+      "title": "The key's own daily USD limit, not the balance, blocks the call."
+    },
+    {
+      "expected": {
+        "code": "provider_key_limit",
+        "status": 402
+      },
+      "function": "providerFailure",
+      "id": "failure-key-diem-limit",
+      "input": {
+        "anthropic": false,
+        "body": "{\"error\":\"API_KEY_DIEM_SPEND_LIMIT_EXCEEDED\"}",
+        "provider": "venice",
+        "status": 402
+      },
+      "title": "The key's own daily DIEM limit."
+    },
+    {
+      "expected": {
+        "code": "provider_auth",
+        "status": 502
+      },
+      "function": "providerFailure",
+      "id": "failure-auth",
+      "input": {
+        "anthropic": false,
+        "body": "{\"error\":\"Authentication failed\"}",
+        "provider": "venice",
+        "status": 401
+      },
+      "title": "A refused provider key is a bad gateway for the agent, not a 401: the agent's own Podlight key was fine."
+    },
+    {
+      "expected": {
+        "code": "provider_rate_limit",
+        "status": 429
+      },
+      "function": "providerFailure",
+      "id": "failure-rate",
+      "input": {
+        "anthropic": false,
+        "body": "{\"error\":\"Rate limit exceeded\"}",
+        "provider": "venice",
+        "status": 429
+      },
+      "title": "Rate limits stay 429 so agents back off."
+    },
+    {
+      "expected": {
+        "code": "provider_error",
+        "status": 400
+      },
+      "function": "providerFailure",
+      "id": "failure-other",
+      "input": {
+        "anthropic": false,
+        "body": "{\"error\":\"Invalid request\"}",
+        "provider": "venice",
+        "status": 400
+      },
+      "title": "Anything else keeps its status."
+    },
+    {
+      "expected": {
+        "code": "provider_error",
+        "status": 503
+      },
+      "function": "providerFailure",
+      "id": "failure-not-json",
+      "input": {
+        "anthropic": false,
+        "body": "upstream timeout",
+        "provider": "venice",
+        "status": 503
+      },
+      "title": "A non-JSON 5xx stays a 5xx."
+    },
+    {
+      "expected": {
+        "status": 402,
+        "type": "billing_error"
+      },
+      "function": "providerFailure",
+      "id": "failure-balance-anthropic",
+      "input": {
+        "anthropic": true,
+        "body": "{\"error\":\"Insufficient balance\"}",
+        "provider": "venice",
+        "status": 402
+      },
+      "title": "Claude Code sees a billing_error for a used-up balance."
+    },
+    {
+      "expected": {
+        "code": "setup_incomplete",
+        "status": 503
+      },
+      "function": "gatewayError",
+      "id": "failure-missing-key",
+      "input": {
+        "anthropic": false,
+        "error": {
+          "kind": "missingProviderKey",
+          "provider": "venice"
+        },
+        "model": "m"
+      },
+      "title": "An API model without its provider's key: setup is incomplete."
+    },
+    {
+      "expected": {
+        "code": "unsupported_endpoint",
+        "status": 404
+      },
+      "function": "gatewayError",
+      "id": "failure-unsupported-path",
+      "input": {
+        "anthropic": false,
+        "error": {
+          "kind": "unsupportedPath",
+          "path": "/v1/completions",
+          "provider": "venice"
+        },
+        "model": "m"
+      },
+      "title": "A path the provider does not serve is a 404 with a hint."
+    },
+    {
+      "expected": {
+        "balances": [
+          {
+            "amount": 12.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 3.25,
+            "currency": "DIEM"
+          },
+          {
+            "amount": 1,
+            "currency": "BUNDLED_CREDITS"
+          }
+        ],
+        "keyExpiration": "2027-01-31T00:00:00Z",
+        "nextEpochBegins": "2026-11-27T00:00:00Z",
+        "rateLimits": [
+          {
+            "amount": 50,
+            "model": "zai-org-glm-5-3",
+            "type": "RPM"
+          },
+          {
+            "amount": 1000000,
+            "model": "zai-org-glm-5-3",
+            "type": "TPM"
+          }
+        ],
+        "tier": "paid"
+      },
+      "function": "veniceAccount",
+      "id": "venice-account",
+      "input": {
+        "body": {
+          "data": {
+            "accessPermitted": true,
+            "apiTier": {
+              "id": "paid",
+              "isCharged": true
+            },
+            "balances": {
+              "BUNDLED_CREDITS": 1,
+              "DIEM": 3.25,
+              "USD": 12.5
+            },
+            "keyExpiration": "2027-01-31T00:00:00.000Z",
+            "nextEpochBegins": "2026-11-27T00:00:00.000Z",
+            "rateLimits": [
+              {
+                "apiModelId": "zai-org-glm-5-3",
+                "rateLimits": [
+                  {
+                    "amount": 50,
+                    "type": "RPM"
+                  },
+                  {
+                    "amount": 1000000,
+                    "type": "TPM"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "title": "Balances in USD, DIEM and bundled credits, the tier, key expiry and per-model rate limits, from /api_keys/rate_limits (works with an Inference key)."
+    },
+    {
+      "expected": {
+        "balances": [
+          {
+            "amount": 0,
+            "currency": "USD"
+          }
+        ],
+        "rateLimits": []
+      },
+      "function": "veniceAccount",
+      "id": "venice-account-minimal",
+      "input": {
+        "body": {
+          "data": {
+            "balances": {
+              "USD": 0
+            }
+          }
+        }
+      },
+      "title": "A key without balances or limits (free tier, nothing set) still checks out."
+    }
+  ],
+  "description": "API providers (Venice): catalog to offers, cost of a request from its usage, the request rewrite, which paths a provider serves, provider errors, the account. Since 0.11."
+}

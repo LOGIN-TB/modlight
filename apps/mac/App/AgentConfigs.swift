@@ -32,7 +32,7 @@ struct AgentConfigs {
             """
                     "\(model.name)": {
                       "name": "\(model.name) (\(label))",
-                      "capabilities": { "tools": \(model.toolCallParser != nil), "input": ["text"], "output": ["text"] },
+                      "capabilities": { "tools": \(model.supportsTools), "input": \(model.supportsImages ? #"["text", "image"]"# : #"["text"]"#), "output": ["text"] },
                       "limit": { "context": \(model.contextTokens), "output": \(min(16_384, model.contextTokens / 4)) }
                     }
             """

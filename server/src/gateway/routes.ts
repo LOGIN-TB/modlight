@@ -5,6 +5,8 @@ import type { Identity, TokenStore } from '../auth/tokens.ts'
 import type { PodManager } from '../pods/manager.ts'
 import type { StateStore } from '../store/state.ts'
 import { errorBody, failure, GatewayFailure, systemMessagesAsReminders } from './shape.ts'
+import * as bridge from './anthropicBridge.ts'
+import { type APIUsage, providerFailure, rewriteForProvider, supportsPath, usageFrom } from '../providers/api.ts'
 
 // The endpoint agents talk to: OpenAI-compatible, plus the Responses API (Codex) and the
 // Anthropic Messages API (Claude Code), passed through to the engine. Port of LocalGateway.swift.
@@ -118,10 +120,6 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
     } catch {
       return send(reply, 400, 'The request body is not JSON.', 'invalid_json', anthropic)
     }
-    if (anthropic) {
-      const fixed = systemMessagesAsReminders(json)
-      if (fixed) data = Buffer.from(JSON.stringify(fixed))
-    }
     const name = typeof json.model === 'string' ? json.model : ''
     if (!name) {
       const names = deps.store.models().filter((m) => allowed(request.client, m.id)).map((m) => m.name)
@@ -143,6 +141,40 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
         return send(reply, f.status, f.message, f.code, anthropic)
       }
       throw error
+    }
+
+    // What goes upstream: a pod gets the body as it came (system entries fixed for the Messages
+    // API); an API provider gets its own model id and a request for usage.
+    let upstreamPath = path
+    let bridged = false
+    let dropUsageChunk = false
+    const api = endpoint.upstream?.kind === 'api' ? endpoint.upstream : null
+    if (!api) {
+      if (anthropic) {
+        const fixed = systemMessagesAsReminders(json)
+        if (fixed) data = Buffer.from(JSON.stringify(fixed))
+      }
+    } else {
+      if (!supportsPath(path, api.provider)) {
+        const f = failure({ kind: 'unsupportedPath', path, provider: api.provider }, name)
+        return send(reply, f.status, f.message, f.code, anthropic)
+      }
+      // OpenAI-style providers cannot count; Claude Code only needs an estimate.
+      if (path === '/v1/messages/count_tokens') return reply.send({ input_tokens: bridge.estimateTokens(json) })
+      let outgoing = json
+      if (path === '/v1/messages') {
+        try {
+          outgoing = bridge.request(json)
+        } catch (error) {
+          if (error instanceof bridge.BridgeError) return send(reply, 400, error.message, 'invalid_request', true)
+          throw error
+        }
+        upstreamPath = '/v1/chat/completions'
+        bridged = true
+      }
+      const rewritten = rewriteForProvider(outgoing, upstreamPath, api.provider, api.providerModelId)
+      data = Buffer.from(JSON.stringify(rewritten.body))
+      dropUsageChunk = !rewritten.clientWantsUsage
     }
 
     deps.manager.requestBegan(endpoint.modelId)
@@ -174,28 +206,40 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
     // pod, even after the engine reported ready (seen live 2026-11-21: the first request after a
     // wake). The request is held anyway, so it is tried again for a while instead of passing a
     // misleading 404 on to the agent.
+    // A provider's base URL ends in its own version (`…/api/v1`); a pod's is the engine's root.
+    const target = api ? `${endpoint.baseURL}${upstreamPath.slice('/v1'.length)}${query}` : `${endpoint.baseURL}${path}${query}`
+    const tries = api ? 0 : PROXY_RETRIES
     let upstream: Response | null = null
-    for (let attempt = 0; attempt <= PROXY_RETRIES; attempt++) {
+    for (let attempt = 0; attempt <= tries; attempt++) {
       try {
-        upstream = await upstreamFetch(`${endpoint.baseURL}${path}${query}`, {
+        upstream = await upstreamFetch(target, {
           method: 'POST', headers, body: data, signal: abort.signal,
           // undici's own option; the global fetch types do not know it.
           dispatcher: upstreamAgent,
         } as RequestInit)
       } catch (error) {
         end()
-        return send(reply, 502, `The pod for ${name} did not answer: ${(error as Error).message}`, 'upstream_unreachable', anthropic)
+        const what = api ? `${api.provider === 'venice' ? 'Venice' : api.provider} for ${name}` : `The pod for ${name}`
+        return send(reply, 502, `${what} did not answer: ${(error as Error).message}`, 'upstream_unreachable', anthropic)
       }
-      if (!isProxyNotReady(upstream)) break
+      if (api || !isProxyNotReady(upstream)) break
       await upstream.body?.cancel().catch(() => {})
       if (attempt < PROXY_RETRIES) await new Promise((resolve) => setTimeout(resolve, retryDelay))
     }
-    if (!upstream || isProxyNotReady(upstream)) {
+    if (!upstream || (!api && isProxyNotReady(upstream))) {
       end()
       const f = failure({ kind: 'notReadyInTime' }, name)
       reply.header('retry-after', '30')
       return send(reply, f.status, f.message, f.code, anthropic)
     }
+
+    if (api && upstream.status >= 400) {
+      const text = await upstream.text().catch(() => '')
+      end()
+      const f = failure({ kind: 'provider', failure: providerFailure(api.provider, upstream.status, text.slice(0, 65_536)) }, name)
+      return send(reply, f.status, f.message, f.code, anthropic)
+    }
+    if (api) return relayMetered(reply, upstream, { bridged, dropUsageChunk, model: name, modelId: endpoint.modelId, end })
 
     reply.code(upstream.status)
     reply.header('content-type', upstream.headers.get('content-type') ?? 'application/json')
@@ -209,5 +253,79 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
     stream.on('error', end)
     stream.on('close', end)
     return reply.send(stream)
+  }
+
+  /**
+   * A provider's answer passed on line by line: its usage is read (and the usage-only chunk
+   * dropped when the agent did not ask for it), and for Claude Code it is turned into Anthropic
+   * Messages, a stream event by event or one message. The usage is booked at the end.
+   */
+  async function relayMetered(reply: FastifyReply, upstream: Response,
+    o: { bridged: boolean; dropUsageChunk: boolean; model: string; modelId: string; end: () => void }): Promise<FastifyReply> {
+    const streamed = (upstream.headers.get('content-type') ?? '').includes('text/event-stream')
+    let usage: APIUsage | null = null
+    const book = (): void => {
+      if (usage) deps.manager.recordAPIUsage(o.modelId, usage)
+      usage = null
+      o.end()
+    }
+    reply.code(upstream.status)
+    reply.header('cache-control', 'no-cache')
+    if (!streamed || !upstream.body) {
+      const text = await upstream.text().catch(() => '')
+      let json: Record<string, unknown> = {}
+      try { json = JSON.parse(text) as Record<string, unknown> } catch { /* passed on as it came */ }
+      usage = usageFrom(json)
+      book()
+      if (o.bridged) return reply.type('application/json').send(JSON.stringify(bridge.response(json, o.model)))
+      return reply.type(upstream.headers.get('content-type') ?? 'application/json').send(text)
+    }
+    reply.type(o.bridged ? 'text/event-stream' : (upstream.headers.get('content-type') ?? 'text/event-stream'))
+    const translator = o.bridged ? new bridge.StreamTranslator(o.model) : null
+    const source = upstream.body as import('node:stream/web').ReadableStream<Uint8Array>
+    async function* lines(): AsyncGenerator<string> {
+      const decoder = new TextDecoder()
+      let pending = ''
+      for await (const chunk of source) {
+        pending += decoder.decode(chunk, { stream: true })
+        let index: number
+        while ((index = pending.indexOf('\n')) >= 0) {
+          yield pending.slice(0, index + 1)
+          pending = pending.slice(index + 1)
+        }
+      }
+      pending += decoder.decode()
+      if (pending) yield pending
+    }
+    const events = (list: Record<string, unknown>[]): string =>
+      list.map((e) => `event: ${String(e.type ?? 'message')}\ndata: ${bridge.canonicalJSON(e)}\n\n`).join('')
+    async function* relay(): AsyncGenerator<string> {
+      try {
+        for await (const line of lines()) {
+          let chunk: Record<string, unknown> | null = null
+          if (line.startsWith('data:')) {
+            try { chunk = JSON.parse(line.slice(5)) as Record<string, unknown> } catch { chunk = null }
+          }
+          const found = chunk ? usageFrom(chunk) : null
+          if (found) usage = found
+          if (translator) {
+            if (chunk) {
+              const out = events(translator.feed(chunk))
+              if (out) yield out
+            }
+            continue
+          }
+          if (found && o.dropUsageChunk && Array.isArray(chunk?.choices) && (chunk!.choices as unknown[]).length === 0) continue
+          yield line
+        }
+        if (translator) {
+          const out = events(translator.finish())
+          if (out) yield out
+        }
+      } finally {
+        book()
+      }
+    }
+    return reply.send(Readable.from(relay()))
   }
 }

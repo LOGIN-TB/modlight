@@ -1,0 +1,2459 @@
+{
+  "cases": [
+    {
+      "id": "request-basic",
+      "title": "Request: the top-level system string becomes the first system message; max_tokens becomes max_completion_tokens, stop_sequences becomes stop; temperature, top_p and top_k pass; model passes unchanged (the caller rewrites it); metadata is dropped",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "venice-qwen",
+          "max_tokens": 1024,
+          "system": "You are terse.",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Hi"
+            }
+          ],
+          "temperature": 0.5,
+          "top_p": 0.9,
+          "top_k": 20,
+          "stop_sequences": [
+            "END"
+          ],
+          "metadata": {
+            "user_id": "u-1"
+          }
+        }
+      },
+      "expected": {
+        "model": "venice-qwen",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are terse."
+          },
+          {
+            "role": "user",
+            "content": "Hi"
+          }
+        ],
+        "max_completion_tokens": 1024,
+        "temperature": 0.5,
+        "top_p": 0.9,
+        "top_k": 20,
+        "stop": [
+          "END"
+        ]
+      }
+    },
+    {
+      "id": "request-system-blocks",
+      "title": "Request: system blocks join their text with a blank line into one system message; user text blocks become text parts; cache_control is dropped; empty stop_sequences are left out",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "system": [
+            {
+              "type": "text",
+              "text": "A",
+              "cache_control": {
+                "type": "ephemeral"
+              }
+            },
+            {
+              "type": "text",
+              "text": "B"
+            }
+          ],
+          "stop_sequences": [],
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "one"
+                },
+                {
+                  "type": "text",
+                  "text": "two",
+                  "cache_control": {
+                    "type": "ephemeral"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "system",
+            "content": "A\n\nB"
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "one"
+              },
+              {
+                "type": "text",
+                "text": "two"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-system-in-messages",
+      "title": "Request: Claude Code puts role \"system\" entries into messages; they go on as user text inside <system-reminder>, as in systemMessagesAsReminders, because the chat templates behind a provider refuse a second system message; an empty top-level system is left out",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "system": "",
+          "messages": [
+            {
+              "role": "user",
+              "content": "hi"
+            },
+            {
+              "role": "system",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Env"
+                },
+                {
+                  "type": "text",
+                  "text": "More"
+                }
+              ]
+            },
+            {
+              "role": "assistant",
+              "content": "ok"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "hi"
+          },
+          {
+            "role": "user",
+            "content": "<system-reminder>\nEnv\n\nMore\n</system-reminder>"
+          },
+          {
+            "role": "assistant",
+            "content": "ok"
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-images",
+      "title": "Request: a base64 image becomes an image_url part with a data URL, a URL image keeps its URL; the order of parts stays",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "image",
+                  "source": {
+                    "type": "base64",
+                    "media_type": "image/png",
+                    "data": "iVBORw0K"
+                  }
+                },
+                {
+                  "type": "image",
+                  "source": {
+                    "type": "url",
+                    "url": "https://example.com/a.jpg"
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "What is this?"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "image_url",
+                "image_url": {
+                  "url": "data:image/png;base64,iVBORw0K"
+                }
+              },
+              {
+                "type": "image_url",
+                "image_url": {
+                  "url": "https://example.com/a.jpg"
+                }
+              },
+              {
+                "type": "text",
+                "text": "What is this?"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-tools-auto",
+      "title": "Request: client tools become functions with input_schema as parameters (no description stays without one); server tools without input_schema (web_search) are dropped; tool_choice auto stays auto",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "tool_choice": {
+            "type": "auto"
+          },
+          "tools": [
+            {
+              "name": "Read",
+              "description": "Reads a file",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            },
+            {
+              "name": "Ping",
+              "input_schema": {
+                "type": "object",
+                "properties": {}
+              }
+            },
+            {
+              "type": "web_search_20250305",
+              "name": "web_search",
+              "max_uses": 5
+            }
+          ]
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ],
+        "tool_choice": "auto",
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "Read",
+              "description": "Reads a file",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "Ping",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-tool-choice-any",
+      "title": "Request: tool_choice any means a tool must be called (required); disable_parallel_tool_use sets parallel_tool_calls false",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "tools": [
+            {
+              "name": "Read",
+              "description": "Reads a file",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            }
+          ],
+          "tool_choice": {
+            "type": "any",
+            "disable_parallel_tool_use": true
+          }
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ],
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "Read",
+              "description": "Reads a file",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            }
+          }
+        ],
+        "tool_choice": "required",
+        "parallel_tool_calls": false
+      }
+    },
+    {
+      "id": "request-tool-choice-tool",
+      "title": "Request: tool_choice for one named tool becomes a function choice of that name",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "tools": [
+            {
+              "name": "Read",
+              "description": "Reads a file",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            }
+          ],
+          "tool_choice": {
+            "type": "tool",
+            "name": "Read"
+          }
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ],
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "Read",
+              "description": "Reads a file",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "function",
+          "function": {
+            "name": "Read"
+          }
+        }
+      }
+    },
+    {
+      "id": "request-tool-choice-none",
+      "title": "Request: tool_choice none stays none",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "tools": [
+            {
+              "name": "Read",
+              "description": "Reads a file",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            }
+          ],
+          "tool_choice": {
+            "type": "none"
+          }
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ],
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "Read",
+              "description": "Reads a file",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            }
+          }
+        ],
+        "tool_choice": "none"
+      }
+    },
+    {
+      "id": "request-only-server-tools",
+      "title": "Request: when no client tool is left, tools and tool_choice are left out; an empty provider tool list is an error at several providers",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "tools": [
+            {
+              "type": "web_search_20250305",
+              "name": "web_search"
+            }
+          ],
+          "tool_choice": {
+            "type": "auto"
+          }
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-tool-round-trip",
+      "title": "Request: assistant tool_use blocks become tool_calls with the input as JSON text (keys sorted, no spaces); thinking blocks are dropped; user tool_result blocks become role \"tool\" messages in block order, text blocks after them a user message; is_error is dropped (Claude Code already writes the error into the content)",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Read a and b"
+            },
+            {
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "thinking",
+                  "thinking": "plan",
+                  "signature": "sig"
+                },
+                {
+                  "type": "text",
+                  "text": "Reading both."
+                },
+                {
+                  "type": "tool_use",
+                  "id": "toolu_1",
+                  "name": "Read",
+                  "input": {
+                    "path": "/a",
+                    "limit": 10
+                  }
+                },
+                {
+                  "type": "tool_use",
+                  "id": "toolu_2",
+                  "name": "Read",
+                  "input": {}
+                }
+              ]
+            },
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "tool_result",
+                  "tool_use_id": "toolu_1",
+                  "content": "A body"
+                },
+                {
+                  "type": "tool_result",
+                  "tool_use_id": "toolu_2",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "B1"
+                    },
+                    {
+                      "type": "text",
+                      "text": "B2"
+                    }
+                  ],
+                  "is_error": true
+                },
+                {
+                  "type": "text",
+                  "text": "Now summarize."
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Read a and b"
+          },
+          {
+            "role": "assistant",
+            "content": "Reading both.",
+            "tool_calls": [
+              {
+                "id": "toolu_1",
+                "type": "function",
+                "function": {
+                  "name": "Read",
+                  "arguments": "{\"limit\":10,\"path\":\"/a\"}"
+                }
+              },
+              {
+                "id": "toolu_2",
+                "type": "function",
+                "function": {
+                  "name": "Read",
+                  "arguments": "{}"
+                }
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "tool_call_id": "toolu_1",
+            "content": "A body"
+          },
+          {
+            "role": "tool",
+            "tool_call_id": "toolu_2",
+            "content": "B1\n\nB2"
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Now summarize."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-tool-result-image",
+      "title": "Request: an assistant turn of only tool_use has content null; a tool_result without content is an empty tool message; images inside tool results cannot go into a tool message and follow the run of tool messages as one user message",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Screenshot please"
+            },
+            {
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "tool_use",
+                  "id": "t",
+                  "name": "Shot",
+                  "input": {}
+                },
+                {
+                  "type": "tool_use",
+                  "id": "u",
+                  "name": "Ping",
+                  "input": {
+                    "host": "a"
+                  }
+                }
+              ]
+            },
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "tool_result",
+                  "tool_use_id": "t",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "see"
+                    },
+                    {
+                      "type": "image",
+                      "source": {
+                        "type": "base64",
+                        "media_type": "image/jpeg",
+                        "data": "/9j/"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "tool_result",
+                  "tool_use_id": "u"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Screenshot please"
+          },
+          {
+            "role": "assistant",
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "t",
+                "type": "function",
+                "function": {
+                  "name": "Shot",
+                  "arguments": "{}"
+                }
+              },
+              {
+                "id": "u",
+                "type": "function",
+                "function": {
+                  "name": "Ping",
+                  "arguments": "{\"host\":\"a\"}"
+                }
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "tool_call_id": "t",
+            "content": "see"
+          },
+          {
+            "role": "tool",
+            "tool_call_id": "u",
+            "content": ""
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "image_url",
+                "image_url": {
+                  "url": "data:image/jpeg;base64,/9j/"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-thinking-medium-stream",
+      "title": "Request: thinking enabled maps its budget to reasoning_effort (below 4096 low, below 16384 medium, else high); stream true adds stream_options.include_usage so the last chunk carries the usage",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "thinking": {
+            "type": "enabled",
+            "budget_tokens": 10000
+          },
+          "stream": true
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ],
+        "reasoning_effort": "medium",
+        "stream": true,
+        "stream_options": {
+          "include_usage": true
+        }
+      }
+    },
+    {
+      "id": "request-thinking-low",
+      "title": "Request: a thinking budget of 1024 is low effort; stream false is left out",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "thinking": {
+            "type": "enabled",
+            "budget_tokens": 1024
+          },
+          "stream": false
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ],
+        "reasoning_effort": "low"
+      }
+    },
+    {
+      "id": "request-thinking-high",
+      "title": "Request: a thinking budget of 31999 (ultrathink) is high effort",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "thinking": {
+            "type": "enabled",
+            "budget_tokens": 31999
+          }
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ],
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "id": "request-thinking-disabled",
+      "title": "Request: thinking disabled sets no reasoning_effort",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "thinking": {
+            "type": "disabled"
+          }
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-adaptive-effort",
+      "title": "Request: adaptive thinking takes output_config.effort (max and xhigh are high); without an effort it is medium",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "thinking": {
+            "type": "adaptive"
+          },
+          "output_config": {
+            "effort": "max"
+          }
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ],
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "id": "request-adaptive-default",
+      "title": "Request: adaptive thinking without output_config.effort is medium",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "messages": [
+            {
+              "role": "user",
+              "content": "x"
+            }
+          ],
+          "thinking": {
+            "type": "adaptive"
+          }
+        }
+      },
+      "expected": {
+        "model": "m",
+        "messages": [
+          {
+            "role": "user",
+            "content": "x"
+          }
+        ],
+        "reasoning_effort": "medium"
+      }
+    },
+    {
+      "id": "request-no-messages",
+      "title": "Request: a body without a messages list is refused (the gateway answers 400 invalid_request_error)",
+      "function": "anthropicRequest",
+      "input": {
+        "body": {
+          "model": "m",
+          "max_tokens": 10
+        }
+      },
+      "expected": {
+        "thrown": "\"messages\" must be a list."
+      }
+    },
+    {
+      "id": "response-text",
+      "title": "Response: message text becomes one text block; stop is end_turn; prompt_tokens includes the cached tokens, Anthropic counts them apart, so input_tokens = prompt_tokens - cached_tokens; the model is the one the client asked for",
+      "function": "anthropicResponse",
+      "input": {
+        "requestModel": "venice-qwen",
+        "body": {
+          "id": "chatcmpl-1",
+          "object": "chat.completion",
+          "model": "qwen3-235b",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Hello."
+              },
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 120,
+            "completion_tokens": 5,
+            "total_tokens": 125,
+            "prompt_tokens_details": {
+              "cached_tokens": 100
+            }
+          }
+        }
+      },
+      "expected": {
+        "id": "msg_chatcmpl-1",
+        "type": "message",
+        "role": "assistant",
+        "model": "venice-qwen",
+        "content": [
+          {
+            "type": "text",
+            "text": "Hello."
+          }
+        ],
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "usage": {
+          "input_tokens": 20,
+          "output_tokens": 5,
+          "cache_read_input_tokens": 100,
+          "cache_creation_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "response-tool-calls",
+      "title": "Response: reasoning_content becomes a thinking block first; tool_calls become tool_use blocks with the arguments parsed; arguments that are not a JSON object give input {} and keep the text in raw_arguments; empty arguments are {}; tool_calls is tool_use; no id gives msg_podlight",
+      "function": "anthropicResponse",
+      "input": {
+        "requestModel": "m",
+        "body": {
+          "choices": [
+            {
+              "index": 0,
+              "finish_reason": "tool_calls",
+              "message": {
+                "role": "assistant",
+                "content": null,
+                "reasoning_content": "Need the file.",
+                "tool_calls": [
+                  {
+                    "id": "call_a",
+                    "type": "function",
+                    "function": {
+                      "name": "Read",
+                      "arguments": "{\"path\":\"/a\"}"
+                    }
+                  },
+                  {
+                    "id": "call_b",
+                    "type": "function",
+                    "function": {
+                      "name": "Bash",
+                      "arguments": "{\"command\": \"ls"
+                    }
+                  },
+                  {
+                    "id": "call_c",
+                    "type": "function",
+                    "function": {
+                      "name": "Ping",
+                      "arguments": ""
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 50,
+            "completion_tokens": 30
+          }
+        }
+      },
+      "expected": {
+        "id": "msg_podlight",
+        "type": "message",
+        "role": "assistant",
+        "model": "m",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "Need the file.",
+            "signature": ""
+          },
+          {
+            "type": "tool_use",
+            "id": "call_a",
+            "name": "Read",
+            "input": {
+              "path": "/a"
+            }
+          },
+          {
+            "type": "tool_use",
+            "id": "call_b",
+            "name": "Bash",
+            "input": {},
+            "raw_arguments": "{\"command\": \"ls"
+          },
+          {
+            "type": "tool_use",
+            "id": "call_c",
+            "name": "Ping",
+            "input": {}
+          }
+        ],
+        "stop_reason": "tool_use",
+        "stop_sequence": null,
+        "usage": {
+          "input_tokens": 50,
+          "output_tokens": 30,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "response-length",
+      "title": "Response: finish_reason length is max_tokens; a missing usage counts zero",
+      "function": "anthropicResponse",
+      "input": {
+        "requestModel": "m",
+        "body": {
+          "id": "x",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Partial"
+              },
+              "finish_reason": "length"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "id": "msg_x",
+        "type": "message",
+        "role": "assistant",
+        "model": "m",
+        "content": [
+          {
+            "type": "text",
+            "text": "Partial"
+          }
+        ],
+        "stop_reason": "max_tokens",
+        "stop_sequence": null,
+        "usage": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "response-content-filter",
+      "title": "Response: content_filter is end_turn; empty text gives no text block; the reasoning field (vLLM's name) is read like reasoning_content",
+      "function": "anthropicResponse",
+      "input": {
+        "requestModel": "m",
+        "body": {
+          "id": "y",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "",
+                "reasoning": "hmm"
+              },
+              "finish_reason": "content_filter"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "id": "msg_y",
+        "type": "message",
+        "role": "assistant",
+        "model": "m",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "hmm",
+            "signature": ""
+          }
+        ],
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "usage": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "response-stop-with-tool-calls",
+      "title": "Response: some providers say stop although the message calls tools; tool calls always mean tool_use, else Claude Code would not run them; a call without id gets call_<position>",
+      "function": "anthropicResponse",
+      "input": {
+        "requestModel": "m",
+        "body": {
+          "id": "z",
+          "choices": [
+            {
+              "index": 0,
+              "finish_reason": "stop",
+              "message": {
+                "role": "assistant",
+                "content": "Let me check.",
+                "tool_calls": [
+                  {
+                    "type": "function",
+                    "function": {
+                      "name": "Read",
+                      "arguments": "{}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "id": "msg_z",
+        "type": "message",
+        "role": "assistant",
+        "model": "m",
+        "content": [
+          {
+            "type": "text",
+            "text": "Let me check."
+          },
+          {
+            "type": "tool_use",
+            "id": "call_0",
+            "name": "Read",
+            "input": {}
+          }
+        ],
+        "stop_reason": "tool_use",
+        "stop_sequence": null,
+        "usage": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "response-no-choices",
+      "title": "Response: a body without choices is an empty end_turn message",
+      "function": "anthropicResponse",
+      "input": {
+        "requestModel": "m",
+        "body": {}
+      },
+      "expected": {
+        "id": "msg_podlight",
+        "type": "message",
+        "role": "assistant",
+        "model": "m",
+        "content": [],
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "usage": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "stream-text",
+      "title": "Stream: message_start on the first chunk, a text block opened by the first non-empty text, closed at the end; message_delta takes the stop reason and the usage of the final usage chunk (choices empty)",
+      "function": "anthropicStream",
+      "input": {
+        "requestModel": "m",
+        "chunks": [
+          {
+            "id": "chatcmpl-9",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "role": "assistant",
+                  "content": ""
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "chatcmpl-9",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "content": "Hel"
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "chatcmpl-9",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "content": "lo"
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "chatcmpl-9",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {},
+                "finish_reason": "stop"
+              }
+            ]
+          },
+          {
+            "id": "chatcmpl-9",
+            "object": "chat.completion.chunk",
+            "choices": [],
+            "usage": {
+              "prompt_tokens": 30,
+              "completion_tokens": 2,
+              "prompt_tokens_details": {
+                "cached_tokens": 10
+              }
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "type": "message_start",
+          "message": {
+            "id": "msg_chatcmpl-9",
+            "type": "message",
+            "role": "assistant",
+            "model": "m",
+            "content": [],
+            "stop_reason": null,
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        },
+        {
+          "type": "content_block_start",
+          "index": 0,
+          "content_block": {
+            "type": "text",
+            "text": ""
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "text_delta",
+            "text": "Hel"
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "text_delta",
+            "text": "lo"
+          }
+        },
+        {
+          "type": "content_block_stop",
+          "index": 0
+        },
+        {
+          "type": "message_delta",
+          "delta": {
+            "stop_reason": "end_turn",
+            "stop_sequence": null
+          },
+          "usage": {
+            "input_tokens": 20,
+            "output_tokens": 2,
+            "cache_read_input_tokens": 10,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "type": "message_stop"
+        }
+      ]
+    },
+    {
+      "id": "stream-thinking-then-text",
+      "title": "Stream: reasoning_content opens a thinking block, the first text closes it and opens a text block; usage in the finish chunk itself is used too",
+      "function": "anthropicStream",
+      "input": {
+        "requestModel": "m",
+        "chunks": [
+          {
+            "id": "c",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "role": "assistant",
+                  "reasoning_content": "Let"
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "c",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "reasoning_content": " me"
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "c",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "content": "Hi"
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "c",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {},
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 7,
+              "completion_tokens": 3
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "type": "message_start",
+          "message": {
+            "id": "msg_c",
+            "type": "message",
+            "role": "assistant",
+            "model": "m",
+            "content": [],
+            "stop_reason": null,
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        },
+        {
+          "type": "content_block_start",
+          "index": 0,
+          "content_block": {
+            "type": "thinking",
+            "thinking": "",
+            "signature": ""
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "thinking_delta",
+            "thinking": "Let"
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "thinking_delta",
+            "thinking": " me"
+          }
+        },
+        {
+          "type": "content_block_stop",
+          "index": 0
+        },
+        {
+          "type": "content_block_start",
+          "index": 1,
+          "content_block": {
+            "type": "text",
+            "text": ""
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "text_delta",
+            "text": "Hi"
+          }
+        },
+        {
+          "type": "content_block_stop",
+          "index": 1
+        },
+        {
+          "type": "message_delta",
+          "delta": {
+            "stop_reason": "end_turn",
+            "stop_sequence": null
+          },
+          "usage": {
+            "input_tokens": 7,
+            "output_tokens": 3,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "type": "message_stop"
+        }
+      ]
+    },
+    {
+      "id": "stream-single-tool-call",
+      "title": "Stream: the first tool call streams live as a tool_use block with input_json_delta; empty argument pieces send nothing; tool calls stop with tool_use",
+      "function": "anthropicStream",
+      "input": {
+        "requestModel": "m",
+        "chunks": [
+          {
+            "id": "d",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "role": "assistant",
+                  "content": "Checking."
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "d",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "tool_calls": [
+                    {
+                      "index": 0,
+                      "id": "call_1",
+                      "type": "function",
+                      "function": {
+                        "name": "Read",
+                        "arguments": ""
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "d",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "tool_calls": [
+                    {
+                      "index": 0,
+                      "function": {
+                        "arguments": "{\"pa"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "d",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "tool_calls": [
+                    {
+                      "index": 0,
+                      "function": {
+                        "arguments": "th\":\"/a\"}"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "d",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {},
+                "finish_reason": "tool_calls"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": [
+        {
+          "type": "message_start",
+          "message": {
+            "id": "msg_d",
+            "type": "message",
+            "role": "assistant",
+            "model": "m",
+            "content": [],
+            "stop_reason": null,
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        },
+        {
+          "type": "content_block_start",
+          "index": 0,
+          "content_block": {
+            "type": "text",
+            "text": ""
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "text_delta",
+            "text": "Checking."
+          }
+        },
+        {
+          "type": "content_block_stop",
+          "index": 0
+        },
+        {
+          "type": "content_block_start",
+          "index": 1,
+          "content_block": {
+            "type": "tool_use",
+            "id": "call_1",
+            "name": "Read",
+            "input": {}
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "{\"pa"
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "th\":\"/a\"}"
+          }
+        },
+        {
+          "type": "content_block_stop",
+          "index": 1
+        },
+        {
+          "type": "message_delta",
+          "delta": {
+            "stop_reason": "tool_use",
+            "stop_sequence": null
+          },
+          "usage": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "type": "message_stop"
+        }
+      ]
+    },
+    {
+      "id": "stream-parallel-tool-calls",
+      "title": "Stream: Anthropic blocks cannot interleave, OpenAI tool-call deltas can; the first tool call streams live, every later one is collected and sent whole (start, one input_json_delta, stop) after it at the end, in order of first appearance",
+      "function": "anthropicStream",
+      "input": {
+        "requestModel": "m",
+        "chunks": [
+          {
+            "id": "e",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "role": "assistant",
+                  "tool_calls": [
+                    {
+                      "index": 0,
+                      "id": "c0",
+                      "type": "function",
+                      "function": {
+                        "name": "Read",
+                        "arguments": ""
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "e",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "tool_calls": [
+                    {
+                      "index": 1,
+                      "id": "c1",
+                      "type": "function",
+                      "function": {
+                        "name": "Glob",
+                        "arguments": "{\"pat"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "e",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "tool_calls": [
+                    {
+                      "index": 0,
+                      "function": {
+                        "arguments": "{\"path\":"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "e",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "tool_calls": [
+                    {
+                      "index": 1,
+                      "function": {
+                        "arguments": "tern\":\"*\"}"
+                      }
+                    },
+                    {
+                      "index": 0,
+                      "function": {
+                        "arguments": "\"/a\"}"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "e",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {},
+                "finish_reason": "tool_calls"
+              }
+            ]
+          },
+          {
+            "id": "e",
+            "choices": [],
+            "usage": {
+              "prompt_tokens": 40,
+              "completion_tokens": 12
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "type": "message_start",
+          "message": {
+            "id": "msg_e",
+            "type": "message",
+            "role": "assistant",
+            "model": "m",
+            "content": [],
+            "stop_reason": null,
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        },
+        {
+          "type": "content_block_start",
+          "index": 0,
+          "content_block": {
+            "type": "tool_use",
+            "id": "c0",
+            "name": "Read",
+            "input": {}
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "{\"path\":"
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\"/a\"}"
+          }
+        },
+        {
+          "type": "content_block_stop",
+          "index": 0
+        },
+        {
+          "type": "content_block_start",
+          "index": 1,
+          "content_block": {
+            "type": "tool_use",
+            "id": "c1",
+            "name": "Glob",
+            "input": {}
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "{\"pattern\":\"*\"}"
+          }
+        },
+        {
+          "type": "content_block_stop",
+          "index": 1
+        },
+        {
+          "type": "message_delta",
+          "delta": {
+            "stop_reason": "tool_use",
+            "stop_sequence": null
+          },
+          "usage": {
+            "input_tokens": 40,
+            "output_tokens": 12,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "type": "message_stop"
+        }
+      ]
+    },
+    {
+      "id": "stream-length",
+      "title": "Stream: finish_reason length is max_tokens; without a usage chunk the usage is zero",
+      "function": "anthropicStream",
+      "input": {
+        "requestModel": "m",
+        "chunks": [
+          {
+            "id": "f",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "content": "abc"
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "id": "f",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {},
+                "finish_reason": "length"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": [
+        {
+          "type": "message_start",
+          "message": {
+            "id": "msg_f",
+            "type": "message",
+            "role": "assistant",
+            "model": "m",
+            "content": [],
+            "stop_reason": null,
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        },
+        {
+          "type": "content_block_start",
+          "index": 0,
+          "content_block": {
+            "type": "text",
+            "text": ""
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "text_delta",
+            "text": "abc"
+          }
+        },
+        {
+          "type": "content_block_stop",
+          "index": 0
+        },
+        {
+          "type": "message_delta",
+          "delta": {
+            "stop_reason": "max_tokens",
+            "stop_sequence": null
+          },
+          "usage": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "type": "message_stop"
+        }
+      ]
+    },
+    {
+      "id": "stream-empty",
+      "title": "Stream: an upstream that closes without a chunk still gives a complete Anthropic stream",
+      "function": "anthropicStream",
+      "input": {
+        "requestModel": "m",
+        "chunks": []
+      },
+      "expected": [
+        {
+          "type": "message_start",
+          "message": {
+            "id": "msg_podlight",
+            "type": "message",
+            "role": "assistant",
+            "model": "m",
+            "content": [],
+            "stop_reason": null,
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        },
+        {
+          "type": "message_delta",
+          "delta": {
+            "stop_reason": "end_turn",
+            "stop_sequence": null
+          },
+          "usage": {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0
+          }
+        },
+        {
+          "type": "message_stop"
+        }
+      ]
+    },
+    {
+      "id": "stream-error-chunk",
+      "title": "Stream: an error object inside the stream becomes an Anthropic error event and ends the translation; later chunks and finish send nothing",
+      "function": "anthropicStream",
+      "input": {
+        "requestModel": "m",
+        "chunks": [
+          {
+            "id": "g",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "content": "Hi"
+                },
+                "finish_reason": null
+              }
+            ]
+          },
+          {
+            "error": {
+              "message": "Upstream overloaded",
+              "code": 503
+            }
+          },
+          {
+            "id": "g",
+            "object": "chat.completion.chunk",
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "content": "more"
+                },
+                "finish_reason": null
+              }
+            ]
+          }
+        ]
+      },
+      "expected": [
+        {
+          "type": "message_start",
+          "message": {
+            "id": "msg_g",
+            "type": "message",
+            "role": "assistant",
+            "model": "m",
+            "content": [],
+            "stop_reason": null,
+            "stop_sequence": null,
+            "usage": {
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0
+            }
+          }
+        },
+        {
+          "type": "content_block_start",
+          "index": 0,
+          "content_block": {
+            "type": "text",
+            "text": ""
+          }
+        },
+        {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "text_delta",
+            "text": "Hi"
+          }
+        },
+        {
+          "type": "error",
+          "error": {
+            "type": "api_error",
+            "message": "Upstream overloaded"
+          }
+        }
+      ]
+    },
+    {
+      "id": "error-openai-shape",
+      "title": "Error: OpenAI's {error: {message}} keeps its message; the status picks the Anthropic type (429 rate_limit_error)",
+      "function": "anthropicError",
+      "input": {
+        "status": 429,
+        "body": {
+          "error": {
+            "message": "Rate limit exceeded",
+            "type": "rate_limit_error",
+            "code": "rate_limit"
+          }
+        }
+      },
+      "expected": {
+        "type": "error",
+        "error": {
+          "type": "rate_limit_error",
+          "message": "Rate limit exceeded"
+        }
+      }
+    },
+    {
+      "id": "error-string-error",
+      "title": "Error: {error: \"text\"} (Venice) keeps the text; 402 is billing_error",
+      "function": "anthropicError",
+      "input": {
+        "status": 402,
+        "body": {
+          "error": "Insufficient USD or Diem balance"
+        }
+      },
+      "expected": {
+        "type": "error",
+        "error": {
+          "type": "billing_error",
+          "message": "Insufficient USD or Diem balance"
+        }
+      }
+    },
+    {
+      "id": "error-message-field",
+      "title": "Error: a top-level message field is read too; 422 (validation) is invalid_request_error like every 4xx without its own type",
+      "function": "anthropicError",
+      "input": {
+        "status": 422,
+        "body": {
+          "message": "Invalid model",
+          "details": {
+            "model": "unknown"
+          }
+        }
+      },
+      "expected": {
+        "type": "error",
+        "error": {
+          "type": "invalid_request_error",
+          "message": "Invalid model"
+        }
+      }
+    },
+    {
+      "id": "error-detail-field",
+      "title": "Error: FastAPI-style {detail: \"text\"} is read; 401 is authentication_error",
+      "function": "anthropicError",
+      "input": {
+        "status": 401,
+        "body": {
+          "detail": "Invalid API key"
+        }
+      },
+      "expected": {
+        "type": "error",
+        "error": {
+          "type": "authentication_error",
+          "message": "Invalid API key"
+        }
+      }
+    },
+    {
+      "id": "error-plain-text",
+      "title": "Error: a body that is not JSON is the message itself; 503 is overloaded_error",
+      "function": "anthropicError",
+      "input": {
+        "status": 503,
+        "body": "upstream connect error"
+      },
+      "expected": {
+        "type": "error",
+        "error": {
+          "type": "overloaded_error",
+          "message": "upstream connect error"
+        }
+      }
+    },
+    {
+      "id": "error-empty",
+      "title": "Error: without a readable message the status is named; 413 is request_too_large",
+      "function": "anthropicError",
+      "input": {
+        "status": 413,
+        "body": null
+      },
+      "expected": {
+        "type": "error",
+        "error": {
+          "type": "request_too_large",
+          "message": "The provider answered with status 413."
+        }
+      }
+    },
+    {
+      "id": "error-529",
+      "title": "Error: 529 is overloaded_error, other 5xx api_error",
+      "function": "anthropicError",
+      "input": {
+        "status": 529,
+        "body": {
+          "error": {
+            "message": "busy"
+          }
+        }
+      },
+      "expected": {
+        "type": "error",
+        "error": {
+          "type": "overloaded_error",
+          "message": "busy"
+        }
+      }
+    },
+    {
+      "id": "error-500",
+      "title": "Error: 500 is api_error; whitespace-only messages count as none",
+      "function": "anthropicError",
+      "input": {
+        "status": 500,
+        "body": {
+          "error": {
+            "message": "  "
+          }
+        }
+      },
+      "expected": {
+        "type": "error",
+        "error": {
+          "type": "api_error",
+          "message": "The provider answered with status 500."
+        }
+      }
+    },
+    {
+      "id": "count-tokens-text",
+      "title": "count_tokens estimate (the provider has none): Unicode scalars of every text that reaches the model, i.e. system text, message text, thinking, tool_use name + input as JSON (sorted keys, no spaces), tool_result text, tool name + description + input_schema as JSON, divided by 4 and rounded up; plus 1600 per image. Here 4+12+3+2+4+13+9 = 47 scalars -> 12",
+      "function": "anthropicTokenEstimate",
+      "input": {
+        "body": {
+          "model": "m",
+          "system": "abcd",
+          "messages": [
+            {
+              "role": "user",
+              "content": "Hello world!"
+            },
+            {
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "thinking",
+                  "thinking": "hmm",
+                  "signature": "s"
+                },
+                {
+                  "type": "text",
+                  "text": "ok"
+                },
+                {
+                  "type": "tool_use",
+                  "id": "t",
+                  "name": "Read",
+                  "input": {
+                    "path": "/a"
+                  }
+                }
+              ]
+            },
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "tool_result",
+                  "tool_use_id": "t",
+                  "content": "file body"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": 12
+    },
+    {
+      "id": "count-tokens-tools-images",
+      "title": "count_tokens estimate: tools count with name, description and schema (4+5+17), \"Wäs?\" is 4 scalars, so 30 scalars -> 8, plus 1600 for the image and 1600 for the image inside the tool result: 3208",
+      "function": "anthropicTokenEstimate",
+      "input": {
+        "body": {
+          "model": "m",
+          "tools": [
+            {
+              "name": "Read",
+              "description": "Reads",
+              "input_schema": {
+                "type": "object"
+              }
+            }
+          ],
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "image",
+                  "source": {
+                    "type": "base64",
+                    "media_type": "image/png",
+                    "data": "AAAA"
+                  }
+                },
+                {
+                  "type": "text",
+                  "text": "Wäs?"
+                }
+              ]
+            },
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "tool_result",
+                  "tool_use_id": "t",
+                  "content": [
+                    {
+                      "type": "image",
+                      "source": {
+                        "type": "url",
+                        "url": "https://example.com/x.png"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": 3208
+    }
+  ]
+}

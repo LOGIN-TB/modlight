@@ -20,8 +20,9 @@ enum Snapshots {
         let keychain = KeychainStore(service: service)
         try? keychain.write("rp-sample", for: .runpodAPIKey)
         try? keychain.write("pl-SampleKeyForScreenshotsOnly", for: .gatewayKey)
+        try? keychain.write("VENICE_INFERENCE_KEY_sample", for: .veniceAPIKey)
         defer {
-            for item in [KeychainStore.Item.runpodAPIKey, .gatewayKey] { try? keychain.delete(item) }
+            for item in [KeychainStore.Item.runpodAPIKey, .gatewayKey, .veniceAPIKey] { try? keychain.delete(item) }
             try? FileManager.default.removeItem(at: storeURL)
         }
 
@@ -37,6 +38,7 @@ enum Snapshots {
         model.sampleTelemetry = [running.id: sampleTelemetry(gpu: "NVIDIA L40S", memoryGB: 48)]
         model.showOtherMacsPodsForSnapshots(sampleOtherMacsPods())
         model.showBalanceForSnapshots(RunpodBalance(usd: 37.8, spendPerHourUsd: 1.21, spendLimitUsd: 80, checkedAt: .now))
+        model.showVeniceForSnapshots(account: sampleVeniceAccount(), catalog: sampleVeniceOffers())
         // Content views without the sidebar: its material does not render offscreen, and the help
         // pages are about the content anyway.
         render("overview", size: CGSize(width: 720, height: 900), into: folder) { NavigationStack { OverviewView() }.environment(model) }
@@ -63,6 +65,16 @@ enum Snapshots {
         render("settings", size: CGSize(width: 640, height: 900), into: folder) { SettingsContent().environment(model) }
         render("add-model", size: CGSize(width: 760, height: 600), into: folder) { AddModelSheet(editing: running).environment(model) }
         render("move", size: CGSize(width: 460, height: 360), into: folder) { MoveToApplicationsView() }
+        // Venice: a ready model, the catalog to add from, the key step.
+        if let venice = model.state.models.first(where: { !$0.isPod }) {
+            render("venice-model", size: CGSize(width: 720, height: 900), into: folder) {
+                NavigationStack { APIModelDetailView(item: venice) }.environment(model)
+            }
+        }
+        render("add-venice", size: CGSize(width: 760, height: 650), into: folder) { AddModelChooser(target: .local, initial: .venice).environment(model) }
+        render("setup-venice", size: CGSize(width: 600, height: 520), into: folder) {
+            VeniceKeyStep(onDone: {}).environment(model).padding(24).frame(width: 600, height: 520)
+        }
         // A model another Mac took over, as this Mac shows it.
         let released = model.state.models[1].id
         _ = try? await store.update { $0.runs[released, default: ModelRun()].managedBy = "studio-mac-7c1e" }
@@ -240,6 +252,30 @@ enum Snapshots {
                 ForeignPod(record: record, pod: nil)].compactMap { $0 }
     }
 
+    nonisolated static func sampleVeniceOffers() -> [APIModelOffer] {
+        func offer(_ id: String, _ name: String, _ privacy: APIPrivacy, _ caps: [String], context: Int, input: Double, output: Double,
+                   cached: Double? = nil, traits: [String] = []) -> APIModelOffer {
+            APIModelOffer(provider: .venice, providerModelId: id, displayName: name, description: nil, contextTokens: context,
+                          maxCompletionTokens: 32_768, privacy: privacy, capabilities: caps, traits: traits,
+                          pricing: APIPricing(input: input, output: output, cacheRead: cached), removesAt: nil,
+                          suggestedName: PodlightModel.suggestedName(for: id))
+        }
+        return [
+            offer("qwen3-coder-480b", "Qwen3 Coder 480B", .private, ["tools", "code"], context: 262_144, input: 0.75, output: 3, cached: 0.375, traits: ["default_code"]),
+            offer("zai-org-glm-5-3", "GLM 5.3", .private, ["tools", "reasoning", "code"], context: 202_752, input: 0.6, output: 2.2, cached: 0.11),
+            offer("kimi-k3", "Kimi K3", .private, ["tools", "reasoning", "vision"], context: 262_144, input: 0.6, output: 2.5, traits: ["default_reasoning"]),
+            offer("qwen-3-8-27b", "Qwen 3.8 27B", .private, ["tools", "vision"], context: 131_072, input: 0.15, output: 0.6),
+            offer("venice-uncensored-1-2", "Venice Uncensored 1.2", .private, [], context: 32_768, input: 0.2, output: 0.9),
+            offer("claude-sonnet-5-5", "Claude Sonnet 5.5", .anonymized, ["tools", "reasoning", "vision", "code"], context: 1_000_000, input: 3.6, output: 18, cached: 0.36),
+        ]
+    }
+
+    nonisolated static func sampleVeniceAccount() -> APIAccount {
+        APIAccount(balances: [.init(currency: "USD", amount: 18.42), .init(currency: "DIEM", amount: 2), .init(currency: "BUNDLED_CREDITS", amount: 0)],
+                   tier: "paid", keyExpiration: nil, nextEpochBegins: Calendar.current.startOfDay(for: .now).addingTimeInterval(86_400),
+                   rateLimits: [.init(model: "zai-org-glm-5-3", type: "RPM", amount: 50), .init(model: "zai-org-glm-5-3", type: "TPM", amount: 1_000_000)])
+    }
+
     nonisolated static func sampleState() -> PodlightState {
         var state = PodlightState()
         let coder = PodlightModel(name: "qwen3-coder-30b", repoId: "Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ", format: .awq,
@@ -251,7 +287,12 @@ enum Snapshots {
                                   contextTokens: 32_768, preferredGPU: GPUChoice(gpuId: "NVIDIA GeForce RTX 4090", cloud: .community))
         small.expectedPricePerHour = 0.34
         small.keepDisk = true
-        state.models = [coder, small]
+        // A ready model at Venice, with a morning of use.
+        let glm = sampleVeniceOffers()[1].model(named: "glm-5.3", at: Date().addingTimeInterval(-3600))
+        state.models = [coder, small, glm]
+        var glmRun = ModelRun()
+        glmRun.lastRequestAt = Date().addingTimeInterval(-12)
+        state.runs[glm.id] = glmRun
         var run = ModelRun()
         run.podId = "sample"
         run.gpuName = "L40S"
@@ -278,6 +319,13 @@ enum Snapshots {
             let weekday = calendar.component(.weekday, from: day)
             let amount = weekday == 1 || weekday == 7 ? 0 : [1.2, 2.6, 0.9, 3.4, 1.8][offset % 5]
             state.spendByDay[PodlightState.dayKey(day)] = amount
+        }
+        for (offset, requests) in [(0, 64), (1, 120), (2, 18)] {
+            guard let day = calendar.date(byAdding: .day, value: -offset, to: .now) else { continue }
+            for _ in 0..<requests {
+                state.recordAPIUsage(APIUsage(promptTokens: 24_000, completionTokens: 900, cachedTokens: 20_000), cost: APICost.of(
+                    APIUsage(promptTokens: 24_000, completionTokens: 900, cachedTokens: 20_000), pricing: glm.api!.pricing), model: glm.id, at: day)
+            }
         }
         return state
     }

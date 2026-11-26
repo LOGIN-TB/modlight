@@ -1,5 +1,5 @@
 import { generateToken } from '../crypto.ts'
-import { hostingOf, iso, type ModelRun, parseDate, type PodlightModel, podStatus, type PodTelemetry, podTelemetry, type PricedChoice, type ServerSettings } from '../model.ts'
+import { hostingOf, iso, isPod, type ModelProvider, type ModelRun, parseDate, type PodlightModel, podStatus, type PodTelemetry, podTelemetry, type PricedChoice, type ServerSettings } from '../model.ts'
 import { allows, dataCenterIds, needsPlacementCheck, StoragePricing } from '../rules/hosting.ts'
 import * as podPlan from '../rules/podPlan.ts'
 import { admitWake, decide, type Spend } from '../rules/scheduler.ts'
@@ -8,6 +8,8 @@ import { type AccountBalance, createWithFallback, NoCapacityError, RunpodClient,
 import { mayBeAvailable, type Pod, pricePerHour } from '../runpod/types.ts'
 import type { SettingsStore } from '../store/settings.ts'
 import { dayKey, type StateStore } from '../store/state.ts'
+import { type APIUsage, costOf, providerBaseURL } from '../providers/api.ts'
+import { type APIAccount, VeniceClient } from '../providers/venice.ts'
 
 // Runs the server's pods: starts them, keeps their watchdogs fed, and stops them when a rule says
 // so. Port of PodManager.swift; RunPod is the source of truth and every tick re-reads it.
@@ -19,6 +21,8 @@ export interface PodEndpoint {
   modelId: string
   baseURL: string
   key: string
+  /** A pod's engine, or an API provider serving the model under its own id. */
+  upstream?: { kind: 'pod' } | { kind: 'api'; provider: ModelProvider; providerModelId: string }
 }
 
 export interface ManagerOptions {
@@ -30,6 +34,8 @@ export interface ManagerOptions {
   podURL?: (podId: string, port: number) => string
   /** RunPod API base, for tests. */
   runpodBase?: string
+  /** Where an API provider takes requests; its real address unless a test says otherwise. */
+  apiBaseURL?: (provider: ModelProvider) => string | null
   /** Wait between readiness checks while a woken pod starts. */
   wakePollMs?: number
   /** Tries, and the wait between them, to resume a pod whose machine has no free card. */
@@ -83,6 +89,7 @@ export class PodManager {
   private readonly fetchImpl: typeof fetch
   private readonly podURL: (podId: string, port: number) => string
   private readonly runpodBase: string | undefined
+  private readonly apiBaseURL: (provider: ModelProvider) => string | null
   private readonly wakePollMs: number
   private readonly log: (message: string) => void
   private readonly inFlight = new Map<string, number>()
@@ -109,6 +116,7 @@ export class PodManager {
     this.fetchImpl = o.fetch ?? fetch
     this.podURL = o.podURL ?? podPlan.proxyURL
     this.runpodBase = o.runpodBase
+    this.apiBaseURL = o.apiBaseURL ?? providerBaseURL
     this.wakePollMs = o.wakePollMs ?? 5_000
     this.log = o.log ?? (() => {})
   }
@@ -156,6 +164,53 @@ export class PodManager {
       }
     })().finally(() => { this.balanceFetch = null })
     return this.balanceFetch
+  }
+
+  // MARK: Venice account
+
+  private veniceCache: (APIAccount & { checkedAt: string }) | null = null
+  private veniceFetch: Promise<void> | null = null
+
+  /** The Venice account's balance as last read; an answer older than a minute is refreshed in the background. */
+  veniceAccount(): (APIAccount & { checkedAt: string }) | null {
+    const checked = this.veniceCache ? Date.parse(this.veniceCache.checkedAt) : 0
+    if (this.now().getTime() - checked >= 60_000) void this.refreshVeniceAccount()
+    return this.veniceCache
+  }
+
+  /** A client for Venice with the server's key, or with `key` when checking a new one. */
+  veniceClient(key?: string | null): VeniceClient {
+    return new VeniceClient(key ?? this.settings.secret('veniceApiKey'), this.apiBaseURL('venice') ?? undefined, this.fetchImpl)
+  }
+
+  veniceChanged(): void {
+    this.veniceCache = null
+    void this.refreshVeniceAccount()
+  }
+
+  refreshVeniceAccount(): Promise<void> {
+    this.veniceFetch ??= (async () => {
+      const key = this.settings.secret('veniceApiKey')
+      if (!key) { this.veniceCache = null; return }
+      try {
+        const account = await this.veniceClient(key).account()
+        this.veniceCache = { ...account, checkedAt: iso(this.now()) }
+      } catch (error) {
+        this.log(`venice account: ${error}`)
+      }
+    })().finally(() => { this.veniceFetch = null })
+    return this.veniceFetch
+  }
+
+  /** Books what one request to an API model used, at its stored prices unless the answer carried its own cost. */
+  recordAPIUsage(id: string, usage: APIUsage): number | null {
+    const pricing = this.store.model(id)?.api?.pricing
+    if (!pricing) return null
+    const { usd } = costOf(usage, pricing)
+    this.store.addApiUsage(this.today(), id, usage, usd)
+    // The balance follows use: read it again soon.
+    if (this.veniceCache && this.now().getTime() - Date.parse(this.veniceCache.checkedAt) > 5_000) void this.refreshVeniceAccount()
+    return usd
   }
 
   // MARK: Models
@@ -281,6 +336,8 @@ export class PodManager {
     maxPricePerHour: number | null, retrying: WaitingForCard | null): Promise<void> {
     const model = this.store.model(id)
     if (!model) throw new GatewayFailure({ kind: 'unknownModel' })
+    // An API model is always ready: there is nothing to start.
+    if (!isPod(model)) return
     const wake = admitWake(this.spend())
     if (!wake.admit) throw new GatewayFailure({ kind: 'limitReached', limit: wake.because })
     const client = this.client()
@@ -547,6 +604,7 @@ export class PodManager {
   async endpoint(name: string): Promise<PodEndpoint> {
     const model = this.store.modelNamed(name)
     if (!model) throw new GatewayFailure({ kind: 'unknownModel' })
+    if (!isPod(model)) return this.apiEndpoint(model)
     const ready = this.readyEndpoint(model.id)
     if (ready) return ready
 
@@ -569,6 +627,19 @@ export class PodManager {
       }
     }
     throw new GatewayFailure({ kind: 'notReadyInTime' })
+  }
+
+  /** An API model: no wake, no wait. The spend limits apply as they do to waking a pod. */
+  private apiEndpoint(model: PodlightModel): PodEndpoint {
+    const wake = admitWake(this.spend())
+    if (!wake.admit) throw new GatewayFailure({ kind: 'limitReached', limit: wake.because })
+    const provider = model.provider
+    const base = this.apiBaseURL(provider)
+    if (!base) throw new GatewayFailure({ kind: 'unknownModel' })
+    const key = provider === 'venice' ? this.settings.secret('veniceApiKey') : null
+    if (!key) throw new GatewayFailure({ kind: 'missingProviderKey', provider })
+    return { modelId: model.id, baseURL: base, key,
+      upstream: { kind: 'api', provider, providerModelId: model.api?.providerModelId ?? model.repoId } }
   }
 
   private readyEndpoint(id: string): PodEndpoint | null {
@@ -613,7 +684,7 @@ export class PodManager {
     if (this.ticking || !this.clientOrNull()) return
     this.ticking = true
     try {
-      for (const model of this.store.models()) {
+      for (const model of this.store.models().filter(isPod)) {
         await this.refresh(model.id)
         await this.applyRules(model.id)
       }

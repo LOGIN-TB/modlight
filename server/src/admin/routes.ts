@@ -42,6 +42,7 @@ const extendBody = z.object({ until: z.string().datetime({ offset: true }) })
 const tokenBody = z.object({ name: z.string().min(1).max(100), models: z.array(z.guid()).nullish() })
 const tokenPatch = z.object({ name: z.string().min(1).max(100).optional(), models: z.array(z.guid()).nullish() })
 const verifyBody = z.object({ runpodApiKey: z.string().optional() })
+const verifyVeniceBody = z.object({ veniceApiKey: z.string().optional() })
 const adoptBody = z.object({ model: podlightModel, podKey: z.string().min(16).max(200), podId: z.string().min(1).max(64).nullish() })
 
 function problem(reply: FastifyReply, status: number, message: string, code: string): FastifyReply {
@@ -93,6 +94,7 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       ...settings.read(),
       hasRunpodKey: settings.secret('runpodApiKey') !== null,
       hasHuggingFaceToken: settings.secret('huggingFaceToken') !== null,
+      hasVeniceKey: settings.secret('veniceApiKey') !== null,
     })
 
     // "Refresh" in the app: ask RunPod now instead of waiting for the next round.
@@ -113,6 +115,8 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       lastClientRequestAt: store.meta('lastClientRequestAt'),
       telemetry: manager.latestTelemetry(),
       balance: manager.balance(),
+      apiUsage: store.apiUsage(),
+      veniceAccount: manager.veniceAccount(),
     }))
 
     admin.get('/admin/settings', async () => publicSettings())
@@ -121,6 +125,7 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       const patch = settingsPatch.parse(request.body ?? {})
       settings.update(patch)
       if (patch.runpodApiKey !== undefined) manager.accountChanged()
+      if (patch.veniceApiKey !== undefined) manager.veniceChanged()
       audit(deps.db, actor(request), 'settings', Object.keys(patch).join(', '))
       return publicSettings()
     })
@@ -131,6 +136,17 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       if (!key) return { result: 'invalid' }
       return { result: await new RunpodClient(key, deps.fetch, deps.runpodBase).checkKey() }
     })
+
+    // A Venice key is checked with the one call every key type may make; the answer carries the balance.
+    admin.post('/admin/settings/verify-venice', async (request) => {
+      const body = verifyVeniceBody.parse(request.body ?? {})
+      const key = body.veniceApiKey?.trim() || settings.secret('veniceApiKey')
+      if (!key) return { result: 'invalid' }
+      const check = await manager.veniceClient(key).checkKey()
+      return check.valid ? { result: 'valid', account: check.account } : { result: check.reason, message: check.message ?? null }
+    })
+
+    admin.get('/admin/catalog/venice', async () => ({ models: await manager.veniceClient().catalog() }))
 
     admin.get('/admin/catalog/gpus', async () => ({ gpus: await manager.client().gpuCatalog() }))
 

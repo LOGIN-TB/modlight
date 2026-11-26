@@ -1,4 +1,5 @@
 import type { Sealer } from '../crypto.ts'
+import type { APIUsage, APIUsageTotals } from '../providers/api.ts'
 import { emptyRun, modelRun, type ModelRun, podlightModel, type PodlightModel } from '../model.ts'
 import type { Spend } from '../rules/scheduler.ts'
 import type { Db } from './db.ts'
@@ -109,6 +110,30 @@ export class StateStore {
       dailyLimitUsd: limits.dailyLimitUsd,
       monthlyLimitUsd: limits.monthlyLimitUsd,
     }
+  }
+
+  /** Books one API request: its tokens for the model, its cost into the day's spend. */
+  addApiUsage(day: string, modelId: string, usage: APIUsage, usd: number): void {
+    this.db.transaction(() => {
+      this.db.prepare(`INSERT INTO api_usage (day, model_id, requests, prompt_tokens, completion_tokens, cached_tokens, usd)
+        VALUES (?, ?, 1, ?, ?, ?, ?)
+        ON CONFLICT(day, model_id) DO UPDATE SET requests = requests + 1, prompt_tokens = prompt_tokens + excluded.prompt_tokens,
+          completion_tokens = completion_tokens + excluded.completion_tokens, cached_tokens = cached_tokens + excluded.cached_tokens,
+          usd = usd + excluded.usd`).run(day, modelId, usage.promptTokens, usage.completionTokens, usage.cachedTokens, usd)
+      this.addSpend(day, usd)
+    })()
+  }
+
+  /** `{day: {modelId: totals}}`, as the app's `apiUsage`. */
+  apiUsage(): Record<string, Record<string, APIUsageTotals>> {
+    const rows = this.db.prepare('SELECT * FROM api_usage ORDER BY day').all() as Array<{ day: string; model_id: string; requests: number;
+      prompt_tokens: number; completion_tokens: number; cached_tokens: number; usd: number }>
+    const out: Record<string, Record<string, APIUsageTotals>> = {}
+    for (const r of rows) {
+      (out[r.day] ??= {})[r.model_id.toUpperCase()] = { requests: r.requests, promptTokens: r.prompt_tokens,
+        completionTokens: r.completion_tokens, cachedTokens: r.cached_tokens, usd: r.usd }
+    }
+    return out
   }
 
   meta(key: string): string | null {

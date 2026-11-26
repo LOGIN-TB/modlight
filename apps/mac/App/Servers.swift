@@ -61,6 +61,8 @@ final class ServerMirror: Identifiable {
     func run(_ id: UUID) -> ModelRun { snapshot?.run(id) ?? ModelRun() }
     var models: [PodlightModel] { snapshot?.models ?? [] }
     var canStart: Bool { status == .online && snapshot?.settings.hasRunpodKey == true }
+    /// The server has a Venice key, so Venice models can be added there.
+    var acceptsVenice: Bool { status == .online && snapshot?.settings.hasVeniceKey == true }
 }
 
 extension AppModel {
@@ -119,7 +121,15 @@ extension AppModel {
         }
     }
 
-    func canStart(_ model: PodlightModel) -> Bool { canStart(in: source(of: model.id)) && run(model.id).managedBy == nil }
+    func canStart(_ model: PodlightModel) -> Bool { model.isPod && canStart(in: source(of: model.id)) && run(model.id).managedBy == nil }
+
+    /// A model can be added here: pods need RunPod, API models their provider's key.
+    func canAdd(in source: Source) -> Bool {
+        switch source {
+        case .local: hasAnyProvider
+        case .server(let id): canStart(in: source) || server(id)?.acceptsVenice == true
+        }
+    }
 
     func defaultHosting(in source: Source) -> HostingPolicy {
         switch source {
@@ -299,13 +309,14 @@ extension AppModel {
 
     // MARK: From this Mac to a server
 
-    /// Copies this Mac's RunPod key and Hugging Face token (`keys`) and its limits and rules
+    /// Copies this Mac's RunPod and Venice keys and Hugging Face token (`keys`) and its limits and rules
     /// (`rules`) to a server, so nothing is typed twice. Returns an error sentence, or nil.
     func copyFromThisMac(to id: UUID, keys: Bool, rules: Bool) async -> String? {
         var change = ServerSettingsChange()
         if keys {
             if let key = try? keychain.read(.runpodAPIKey), !key.isEmpty { change.runpodApiKey(key) }
             if let token = try? keychain.read(.huggingFaceToken), !token.isEmpty { change.huggingFaceToken(token) }
+            if let venice = try? keychain.read(.veniceAPIKey), !venice.isEmpty { change.veniceApiKey(venice) }
         }
         if rules {
             let s = state.settings
@@ -374,4 +385,43 @@ extension Array where Element == KeptDisk {
     var gb: Int { map(\.gb).reduce(0, +) }
     var perHour: Double { map(\.perHour).reduce(0, +) }
     var perMonth: Double { map(\.perMonth).reduce(0, +) }
+}
+
+// MARK: API models
+
+extension AppModel {
+    /// One API model's tokens and cost for a day (`yyyy-MM-dd`) or a month (`yyyy-MM`), wherever it lives.
+    func apiTotals(_ id: UUID, period: String) -> APIUsageTotals {
+        switch source(of: id) {
+        case .local: state.apiTotals(id, period: period)
+        case .server(let server): self.server(server)?.snapshot?.apiTotals(id, period: period) ?? APIUsageTotals()
+        }
+    }
+
+    /// What all API models of a source cost in a day or month.
+    func apiSpend(in source: Source, period: String) -> Double {
+        switch source {
+        case .local: state.apiSpend(period: period)
+        case .server(let id): server(id)?.snapshot?.apiSpend(period: period) ?? 0
+        }
+    }
+
+    /// The Venice account that pays for a source's Venice models.
+    func veniceAccount(in source: Source) -> APIAccount? {
+        switch source {
+        case .local: veniceAccount
+        case .server(let id): server(id)?.snapshot?.veniceAccount
+        }
+    }
+
+    func hasVeniceKey(in source: Source) -> Bool {
+        switch source {
+        case .local: hasVeniceKey
+        case .server(let id): server(id)?.snapshot?.settings.hasVeniceKey == true
+        }
+    }
+
+    /// `yyyy-MM-dd` of today and `yyyy-MM` of this month, as the usage is kept.
+    static var todayKey: String { PodlightState.dayKey(.now) }
+    static var monthKey: String { String(todayKey.prefix(7)) }
 }

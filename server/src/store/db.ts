@@ -24,6 +24,10 @@ const MIGRATIONS: string[] = [
    CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
    CREATE TABLE audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, actor TEXT NOT NULL,
      action TEXT NOT NULL, detail TEXT);`,
+  // 0.11: tokens and cost of API models (Venice) per day and model.
+  `CREATE TABLE api_usage (day TEXT NOT NULL, model_id TEXT NOT NULL, requests INTEGER NOT NULL DEFAULT 0,
+     prompt_tokens INTEGER NOT NULL DEFAULT 0, completion_tokens INTEGER NOT NULL DEFAULT 0,
+     cached_tokens INTEGER NOT NULL DEFAULT 0, usd REAL NOT NULL DEFAULT 0, PRIMARY KEY (day, model_id));`,
 ]
 
 export function openDatabase(path: string): Db {

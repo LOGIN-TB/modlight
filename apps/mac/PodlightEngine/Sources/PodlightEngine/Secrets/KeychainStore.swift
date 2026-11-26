@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-/// Where Podlight keeps secrets: the RunPod key, the Hugging Face token, the local gateway key.
+/// Where Podlight keeps secrets: the RunPod and Venice keys, the Hugging Face token, the local gateway key.
 ///
 /// Only the macOS Keychain, never a file or `UserDefaults`, and never logged. A value is written,
 /// read back when needed, and replaced or deleted; there is deliberately no way to list values.
@@ -12,6 +12,8 @@ public struct KeychainStore: Sendable {
 
         public static let runpodAPIKey = Item("runpod-api-key")
         public static let huggingFaceToken = Item("huggingface-token")
+        /// The key for Venice.ai's API (an Inference key is enough).
+        public static let veniceAPIKey = Item("venice-api-key")
         /// The key local agents use for Podlight's gateway.
         public static let gatewayKey = Item("gateway-key")
         /// The key between Podlight and one model's pod (vLLM and the watchdog).
