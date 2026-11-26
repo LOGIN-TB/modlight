@@ -97,7 +97,7 @@ private func close(_ a: Double, _ b: Double) -> Bool { abs(a - b) < 1e-9 }
 struct SpecCaseTests {
     static let all = Spec.load(["scheduler.json", "scheduler-podlight.json", "capacity.json", "kv-profile.json", "gguf.json",
                                 "gpu-suggest.json", "pod-plan.json", "hosting.json", "gateway.json", "price-guard.json",
-                                "api-provider.json"])
+                                "api-provider.json", "anthropic-bridge.json"])
 
     @Test("every spec file was found and parsed")
     func specIsReadable() {
@@ -185,7 +185,8 @@ struct SpecCaseTests {
              "mayHaveCapacity", "dataCenterIds", "storagePricing", "systemMessagesAsReminders", "gatewayError",
              "isValidName", "summarizeEngineLog", "looksDegenerate", "priceGuard",
              "veniceOffers", "veniceOffer", "apiCost", "apiUsage", "apiForward", "apiPathSupported",
-             "providerFailure", "veniceAccount":
+             "providerFailure", "veniceAccount",
+             "anthropicRequest", "anthropicResponse", "anthropicStream", "anthropicError", "anthropicTokenEstimate":
             try SpecRuntime.check(c)
         default:
             Issue.record("unknown function \(c.function) in \(c.file)")

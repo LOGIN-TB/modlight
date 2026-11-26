@@ -143,11 +143,33 @@ enum SpecRuntime {
             got = PodManager.summarizeEngineLog(input["lines"] as? [String] ?? [])
         case "looksDegenerate":
             got = PodManager.looksDegenerate(input["text"] as? String ?? "")
+        case "anthropicRequest":
+            do {
+                got = try normalized(AnthropicBridge.request(try #require(input["body"] as? [String: Any])))
+            } catch let error as AnthropicBridge.InvalidRequest {
+                got = ["thrown": error.message]
+            }
+        case "anthropicResponse":
+            got = try normalized(AnthropicBridge.response(try #require(input["body"] as? [String: Any]),
+                                                          requestModel: input["requestModel"] as? String ?? ""))
+        case "anthropicStream":
+            var translator = AnthropicBridge.StreamTranslator(requestModel: input["requestModel"] as? String ?? "")
+            let chunks = input["chunks"] as? [[String: Any]] ?? []
+            got = try normalized(chunks.flatMap { translator.feed($0) } + translator.finish())
+        case "anthropicError":
+            got = try normalized(AnthropicBridge.error(status: input["status"] as? Int ?? 0, body: input["body"] is NSNull ? nil : input["body"]))
+        case "anthropicTokenEstimate":
+            got = AnthropicBridge.estimateTokens(try #require(input["body"] as? [String: Any]))
         default:
             Issue.record("SpecRuntime has no \(c.function)")
             return
         }
         #expect(same(got, expected), "\(c.file) \(c.id): got \(got), expected \(expected)")
+    }
+
+    /// A value built in Swift as it reads after a JSON round trip (Bool and Int as NSNumber).
+    static func normalized(_ value: Any) throws -> Any {
+        try JSONSerialization.jsonObject(with: JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed]), options: [.fragmentsAllowed])
     }
 
     /// Deep equality of JSON values; numbers within a relative 1e-9.
