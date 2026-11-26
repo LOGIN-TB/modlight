@@ -40,6 +40,13 @@ final class AppModel {
     /// Telemetry for the screenshots, instead of live pods.
     var sampleTelemetry: [UUID: [PodTelemetry]]?
     private(set) var hasRunpodKey = false
+    private(set) var hasVeniceKey = false
+    /// The Venice account behind this Mac's key: balances, tier, key expiry, rate limits.
+    private(set) var veniceAccount: APIAccount?
+    private(set) var veniceAccountCheckedAt: Date?
+    /// Venice's catalog, read when the add sheet or a price check needs it.
+    private(set) var veniceCatalog: [APIModelOffer] = []
+    private(set) var veniceCatalogLoadedAt: Date?
     private(set) var hasHuggingFaceToken = false
     private(set) var gatewayKey: String?
     enum GatewayStatus: Equatable { case starting, running, failed(String) }
@@ -82,8 +89,11 @@ final class AppModel {
             try? keychain.write(key, for: .gatewayKey)
             gatewayKey = key
         }
-        showingSetup = !hasRunpodKey
+        showingSetup = !hasRunpodKey && !hasVeniceKey
     }
+
+    /// Any provider set up on this Mac: RunPod for pods, Venice for API models.
+    var hasAnyProvider: Bool { hasRunpodKey || hasVeniceKey }
 
     /// Starts the gateway and the two loops: a fast one that mirrors state for the interface and
     /// a slower one that asks RunPod and applies the rules.
@@ -115,6 +125,8 @@ final class AppModel {
                 guard let self else { return }
                 await self.refreshOtherMacsPods()
                 await self.refreshBalance()
+                await self.refreshVeniceAccount()
+                await self.refreshVenicePrices()
                 try? await Task.sleep(for: .seconds(60))
             }
         })
@@ -143,6 +155,11 @@ final class AppModel {
         if telemetry != localTelemetry { localTelemetry = telemetry }
         syncServers()
         notifier.compare(previous: previous, current: state)
+        // A request to a Venice model was booked: read the balance again soon, so it follows use.
+        if previous.apiUsage != state.apiUsage, hasVeniceKey,
+           veniceAccountCheckedAt.map({ Date.now.timeIntervalSince($0) > 5 }) ?? true {
+            Task { await refreshVeniceAccount() }
+        }
         if selection == nil || !isValid(selection) { selection = .overview }
     }
 
@@ -169,6 +186,7 @@ final class AppModel {
 
     private func refreshSecrets() {
         hasRunpodKey = keychain.contains(.runpodAPIKey)
+        hasVeniceKey = keychain.contains(.veniceAPIKey)
         hasHuggingFaceToken = keychain.contains(.huggingFaceToken)
         gatewayKey = try? keychain.read(.gatewayKey)
     }
@@ -233,6 +251,67 @@ final class AppModel {
             try keychain.write(token, for: .huggingFaceToken)
         }
         refreshSecrets()
+    }
+
+    /// Checks a Venice key and saves it when Venice accepts it.
+    func saveVeniceKey(_ key: String) async -> APIKeyCheck {
+        let outcome = await VeniceClient(apiKey: key).checkKey()
+        if case .valid(let account) = outcome {
+            do {
+                try keychain.write(key, for: .veniceAPIKey)
+            } catch {
+                return .unreachable(error.localizedDescription)
+            }
+            refreshSecrets()
+            veniceAccount = account
+            veniceAccountCheckedAt = .now
+        }
+        return outcome
+    }
+
+    func removeVeniceKey() {
+        try? keychain.delete(.veniceAPIKey)
+        refreshSecrets()
+        veniceAccount = nil
+        veniceAccountCheckedAt = nil
+    }
+
+    func venice() -> VeniceClient { VeniceClient(apiKey: try? keychain.read(.veniceAPIKey)) }
+
+    /// Reads the Venice balance. A failure keeps the last answer (it shows its time).
+    func refreshVeniceAccount() async {
+        guard hasVeniceKey else { veniceAccount = nil; return }
+        veniceAccountCheckedAt = .now
+        if let account = try? await venice().account() { veniceAccount = account }
+    }
+
+    /// Venice's catalog; read again after an hour.
+    @discardableResult
+    func loadVeniceCatalog(force: Bool = false) async throws -> [APIModelOffer] {
+        if !force, let at = veniceCatalogLoadedAt, Date.now.timeIntervalSince(at) < 3600, !veniceCatalog.isEmpty { return veniceCatalog }
+        veniceCatalog = try await venice().catalog()
+        veniceCatalogLoadedAt = .now
+        return veniceCatalog
+    }
+
+    /// Venice changes prices now and then: once a day each Venice model on this Mac takes the
+    /// catalog's current ones, so costs are counted right.
+    func refreshVenicePrices() async {
+        let stale = state.models.filter { $0.provider == .venice && ($0.api.map { Date.now.timeIntervalSince($0.pricedAt) > 86_400 } ?? false) }
+        guard !stale.isEmpty, let catalog = try? await loadVeniceCatalog() else { return }
+        for var item in stale {
+            guard let offer = catalog.first(where: { $0.providerModelId == item.api?.providerModelId }) else { continue }
+            item.api?.pricing = offer.pricing
+            item.api?.pricedAt = .now
+            item.api?.removesAt = offer.removesAt
+            try? await manager.save(item)
+        }
+        await reloadState()
+    }
+
+    /// Venice's rate limits for one model, from the account.
+    func veniceLimits(for providerModelId: String) -> [APIAccount.RateLimit] {
+        veniceAccount?.rateLimits.filter { $0.model == providerModelId } ?? []
     }
 
     func newGatewayKey() {
@@ -360,6 +439,14 @@ final class AppModel {
 
     /// Sample credit for the help snapshots.
     func showBalanceForSnapshots(_ balance: RunpodBalance) { localBalance = balance }
+
+    /// A sample Venice account and catalog for the help snapshots.
+    func showVeniceForSnapshots(account: APIAccount, catalog: [APIModelOffer]) {
+        veniceAccount = account
+        veniceAccountCheckedAt = .now
+        veniceCatalog = catalog
+        veniceCatalogLoadedAt = .now
+    }
 
     /// Reads the account's credit. A failure keeps the last answer (it shows its time).
     func refreshBalance() async {

@@ -61,6 +61,18 @@ struct OverviewView: View {
                 }
                 LabeledContent("Together", value: Format.perHour(model.totalCostPerHour))
             }
+            let apiModels = model.state.models.filter { !$0.isPod }
+            if !apiModels.isEmpty {
+                LabeledContent {
+                    Text(Format.smallMoney(model.state.apiSpend(period: AppModel.todayKey)))
+                } label: {
+                    Text("Venice models, ready · today")
+                    Text(apiModels.map(\.name).joined(separator: ", "))
+                }
+                if let account = model.veniceAccount {
+                    LabeledContent("Venice balance", value: VeniceText.balances(account))
+                }
+            }
             let disks = model.allKeptDisks
             if !disks.isEmpty {
                 LabeledContent {
@@ -92,18 +104,19 @@ struct OverviewView: View {
         let localStarted = model.state.models.contains { model.state.run($0.id).startedAt != nil }
         let serverStarted = snapshots.contains { s in s.models.contains { s.run($0.id).startedAt != nil || s.run($0.id).podId != nil } }
         let firstModel = model.state.models.first?.id ?? snapshots.lazy.compactMap(\.models.first?.id).first
+        let apiModelAdded = model.state.models.contains { !$0.isPod } || snapshots.contains { $0.models.contains { !$0.isPod } }
         let agentSeen = model.state.lastClientRequestAt != nil || snapshots.contains { $0.lastClientRequestAt != nil }
         return [
-            Step(id: "runpod", title: "Connect RunPod", detail: "Podlight needs your RunPod API key to start pods.",
-                 done: model.hasRunpodKey || snapshots.contains { $0.settings.hasRunpodKey }, optional: false,
+            Step(id: "runpod", title: "Connect RunPod or Venice", detail: "RunPod for your own pods, Venice for ready models billed per token.",
+                 done: model.hasAnyProvider || snapshots.contains { $0.settings.hasRunpodKey || $0.settings.hasVeniceKey == true }, optional: false,
                  action: "Set Up…") { model.showingSetup = true },
-            Step(id: "hf", title: "Add a Hugging Face token", detail: "Recommended: downloads are limited more strictly without one, and gated models need it.",
-                 done: model.hasHuggingFaceToken || snapshots.contains { $0.settings.hasHuggingFaceToken }, optional: true,
+            Step(id: "hf", title: "Add a Hugging Face token", detail: "Recommended for pods: downloads are limited more strictly without one, and gated models need it.",
+                 done: model.hasHuggingFaceToken || !model.hasRunpodKey || snapshots.contains { $0.settings.hasHuggingFaceToken }, optional: true,
                  action: "Open Settings") { model.selection = .settings },
-            Step(id: "model", title: "Add a model", detail: "Choose one on Hugging Face; Podlight suggests a GPU and shows the price.",
+            Step(id: "model", title: "Add a model", detail: "From Hugging Face for a pod, or a ready one from Venice; Podlight shows the price.",
                  done: firstModel != nil, optional: false, action: "Add Model…") { model.addModel(to: .local) },
-            Step(id: "start", title: "Start it once in Podlight", detail: "The first start takes 10–25 minutes, longer than an agent waits.",
-                 done: localStarted || serverStarted, optional: false, action: "Show Model") {
+            Step(id: "start", title: "Start it once in Podlight", detail: "The first start takes 10–25 minutes, longer than an agent waits. Venice models need no start.",
+                 done: localStarted || serverStarted || apiModelAdded, optional: false, action: "Show Model") {
                      if let firstModel { model.selection = .model(firstModel) }
                  },
             Step(id: "agent", title: "Connect your agent", detail: "Enter the address, key and model name in your coding agent.",
@@ -179,7 +192,9 @@ struct OverviewView: View {
                         }
                         .buttonStyle(.plain)
                         Spacer()
-                        if run.phase == .stopped || run.phase == .failed {
+                        if !item.isPod {
+                            EmptyView()
+                        } else if run.phase == .stopped || run.phase == .failed {
                             Button("Start…") { model.startingModel = item }.disabled(!model.hasRunpodKey)
                         } else if run.phase == .ready || run.phase == .loading {
                             Button("Stop") { Task { await model.stop(item) } }
@@ -190,7 +205,7 @@ struct OverviewView: View {
                 }
                 Button { model.addModel(to: .local) } label: { Label("Add Model…", systemImage: "plus") }
                     .buttonStyle(.borderless)
-                    .disabled(!model.hasRunpodKey)
+                    .disabled(!model.hasAnyProvider)
             } header: {
                 Text(model.servers.isEmpty ? "Models" : "Models on this Mac")
             }
@@ -237,7 +252,9 @@ private struct ServerOverviewSection: View {
                     }
                     .buttonStyle(.plain)
                     Spacer()
-                    if run.phase == .stopped || run.phase == .failed {
+                    if !item.isPod {
+                        EmptyView()
+                    } else if run.phase == .stopped || run.phase == .failed {
                         Button("Start…") { model.startingModel = item }.disabled(!server.canStart)
                     } else if run.phase == .ready || run.phase == .loading {
                         Button("Stop") { Task { await model.stop(item) } }
@@ -247,7 +264,7 @@ private struct ServerOverviewSection: View {
                 }
             }
             if server.models.isEmpty && server.status == .online {
-                if server.snapshot?.settings.hasRunpodKey == false {
+                if server.snapshot?.settings.hasRunpodKey == false && server.snapshot?.settings.hasVeniceKey != true {
                     Button("Add the Server's RunPod Key…") { model.selection = .serverSettings(server.id) }
                 } else {
                     Button { model.addModel(to: .server(server.id)) } label: { Label("Add Model…", systemImage: "plus") }

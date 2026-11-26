@@ -2,7 +2,7 @@
 
 ## „RunPod kennt diesen Key nicht“
 
-Der Key wurde nicht vollständig kopiert oder ist widerrufen. Lege bei RunPod einen neuen an und füge ihn unter Einstellungen → Zugänge ein.
+Der Key wurde nicht vollständig kopiert oder ist widerrufen. Lege bei RunPod einen neuen an und füge ihn unter Einstellungen → Anbieter und Zugänge ein.
 
 ## „Keine freie Karte bei RunPod“
 
@@ -18,7 +18,7 @@ Ein neuer Pod lädt zuerst die Engine (etwa 9 GB) und dann das Modell. Danach st
 
 ## „Das Modell braucht einen Hugging-Face-Token“
 
-Manche Hersteller geben ihre Modelle erst nach Zustimmung frei. Öffne die Modellseite auf huggingface.co, stimme den Bedingungen zu und trage unter Einstellungen → Zugänge einen Token mit Leserecht ein.
+Manche Hersteller geben ihre Modelle erst nach Zustimmung frei. Öffne die Modellseite auf huggingface.co, stimme den Bedingungen zu und trage unter Einstellungen → Anbieter und Zugänge einen Token mit Leserecht ein.
 
 ## „RunPod hat den Pod außerhalb deiner Region platziert“
 

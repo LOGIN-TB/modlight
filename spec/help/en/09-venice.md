@@ -2,7 +2,7 @@
 
 Venice.ai is a second provider next to RunPod. Instead of renting a card and loading a model onto it, you pick a ready model from Venice's catalog. It answers right away; there is no pod. You pay per token, so only for what your agent actually sends and receives. For the agent nothing changes: same address, same key, and the model is called whatever you name it in Podlight.
 
-<!-- TODO screenshot: a Venice model in the model list next to a pod model (screenshots/en/venice-model.png) -->
+![A Venice model in Podlight](screenshots/en/venice-model.png)
 
 ## Pod or Venice?
 
@@ -34,26 +34,26 @@ Venice deducts in this order: DIEM first, then earned credit, then plan credit, 
 
 ## Adding the key to Podlight
 
-Paste the key under Settings → Providers → Venice, or during setup when Podlight asks about Venice. Podlight checks it right away and shows your Venice balance and plan. The key is kept in this Mac's keychain and only sent to Venice.
+Paste the key under Settings → Providers and access, or during setup when Podlight asks about Venice. Podlight checks it right away and shows your Venice balance and plan. The key is kept in this Mac's keychain and only sent to Venice.
 
-<!-- TODO screenshot: Settings → Providers → Venice with balance and plan (screenshots/en/settings-venice.png) -->
+![The Venice key step](screenshots/en/setup-venice.png)
 
 ## Adding a Venice model
 
-- Under "Models", click "Add Model" and choose "Venice (ready model, per token)".
+- Click "Add Model…" and choose "Ready model at Venice · per token" at the top of the sheet.
 - Search the catalog by name. Filters narrow the list: by privacy (see below) and by abilities such as tool calls, vision, reasoning and code. Coding agents need tool calls.
 - Each model shows its price per 1 million tokens for input and output, and its context length.
 - Give it a name. Your agent asks for the model by this name.
 
 The model is now ready. There is nothing to start.
 
-<!-- TODO screenshot: the Venice catalog with filters and prices (screenshots/en/add-venice.png) -->
+![The Venice catalog with filters and prices](screenshots/en/add-venice.png)
 
 ### Private and Anonymized
 
 Venice sorts its models into two tiers:
 
-- **Private:** Venice runs the model itself and keeps neither requests nor answers. This filter is selected by default.
+- **Private:** Venice runs the model itself and keeps neither requests nor answers. Only these are listed until you tick "Include anonymized".
 - **Anonymized:** models from other providers such as Claude, GPT or Gemini. Venice forwards the request and first removes what points to you, such as your account and IP address. The provider still sees the content, though, and its own retention rules apply.
 
 If your agent sends code that must not leave your hands, stay with "Private".
@@ -68,10 +68,10 @@ Podlight shows for each Venice model how many tokens it has used and what that c
 
 Podlight checks your Venice balance regularly. The refresh button in the toolbar (⌘R) checks right away.
 
-The spending limits under Settings → General cover pods and Venice together. At a limit, Podlight sends no more requests to Venice until the next day or month. A daily limit on the key itself (see above) applies on top, directly at Venice.
+The spending limits under Settings → Costs and safety (or under Costs) cover pods and Venice together. At a limit, Podlight sends no more requests to Venice until the next day or month. A daily limit on the key itself (see above) applies on top, directly at Venice.
 
 ### When Venice refuses
 
 - **No credit (error 402):** top up at Venice. If you only use DIEM, the credit comes back the next day.
 - **Key limit reached:** the daily USD or DIEM limit you set on the key is used up. Raise it at https://venice.ai/settings/api or wait until the next day.
-- **Key expired or invalid:** create a new key at Venice and enter it under Settings → Providers → Venice.
+- **Key expired or invalid:** create a new key at Venice and enter it under Settings → Providers and access.

@@ -2,7 +2,7 @@ import Charts
 import PodlightEngine
 import SwiftUI
 
-/// What the pods of this Mac or of one server cost, against the limits that stop them.
+/// What the pods and Venice models of this Mac or of one server cost, against the limits that stop them.
 struct CostsView: View {
     @Environment(AppModel.self) private var model
     @State private var editingLimits = false
@@ -66,14 +66,15 @@ struct CostsView: View {
                 }
                 BalanceRow(balance: balance)
             }
-            let models = model.models(in: source)
+            VeniceCostsSection(source: source)
+            let models = model.models(in: source).filter(\.isPod)
             if !models.isEmpty {
                 Section {
                     ForEach(models) { item in
                         ModelCostRow(item: item, run: model.run(item.id), keptGB: keptDisks.first { $0.id == item.id }?.gb)
                     }
                 } header: {
-                    Text("Models")
+                    Text("Pods")
                 } footer: {
                     Text("Running models are billed for the GPU and their storage. A stopped model costs nothing unless it keeps its disk: RunPod bills that disk by the hour (0.20 USD per GB and month) until Podlight deletes it after \(model.deleteStoppedAfterDays(in: source)) days without use. These costs are included in the figures below.")
                         .font(.caption).foregroundStyle(.secondary)
@@ -96,8 +97,8 @@ struct CostsView: View {
                 Text("Spending limits")
             } footer: {
                 Text(source == .local
-                     ? "At a limit, Podlight stops this Mac's pods and does not start or wake them again until the next day or month."
-                     : "At a limit, the server stops its pods and does not start or wake them again until the next day or month. Days are counted in the server's time zone.")
+                     ? "At a limit, Podlight stops this Mac's pods, does not start or wake them again, and refuses requests to Venice models until the next day or month."
+                     : "At a limit, the server stops its pods, does not start or wake them again, and refuses requests to Venice models until the next day or month. Days are counted in the server's time zone.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Last 30 days") {
@@ -111,15 +112,16 @@ struct CostsView: View {
             }
             Section {
                 Text(source == .local
-                     ? "These figures are Podlight's own count of this Mac's pods (price per hour × running time). Your RunPod account shows the exact charges, including other pods."
-                     : "These figures are the server's own count of its pods (price per hour × running time). Your RunPod account shows the exact charges, including other pods.")
+                     ? "These figures are Podlight's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Podlight."
+                     : "These figures are the server's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Podlight.")
                     .font(.caption).foregroundStyle(.secondary)
                 Link("Open RunPod billing", destination: Links.runpodBilling)
+                Link("Open Venice API settings", destination: Links.veniceAPIKeys)
             }
         }
         .formStyle(.grouped)
         .navigationTitle(source == .local ? String(localized: "Costs") : String(localized: "Costs · \(model.name(of: source))"))
-        .task { if source == .local { await model.refreshBalance() } }
+        .task { if source == .local { await model.refreshBalance(); await model.refreshVeniceAccount() } }
     }
 }
 

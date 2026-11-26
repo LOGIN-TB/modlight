@@ -23,8 +23,10 @@ struct RootView: View {
                 } detail: {
                     Detail()
                 }
-                .sheet(isPresented: $model.showingAddModel, onDismiss: { model.addSheetDismissed() }) { AddModelSheet(target: model.addingTo) }
-                .sheet(item: $model.editingModel) { AddModelSheet(editing: $0, target: model.source(of: $0.id)) }
+                .sheet(isPresented: $model.showingAddModel, onDismiss: { model.addSheetDismissed() }) { AddModelChooser(target: model.addingTo) }
+                .sheet(item: $model.editingModel) { item in
+                    if item.isPod { AddModelSheet(editing: item, target: model.source(of: item.id)) } else { RenameAPIModelSheet(item: item) }
+                }
                 .sheet(isPresented: $model.showingAddServer, onDismiss: { model.offerTransferAfterPairing() }) { AddServerSheet() }
                 .sheet(item: $model.transfer) { TransferSheet(request: $0) }
                 .sheet(item: $model.startingModel) { StartSheet(model: $0) }
@@ -101,8 +103,8 @@ private struct ModelRows: View {
             ModelRow(item: item, run: model.run(item.id))
                 .tag(SidebarItem.model(item.id))
                 .contextMenu {
-                    Button("Edit…") { model.editingModel = item }
-                        .disabled(model.run(item.id).phase != .stopped && model.run(item.id).phase != .failed)
+                    Button(item.isPod ? "Edit…" : "Rename…") { model.editingModel = item }
+                        .disabled(item.isPod && model.run(item.id).phase != .stopped && model.run(item.id).phase != .failed)
                     if source == .local, !model.servers.isEmpty {
                         Menu("Hand Over to Server") {
                             ForEach(model.servers) { server in
@@ -120,7 +122,7 @@ private struct ModelRows: View {
             Label("Add Model…", systemImage: "plus")
         }
         .buttonStyle(.borderless)
-        .disabled(!model.canStart(in: source))
+        .disabled(!model.canAdd(in: source))
     }
 }
 
@@ -149,7 +151,9 @@ private struct Detail: View {
         switch model.selection {
         case .overview: OverviewView()
         case .model:
-            if let item = model.selectedModel { ModelDetailView(item: item) } else { NoModelView() }
+            if let item = model.selectedModel {
+                if item.isPod { ModelDetailView(item: item) } else { APIModelDetailView(item: item) }
+            } else { NoModelView() }
         case .connection: ConnectionView()
         case .costs: CostsView()
         case .settings: SettingsContent().navigationTitle("Settings")
@@ -166,11 +170,11 @@ struct NoModelView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        if !model.hasRunpodKey {
+        if !model.hasAnyProvider {
             ContentUnavailableView {
-                Label("Connect Podlight to RunPod", systemImage: "key")
+                Label("Connect Podlight to RunPod or Venice", systemImage: "key")
             } description: {
-                Text("Podlight needs your RunPod API key to start pods. It takes about a minute.")
+                Text("RunPod for models on your own rented GPU, Venice for ready models billed per token. Setting up takes about a minute.")
             } actions: {
                 Button("Set Up…") { model.showingSetup = true }.buttonStyle(.glassProminent)
             }
@@ -178,7 +182,7 @@ struct NoModelView: View {
             ContentUnavailableView {
                 Label("No Models Yet", systemImage: "cpu")
             } description: {
-                Text("Choose a model from Hugging Face. Podlight suggests a GPU and shows what it costs.")
+                Text("Choose a model from Hugging Face for your own pod, or a ready model at Venice. Podlight shows what it costs.")
             } actions: {
                 Button("Add Model…") { model.showingAddModel = true }.buttonStyle(.glassProminent)
             }

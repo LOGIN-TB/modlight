@@ -57,6 +57,22 @@ enum Format {
         return formatter.string(from: seconds) ?? ""
     }
 
+    /// Token counts as people read them: 950, 12.4k, 3.2M.
+    static func tokenCount(_ count: Int) -> String {
+        count.formatted(.number.notation(.compactName).precision(.significantDigits(1...3)))
+    }
+
+    /// A price per million tokens: "$0.50"; small prices get more decimals.
+    static func perMillion(_ usd: Double) -> String {
+        usd.formatted(.currency(code: "USD").precision(.fractionLength(usd < 0.1 ? 3 : 2)))
+    }
+
+    /// Cost of API use, down to a hundredth of a cent.
+    static func smallMoney(_ usd: Double) -> String {
+        if usd > 0 && usd < 0.0001 { return "< " + 0.0001.formatted(.currency(code: "USD").precision(.fractionLength(4))) }
+        return usd.formatted(.currency(code: "USD").precision(.fractionLength(usd < 1 ? 4 : 2)))
+    }
+
     static func speed(_ tokensPerSecond: Double?) -> String {
         guard let t = tokensPerSecond else { return "–" }
         return String(localized: "about \(Int(t.rounded())) tok/s")
@@ -70,7 +86,7 @@ enum Describe {
         case let e as PodlightError:
             switch e {
             case .missingRunpodKey:
-                return String(localized: "Add your RunPod API key first (Podlight → Settings → Access).")
+                return String(localized: "Add your RunPod API key first (Podlight → Settings → Providers).")
             case .limitReached(let which):
                 return which == "monthly-limit"
                     ? String(localized: "The monthly spending limit is reached. Raise it in Settings to start again.")
@@ -83,7 +99,7 @@ enum Describe {
                 return String(localized: "There is no model named \(name).")
             case .runpod(let status, let message):
                 return status == 401
-                    ? String(localized: "RunPod did not accept the API key. Check it in Settings → Access.")
+                    ? String(localized: "RunPod did not accept the API key. Check it in Settings → Providers.")
                     : String(localized: "RunPod refused: \(message)")
             case .notReadyInTime:
                 return String(localized: "The model is still loading. A new pod can take up to 25 minutes; resuming one takes about a minute.")
@@ -104,6 +120,12 @@ enum Describe {
                 return String(localized: "\(card) is taken, and the free cards cost more than \(Format.perHour(ceiling)). Nothing was booked.")
             case .modelLookup(let message):
                 return String(localized: "Hugging Face could not describe the model, so it cannot be taken over yet: \(message)")
+            case .missingProviderKey(let provider):
+                return String(localized: "Add your \(provider.displayName) API key first (Podlight → Settings → Providers).")
+            case .provider(let failure):
+                return failure.message
+            case .unsupportedPath(let path, let provider):
+                return String(localized: "\(provider.displayName) does not serve \(path).")
             }
         case let e as RunpodError:
             return String(localized: "RunPod refused (\(e.status)).")

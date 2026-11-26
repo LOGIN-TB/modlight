@@ -73,12 +73,32 @@
         }
       }
     },
+    "%@ / %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ / %2$@"
+          }
+        }
+      }
+    },
     "%@ Is Taken": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ ist belegt"
+          }
+        }
+      }
+    },
+    "%@ context": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Kontext"
           }
         }
       }
@@ -95,6 +115,16 @@
           "stringUnit": {
             "state": "new",
             "value": "%1$@ cost about %2$@ per hour. Once Podlight has quit, agents on this Mac can no longer reach them.\n\nIf you keep them running, each pod stops itself after %3$lld minutes without Podlight."
+          }
+        }
+      }
+    },
+    "%@ does not serve %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ bietet %2$@ nicht an."
           }
         }
       }
@@ -125,6 +155,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ kann keine Werkzeugaufrufe, der Agent kann damit also keine Dateien bearbeiten und keine Befehle ausführen."
+          }
+        }
+      }
+    },
+    "%@ in · %@ out per 1M tokens": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ Eingabe · %2$@ Ausgabe pro 1 Mio. Token"
           }
         }
       }
@@ -223,6 +263,26 @@
         }
       }
     },
+    "%@ per 1M tokens": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pro 1 Mio. Token"
+          }
+        }
+      }
+    },
+    "%@ plan credits": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Abo-Guthaben"
+          }
+        }
+      }
+    },
     "%@ read": {
       "localizations": {
         "de": {
@@ -275,6 +335,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ Token"
+          }
+        }
+      }
+    },
+    "%@ tokens a minute": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Token pro Minute"
           }
         }
       }
@@ -351,6 +421,16 @@
         }
       }
     },
+    "%@ · %@ tokens": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ Token"
+          }
+        }
+      }
+    },
     "%@ · %@ · from %@": {
       "localizations": {
         "de": {
@@ -379,6 +459,16 @@
           "stringUnit": {
             "state": "new",
             "value": "%1$@ · %2$@%3$@"
+          }
+        }
+      }
+    },
+    "%@ · %lld requests · %@ in, %@ out": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld Anfragen · %3$@ rein, %4$@ raus"
           }
         }
       }
@@ -531,6 +621,16 @@
         }
       }
     },
+    "%lld models": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Modelle"
+          }
+        }
+      }
+    },
     "%lld of %lld W": {
       "localizations": {
         "de": {
@@ -579,6 +679,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld Pods laufen noch"
+          }
+        }
+      }
+    },
+    "%lld requests a day": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Anfragen pro Tag"
+          }
+        }
+      }
+    },
+    "%lld requests a minute": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Anfragen pro Minute"
           }
         }
       }
@@ -633,6 +753,16 @@
         }
       }
     },
+    "1. Create an account at venice.ai and add credit: USD credits by card or crypto, or a Pro plan with monthly credits.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Lege ein Konto auf venice.ai an und lade Guthaben auf: USD-Guthaben per Karte oder Krypto, oder ein Pro-Abo mit monatlichem Guthaben."
+          }
+        }
+      }
+    },
     "1. Open RunPod's settings and sign in.": {
       "localizations": {
         "de": {
@@ -683,6 +813,16 @@
         }
       }
     },
+    "2. Open Settings → API and click \"Generate New API Key\".": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Öffne Settings → API und klicke auf „Generate New API Key“."
+          }
+        }
+      }
+    },
     "2. Under \"API Keys\", click \"Create API Key\" and name it \"Podlight\".": {
       "localizations": {
         "de": {
@@ -699,6 +839,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "3. Wähle die Berechtigung „All“ oder „Restricted“ mit Lese- und Schreibrecht für Pods."
+          }
+        }
+      }
+    },
+    "3. Choose the type \"Inference Only\". An expiry date and a daily limit are optional.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. Wähle den Typ „Inference Only“. Ablaufdatum und Tageslimit sind optional."
           }
         }
       }
@@ -743,22 +893,22 @@
         }
       }
     },
+    "4. Copy the key and paste it here. Venice shows it only once.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4. Kopiere den Key und füge ihn hier ein. Venice zeigt ihn nur einmal an."
+          }
+        }
+      }
+    },
     "8 hours from now": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "8 Stunden ab jetzt"
-          }
-        }
-      }
-    },
-    "A Hugging Face token is recommended: pods download over addresses RunPod shares with others, and Hugging Face limits anonymous downloads more strictly. It is required for gated models. After a new Podlight key, paste it into your agents' configuration.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ein Hugging-Face-Token ist empfohlen: Pods laden über Adressen, die RunPod mit anderen teilt, und Hugging Face begrenzt Downloads ohne Konto stärker. Für gesperrte Modelle ist er Pflicht. Nach einem neuen Podlight-Schlüssel trägst du ihn in die Konfiguration deiner Agenten ein."
           }
         }
       }
@@ -823,6 +973,16 @@
         }
       }
     },
+    "A third party (for example Anthropic, OpenAI or Google) runs the model. Venice passes the prompt on without who sent it; that provider's terms apply.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Drittanbieter (etwa Anthropic, OpenAI oder Google) betreibt das Modell. Venice gibt den Prompt ohne Absender weiter; es gelten die Bedingungen dieses Anbieters."
+          }
+        }
+      }
+    },
     "A time of day…": {
       "localizations": {
         "de": {
@@ -859,6 +1019,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "API-Key"
+          }
+        }
+      }
+    },
+    "Above %@ tokens": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über %@ Token"
           }
         }
       }
@@ -903,6 +1073,16 @@
         }
       }
     },
+    "Add Key…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key hinzufügen …"
+          }
+        }
+      }
+    },
     "Add Model": {
       "localizations": {
         "de": {
@@ -933,6 +1113,16 @@
         }
       }
     },
+    "Add RunPod Key in Setup…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod-Key in der Einrichtung hinzufügen …"
+          }
+        }
+      }
+    },
     "Add Server": {
       "localizations": {
         "de": {
@@ -953,12 +1143,32 @@
         }
       }
     },
+    "Add Venice Key…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Key hinzufügen …"
+          }
+        }
+      }
+    },
     "Add a Hugging Face token": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Hugging-Face-Token hinzufügen"
+          }
+        }
+      }
+    },
+    "Add a Venice Model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Modell hinzufügen"
           }
         }
       }
@@ -1053,12 +1263,32 @@
         }
       }
     },
-    "Add your RunPod API key first (Podlight → Settings → Access).": {
+    "Add your %@ API key first (Podlight → Settings → Providers).": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trage zuerst deinen RunPod-API-Key ein (Podlight → Einstellungen → Zugänge)."
+            "value": "Füge zuerst deinen %@-API-Key hinzu (Podlight → Einstellungen → Anbieter)."
+          }
+        }
+      }
+    },
+    "Add your RunPod API key first (Podlight → Settings → Providers).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trage zuerst deinen RunPod-API-Key ein (Podlight → Einstellungen → Anbieter)."
+          }
+        }
+      }
+    },
+    "Add your Venice API key, so agents can use what you add here.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge deinen Venice-API-Key hinzu, damit Agenten nutzen können, was du hier hinzufügst."
           }
         }
       }
@@ -1143,6 +1373,16 @@
         }
       }
     },
+    "Agents get an error until a Venice API key is added (Settings → Providers).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten bekommen einen Fehler, bis ein Venice-API-Key eingetragen ist (Einstellungen → Anbieter)."
+          }
+        }
+      }
+    },
     "Agents on this Mac and in the local network can connect now.": {
       "localizations": {
         "de": {
@@ -1163,12 +1403,32 @@
         }
       }
     },
+    "Agents reach it like every other model: same address, same key, this name. Claude Code works too; Podlight translates its requests.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten erreichen es wie jedes andere Modell: gleiche Adresse, gleicher Key, dieser Name. Auch Claude Code funktioniert; Podlight übersetzt seine Anfragen."
+          }
+        }
+      }
+    },
     "Agents use an access key of their own, not this Mac's key. A stopped model starts by itself when an agent asks for it, within the server's spending limits.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Agenten nutzen einen eigenen Zugangsschlüssel, nicht den Schlüssel dieses Macs. Ein gestopptes Modell startet von selbst, wenn ein Agent es anfragt, solange die Ausgabenlimits des Servers es zulassen."
+          }
+        }
+      }
+    },
+    "Agents use this name in the model field. Change it in their configuration too.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten tragen diesen Namen im Feld „model“ ein. Ändere ihn auch in ihrer Konfiguration."
           }
         }
       }
@@ -1189,6 +1449,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alle Modelle"
+          }
+        }
+      }
+    },
+    "Also Set Up RunPod…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auch RunPod einrichten …"
+          }
+        }
+      }
+    },
+    "Also Set Up Venice…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auch Venice einrichten …"
+          }
+        }
+      }
+    },
+    "Always ready: no pod to start. Billed per token, only when an agent uses it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immer bereit: Es gibt keinen Pod zu starten. Abgerechnet wird pro Token und nur, wenn ein Agent es nutzt."
+          }
+        }
+      }
+    },
+    "Anonymized": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anonymisiert"
           }
         }
       }
@@ -1313,32 +1613,42 @@
         }
       }
     },
-    "At a limit, Podlight stops this Mac's pods and does not start or wake them again until the next day or month.": {
+    "Asking Venice…": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ist ein Limit erreicht, stoppt Podlight die Pods dieses Macs und startet sie bis zum nächsten Tag oder Monat nicht wieder, auch nicht auf Anfrage."
+            "value": "Frage Venice …"
           }
         }
       }
     },
-    "At a limit, Podlight stops this Mac's pods and starts them again only the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Podlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.": {
+    "At a limit, Podlight stops this Mac's pods and refuses requests to Venice models until the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Podlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bei einem Limit stoppt Podlight die Pods dieses Macs und startet sie erst am nächsten Tag oder im nächsten Monat wieder. Jeder Pod stoppt sich außerdem selbst, wenn er die eingestellte Zeit nichts von Podlight gehört hat, etwa während dieser Mac schläft. Ist die gewählte Karte belegt, nimmt Podlight eine andere nur bis zum eingestellten Aufpreis. Darüber fragt es nach oder wartet, wenn niemand von Hand gestartet hat, auf eine günstigere Karte."
+            "value": "Ist ein Limit erreicht, stoppt Podlight die Pods dieses Macs und lehnt Anfragen an Venice-Modelle bis zum nächsten Tag oder Monat ab. Jeder Pod stoppt sich außerdem selbst, wenn er die eingestellte Zeit nichts von Podlight hört, etwa während dieser Mac schläft. Ist die gewählte Karte vergeben, nimmt Podlight eine andere nur bis zum eingestellten Aufpreis; darüber fragt es nach oder wartet, wenn niemand von Hand gestartet hat, auf eine günstigere Karte."
           }
         }
       }
     },
-    "At a limit, the server stops its pods and does not start or wake them again until the next day or month. Days are counted in the server's time zone.": {
+    "At a limit, Podlight stops this Mac's pods, does not start or wake them again, and refuses requests to Venice models until the next day or month.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bei einem Limit stoppt der Server seine Pods und startet oder weckt sie erst am nächsten Tag oder im nächsten Monat wieder. Tage zählen in der Zeitzone des Servers."
+            "value": "Ist ein Limit erreicht, stoppt Podlight die Pods dieses Macs, startet oder weckt sie nicht wieder und lehnt Anfragen an Venice-Modelle ab, bis zum nächsten Tag oder Monat."
+          }
+        }
+      }
+    },
+    "At a limit, the server stops its pods, does not start or wake them again, and refuses requests to Venice models until the next day or month. Days are counted in the server's time zone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ist ein Limit erreicht, stoppt der Server seine Pods, startet oder weckt sie nicht wieder und lehnt Anfragen an Venice-Modelle ab, bis zum nächsten Tag oder Monat. Tage zählen in der Zeitzone des Servers."
           }
         }
       }
@@ -1349,6 +1659,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zurück"
+          }
+        }
+      }
+    },
+    "Balance": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guthaben"
+          }
+        }
+      }
+    },
+    "Balance as of %@. Costs are counted from each answer as it arrives.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guthaben von %@. Die Kosten werden aus jeder Antwort gezählt, sobald sie ankommt."
           }
         }
       }
@@ -1429,6 +1759,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "CPU"
+          }
+        }
+      }
+    },
+    "Cached input": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingabe aus dem Cache"
+          }
+        }
+      }
+    },
+    "Can": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kann"
           }
         }
       }
@@ -1523,22 +1873,22 @@
         }
       }
     },
-    "Choose a model from Hugging Face. Podlight suggests a GPU and shows what it costs.": {
+    "Choose a model from Hugging Face for your own pod, or a ready model at Venice. Podlight shows what it costs.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähle ein Modell von Hugging Face. Podlight schlägt eine Karte vor und zeigt, was sie kostet."
+            "value": "Wähle ein Modell von Hugging Face für deinen eigenen Pod oder ein fertiges Modell bei Venice. Podlight zeigt, was es kostet."
           }
         }
       }
     },
-    "Choose one on Hugging Face; Podlight suggests a GPU and shows the price.": {
+    "Choose a model. Nothing is charged until an agent uses it.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Such eines bei Hugging Face aus; Podlight schlägt eine Karte vor und zeigt den Preis."
+            "value": "Wähle ein Modell. Berechnet wird erst, wenn ein Agent es nutzt."
           }
         }
       }
@@ -1583,6 +1933,16 @@
         }
       }
     },
+    "Code": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code"
+          }
+        }
+      }
+    },
     "Codex": {
       "localizations": {
         "de": {
@@ -1613,22 +1973,22 @@
         }
       }
     },
-    "Connect Podlight to RunPod": {
+    "Connect Podlight to RunPod or Venice": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podlight mit RunPod verbinden"
+            "value": "Podlight mit RunPod oder Venice verbinden"
           }
         }
       }
     },
-    "Connect RunPod": {
+    "Connect RunPod or Venice": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "RunPod verbinden"
+            "value": "RunPod oder Venice verbinden"
           }
         }
       }
@@ -1953,12 +2313,32 @@
         }
       }
     },
+    "Create an Account": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto anlegen"
+          }
+        }
+      }
+    },
     "Credit at RunPod": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Guthaben bei RunPod"
+          }
+        }
+      }
+    },
+    "DIEM renews": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DIEM erneuert sich"
           }
         }
       }
@@ -2253,16 +2633,6 @@
         }
       }
     },
-    "Every start has an end. Idle pods stop by themselves.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jeder Start hat ein Ende. Ungenutzte Pods stoppen von selbst."
-          }
-        }
-      }
-    },
     "Extend": {
       "localizations": {
         "de": {
@@ -2405,6 +2775,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jetzt frei, zu einem höheren Preis."
+          }
+        }
+      }
+    },
+    "From Hugging Face for a pod, or a ready one from Venice; Podlight shows the price.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von Hugging Face für einen Pod oder ein fertiges von Venice; Podlight zeigt den Preis."
           }
         }
       }
@@ -2669,12 +3049,12 @@
         }
       }
     },
-    "If this Mac sleeps or Podlight quits, pods stop after a few minutes.": {
+    "Images": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schläft dieser Mac oder wird Podlight beendet, stoppen die Pods nach wenigen Minuten."
+            "value": "Bilder"
           }
         }
       }
@@ -2685,6 +3065,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wähle in deinem Coding-Agenten (OpenCode, Cline, Aider, pi, …) einen eigenen oder OpenAI-kompatiblen Anbieter und trage diese drei Werte ein. Ein gestopptes Modell startet von selbst, wenn ein Agent es anfragt. Ein neuer Pod braucht dann bis zu 25 Minuten, starte ein neues Modell deshalb zuerst in Podlight."
+          }
+        }
+      }
+    },
+    "Include anonymized": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anonymisierte einbeziehen"
           }
         }
       }
@@ -2781,12 +3171,32 @@
         }
       }
     },
+    "Key expires": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key läuft ab"
+          }
+        }
+      }
+    },
     "Last 30 days": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Letzte 30 Tage"
+          }
+        }
+      }
+    },
+    "Last request": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte Anfrage"
           }
         }
       }
@@ -2903,6 +3313,16 @@
         }
       }
     },
+    "Longest answer": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Längste Antwort"
+          }
+        }
+      }
+    },
     "Longest context": {
       "localizations": {
         "de": {
@@ -2929,6 +3349,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suche in deinem RunPod-Konto …"
+          }
+        }
+      }
+    },
+    "Lowercase letters, digits, \".\", \"_\" and \"-\".": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kleinbuchstaben, Ziffern, „.“, „_“ und „-“."
           }
         }
       }
@@ -3113,6 +3543,16 @@
         }
       }
     },
+    "Needs:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Braucht:"
+          }
+        }
+      }
+    },
     "Network": {
       "localizations": {
         "de": {
@@ -3173,12 +3613,32 @@
         }
       }
     },
-    "Next, add a model. Podlight checks whether it suits a coding agent, suggests a GPU and shows the cost per hour. Nothing is started or charged until you press Start.": {
+    "Next, add a model. For a pod, Podlight checks whether it suits a coding agent, suggests a GPU and shows the cost per hour. Nothing is started or charged until you press Start.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Als Nächstes fügst du ein Modell hinzu. Podlight prüft, ob es sich für einen Coding-Agenten eignet, schlägt eine Karte vor und zeigt die Kosten pro Stunde. Gestartet und berechnet wird erst, wenn du auf „Starten“ klickst."
+            "value": "Füge als Nächstes ein Modell hinzu. Für einen Pod prüft Podlight, ob es zu einem Coding-Agenten passt, schlägt eine Karte vor und zeigt die Kosten pro Stunde. Gestartet und berechnet wird erst, wenn du auf „Starten“ drückst."
+          }
+        }
+      }
+    },
+    "Next, add a ready model from Venice's catalog. It costs nothing until an agent uses it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge als Nächstes ein fertiges Modell aus dem Venice-Katalog hinzu. Es kostet nichts, bis ein Agent es nutzt."
+          }
+        }
+      }
+    },
+    "No %@ key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein %@-Key"
           }
         }
       }
@@ -3309,6 +3769,26 @@
         }
       }
     },
+    "No requests": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Anfragen"
+          }
+        }
+      }
+    },
+    "No requests this month": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Monat keine Anfragen"
+          }
+        }
+      }
+    },
     "No weight files found in this repository.": {
       "localizations": {
         "de": {
@@ -3375,6 +3855,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nicht erreichbar. Die Modelle dort laufen nach den Regeln des Servers weiter."
+          }
+        }
+      }
+    },
+    "Not read yet": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nicht gelesen"
           }
         }
       }
@@ -3449,6 +3939,16 @@
         }
       }
     },
+    "Nothing is deleted at Venice; you can add the model again at any time.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei Venice wird nichts gelöscht; du kannst das Modell jederzeit wieder hinzufügen."
+          }
+        }
+      }
+    },
     "Nothing is running": {
       "localizations": {
         "de": {
@@ -3465,6 +3965,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gerade läuft nichts, für Karten wird also nichts berechnet."
+          }
+        }
+      }
+    },
+    "Nothing matches among the private models. Include anonymized ones?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unter den privaten Modellen passt keines. Anonymisierte einbeziehen?"
+          }
+        }
+      }
+    },
+    "Nothing matches.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts passt."
           }
         }
       }
@@ -3629,6 +4149,26 @@
         }
       }
     },
+    "Open Venice API Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-API-Einstellungen öffnen"
+          }
+        }
+      }
+    },
+    "Open Venice API settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-API-Einstellungen öffnen"
+          }
+        }
+      }
+    },
     "Open the model page": {
       "localizations": {
         "de": {
@@ -3705,6 +4245,16 @@
         }
       }
     },
+    "Own pod at RunPod · per hour": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigener Pod bei RunPod · pro Stunde"
+          }
+        }
+      }
+    },
     "Pair": {
       "localizations": {
         "de": {
@@ -3775,6 +4325,16 @@
         }
       }
     },
+    "Paste the API key (VENICE_INFERENCE_KEY_…)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Key einfügen (VENICE_INFERENCE_KEY_…)"
+          }
+        }
+      }
+    },
     "Paste the token (hf_…)": {
       "localizations": {
         "de": {
@@ -3791,6 +4351,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pro Tag"
+          }
+        }
+      }
+    },
+    "Per million tokens in / out": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro Million Token Eingabe / Ausgabe"
           }
         }
       }
@@ -3865,12 +4435,42 @@
         }
       }
     },
+    "Podlight gives the coding agent on this Mac, for example OpenCode or Claude Code, language models of your choice, behind one address and one key. You decide where each model runs.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight gibt dem Coding-Agenten auf diesem Mac, etwa OpenCode oder Claude Code, Sprachmodelle deiner Wahl, hinter einer Adresse und einem Key. Wo jedes Modell läuft, entscheidest du."
+          }
+        }
+      }
+    },
     "Podlight is connected to RunPod": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Podlight ist mit RunPod verbunden"
+          }
+        }
+      }
+    },
+    "Podlight is connected to RunPod and Venice": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight ist mit RunPod und Venice verbunden"
+          }
+        }
+      }
+    },
+    "Podlight is connected to Venice": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podlight ist mit Venice verbunden"
           }
         }
       }
@@ -3895,26 +4495,6 @@
         }
       }
     },
-    "Podlight needs your RunPod API key to start pods.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight braucht deinen RunPod-API-Key, um Pods zu starten."
-          }
-        }
-      }
-    },
-    "Podlight needs your RunPod API key to start pods. It takes about a minute.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight braucht deinen RunPod-API-Key, um Pods zu starten. Das dauert etwa eine Minute."
-          }
-        }
-      }
-    },
     "Podlight on GitHub": {
       "localizations": {
         "de": {
@@ -3931,16 +4511,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Podlight auf diesem Mac vergisst den Server. Die Modelle dort laufen nach den Regeln des Servers weiter, und der Server behält sie."
-          }
-        }
-      }
-    },
-    "Podlight runs a language model of your choice on a rented GPU at RunPod, and lets the coding agent on this Mac use it, for example OpenCode.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight startet ein Sprachmodell deiner Wahl auf einer gemieteten Grafikkarte bei RunPod. Dein Coding-Agent auf diesem Mac, etwa OpenCode, kann es dann nutzen."
           }
         }
       }
@@ -3991,12 +4561,32 @@
         }
       }
     },
+    "Pods": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pods"
+          }
+        }
+      }
+    },
     "Pods download models over addresses RunPod shares with other customers. Hugging Face limits downloads without an account more strictly, which can stop a download halfway.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Pods laden Modelle über Adressen, die RunPod mit anderen Kunden teilt. Hugging Face begrenzt Downloads ohne Konto stärker, das kann einen Download mittendrin abbrechen."
+          }
+        }
+      }
+    },
+    "Pods need a RunPod API key.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pods brauchen einen RunPod-API-Key."
           }
         }
       }
@@ -4041,12 +4631,62 @@
         }
       }
     },
+    "Prices and model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preise und Modell"
+          }
+        }
+      }
+    },
+    "Prices as of": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preise vom"
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datenschutz"
+          }
+        }
+      }
+    },
+    "Private": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privat"
+          }
+        }
+      }
+    },
     "Prompt cache": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Prompt-Cache"
+          }
+        }
+      }
+    },
+    "Providers and access": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anbieter und Zugänge"
           }
         }
       }
@@ -4091,6 +4731,16 @@
         }
       }
     },
+    "Rate limit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ratenlimit"
+          }
+        }
+      }
+    },
     "Reachable on the local network": {
       "localizations": {
         "de": {
@@ -4121,6 +4771,16 @@
         }
       }
     },
+    "Reading Venice's catalog…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lese den Venice-Katalog …"
+          }
+        }
+      }
+    },
     "Reading the model from Hugging Face…": {
       "localizations": {
         "de": {
@@ -4131,12 +4791,52 @@
         }
       }
     },
-    "Recommended: downloads are limited more strictly without one, and gated models need it.": {
+    "Ready at %@": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Empfohlen: Ohne Token begrenzt Hugging Face Downloads stärker, und gesperrte Modelle brauchen ihn."
+            "value": "Bereit bei %@"
+          }
+        }
+      }
+    },
+    "Ready at %@ · today %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereit bei %1$@ · heute %2$@"
+          }
+        }
+      }
+    },
+    "Ready model at Venice · per token": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertiges Modell bei Venice · pro Token"
+          }
+        }
+      }
+    },
+    "Reasoning": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reasoning"
+          }
+        }
+      }
+    },
+    "Recommended for pods: downloads are limited more strictly without one, and gated models need it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Pods empfohlen: Ohne Token sind Downloads strenger begrenzt, und gesperrte Modelle brauchen ihn."
           }
         }
       }
@@ -4171,6 +4871,16 @@
         }
       }
     },
+    "Remove Model…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell entfernen …"
+          }
+        }
+      }
+    },
     "Remove Server…": {
       "localizations": {
         "de": {
@@ -4191,6 +4901,26 @@
         }
       }
     },
+    "Remove Venice Key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Key entfernen"
+          }
+        }
+      }
+    },
+    "Remove the Venice key?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Key entfernen?"
+          }
+        }
+      }
+    },
     "Removed.": {
       "localizations": {
         "de": {
@@ -4201,12 +4931,42 @@
         }
       }
     },
+    "Rename %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ umbenennen"
+          }
+        }
+      }
+    },
+    "Rename…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umbenennen …"
+          }
+        }
+      }
+    },
     "Replace API Key…": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "API-Key ersetzen …"
+          }
+        }
+      }
+    },
+    "Replace Venice Key…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Key ersetzen …"
           }
         }
       }
@@ -4237,6 +4997,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Das Fortsetzen dauert etwa eine Minute."
+          }
+        }
+      }
+    },
+    "Retired on %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird am %@ abgeschaltet"
           }
         }
       }
@@ -4351,12 +5121,12 @@
         }
       }
     },
-    "RunPod did not accept the API key. Check it in Settings → Access.": {
+    "RunPod did not accept the API key. Check it in Settings → Providers.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "RunPod hat den API-Key nicht angenommen. Prüfe ihn unter Einstellungen → Zugänge."
+            "value": "RunPod hat den API-Key nicht angenommen. Prüfe ihn unter Einstellungen → Anbieter."
           }
         }
       }
@@ -4387,6 +5157,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "RunPod kennt diesen Key nicht. Prüfe, ob er vollständig kopiert ist, oder lege einen neuen an."
+          }
+        }
+      }
+    },
+    "RunPod for models on your own rented GPU, Venice for ready models billed per token. Setting up takes about a minute.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod für Modelle auf deiner eigenen gemieteten Karte, Venice für fertige Modelle mit Abrechnung pro Token. Die Einrichtung dauert etwa eine Minute."
+          }
+        }
+      }
+    },
+    "RunPod for your own pods, Venice for ready models billed per token.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod für deine eigenen Pods, Venice für fertige Modelle mit Abrechnung pro Token."
           }
         }
       }
@@ -4437,6 +5227,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "RunPod hat einen Fehler gemeldet."
+          }
+        }
+      }
+    },
+    "RunPod: your own model on a rented GPU, billed per hour. Podlight suggests the card, and every start has an end.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunPod: dein eigenes Modell auf einer gemieteten Karte, abgerechnet pro Stunde. Podlight schlägt die Karte vor, und jeder Start hat ein Ende."
           }
         }
       }
@@ -4529,6 +5329,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Läuft auf"
+          }
+        }
+      }
+    },
+    "Runs on hardware that keeps nothing: no prompt or answer is stored.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Läuft auf Hardware, die nichts behält: Weder Prompt noch Antwort werden gespeichert."
           }
         }
       }
@@ -4633,6 +5443,16 @@
         }
       }
     },
+    "Search, e.g. qwen, coder, glm": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suchen, z. B. qwen, coder, glm"
+          }
+        }
+      }
+    },
     "Secure": {
       "localizations": {
         "de": {
@@ -4703,12 +5523,22 @@
         }
       }
     },
-    "Set Up": {
+    "Set Up RunPod": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einrichten"
+            "value": "RunPod einrichten"
+          }
+        }
+      }
+    },
+    "Set Up Venice": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice einrichten"
           }
         }
       }
@@ -4849,6 +5679,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ausgabenlimits und Regeln"
+          }
+        }
+      }
+    },
+    "Spending limits cover both. Your keys stay in this Mac's keychain.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Ausgabenlimits gelten für beides. Deine Schlüssel bleiben im Schlüsselbund dieses Macs."
           }
         }
       }
@@ -5621,12 +6461,12 @@
         }
       }
     },
-    "The first start takes 10–25 minutes, longer than an agent waits.": {
+    "The first start takes 10–25 minutes, longer than an agent waits. Venice models need no start.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der erste Start dauert 10–25 Minuten, länger als ein Agent wartet."
+            "value": "Der erste Start dauert 10–25 Minuten, länger als ein Agent wartet. Venice-Modelle brauchen keinen Start."
           }
         }
       }
@@ -5637,6 +6477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Key liegt im Schlüsselbund dieses Macs und geht nur an RunPod."
+          }
+        }
+      }
+    },
+    "The key is stored in this Mac's keychain and only ever sent to Venice.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Key liegt im Schlüsselbund dieses Macs und geht nur an Venice."
           }
         }
       }
@@ -5657,6 +6507,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Der Key funktioniert."
+          }
+        }
+      }
+    },
+    "The key works. Balance: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Key funktioniert. Guthaben: %@"
           }
         }
       }
@@ -5897,6 +6757,16 @@
         }
       }
     },
+    "There is already a model with this name.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es gibt schon ein Modell mit diesem Namen."
+          }
+        }
+      }
+    },
     "There is no model named %@.": {
       "localizations": {
         "de": {
@@ -5917,22 +6787,22 @@
         }
       }
     },
-    "These figures are Podlight's own count of this Mac's pods (price per hour × running time). Your RunPod account shows the exact charges, including other pods.": {
+    "These figures are Podlight's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Podlight.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Zahlen zählt Podlight selbst für die Pods dieses Macs (Preis pro Stunde × Laufzeit). Genau abgerechnet wird in deinem RunPod-Konto, dort auch für andere Pods."
+            "value": "Diese Zahlen zählt Podlight selbst: Pods als Preis pro Stunde × Laufzeit, Venice-Modelle aus den Kosten oder Token jeder Antwort. Die genauen Beträge, auch für Nutzung außerhalb von Podlight, zeigen deine Konten bei RunPod und Venice."
           }
         }
       }
     },
-    "These figures are the server's own count of its pods (price per hour × running time). Your RunPod account shows the exact charges, including other pods.": {
+    "These figures are the server's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Podlight.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Zahlen zählt der Server selbst für seine Pods (Preis pro Stunde × Laufzeit). Die genauen Beträge, auch für andere Pods, zeigt dein RunPod-Konto."
+            "value": "Diese Zahlen zählt der Server selbst: Pods als Preis pro Stunde × Laufzeit, Venice-Modelle aus den Kosten oder Token jeder Antwort. Die genauen Beträge, auch für Nutzung außerhalb von Podlight, zeigen deine Konten bei RunPod und Venice."
           }
         }
       }
@@ -6073,6 +6943,16 @@
         }
       }
     },
+    "This server has no Venice API key yet. Add it under the server's settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server hat noch keinen Venice-API-Key. Trage ihn in den Einstellungen des Servers ein."
+          }
+        }
+      }
+    },
     "Time": {
       "localizations": {
         "de": {
@@ -6139,6 +7019,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Werkzeugaufrufe"
+          }
+        }
+      }
+    },
+    "Tools": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools"
           }
         }
       }
@@ -6293,6 +7183,16 @@
         }
       }
     },
+    "Use": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutzung"
+          }
+        }
+      }
+    },
     "Use This Instead": {
       "localizations": {
         "de": {
@@ -6349,6 +7249,146 @@
           "stringUnit": {
             "state": "translated",
             "value": "Variablen"
+          }
+        }
+      }
+    },
+    "Venice": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice"
+          }
+        }
+      }
+    },
+    "Venice API key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-API-Key"
+          }
+        }
+      }
+    },
+    "Venice balance": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Guthaben"
+          }
+        }
+      }
+    },
+    "Venice could not be reached (%@). Check the internet connection and try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice war nicht erreichbar (%@). Prüfe die Internetverbindung und versuche es noch einmal."
+          }
+        }
+      }
+    },
+    "Venice does not accept this key. Check that it was copied completely, or create a new one.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice nimmt diesen Key nicht an. Prüfe, ob er vollständig kopiert wurde, oder erstelle einen neuen."
+          }
+        }
+      }
+    },
+    "Venice model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Modell"
+          }
+        }
+      }
+    },
+    "Venice models stay in Podlight but answer agents with an error until a key is added again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Modelle bleiben in Podlight, antworten Agenten aber mit einem Fehler, bis wieder ein Key eingetragen ist."
+          }
+        }
+      }
+    },
+    "Venice models, ready · today": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Modelle, bereit · heute"
+          }
+        }
+      }
+    },
+    "Venice prices": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice-Preise"
+          }
+        }
+      }
+    },
+    "Venice retires this model on %@. Add a successor before then.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice schaltet dieses Modell am %@ ab. Füge vorher einen Nachfolger hinzu."
+          }
+        }
+      }
+    },
+    "Venice serves ready models per token; an \"Inference Only\" key is enough. A Hugging Face token is recommended: pods download over addresses RunPod shares with others, and Hugging Face limits anonymous downloads more strictly. It is required for gated models. After a new Podlight key, paste it into your agents' configuration.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice bietet fertige Modelle pro Token an; ein Key vom Typ „Inference Only“ genügt. Ein Hugging-Face-Token wird empfohlen: Pods laden über Adressen, die RunPod mit anderen teilt, und Hugging Face begrenzt anonyme Downloads strenger. Für gesperrte Modelle ist er nötig. Nach einem neuen Podlight-Key trage ihn in die Konfiguration deiner Agenten ein."
+          }
+        }
+      }
+    },
+    "Venice uses DIEM first, then plan credits, then USD. The spending limits count Venice and pods together.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice verbraucht zuerst DIEM, dann Abo-Guthaben, dann USD. Die Ausgabenlimits zählen Venice und Pods zusammen."
+          }
+        }
+      }
+    },
+    "Venice's catalog could not be read.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Venice-Katalog konnte nicht gelesen werden."
+          }
+        }
+      }
+    },
+    "Venice: ready models, billed per token, with nothing to start. Private ones keep no data.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venice: fertige Modelle, abgerechnet pro Token, ohne etwas zu starten. Private Modelle speichern keine Daten."
           }
         }
       }
@@ -6443,6 +7483,16 @@
         }
       }
     },
+    "Where it runs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo es läuft"
+          }
+        }
+      }
+    },
     "Where pods may run": {
       "localizations": {
         "de": {
@@ -6503,22 +7553,12 @@
         }
       }
     },
-    "You need a RunPod account with some credit. Setting up takes about a minute.": {
+    "You need an account with some credit at RunPod or Venice, or both. Each takes about a minute.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du brauchst ein RunPod-Konto mit etwas Guthaben. Die Einrichtung dauert etwa eine Minute."
-          }
-        }
-      }
-    },
-    "You pick a model, Podlight suggests a GPU and shows the price.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Du wählst ein Modell, Podlight schlägt eine Karte vor und zeigt den Preis."
+            "value": "Du brauchst ein Konto mit etwas Guthaben bei RunPod oder Venice, oder bei beiden. Jedes dauert etwa eine Minute."
           }
         }
       }
@@ -6529,6 +7569,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dein RunPod-API-Key"
+          }
+        }
+      }
+    },
+    "Your Venice API key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Venice-API-Key"
           }
         }
       }
@@ -6555,16 +7605,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deine Karte fasst hier keine %@ Token mehr, deshalb ist die Empfehlung gewählt."
-          }
-        }
-      }
-    },
-    "Your keys stay in this Mac's keychain.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deine Schlüssel bleiben im Schlüsselbund dieses Macs."
           }
         }
       }
@@ -6645,6 +7685,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "kein Limit"
+          }
+        }
+      }
+    },
+    "none": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "keins"
           }
         }
       }
@@ -6809,12 +7859,22 @@
         }
       }
     },
-    "• Optional: a Hugging Face token, only for gated models (Settings → Access).": {
+    "• At Venice: a private model that can use tools and is marked for code.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "• Optional ein Hugging-Face-Token, nur für gesperrte Modelle (Einstellungen → Zugänge)."
+            "value": "• Bei Venice: ein privates Modell, das Tools nutzen kann und für Code gekennzeichnet ist."
+          }
+        }
+      }
+    },
+    "• Optional: a Hugging Face token, only for gated models (Settings → Providers).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Optional: ein Hugging-Face-Token, nur für gesperrte Modelle (Einstellungen → Anbieter)."
           }
         }
       }

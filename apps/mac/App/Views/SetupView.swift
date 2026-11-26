@@ -1,8 +1,8 @@
 import PodlightEngine
 import SwiftUI
 
-/// First run: the one thing Podlight cannot work without (a RunPod key), the optional one
-/// (a Hugging Face token), and then straight to the first model. Can be left and resumed.
+/// First run: a provider (RunPod for own pods, Venice for ready models, or both), for pods the
+/// optional Hugging Face token, and then straight to the first model. Can be left and resumed.
 struct SetupView: View {
     @Environment(AppModel.self) private var model
     @State private var page = 0
@@ -15,6 +15,7 @@ struct SetupView: View {
                 case 0: welcome
                 case 1: RunpodKeyStep(onDone: { page = 2 })
                 case 2: HuggingFaceStep(onDone: { page = 3 })
+                case 4: VeniceKeyStep(onDone: { page = 3 }, showsSkip: true)
                 default: done
                 }
             }
@@ -22,49 +23,71 @@ struct SetupView: View {
             .padding(24)
         }
         .frame(maxWidth: 600, maxHeight: 520)
-        .onAppear { if model.hasRunpodKey { page = model.hasHuggingFaceToken ? 3 : 2 } }
+        .onAppear {
+            if model.hasRunpodKey { page = model.hasHuggingFaceToken ? 3 : 2 } else if model.hasVeniceKey { page = 3 }
+        }
     }
 
     private var welcome: some View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: "lightbulb.max").font(.system(size: 44)).foregroundStyle(.tint).accessibilityHidden(true)
             Text("Welcome to Podlight").font(.largeTitle.weight(.semibold))
-            Text("Podlight runs a language model of your choice on a rented GPU at RunPod, and lets the coding agent on this Mac use it, for example OpenCode.")
+            Text("Podlight gives the coding agent on this Mac, for example OpenCode or Claude Code, language models of your choice, behind one address and one key. You decide where each model runs.")
             VStack(alignment: .leading, spacing: 10) {
-                Label("You pick a model, Podlight suggests a GPU and shows the price.", systemImage: "cpu")
-                Label("Every start has an end. Idle pods stop by themselves.", systemImage: "timer")
-                Label("If this Mac sleeps or Podlight quits, pods stop after a few minutes.", systemImage: "moon.zzz")
-                Label("Your keys stay in this Mac's keychain.", systemImage: "lock")
+                Label("RunPod: your own model on a rented GPU, billed per hour. Podlight suggests the card, and every start has an end.", systemImage: "cpu")
+                Label("Venice: ready models, billed per token, with nothing to start. Private ones keep no data.", systemImage: "sparkles")
+                Label("Spending limits cover both. Your keys stay in this Mac's keychain.", systemImage: "lock")
             }
             .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
             Spacer()
-            Text("You need a RunPod account with some credit. Setting up takes about a minute.")
+            Text("You need an account with some credit at RunPod or Venice, or both. Each takes about a minute.")
                 .font(.callout)
             HStack {
                 Button("Later") { dismiss() }.keyboardShortcut(.cancelAction)
                 Spacer()
-                // A server has its own RunPod key: nothing to set up on this Mac.
+                // A server has its own keys: nothing to set up on this Mac.
                 Button("I Use a Podlight Server…") { dismiss(); model.showingAddServer = true }
-                Button("Set Up") { page = 1 }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                Button("Set Up Venice") { page = 4 }
+                Button("Set Up RunPod") { page = 1 }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
             }
+        }
+    }
+
+    private var doneTitle: String {
+        switch (model.hasRunpodKey, model.hasVeniceKey) {
+        case (true, true): String(localized: "Podlight is connected to RunPod and Venice")
+        case (false, true): String(localized: "Podlight is connected to Venice")
+        default: String(localized: "Podlight is connected to RunPod")
         }
     }
 
     private var done: some View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: "checkmark.circle.fill").font(.system(size: 44)).foregroundStyle(.green).accessibilityHidden(true)
-            Text("Podlight is connected to RunPod").font(.largeTitle.weight(.semibold))
-            Text("Next, add a model. Podlight checks whether it suits a coding agent, suggests a GPU and shows the cost per hour. Nothing is started or charged until you press Start.")
+            Text(doneTitle).font(.largeTitle.weight(.semibold))
+            if model.hasRunpodKey {
+                Text("Next, add a model. For a pod, Podlight checks whether it suits a coding agent, suggests a GPU and shows the cost per hour. Nothing is started or charged until you press Start.")
+            } else {
+                Text("Next, add a ready model from Venice's catalog. It costs nothing until an agent uses it.")
+            }
             VStack(alignment: .leading, spacing: 6) {
                 Text("Good first choices for coding:").font(.headline)
-                Text("• A 4-bit build (AWQ, GPTQ or INT4) of a coding model between 7 and 32 billion parameters.")
-                Text("• Optional: a Hugging Face token, only for gated models (Settings → Access).")
+                if model.hasRunpodKey {
+                    Text("• A 4-bit build (AWQ, GPTQ or INT4) of a coding model between 7 and 32 billion parameters.")
+                    Text("• Optional: a Hugging Face token, only for gated models (Settings → Providers).")
+                }
+                if model.hasVeniceKey {
+                    Text("• At Venice: a private model that can use tools and is marked for code.")
+                }
             }
             .foregroundStyle(.secondary)
             Spacer()
             HStack {
                 Button("Close") { dismiss() }.keyboardShortcut(.cancelAction)
                 Spacer()
+                if !model.hasVeniceKey { Button("Also Set Up Venice…") { page = 4 } }
+                if !model.hasRunpodKey { Button("Also Set Up RunPod…") { page = 1 } }
                 Button("Add First Model…") {
                     dismiss()
 

@@ -7,6 +7,12 @@ struct ModelRow: View {
     let run: ModelRun
 
     private var summary: String {
+        if !item.isPod {
+            let today = model.apiTotals(item.id, period: AppModel.todayKey)
+            let provider = item.provider.displayName
+            return today.requests == 0 ? String(localized: "Ready at \(provider)")
+                : String(localized: "Ready at \(provider) · today \(Format.smallMoney(today.usd))")
+        }
         let text = PhaseText.summary(run)
         if run.phase == .stopped, run.managedBy == nil, run.podId != nil, let gb = run.persistentGB, gb > 0 {
             return String(localized: "\(text) · disk \(Format.storagePerHour(StoragePricing.stoppedPerHour(volumeGB: gb)))")
@@ -17,7 +23,11 @@ struct ModelRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            PhaseIcon(phase: run.phase)
+            if item.isPod {
+                PhaseIcon(phase: run.phase)
+            } else {
+                Image(systemName: "sparkles").foregroundStyle(.green).frame(width: 20).accessibilityHidden(true)
+            }
             VStack(alignment: .leading, spacing: 1) {
                 Text(item.name).lineLimit(1)
                 Text(summary).font(.caption).foregroundStyle(.secondary).lineLimit(1)

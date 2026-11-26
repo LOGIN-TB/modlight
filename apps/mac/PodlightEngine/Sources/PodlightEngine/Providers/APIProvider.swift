@@ -126,6 +126,23 @@ public struct APIModelOffer: Codable, Sendable, Equatable, Identifiable {
 
     public var id: String { "\(provider.rawValue):\(providerModelId)" }
 
+    public init(provider: ModelProvider, providerModelId: String, displayName: String, description: String?,
+                contextTokens: Int, maxCompletionTokens: Int?, privacy: APIPrivacy, capabilities: [String],
+                traits: [String], pricing: APIPricing, removesAt: Date?, suggestedName: String) {
+        self.provider = provider
+        self.providerModelId = providerModelId
+        self.displayName = displayName
+        self.description = description
+        self.contextTokens = contextTokens
+        self.maxCompletionTokens = maxCompletionTokens
+        self.privacy = privacy
+        self.capabilities = capabilities
+        self.traits = traits
+        self.pricing = pricing
+        self.removesAt = removesAt
+        self.suggestedName = suggestedName
+    }
+
     /// The model Podlight stores when the user adds this offer under `name`.
     public func model(named name: String, at date: Date = Date()) -> PodlightModel {
         var model = PodlightModel(name: name, repoId: providerModelId, format: .unknown, weightBytes: 0,
