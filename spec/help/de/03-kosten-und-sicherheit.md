@@ -24,7 +24,9 @@ Modelle bei Venice zählen mit: Podlight rechnet ihre Kosten pro Token in diesel
 
 ![Die Ansicht „Kosten“](screenshots/de/costs.png)
 
-Die Zahlen unter „Kosten“ zählt Podlight selbst: Preis pro Stunde mal Laufzeit, nur für die Pods dieses Macs. Genau abgerechnet wird bei RunPod. „Guthaben bei RunPod“ zeigt, was in deinem RunPod-Konto noch übrig ist und wie lange es bei den aktuellen Kosten des ganzen Kontos pro Stunde reicht, andere Pods eingeschlossen. Unter einem Tag wird die Zeile orange, unter drei Stunden rot.
+„Kosten“ zeigt oben in Kacheln, was heute und diesen Monat ausgegeben ist, was im Moment pro Stunde anfällt und wie lange die Guthaben bei RunPod und Venice noch reichen. Die Limits und das Diagramm der letzten 30 Tage sind nach Pods (grün) und Venice (blau) geteilt. Darunter stehen die Venice-Modelle nach Kosten im Monat und die Pods mit ihren laufenden Kosten.
+
+Die Zahlen zählt Podlight selbst: bei Pods Preis pro Stunde mal Laufzeit, bei Venice aus jeder Antwort. Genau abgerechnet wird bei RunPod und Venice. Das Guthaben bei RunPod gilt für das ganze Konto, andere Pods eingeschlossen; unter einem Tag Reichweite wird die Kachel orange.
 
 Der Knopf zum Aktualisieren in der Symbolleiste (⌘R) fragt RunPod und alle Server sofort. Ein Pod, den du in der RunPod-Konsole gelöscht hast, verschwindet aus Podlight ohnehin binnen Sekunden.
 

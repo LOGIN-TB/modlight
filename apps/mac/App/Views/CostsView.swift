@@ -215,47 +215,6 @@ struct CostsView: View {
     }
 }
 
-/// The RunPod account's credit and how long it lasts at the account's current rate (all its pods,
-/// not only Podlight's), orange under a day and red under three hours.
-struct BalanceRow: View {
-    let balance: RunpodBalance?
-
-    var body: some View {
-        if let balance {
-            LabeledContent {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(Format.money(balance.usd)).foregroundStyle(color(balance)).monospacedDigit()
-                    Text(lasts(balance)).font(.caption).foregroundStyle(color(balance) == .primary ? .secondary : color(balance))
-                }
-            } label: {
-                Text("Credit at RunPod")
-                if let checked = balance.checkedAt {
-                    Text("As of \(Format.time(checked)), for the whole account").font(.caption).foregroundStyle(.secondary)
-                }
-            }
-        } else {
-            LabeledContent("Credit at RunPod") {
-                Text("Not available").foregroundStyle(.secondary)
-            }
-            .help(Text("RunPod did not answer, or the API key may not read the account."))
-        }
-    }
-
-    private func color(_ balance: RunpodBalance) -> Color {
-        guard let hours = balance.hoursLeft else { return .primary }
-        return hours < 3 ? .red : hours < 24 ? .orange : .primary
-    }
-
-    private func lasts(_ balance: RunpodBalance) -> String {
-        guard let hours = balance.hoursLeft else { return String(localized: "Nothing in the account costs anything right now") }
-        let rate = Format.perHour(balance.spendPerHourUsd)
-        if hours < 1 { return String(localized: "Lasts under an hour at \(rate)") }
-        if hours < 48 { return String(localized: "Lasts about \(Int(hours.rounded())) hours at \(rate)") }
-        return String(localized: "Lasts about \(Int((hours / 24).rounded())) days at \(rate)")
-    }
-}
-
-/// One model and what it costs right now: running, stopped with its disk kept, or nothing.
 private struct ModelCostRow: View {
     let item: PodlightModel
     let run: ModelRun

@@ -31,6 +31,16 @@
         }
       }
     },
+    "%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        }
+      }
+    },
     "%@ (%@) is taken. Podlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself.": {
       "localizations": {
         "de": {
@@ -431,16 +441,6 @@
         }
       }
     },
-    "%@ · %@ tokens": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ · %2$@ Token"
-          }
-        }
-      }
-    },
     "%@ · %@ · from %@": {
       "localizations": {
         "de": {
@@ -469,16 +469,6 @@
           "stringUnit": {
             "state": "new",
             "value": "%1$@ · %2$@%3$@"
-          }
-        }
-      }
-    },
-    "%@ · %lld requests · %@ in, %@ out": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ · %2$lld Anfragen · %3$@ rein, %4$@ raus"
           }
         }
       }
@@ -581,6 +571,16 @@
         }
       }
     },
+    "%@/min now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "jetzt %@/min"
+          }
+        }
+      }
+    },
     "%@: can move once it runs or has stopped": {
       "localizations": {
         "de": {
@@ -627,6 +627,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld Tagen"
+          }
+        }
+      }
+    },
+    "%lld h": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld h"
+          }
+        }
+      }
+    },
+    "%lld min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
           }
         }
       }
@@ -703,6 +723,16 @@
         }
       }
     },
+    "%lld requests": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Anfragen"
+          }
+        }
+      }
+    },
     "%lld requests a day": {
       "localizations": {
         "de": {
@@ -733,6 +763,26 @@
         }
       }
     },
+    "%lld requests · %@ tokens · cache %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld Anfragen · %2$@ Token · Cache %3$@"
+          }
+        }
+      }
+    },
+    "%lld requests, %@ tokens": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld Anfragen, %2$@ Token"
+          }
+        }
+      }
+    },
     "%lld running": {
       "localizations": {
         "de": {
@@ -743,12 +793,32 @@
         }
       }
     },
+    "%lld tok/s": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Token/s"
+          }
+        }
+      }
+    },
     "%lld waiting": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "%lld wartend"
+          }
+        }
+      }
+    },
+    "%lld:00": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld:00"
           }
         }
       }
@@ -1433,16 +1503,6 @@
         }
       }
     },
-    "Agents reach it like every other model: same address, same key, this name. Claude Code works too; Podlight translates its requests.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Agenten erreichen es wie jedes andere Modell: gleiche Adresse, gleicher Key, dieser Name. Auch Claude Code funktioniert; Podlight übersetzt seine Anfragen."
-          }
-        }
-      }
-    },
     "Agents use an access key of their own, not this Mac's key. A stopped model starts by itself when an agent asks for it, within the server's spending limits.": {
       "localizations": {
         "de": {
@@ -1503,12 +1563,12 @@
         }
       }
     },
-    "Always ready: no pod to start. Billed per token, only when an agent uses it.": {
+    "An agent sends the whole conversation with every request, so input tokens dominate. Tokens the provider already has in its cache cost a fraction. Podlight sends a cache key per agent and system prompt so that requests land where the prefix is cached.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Immer bereit: Es gibt keinen Pod zu starten. Abgerechnet wird pro Token und nur, wenn ein Agent es nutzt."
+            "value": "Ein Agent schickt bei jeder Anfrage den ganzen bisherigen Verlauf mit, deshalb überwiegen die Eingabe-Token. Token, die der Anbieter schon im Cache hat, kosten nur einen Bruchteil. Podlight schickt pro Agent und System-Prompt einen Cache-Schlüssel mit, damit die Anfragen dort landen, wo der Anfang schon im Cache liegt."
           }
         }
       }
@@ -1593,16 +1653,6 @@
         }
       }
     },
-    "As of %@, for the whole account": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stand %@, für das ganze Konto"
-          }
-        }
-      }
-    },
     "Ask RunPod and the servers now": {
       "localizations": {
         "de": {
@@ -1683,6 +1733,16 @@
         }
       }
     },
+    "Avg. context": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ø Kontext"
+          }
+        }
+      }
+    },
     "Back": {
       "localizations": {
         "de": {
@@ -1699,16 +1759,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guthaben"
-          }
-        }
-      }
-    },
-    "Balance as of %@. Costs are counted from each answer as it arrives.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guthaben von %@. Die Kosten werden aus jeder Antwort gezählt, sobald sie ankommt."
           }
         }
       }
@@ -1793,22 +1843,22 @@
         }
       }
     },
+    "Cache hits": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache-Treffer"
+          }
+        }
+      }
+    },
     "Cached input": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Eingabe aus dem Cache"
-          }
-        }
-      }
-    },
-    "Can": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kann"
           }
         }
       }
@@ -2183,6 +2233,16 @@
         }
       }
     },
+    "Copy Name": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namen kopieren"
+          }
+        }
+      }
+    },
     "Copy OpenCode Configuration": {
       "localizations": {
         "de": {
@@ -2223,12 +2283,42 @@
         }
       }
     },
-    "Cost per hour": {
+    "Cost per hour now": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kosten pro Stunde"
+            "value": "Kosten pro Stunde jetzt"
+          }
+        }
+      }
+    },
+    "Cost per hour today": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosten pro Stunde heute"
+          }
+        }
+      }
+    },
+    "Cost today": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosten heute"
+          }
+        }
+      }
+    },
+    "Cost today by hour": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosten heute nach Stunde"
           }
         }
       }
@@ -2363,16 +2453,6 @@
         }
       }
     },
-    "Credit at RunPod": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guthaben bei RunPod"
-          }
-        }
-      }
-    },
     "Critical": {
       "localizations": {
         "de": {
@@ -2383,12 +2463,12 @@
         }
       }
     },
-    "DIEM renews": {
+    "Daily limit": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "DIEM erneuert sich"
+            "value": "Tageslimit"
           }
         }
       }
@@ -2753,6 +2833,26 @@
         }
       }
     },
+    "First token": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstes Token"
+          }
+        }
+      }
+    },
+    "First token at Venice, p90": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstes Token bei Venice, p90"
+          }
+        }
+      }
+    },
     "Floor": {
       "localizations": {
         "de": {
@@ -2785,6 +2885,16 @@
           "stringUnit": {
             "state": "new",
             "value": "For %1$@ tokens the model needs about %2$lld GB of card memory."
+          }
+        }
+      }
+    },
+    "For agents": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Agenten"
           }
         }
       }
@@ -3039,6 +3149,16 @@
         }
       }
     },
+    "Hour": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stunde"
+          }
+        }
+      }
+    },
     "How do I set up a server?": {
       "localizations": {
         "de": {
@@ -3281,6 +3401,16 @@
         }
       }
     },
+    "Kind": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Art"
+          }
+        }
+      }
+    },
     "Last 30 days": {
       "localizations": {
         "de": {
@@ -3301,44 +3431,12 @@
         }
       }
     },
-    "Lasts about %lld days at %@": {
+    "Lasts about %@ at the current rate": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reicht bei %2$@ etwa %1$lld Tage"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Lasts about %1$lld days at %2$@"
-          }
-        }
-      }
-    },
-    "Lasts about %lld hours at %@": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reicht bei %2$@ etwa %1$lld Stunden"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Lasts about %1$lld hours at %2$@"
-          }
-        }
-      }
-    },
-    "Lasts under an hour at %@": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reicht bei %@ keine Stunde mehr"
+            "value": "Reicht bei der aktuellen Rate etwa %@"
           }
         }
       }
@@ -3399,6 +3497,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Limit erreicht"
+          }
+        }
+      }
+    },
+    "Limits now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limits jetzt"
           }
         }
       }
@@ -3533,12 +3641,32 @@
         }
       }
     },
+    "Minute": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minute"
+          }
+        }
+      }
+    },
     "Model": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Modell"
+          }
+        }
+      }
+    },
+    "Model details": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell-Details"
           }
         }
       }
@@ -3773,16 +3901,6 @@
         }
       }
     },
-    "No %@ key": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kein %@-Key"
-          }
-        }
-      }
-    },
     "No GGUF files found in this repository.": {
       "localizations": {
         "de": {
@@ -3879,6 +3997,16 @@
         }
       }
     },
+    "No key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Key"
+          }
+        }
+      }
+    },
     "No model": {
       "localizations": {
         "de": {
@@ -3909,12 +4037,12 @@
         }
       }
     },
-    "No requests": {
+    "No requests in the last half hour.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine Anfragen"
+            "value": "In der letzten halben Stunde keine Anfragen."
           }
         }
       }
@@ -3959,16 +4087,6 @@
         }
       }
     },
-    "Not available": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nicht verfügbar"
-          }
-        }
-      }
-    },
     "Not reachable": {
       "localizations": {
         "de": {
@@ -3995,16 +4113,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nicht erreichbar. Die Modelle dort laufen nach den Regeln des Servers weiter."
-          }
-        }
-      }
-    },
-    "Not read yet": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noch nicht gelesen"
           }
         }
       }
@@ -4055,16 +4163,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nichts gefunden. Versuche einen kürzeren Namen."
-          }
-        }
-      }
-    },
-    "Nothing in the account costs anything right now": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Im Konto kostet gerade nichts"
           }
         }
       }
@@ -4195,6 +4293,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Schlüssel pro Agent oder Rechner, damit du einen widerrufen kannst, ohne die anderen anzufassen. Ein Schlüssel lässt sich auf einzelne Modelle beschränken."
+          }
+        }
+      }
+    },
+    "Only %@ of the input came from the cache. Podlight now sends a cache key per agent; at 70 %% today would have cost about %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur %1$@ der Eingabe kamen aus dem Cache. Podlight schickt jetzt pro Agent einen Cache-Schlüssel mit; bei 70 %% hätte heute etwa %2$@ gekostet."
           }
         }
       }
@@ -4801,16 +4909,6 @@
         }
       }
     },
-    "Prices and model": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preise und Modell"
-          }
-        }
-      }
-    },
     "Prices as of": {
       "localizations": {
         "de": {
@@ -4821,12 +4919,12 @@
         }
       }
     },
-    "Privacy": {
+    "Prices, capabilities and Venice's figures": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Datenschutz"
+            "value": "Preise, Fähigkeiten und Werte von Venice"
           }
         }
       }
@@ -4901,12 +4999,12 @@
         }
       }
     },
-    "Rate limit": {
+    "Rate limits show after the first request.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ratenlimit"
+            "value": "Ratenlimits erscheinen nach der ersten Anfrage."
           }
         }
       }
@@ -5051,16 +5149,6 @@
         }
       }
     },
-    "Remove Model…": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Modell entfernen …"
-          }
-        }
-      }
-    },
     "Remove Server…": {
       "localizations": {
         "de": {
@@ -5107,6 +5195,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entfernt."
+          }
+        }
+      }
+    },
+    "Remove…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen …"
           }
         }
       }
@@ -5167,6 +5265,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anfragen"
+          }
+        }
+      }
+    },
+    "Requests per minute": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anfragen pro Minute"
           }
         }
       }
@@ -5311,6 +5419,16 @@
         }
       }
     },
+    "RunPod credit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guthaben bei RunPod"
+          }
+        }
+      }
+    },
     "RunPod did not accept the API key. Check it in Settings → Providers.": {
       "localizations": {
         "de": {
@@ -5327,16 +5445,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "RunPod hat diesen Schlüssel nicht angenommen."
-          }
-        }
-      }
-    },
-    "RunPod did not answer, or the API key may not read the account.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "RunPod hat nicht geantwortet, oder der API-Schlüssel darf das Konto nicht lesen."
           }
         }
       }
@@ -5441,12 +5549,12 @@
         }
       }
     },
-    "Running models are billed for the GPU and their storage. A stopped model costs nothing unless it keeps its disk: RunPod bills that disk by the hour (0.20 USD per GB and month) until Podlight deletes it after %lld days without use. These costs are included in the figures below.": {
+    "Running models are billed for the GPU and their storage. A stopped model costs nothing unless it keeps its disk: RunPod bills that disk by the hour (0.20 USD per GB and month) until Podlight deletes it after %lld days without use. These costs are included in the figures above.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Laufende Modelle kosten GPU und Speicher. Ein gestopptes Modell kostet nichts, außer es behält seine Festplatte: Die berechnet RunPod stundenweise (0,20 USD pro GB und Monat), bis Podlight sie nach %lld Tagen ohne Nutzung löscht. Diese Kosten sind in den Zahlen unten enthalten."
+            "value": "Laufende Modelle kosten Karte und Speicher. Ein gestopptes Modell kostet nichts, außer es behält seine Festplatte: Die berechnet RunPod stundenweise (0,20 USD pro GB und Monat), bis Podlight sie nach %lld Tagen ohne Nutzung löscht. Diese Kosten sind in den Zahlen oben enthalten."
           }
         }
       }
@@ -5549,6 +5657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notbremse ohne Server"
+          }
+        }
+      }
+    },
+    "Same address and key as every other model. Claude Code works too; Podlight translates its requests.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gleiche Adresse und gleicher Key wie bei jedem anderen Modell. Auch Claude Code funktioniert; Podlight übersetzt seine Anfragen."
           }
         }
       }
@@ -5913,12 +6031,12 @@
         }
       }
     },
-    "Spending per day, last 30 days": {
+    "Spending per day, last 30 days, pods and Venice": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ausgaben pro Tag, letzte 30 Tage"
+            "value": "Ausgaben pro Tag, letzte 30 Tage, Pods und Venice"
           }
         }
       }
@@ -7223,22 +7341,52 @@
         }
       }
     },
-    "Together": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zusammen"
-          }
-        }
-      }
-    },
     "Token mix": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Token-Aufteilung"
+          }
+        }
+      }
+    },
+    "Tokens": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token"
+          }
+        }
+      }
+    },
+    "Tokens per minute": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token pro Minute"
+          }
+        }
+      }
+    },
+    "Tokens per minute in the last 30 minutes": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token pro Minute in den letzten 30 Minuten"
+          }
+        }
+      }
+    },
+    "Tokens per minute · last 30 min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token pro Minute · letzte 30 min"
           }
         }
       }
@@ -7423,16 +7571,6 @@
         }
       }
     },
-    "Use": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nutzung"
-          }
-        }
-      }
-    },
     "Use This Instead": {
       "localizations": {
         "de": {
@@ -7503,16 +7641,6 @@
         }
       }
     },
-    "Venice": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Venice"
-          }
-        }
-      }
-    },
     "Venice API key": {
       "localizations": {
         "de": {
@@ -7543,6 +7671,16 @@
         }
       }
     },
+    "Venice credit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guthaben bei Venice"
+          }
+        }
+      }
+    },
     "Venice did not accept this key.": {
       "localizations": {
         "de": {
@@ -7559,6 +7697,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Venice nimmt diesen Key nicht an. Prüfe, ob er vollständig kopiert wurde, oder erstelle einen neuen."
+          }
+        }
+      }
+    },
+    "Venice median %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Median bei Venice %@"
+          }
+        }
+      }
+    },
+    "Venice median %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Median bei Venice %lld"
           }
         }
       }
@@ -7583,12 +7741,12 @@
         }
       }
     },
-    "Venice models, ready · today": {
+    "Venice models this month": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Venice-Modelle, bereit · heute"
+            "value": "Venice-Modelle diesen Monat"
           }
         }
       }
@@ -7619,16 +7777,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Venice bietet fertige Modelle pro Token an; ein Key vom Typ „Inference Only“ genügt. Ein Hugging-Face-Token wird empfohlen: Pods laden über Adressen, die RunPod mit anderen teilt, und Hugging Face begrenzt anonyme Downloads strenger. Für gesperrte Modelle ist er nötig. Nach einem neuen Podlight-Key trage ihn in die Konfiguration deiner Agenten ein."
-          }
-        }
-      }
-    },
-    "Venice uses DIEM first, then plan credits, then USD. The spending limits count Venice and pods together.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Venice verbraucht zuerst DIEM, dann Abo-Guthaben, dann USD. Die Ausgabenlimits zählen Venice und Pods zusammen."
           }
         }
       }
@@ -7729,6 +7877,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Was ist dir am wichtigsten?"
+          }
+        }
+      }
+    },
+    "What today's cost is for": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wofür die Kosten heute anfallen"
           }
         }
       }
@@ -7899,6 +8057,16 @@
         }
       }
     },
+    "cache %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache %@"
+          }
+        }
+      }
+    },
     "docker compose up -d starts it in the background and shows nothing of the server. Then docker compose exec podlight podlight-info shows address and pairing code. In Coolify, use this file as a Docker Compose resource and run podlight-info in the container's terminal.": {
       "localizations": {
         "de": {
@@ -7959,6 +8127,36 @@
         }
       }
     },
+    "last 30 min: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "letzte 30 min: %@"
+          }
+        }
+      }
+    },
+    "lasts about %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reicht etwa %@"
+          }
+        }
+      }
+    },
+    "median, last 30 min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Median, letzte 30 min"
+          }
+        }
+      }
+    },
     "no limit": {
       "localizations": {
         "de": {
@@ -7985,6 +8183,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "nichts"
+          }
+        }
+      }
+    },
+    "nothing billed for GPUs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "keine Kosten für Karten"
+          }
+        }
+      }
+    },
+    "nothing in use": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gerade nicht in Gebrauch"
+          }
+        }
+      }
+    },
+    "nothing running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "läuft gerade nichts"
+          }
+        }
+      }
+    },
+    "now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "jetzt"
+          }
+        }
+      }
+    },
+    "of %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "von %@"
           }
         }
       }
@@ -8029,6 +8277,26 @@
         }
       }
     },
+    "pods %@ · Venice %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pods %1$@ · Venice %2$@"
+          }
+        }
+      }
+    },
+    "pods and Venice": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pods und Venice"
+          }
+        }
+      }
+    },
     "power: –": {
       "localizations": {
         "de": {
@@ -8049,12 +8317,42 @@
         }
       }
     },
+    "sent per request": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pro Anfrage gesendet"
+          }
+        }
+      }
+    },
+    "share of input from the cache": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anteil der Eingabe aus dem Cache"
+          }
+        }
+      }
+    },
     "the pod is deleted, nothing billed": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "der Pod wird gelöscht, nichts wird berechnet"
+          }
+        }
+      }
+    },
+    "today": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "heute"
           }
         }
       }
@@ -8165,6 +8463,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "• Optional: ein Hugging-Face-Token, nur für gesperrte Modelle (Einstellungen → Anbieter)."
+          }
+        }
+      }
+    },
+    "−%lld min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "−%lld min"
+          }
+        }
+      }
+    },
+    "≈ %@/h now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ %@/h jetzt"
           }
         }
       }

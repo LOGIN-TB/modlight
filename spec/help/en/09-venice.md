@@ -64,7 +64,22 @@ You reach a Venice model like any other model in Podlight: with the address and 
 
 ## Costs and limits
 
-Podlight shows for each Venice model how many tokens it has used and what that cost, while the agent works. An agent sends the conversation so far with every request, so the input price usually matters more than the output price.
+A Venice model's page shows live what it does and costs:
+
+- **Cost today** and, while an agent works, the cost per hour right now.
+- **Cache hits:** the share of input that came from Venice's cache. Green from 60 %, orange below, red under 30 %.
+- **Writing** and **first token:** how fast answers come, each next to the median Venice measures for everyone on this model.
+- **Avg. context:** how much conversation an agent sends per request.
+- **Tokens per minute** over the last half hour, split into new input, cached input and output, next to Venice's **rate limits** as the latest answer reported them, the daily limit, and how long the balance lasts at the current rate.
+- **Cost today by hour.**
+
+![A Venice model's page](screenshots/en/venice-model.png)
+
+### Cache and costs
+
+An agent sends the whole conversation with every request, often tens of thousands of tokens, so the input price usually matters more than the output price. When the start of a request is already in Venice's cache, that part costs a fraction, about a fifth for many models.
+
+Venice spreads requests over several machines, though, and without a hint the next request often lands on one that does not know the start. Since 0.12 Podlight therefore sends a fixed cache key (`prompt_cache_key`) per agent and system prompt. If your agent sets one itself, its own is kept. "What today's cost is for" shows how the cost splits into new input, cache and output; when the cache barely helps, Podlight estimates there what the day would have cost at 70 %.
 
 Podlight checks your Venice balance regularly. The refresh button in the toolbar (⌘R) checks right away.
 

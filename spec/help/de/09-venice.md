@@ -64,7 +64,22 @@ Ein Venice-Modell erreichst du wie jedes andere Modell in Podlight: über die Ad
 
 ## Kosten und Limits
 
-Podlight zeigt bei jedem Venice-Modell, wie viele Token es verbraucht hat und was das gekostet hat, während der Agent arbeitet. Ein Agent schickt bei jeder Anfrage den bisherigen Verlauf mit. Deshalb zählt meist der Preis für die Eingabe mehr als der für die Ausgabe.
+Die Seite eines Venice-Modells zeigt live, was es tut und kostet:
+
+- **Kosten heute** und, solange gearbeitet wird, die Kosten pro Stunde im Moment.
+- **Cache-Treffer:** welcher Anteil der Eingabe aus dem Cache von Venice kam. Grün ab 60 %, orange darunter, rot unter 30 %.
+- **Schreiben** und **erstes Token:** wie schnell die Antworten kommen, jeweils neben dem Median, den Venice für alle Nutzer dieses Modells misst.
+- **Ø Kontext:** wie viel Verlauf ein Agent pro Anfrage schickt.
+- **Token pro Minute** der letzten halben Stunde, aufgeteilt in neue Eingabe, Eingabe aus dem Cache und Ausgabe, daneben die **Ratenlimits** von Venice, wie sie die letzte Antwort meldete, das Tageslimit und wie lange das Guthaben bei der aktuellen Rate reicht.
+- **Kosten heute nach Stunde.**
+
+![Die Seite eines Venice-Modells](screenshots/de/venice-model.png)
+
+### Cache und Kosten
+
+Ein Agent schickt bei jeder Anfrage den bisherigen Verlauf mit, oft zehntausende Token. Deshalb zählt meist der Preis für die Eingabe mehr als der für die Ausgabe. Liegt der Anfang einer Anfrage schon im Cache von Venice, kostet dieser Teil nur einen Bruchteil, bei vielen Modellen etwa ein Fünftel.
+
+Venice verteilt Anfragen aber auf mehrere Rechner, und ohne Hinweis landet die nächste Anfrage oft auf einem, der den Anfang nicht kennt. Seit 0.12 schickt Podlight deshalb pro Agent und System-Prompt einen festen Cache-Schlüssel (`prompt_cache_key`) mit. Setzt dein Agent selbst einen, bleibt seiner. Unter „Wofür die Kosten heute anfallen“ siehst du, wie sich die Kosten auf neue Eingabe, Cache und Ausgabe verteilen; greift der Cache kaum, schätzt Podlight dort, was der Tag bei 70 % gekostet hätte.
 
 Das Guthaben bei Venice fragt Podlight regelmäßig ab. Der Knopf zum Aktualisieren in der Symbolleiste (⌘R) fragt sofort.
 
