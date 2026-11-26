@@ -327,6 +327,7 @@ public enum APIForward {
     /// `model` becomes the provider's id. A streamed chat completion always asks for usage, so
     /// Podlight can count tokens. Venice adds its own system prompt unless told not to; an agent
     /// brings its own, so Podlight turns Venice's off unless the agent set `venice_parameters`.
+    /// A `prompt_cache_key` derived from the system prompt is added unless the agent sent one.
     public static func rewrite(_ json: [String: Any], path: String, provider: ModelProvider,
                                providerModelId: String) -> Rewritten {
         var body = json
@@ -342,6 +343,13 @@ public enum APIForward {
             if provider == .venice, body["venice_parameters"] == nil {
                 body["venice_parameters"] = ["include_venice_system_prompt": false]
             }
+        }
+        // Without a routing hint Venice spreads requests over backends and its prompt cache
+        // rarely hits (9 % measured on 2026-11-26 with Claude Code); one key per system prompt
+        // keeps an agent's requests together.
+        if provider == .venice, path == "/v1/chat/completions" || path == "/v1/responses",
+           body["prompt_cache_key"] == nil, let key = APITelemetry.cacheKey(body, providerModelId: providerModelId) {
+            body["prompt_cache_key"] = key
         }
         return Rewritten(body: body, clientWantsUsage: wantsUsage)
     }

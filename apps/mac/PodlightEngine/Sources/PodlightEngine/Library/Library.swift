@@ -363,11 +363,13 @@ public struct PodlightState: Codable, Sendable, Equatable {
     /// Tokens and cost of API models, per local day (`yyyy-MM-dd`) and model id (UUID string).
     /// Their cost is in `spendByDay` too, so the limits cover pods and API models together.
     public var apiUsage: [String: [String: APIUsageTotals]] = [:]
+    /// The same per local hour (`yyyy-MM-ddTHH`), the last 48 hours, for "today by hour".
+    public var apiUsageByHour: [String: [String: APIUsageTotals]] = [:]
 
     public init() {}
 
     private enum CodingKeys: String, CodingKey {
-        case models, runs, settings, spendByDay, lastClientRequestAt, servers, deviceTag, apiUsage
+        case models, runs, settings, spendByDay, lastClientRequestAt, servers, deviceTag, apiUsage, apiUsageByHour
     }
 
     // Every field optional on read, so a state file from an older version still loads.
@@ -381,6 +383,7 @@ public struct PodlightState: Codable, Sendable, Equatable {
         servers = try c.decodeIfPresent([ServerEntry].self, forKey: .servers) ?? []
         deviceTag = try c.decodeIfPresent(String.self, forKey: .deviceTag)
         apiUsage = try c.decodeIfPresent([String: [String: APIUsageTotals]].self, forKey: .apiUsage) ?? [:]
+        apiUsageByHour = try c.decodeIfPresent([String: [String: APIUsageTotals]].self, forKey: .apiUsageByHour) ?? [:]
     }
 
     /// Books one API request: its tokens for the model, its cost into the day's spend.
@@ -389,6 +392,17 @@ public struct PodlightState: Codable, Sendable, Equatable {
         let day = Self.dayKey(date, calendar: calendar)
         apiUsage[day, default: [:]][model.uuidString, default: APIUsageTotals()].add(usage, cost: cost)
         spendByDay[day, default: 0] += cost.usd
+        let hour = Self.hourKey(date, calendar: calendar)
+        apiUsageByHour[hour, default: [:]][model.uuidString, default: APIUsageTotals()].add(usage, cost: cost)
+        if apiUsageByHour.count > 48 {
+            for old in apiUsageByHour.keys.sorted().dropLast(48) { apiUsageByHour[old] = nil }
+        }
+    }
+
+    /// `yyyy-MM-ddTHH` in local time.
+    public static func hourKey(_ date: Date, calendar: Calendar = .current) -> String {
+        let c = calendar.dateComponents([.year, .month, .day, .hour], from: date)
+        return String(format: "%04d-%02d-%02dT%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0, c.hour ?? 0)
     }
 
     /// One API model's totals for a day, or for a month when `period` is `yyyy-MM`.

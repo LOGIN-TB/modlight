@@ -1,0 +1,1126 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "averagePromptTokens": 85750,
+        "cacheShare": 0.4116222760290557,
+        "errorShare": 0.2,
+        "minutes": [
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:01:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:02:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:03:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:04:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:05:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:06:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:07:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:08:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:09:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:10:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:11:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 70000,
+            "output": 0,
+            "requests": 1,
+            "start": "2026-11-26T20:12:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:13:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:14:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:15:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:16:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:17:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:18:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:19:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 70000,
+            "newInput": 10000,
+            "output": 300,
+            "requests": 1,
+            "start": "2026-11-26T20:20:00Z",
+            "usd": 0.004
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:21:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:22:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:23:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:24:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:25:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 85000,
+            "output": 400,
+            "requests": 1,
+            "start": "2026-11-26T20:26:00Z",
+            "usd": 0.0138
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:27:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:28:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 20000,
+            "newInput": 68000,
+            "output": 600,
+            "requests": 1,
+            "start": "2026-11-26T20:29:00Z",
+            "usd": 0.0115
+          },
+          {
+            "cachedInput": 80000,
+            "newInput": 10000,
+            "output": 800,
+            "requests": 1,
+            "start": "2026-11-26T20:30:00Z",
+            "usd": 0.0042
+          }
+        ],
+        "requests": 5,
+        "requestsPerMinute": 0.6,
+        "runwayHours": 128.50746268656715,
+        "tokensPerSecondMedian": 80.0,
+        "ttftP50Ms": 1400,
+        "usdPerHour": 0.134
+      },
+      "function": "apiTelemetrySummary",
+      "id": "summary-agent-session",
+      "input": {
+        "balanceUsd": 17.22,
+        "now": "2026-11-26T20:30:30Z",
+        "samples": [
+          {
+            "cachedTokens": 80000,
+            "completionTokens": 800,
+            "durationMs": 11400,
+            "promptTokens": 90000,
+            "status": 200,
+            "streamed": true,
+            "time": "2026-11-26T20:30:10Z",
+            "ttftMs": 1400,
+            "usd": 0.0042
+          },
+          {
+            "cachedTokens": 20000,
+            "completionTokens": 600,
+            "durationMs": 9400,
+            "promptTokens": 88000,
+            "status": 200,
+            "streamed": true,
+            "time": "2026-11-26T20:29:05Z",
+            "ttftMs": 1900,
+            "usd": 0.0115
+          },
+          {
+            "cachedTokens": 0,
+            "completionTokens": 400,
+            "durationMs": 7600,
+            "promptTokens": 85000,
+            "status": 200,
+            "streamed": true,
+            "time": "2026-11-26T20:26:40Z",
+            "ttftMs": 2600,
+            "usd": 0.0138
+          },
+          {
+            "cachedTokens": 70000,
+            "completionTokens": 300,
+            "durationMs": 4900,
+            "promptTokens": 80000,
+            "status": 200,
+            "streamed": true,
+            "time": "2026-11-26T20:20:00Z",
+            "ttftMs": 900,
+            "usd": 0.004
+          },
+          {
+            "cachedTokens": 0,
+            "completionTokens": 0,
+            "durationMs": 800,
+            "promptTokens": 70000,
+            "status": 402,
+            "streamed": false,
+            "time": "2026-11-26T20:12:00Z",
+            "usd": 0
+          },
+          {
+            "cachedTokens": 0,
+            "completionTokens": 500,
+            "durationMs": 6000,
+            "promptTokens": 60000,
+            "status": 200,
+            "streamed": true,
+            "time": "2026-11-26T19:59:00Z",
+            "ttftMs": 1000,
+            "usd": 0.0099
+          },
+          {
+            "cachedTokens": 0,
+            "completionTokens": 500,
+            "durationMs": 6000,
+            "promptTokens": 50000,
+            "status": 200,
+            "streamed": true,
+            "time": "2026-11-26T19:40:00Z",
+            "ttftMs": 1000,
+            "usd": 0.0083
+          }
+        ]
+      },
+      "title": "Half an hour of an agent: per-minute buckets (new input = prompt minus cached), cache share over all prompt tokens, lower median of first-token time and output speed (streamed only), errors counted, the last 15 minutes as an hourly rate, the balance's runway at that rate. Samples older than 30 minutes and in the future are left out."
+    },
+    {
+      "expected": {
+        "minutes": [
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:01:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:02:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:03:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:04:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:05:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:06:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:07:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:08:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:09:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:10:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:11:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:12:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:13:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:14:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:15:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:16:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:17:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:18:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:19:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:20:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:21:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:22:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:23:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:24:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:25:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:26:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:27:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:28:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:29:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:30:00Z",
+            "usd": 0
+          }
+        ],
+        "requests": 0,
+        "requestsPerMinute": 0.0,
+        "usdPerHour": 0
+      },
+      "function": "apiTelemetrySummary",
+      "id": "summary-empty",
+      "input": {
+        "balanceUsd": 17.22,
+        "now": "2026-11-26T20:30:30Z",
+        "samples": []
+      },
+      "title": "No requests: 30 empty minutes, no shares or medians, nothing per hour, no runway."
+    },
+    {
+      "expected": {
+        "averagePromptTokens": 1000,
+        "cacheShare": 0.0,
+        "errorShare": 0.0,
+        "minutes": [
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:01:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:02:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:03:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:04:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:05:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:06:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:07:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:08:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:09:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:10:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:11:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:12:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:13:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:14:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:15:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:16:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:17:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:18:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:19:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:20:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:21:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:22:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:23:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:24:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:25:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:26:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:27:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:28:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 0,
+            "output": 0,
+            "requests": 0,
+            "start": "2026-11-26T20:29:00Z",
+            "usd": 0
+          },
+          {
+            "cachedInput": 0,
+            "newInput": 1000,
+            "output": 200,
+            "requests": 1,
+            "start": "2026-11-26T20:30:00Z",
+            "usd": 0.001
+          }
+        ],
+        "requests": 1,
+        "requestsPerMinute": 0.2,
+        "usdPerHour": 0.004
+      },
+      "function": "apiTelemetrySummary",
+      "id": "summary-not-streamed",
+      "input": {
+        "balanceUsd": null,
+        "now": "2026-11-26T20:30:30Z",
+        "samples": [
+          {
+            "cachedTokens": 0,
+            "completionTokens": 200,
+            "durationMs": 2500,
+            "promptTokens": 1000,
+            "status": 200,
+            "streamed": false,
+            "time": "2026-11-26T20:30:00Z",
+            "usd": 0.001
+          }
+        ]
+      },
+      "title": "A plain answer has no first-token time and no speed; without a balance there is no runway."
+    },
+    {
+      "expected": {
+        "at": "2026-11-26T20:30:30Z",
+        "limitRequests": 100,
+        "limitTokens": 2000000,
+        "remainingRequests": 66,
+        "remainingTokens": 412000,
+        "resetRequests": "2026-11-26T20:31:00Z",
+        "resetTokens": "2026-11-26T20:31:00Z"
+      },
+      "function": "apiRateLimitHeaders",
+      "id": "ratelimit-headers",
+      "input": {
+        "at": "2026-11-26T20:30:30Z",
+        "headers": {
+          "X-RateLimit-Limit-Requests": "100",
+          "x-ratelimit-limit-tokens": "2000000",
+          "x-ratelimit-remaining": "50",
+          "x-ratelimit-remaining-requests": "66",
+          "x-ratelimit-remaining-tokens": "412000",
+          "x-ratelimit-reset-requests": "1795725060000",
+          "x-ratelimit-reset-tokens": "1795725060000"
+        }
+      },
+      "title": "Venice's x-ratelimit-* headers in any case; resets are Unix milliseconds; the failed-request budget (x-ratelimit-remaining) is not a model limit and is ignored."
+    },
+    {
+      "expected": null,
+      "function": "apiRateLimitHeaders",
+      "id": "ratelimit-none",
+      "input": {
+        "at": "2026-11-26T20:30:30Z",
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining": "49"
+        }
+      },
+      "title": "An answer without rate-limit headers gives nothing."
+    },
+    {
+      "expected": {
+        "at": "2026-11-26T20:30:30Z",
+        "remainingTokens": 1500
+      },
+      "function": "apiRateLimitHeaders",
+      "id": "ratelimit-partial",
+      "input": {
+        "at": "2026-11-26T20:30:30Z",
+        "headers": {
+          "x-ratelimit-remaining-tokens": "1500"
+        }
+      },
+      "title": "Only some headers: the rest stays unknown."
+    },
+    {
+      "expected": true,
+      "function": "apiChunkHasContent",
+      "id": "content-text",
+      "input": {
+        "chunk": {
+          "choices": [
+            {
+              "delta": {
+                "content": "Hi"
+              },
+              "index": 0
+            }
+          ]
+        }
+      },
+      "title": "A text delta is output."
+    },
+    {
+      "expected": false,
+      "function": "apiChunkHasContent",
+      "id": "content-role-only",
+      "input": {
+        "chunk": {
+          "choices": [
+            {
+              "delta": {
+                "content": "",
+                "role": "assistant"
+              },
+              "index": 0
+            }
+          ]
+        }
+      },
+      "title": "The first chunk with only the role is not output yet."
+    },
+    {
+      "expected": true,
+      "function": "apiChunkHasContent",
+      "id": "content-reasoning",
+      "input": {
+        "chunk": {
+          "choices": [
+            {
+              "delta": {
+                "reasoning_content": "Let me"
+              },
+              "index": 0
+            }
+          ]
+        }
+      },
+      "title": "Reasoning counts: the model is producing tokens."
+    },
+    {
+      "expected": true,
+      "function": "apiChunkHasContent",
+      "id": "content-tool-call",
+      "input": {
+        "chunk": {
+          "choices": [
+            {
+              "delta": {
+                "tool_calls": [
+                  {
+                    "function": {
+                      "arguments": "{"
+                    },
+                    "index": 0
+                  }
+                ]
+              },
+              "index": 0
+            }
+          ]
+        }
+      },
+      "title": "A tool call delta counts."
+    },
+    {
+      "expected": false,
+      "function": "apiChunkHasContent",
+      "id": "content-usage",
+      "input": {
+        "chunk": {
+          "choices": [],
+          "usage": {
+            "completion_tokens": 1,
+            "prompt_tokens": 3
+          }
+        }
+      },
+      "title": "The usage chunk is not output."
+    },
+    {
+      "expected": true,
+      "function": "apiChunkHasContent",
+      "id": "content-responses-delta",
+      "input": {
+        "chunk": {
+          "delta": "Hi",
+          "type": "response.output_text.delta"
+        }
+      },
+      "title": "Responses API: response.output_text.delta is output."
+    },
+    {
+      "expected": false,
+      "function": "apiChunkHasContent",
+      "id": "content-responses-created",
+      "input": {
+        "chunk": {
+          "type": "response.created"
+        }
+      },
+      "title": "Responses API: response.created is not."
+    },
+    {
+      "expected": "podlight-5878d4f89f44244fb6df4e2e688ab6e7",
+      "function": "apiCacheKey",
+      "id": "cachekey-system",
+      "input": {
+        "body": {
+          "messages": [
+            {
+              "content": "You are Claude Code.",
+              "role": "system"
+            },
+            {
+              "content": "hi",
+              "role": "user"
+            }
+          ]
+        },
+        "providerModelId": "glm-5-3-flash-uncensored"
+      },
+      "title": "The same model and system prompt always give the same key, whatever follows."
+    },
+    {
+      "expected": "podlight-49f19aaf9aa15aadcaad9a08752b18ab",
+      "function": "apiCacheKey",
+      "id": "cachekey-parts",
+      "input": {
+        "body": {
+          "messages": [
+            {
+              "content": [
+                {
+                  "text": "Be ",
+                  "type": "text"
+                },
+                {
+                  "text": "brief.",
+                  "type": "text"
+                }
+              ],
+              "role": "developer"
+            },
+            {
+              "content": "x",
+              "role": "user"
+            }
+          ]
+        },
+        "providerModelId": "glm-5-3-flash-uncensored"
+      },
+      "title": "System content as parts is joined; developer messages count as system."
+    },
+    {
+      "expected": "podlight-cf41bf896936e406990d6dfc7c562d33",
+      "function": "apiCacheKey",
+      "id": "cachekey-responses",
+      "input": {
+        "body": {
+          "input": "hi",
+          "instructions": "You are Codex."
+        },
+        "providerModelId": "glm-5-3-flash-uncensored"
+      },
+      "title": "Responses API: the instructions."
+    },
+    {
+      "expected": null,
+      "function": "apiCacheKey",
+      "id": "cachekey-none",
+      "input": {
+        "body": {
+          "messages": [
+            {
+              "content": "hi",
+              "role": "user"
+            }
+          ]
+        },
+        "providerModelId": "glm-5-3-flash-uncensored"
+      },
+      "title": "No system prompt: no key, nothing stable to route on."
+    }
+  ],
+  "description": "Live telemetry of API models: the half-hour summary, rate-limit headers, which stream chunk is the first token, and the prompt cache key. Since 0.12."
+}

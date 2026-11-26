@@ -10,6 +10,8 @@ struct UsageMeter {
     /// Drop the usage-only chunk (empty `choices`) of a chat completion stream.
     let dropUsageChunk: Bool
     private(set) var usage: APIUsage?
+    /// When the first chunk with model output passed: the time to first token.
+    private(set) var firstContentAt: Date?
     private var body = Data()
     private var bodyTooLong = false
     private static let bodyLimit = 32 * 1024 * 1024
@@ -25,10 +27,9 @@ struct UsageMeter {
             return line
         }
         let payload = line.dropFirst(Self.dataPrefix.count)
-        guard let json = (try? JSONSerialization.jsonObject(with: Data(payload))) as? [String: Any],
-              let found = APIUsage.from(json) else {
-            return line
-        }
+        guard let json = (try? JSONSerialization.jsonObject(with: Data(payload))) as? [String: Any] else { return line }
+        if firstContentAt == nil, APITelemetry.hasContent(json) { firstContentAt = Date() }
+        guard let found = APIUsage.from(json) else { return line }
         usage = found
         if dropUsageChunk, let choices = json["choices"] as? [Any], choices.isEmpty { return nil }
         return line

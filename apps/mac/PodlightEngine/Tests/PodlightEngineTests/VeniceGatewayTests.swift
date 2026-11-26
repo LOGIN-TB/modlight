@@ -1,4 +1,5 @@
 import Foundation
+import HTTPTypes
 import Hummingbird
 import NIOCore
 import Testing
@@ -39,7 +40,13 @@ private func runFakeVenice(port: Int, log: VeniceLog) async throws {
         let messages = body["messages"] as? [[String: Any]] ?? []
         let prompt = messages.first?["content"] as? String ?? ""
         if prompt == "slow" {
-            return Response(status: .ok, headers: [.contentType: "text/event-stream"], body: ResponseBody { writer in
+            var limited = HTTPFields()
+            limited[.contentType] = "text/event-stream"
+            limited[HTTPField.Name("x-ratelimit-limit-requests")!] = "100"
+            limited[HTTPField.Name("x-ratelimit-remaining-requests")!] = "66"
+            limited[HTTPField.Name("x-ratelimit-limit-tokens")!] = "2000000"
+            limited[HTTPField.Name("x-ratelimit-remaining-tokens")!] = "412000"
+            return Response(status: .ok, headers: limited, body: ResponseBody { writer in
                 try await Task.sleep(for: .milliseconds(800))
                 try await writer.write(ByteBuffer(string: #"data: {"choices":[{"index":0,"delta":{"content":"ok"}}]}"# + "\n\ndata: [DONE]\n\n"))
                 try await writer.finish(nil)
@@ -182,6 +189,17 @@ struct VeniceGatewayTests {
         _ = try await slow.value
         try await Task.sleep(for: .milliseconds(200))
         #expect(await manager.inFlightCounts().isEmpty)
+        // The live view learned how fast it came and how much of the rate limit is left.
+        let telemetry = await manager.apiTelemetryByModel()
+        let last = try #require(telemetry.samples[model.id]?.last)
+        #expect(last.streamed && (last.ttftMs ?? 0) >= 700 && last.durationMs >= (last.ttftMs ?? 0))
+        #expect(telemetry.rateLimits[model.id]?.remainingRequests == 66)
+        #expect(telemetry.rateLimits[model.id]?.limitTokens == 2_000_000)
+        #expect((telemetry.samples[model.id]?.count ?? 0) >= 5, "every request is a sample, errors too")
+        #expect(telemetry.samples[model.id]?.contains { $0.status == 402 } == true)
+        // With a system prompt Podlight asks Venice to keep the agent's requests on one cache.
+        _ = try await post("/v1/chat/completions", #"{"model":"uncensored","messages":[{"role":"system","content":"You are Claude Code."},{"role":"user","content":"Hi"}]}"#)
+        #expect((await log.last()?["prompt_cache_key"] as? String)?.hasPrefix("podlight-") == true)
 
         // At the spending limit API models are refused like pods.
         _ = try await manager.store.update { $0.settings.dailyLimitUsd = 0.01 }

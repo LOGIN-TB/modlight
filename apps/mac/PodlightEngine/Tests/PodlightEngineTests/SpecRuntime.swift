@@ -135,6 +135,18 @@ enum SpecRuntime {
             got = input["anthropic"] as? Bool == true
                 ? ["status": failure.status, "type": LocalGateway.anthropicType(failure.status)]
                 : ["status": failure.status, "code": failure.code]
+        case "apiTelemetrySummary":
+            let samples = try decode([APIRequestSample].self, input["samples"])
+            got = try json(APITelemetry.summary(samples, now: try decode(Date.self, input["now"]),
+                                                balanceUsd: input["balanceUsd"] as? Double))
+        case "apiRateLimitHeaders":
+            got = try APIRateLimit.from(headers: try #require(input["headers"] as? [String: String]),
+                                        at: try decode(Date.self, input["at"])).map { try json($0) } ?? NSNull()
+        case "apiChunkHasContent":
+            got = APITelemetry.hasContent(try #require(input["chunk"] as? [String: Any]))
+        case "apiCacheKey":
+            got = APITelemetry.cacheKey(try #require(input["body"] as? [String: Any]),
+                                        providerModelId: try #require(input["providerModelId"] as? String)) ?? NSNull()
         case "veniceAccount":
             got = try json(try VeniceClient.account(from: JSONSerialization.data(withJSONObject: try #require(input["body"]))))
         case "isValidName":
