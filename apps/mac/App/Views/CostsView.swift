@@ -81,8 +81,8 @@ struct CostsView: View {
                 }
             }
             Section {
-                LimitRow(title: "Today", spent: spend.todayUsd, limit: spend.dailyLimitUsd)
-                LimitRow(title: "This month", spent: spend.monthUsd, limit: spend.monthlyLimitUsd)
+                MeterRow("Today", value: spend.todayUsd, limit: spend.dailyLimitUsd)
+                MeterRow("This month", value: spend.monthUsd, limit: spend.monthlyLimitUsd)
                 Button("Change Limits…") { editingLimits = true }
                     .popover(isPresented: $editingLimits, arrowEdge: .bottom) {
                         Form {
@@ -203,25 +203,13 @@ private struct ModelCostRow: View {
     }
 }
 
+/// An amount against its limit. Kept for the pages not yet rebuilt on `MeterRow`, which draws it.
 struct LimitRow: View {
     let title: LocalizedStringKey
     let spent: Double
     let limit: Double?
 
-    /// Like every other row: the name on the left, the amount on the right, the bar beneath. The
-    /// grouped form centres a Gauge's labels, which read as a heading over each bar.
     var body: some View {
-        if let limit, limit > 0 {
-            VStack(alignment: .leading, spacing: 6) {
-                LabeledContent(title) { Text("\(Format.money(spent)) of \(Format.money(limit))").monospacedDigit() }
-                ProgressView(value: min(spent, limit), total: limit)
-                    .progressViewStyle(.linear)
-                    .tint(spent >= limit ? .red : spent >= limit * 0.8 ? .orange : .accentColor)
-                    .accessibilityHidden(true)
-            }
-            .accessibilityElement(children: .combine)
-        } else {
-            LabeledContent(title) { Text("\(Format.money(spent)), no limit") }
-        }
+        MeterRow(title, value: spent, limit: limit)
     }
 }
