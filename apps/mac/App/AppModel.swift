@@ -28,6 +28,10 @@ final class AppModel {
     private(set) var state = PodlightState()
     /// The latest telemetry per model on this Mac whose pod runs, from the pod's watchdog.
     private(set) var localTelemetry: [UUID: PodTelemetry] = [:]
+    /// Requests the gateway on this Mac is answering right now, per model.
+    private(set) var localInFlight: [UUID: Int] = [:]
+    /// Ticks with the state reload, so "answered a moment ago" goes out on time.
+    private(set) var now = Date.now
     /// Podlight pods in the RunPod account that another Mac manages, offered for taking over.
     private(set) var otherMacsPods: [ForeignPod] = []
     /// Pods being taken over right now, for a progress indicator on their row.
@@ -153,6 +157,9 @@ final class AppModel {
         state = await manager.state()
         let telemetry = await manager.latestTelemetry()
         if telemetry != localTelemetry { localTelemetry = telemetry }
+        let inFlight = await manager.inFlightCounts()
+        if inFlight != localInFlight { localInFlight = inFlight }
+        now = .now
         syncServers()
         notifier.compare(previous: previous, current: state)
         // A request to a Venice model was booked: read the balance again soon, so it follows use.

@@ -38,6 +38,13 @@ private func runFakeVenice(port: Int, log: VeniceLog) async throws {
         await log.record(data, auth: request.headers[.authorization] ?? "", path: request.uri.path)
         let messages = body["messages"] as? [[String: Any]] ?? []
         let prompt = messages.first?["content"] as? String ?? ""
+        if prompt == "slow" {
+            return Response(status: .ok, headers: [.contentType: "text/event-stream"], body: ResponseBody { writer in
+                try await Task.sleep(for: .milliseconds(800))
+                try await writer.write(ByteBuffer(string: #"data: {"choices":[{"index":0,"delta":{"content":"ok"}}]}"# + "\n\ndata: [DONE]\n\n"))
+                try await writer.finish(nil)
+            })
+        }
         if prompt == "broke" {
             return Response(status: .init(code: 402), headers: [.contentType: "application/json"],
                             body: .init(byteBuffer: ByteBuffer(string: #"{"error":"Insufficient balance","code":"INSUFFICIENT_BALANCE"}"#)))
@@ -167,6 +174,14 @@ struct VeniceGatewayTests {
         #expect(await manager.state().apiTotals(model.id, period: today).requests == 5, "both Messages requests were counted")
         let (brokeMessage, brokeMessageBody) = try await post("/v1/messages", #"{"model":"uncensored","max_tokens":10,"messages":[{"role":"user","content":"broke"}]}"#)
         #expect(brokeMessage == 402 && brokeMessageBody.contains("billing_error"))
+
+        // While an answer streams, the model counts as in flight: the menu bar lights up for it.
+        let slow = Task { try await post("/v1/chat/completions", #"{"model":"uncensored","stream":true,"messages":[{"role":"user","content":"slow"}]}"#) }
+        try await Task.sleep(for: .milliseconds(400))
+        #expect(await manager.inFlightCounts()[model.id] == 1)
+        _ = try await slow.value
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(await manager.inFlightCounts().isEmpty)
 
         // At the spending limit API models are refused like pods.
         _ = try await manager.store.update { $0.settings.dailyLimitUsd = 0.01 }

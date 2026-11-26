@@ -425,3 +425,35 @@ extension AppModel {
     static var todayKey: String { PodlightState.dayKey(.now) }
     static var monthKey: String { String(todayKey.prefix(7)) }
 }
+
+// MARK: Activity for the menu bar
+
+extension AppModel {
+    /// How long after its last request an API model still counts as in use: short requests fall
+    /// between two looks at the state otherwise.
+    static let apiActivityWindow: TimeInterval = 8
+
+    /// API models answering now or a moment ago, on this Mac and on every server, with the
+    /// requests in flight (known on this Mac only).
+    var activeAPIModels: [(source: Source, model: PodlightModel, inFlight: Int)] {
+        func recent(_ run: ModelRun) -> Bool {
+            run.lastRequestAt.map { now.timeIntervalSince($0) < Self.apiActivityWindow } ?? false
+        }
+        let local = state.models.filter { !$0.isPod }.compactMap { item -> (Source, PodlightModel, Int)? in
+            let flying = localInFlight[item.id] ?? 0
+            return flying > 0 || recent(state.run(item.id)) ? (.local, item, flying) : nil
+        }
+        let remote = servers.flatMap { server -> [(Source, PodlightModel, Int)] in
+            guard let snapshot = server.snapshot else { return [] }
+            return snapshot.models.filter { !$0.isPod && recent(snapshot.run($0.id)) }.map { (.server(server.id), $0, 0) }
+        }
+        return (local + remote).map { (source: $0.0, model: $0.1, inFlight: $0.2) }
+    }
+
+    /// What the menu bar bulb shows right now.
+    var menuBarLamp: MenuBarLamp {
+        var providers: [ModelProvider] = []
+        for entry in activeAPIModels where !providers.contains(entry.model.provider) { providers.append(entry.model.provider) }
+        return MenuBarLamp(podActive: !allActiveRuns.isEmpty, apiProviders: providers)
+    }
+}
