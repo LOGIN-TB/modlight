@@ -42,9 +42,16 @@ public enum PodlightError: Error, Sendable, Equatable {
 
 /// Where the gateway forwards a request.
 public struct PodEndpoint: Sendable, Equatable {
+    /// A pod's engine, or an API provider serving the model under its own id.
+    public enum Upstream: Sendable, Equatable {
+        case pod
+        case api(ModelProvider, providerModelId: String)
+    }
+
     public var modelId: UUID
     public var baseURL: URL
     public var key: String
+    public var upstream: Upstream = .pod
 }
 
 /// Runs the pods for "This Mac": starts them, keeps them alive while wanted, and stops them when
@@ -56,6 +63,8 @@ public actor PodManager {
     private let now: @Sendable () -> Date
     /// Address of one port of a pod. RunPod's proxy in the app; a local server in tests.
     private let podURL: @Sendable (_ podId: String, _ port: Int) -> URL
+    /// Where an API provider takes requests. Its real address in the app; a local server in tests.
+    private let apiBaseURL: @Sendable (ModelProvider) -> URL?
     private var inFlight: [UUID: Int] = [:]
     private var starts: [UUID: Task<Void, Error>] = [:]
     /// Telemetry per model while its pod runs, the last 30 minutes. In memory only.
@@ -79,7 +88,9 @@ public actor PodManager {
                 transport: HTTPTransport = URLSession.shared, now: @escaping @Sendable () -> Date = Date.init,
                 podURL: @escaping @Sendable (_ podId: String, _ port: Int) -> URL = PodPlan.proxyURL,
                 hostBusyTries: Int = 5, hostBusyDelay: Duration = .seconds(15),
-                cardRetryInterval: TimeInterval = 30, loadStallLimit: TimeInterval = 600) {
+                cardRetryInterval: TimeInterval = 30, loadStallLimit: TimeInterval = 600,
+                apiBaseURL: @escaping @Sendable (ModelProvider) -> URL? = { $0.apiBaseURL }) {
+        self.apiBaseURL = apiBaseURL
         self.hostBusyTries = max(1, hostBusyTries)
         self.hostBusyDelay = hostBusyDelay
         self.cardRetryInterval = cardRetryInterval
@@ -193,6 +204,8 @@ public actor PodManager {
                               maxPricePerHour: Double?, retrying: WaitingForCard?) async throws {
         let state = await store.current()
         guard let model = state.models.first(where: { $0.id == id }) else { throw PodlightError.unknownModel(id.uuidString) }
+        // An API model is always ready: there is nothing to start.
+        guard model.isPod else { return }
         if let other = state.run(id).managedBy { throw PodlightError.managedElsewhere(PodOwner.displayName(of: other)) }
         let wake = Scheduler.admitWake(spend: state.spend(on: now()))
         guard wake.admit else { throw PodlightError.limitReached(wake.because) }
@@ -661,7 +674,8 @@ public actor PodManager {
         guard let client = try? client() else { return }
         let state = await store.current()
         let mine = await ownTag()
-        var owned = state.models.filter { state.run($0.id).managedBy == nil }
+        // API models have no pod and no pod key; their record would tell other Macs nothing useful.
+        var owned = state.podModels.filter { state.run($0.id).managedBy == nil }
         var desired: [UUID: (name: String, env: [String: String], signature: String)] = [:]
         for model in owned {
             guard let key = try? podKey(for: model.id) else { continue }
@@ -741,6 +755,7 @@ public actor PodManager {
     public func endpoint(forModelNamed name: String) async throws -> PodEndpoint {
         let state = await store.current()
         guard let model = state.model(named: name) else { throw PodlightError.unknownModel(name) }
+        if !model.isPod { return try apiEndpoint(model, state: state) }
         if let other = state.run(model.id).managedBy { throw PodlightError.managedElsewhere(PodOwner.displayName(of: other)) }
         if let ready = try readyEndpoint(model.id, state: state) { return ready }
 
@@ -761,6 +776,37 @@ public actor PodManager {
             }
         }
         throw PodlightError.notReadyInTime
+    }
+
+    /// An API model: no wake, no wait. The spend limits apply as they do to waking a pod.
+    private func apiEndpoint(_ model: PodlightModel, state: PodlightState) throws -> PodEndpoint {
+        let wake = Scheduler.admitWake(spend: state.spend(on: now()))
+        guard wake.admit else { throw PodlightError.limitReached(wake.because) }
+        guard let base = apiBaseURL(model.provider) else { throw PodlightError.unknownModel(model.name) }
+        guard let key = providerKey(model.provider) else { throw PodlightError.missingProviderKey(model.provider) }
+        return PodEndpoint(modelId: model.id, baseURL: base, key: key,
+                           upstream: .api(model.provider, providerModelId: model.api?.providerModelId ?? model.repoId))
+    }
+
+    /// The key for an API provider, from the keychain.
+    public func providerKey(_ provider: ModelProvider) -> String? {
+        let item: KeychainStore.Item? = switch provider {
+        case .venice: .veniceAPIKey
+        case .runpod: nil
+        }
+        guard let item, let key = try? keychain.read(item), !key.isEmpty else { return nil }
+        return key
+    }
+
+    /// Books what one request to an API model used, at the model's stored prices unless the
+    /// answer carried its own cost. Returns that cost.
+    @discardableResult
+    public func recordAPIUsage(_ id: UUID, usage: APIUsage) async -> APICost? {
+        let t = now()
+        guard let pricing = await store.current().models.first(where: { $0.id == id })?.api?.pricing else { return nil }
+        let cost = APICost.of(usage, pricing: pricing)
+        _ = try? await store.update { $0.recordAPIUsage(usage, cost: cost, model: id, at: t) }
+        return cost
     }
 
     private func readyEndpoint(_ id: UUID, state: PodlightState) throws -> PodEndpoint? {
@@ -797,7 +843,7 @@ public actor PodManager {
         guard (try? client()) != nil else { return }
         let state = await store.current()
         // A model another Mac took over is left alone until it is taken back.
-        for model in state.models where state.run(model.id).managedBy == nil {
+        for model in state.podModels where state.run(model.id).managedBy == nil {
             await refresh(model.id)
             await applyRules(model.id)
         }
