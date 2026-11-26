@@ -35,18 +35,48 @@ struct MenuBarLamp: Equatable {
         }
     }
 
-    /// The image for the menu bar. A coloured one is not a template, or macOS would draw it in one colour.
+    /// The image for the menu bar, always the same size so the item never shifts when the bulb
+    /// lights up. A coloured one is drawn into a bitmap rather than handed over as a symbol: the
+    /// menu bar blends symbol images with its background, which turned blue into red. Off, it is a
+    /// template, so it follows the menu bar's own colour as before.
+    @MainActor
     func image() -> NSImage {
-        let base = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil) ?? NSImage()
-        guard let colors else {
-            base.isTemplate = true
-            return base
+        let key = "\(symbolName)|\(colors?.map { $0.description }.joined(separator: ",") ?? "template")"
+        if let cached = Self.cache[key] { return cached }
+        let config = NSImage.SymbolConfiguration(pointSize: Self.pointSize, weight: .regular)
+            .applying(colors.map { NSImage.SymbolConfiguration(paletteColors: $0) } ?? NSImage.SymbolConfiguration())
+        let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?.withSymbolConfiguration(config) ?? NSImage()
+        let canvas = Self.canvas
+        let image = NSImage(size: canvas, flipped: false) { rect in
+            let size = symbol.size
+            symbol.draw(in: NSRect(x: (rect.width - size.width) / 2, y: (rect.height - size.height) / 2,
+                                   width: size.width, height: size.height))
+            return true
         }
-        let config = NSImage.SymbolConfiguration(pointSize: 0, weight: .regular, scale: .medium)
-            .applying(NSImage.SymbolConfiguration(paletteColors: colors))
-        let image = base.withSymbolConfiguration(config) ?? base
-        image.isTemplate = false
+        image.isTemplate = colors == nil
+        Self.cache[key] = image
         return image
+    }
+
+    private static let pointSize: CGFloat = 15
+    /// The lit bulb with its rays is the widest state; every state is drawn on its size.
+    private static let canvas: NSSize = {
+        let config = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
+        let size = NSImage(systemSymbolName: "lightbulb.max.fill", accessibilityDescription: nil)?
+            .withSymbolConfiguration(config)?.size ?? NSSize(width: 20, height: 18)
+        return NSSize(width: ceil(size.width), height: ceil(size.height))
+    }()
+    @MainActor private static var cache: [String: NSImage] = [:]
+
+    /// `-PodlightLampPreview pod|venice|both` at launch shows that state, to check the colours in
+    /// the menu bar without a running pod or a paid request.
+    static var preview: MenuBarLamp? {
+        switch UserDefaults.standard.string(forKey: "PodlightLampPreview") {
+        case "pod": MenuBarLamp(podActive: true, apiProviders: [])
+        case "venice": MenuBarLamp(podActive: false, apiProviders: [.venice])
+        case "both": MenuBarLamp(podActive: true, apiProviders: [.venice])
+        default: nil
+        }
     }
 
     var accessibilityText: String {

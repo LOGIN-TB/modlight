@@ -452,6 +452,7 @@ extension AppModel {
 
     /// What the menu bar bulb shows right now.
     var menuBarLamp: MenuBarLamp {
+        if let preview = MenuBarLamp.preview { return preview }
         var providers: [ModelProvider] = []
         for entry in activeAPIModels where !providers.contains(entry.model.provider) { providers.append(entry.model.provider) }
         return MenuBarLamp(podActive: !allActiveRuns.isEmpty, apiProviders: providers)
