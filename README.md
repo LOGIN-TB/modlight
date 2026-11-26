@@ -7,7 +7,7 @@ up, or nobody is asking, the pod stops. It also stops when your Mac sleeps or th
 Or add a ready model from [Venice.ai](https://venice.ai), billed per token with nothing to start, and
 reach it through the same address and key: Podlight routes each model to where it runs.
 
-> **Status: 0.11.1.** Local mode on the Mac, usable from other computers on your network, and server
+> **Status: 0.12.0.** Local mode on the Mac, usable from other computers on your network, and server
 > mode: a container that keeps models reachable while your Mac is off, controlled from the app. vLLM
 > and llama.cpp (GGUF) on RunPod, and Venice's ready models per token; Claude Code and Codex as well
 > as OpenAI-compatible agents. Built and tested on real RunPod hardware; Venice against its recorded
@@ -50,6 +50,11 @@ An "Inference Only" key from venice.ai → Settings → API is enough. In Podlig
   key. Podlight sends the request on with Venice's model id and your Venice key, and turns Venice's own
   system prompt off (agents bring their own). Claude Code works too: Podlight translates the
   Anthropic Messages API to chat completions and back, streaming and tool calls included.
+- **Live figures.** A Venice model's page shows requests in flight, tokens per minute (new, cached,
+  output), time to first token and output speed against Venice's public median, its rate limits
+  from Venice's response headers, cost per hour now and the balance's runway. Podlight sends a
+  `prompt_cache_key` per agent and system prompt, so more of the resent conversation is billed at
+  the cache rate.
 - **Costs as they happen.** Each answer's usage (Venice's own `cost` where it gives one, else tokens ×
   the model's prices, cached tokens apart) is booked per model and day. The Venice balance (USD, DIEM,
   plan credits) is read every minute and after use. The daily and monthly limits count pods and
