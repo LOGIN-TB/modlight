@@ -30,6 +30,12 @@ final class AppModel {
     private(set) var localTelemetry: [UUID: PodTelemetry] = [:]
     /// Requests the gateway on this Mac is answering right now, per model.
     private(set) var localInFlight: [UUID: Int] = [:]
+    /// Each local API model's requests of the last half hour and its provider's latest rate limit.
+    private(set) var localAPISamples: [UUID: [APIRequestSample]] = [:]
+    private(set) var localAPIRateLimits: [UUID: APIRateLimit] = [:]
+    /// Venice's public figures per model id (uptime, first token, speed), read every five minutes.
+    private(set) var venicePerformance: [String: VenicePerformance] = [:]
+    private var venicePerformanceAt: Date?
     /// Ticks with the state reload, so "answered a moment ago" goes out on time.
     private(set) var now = Date.now
     /// Podlight pods in the RunPod account that another Mac manages, offered for taking over.
@@ -131,6 +137,7 @@ final class AppModel {
                 await self.refreshBalance()
                 await self.refreshVeniceAccount()
                 await self.refreshVenicePrices()
+                await self.refreshVenicePerformance()
                 try? await Task.sleep(for: .seconds(60))
             }
         })
@@ -159,6 +166,9 @@ final class AppModel {
         if telemetry != localTelemetry { localTelemetry = telemetry }
         let inFlight = await manager.inFlightCounts()
         if inFlight != localInFlight { localInFlight = inFlight }
+        let live = await manager.apiTelemetryByModel()
+        if live.samples != localAPISamples { localAPISamples = live.samples }
+        if live.rateLimits != localAPIRateLimits { localAPIRateLimits = live.rateLimits }
         now = .now
         syncServers()
         notifier.compare(previous: previous, current: state)
@@ -314,6 +324,23 @@ final class AppModel {
             try? await manager.save(item)
         }
         await reloadState()
+    }
+
+    /// Venice's public per-model figures, when a Venice model is set up here or on a server.
+    func refreshVenicePerformance(force: Bool = false) async {
+        let anyVenice = state.models.contains { $0.provider == .venice } || servers.contains { $0.models.contains { $0.provider == .venice } }
+        guard anyVenice else { return }
+        if !force, let at = venicePerformanceAt, Date.now.timeIntervalSince(at) < 300 { return }
+        venicePerformanceAt = .now
+        if let figures = try? await VeniceClient(apiKey: nil).performance() { venicePerformance = figures }
+    }
+
+    /// For the help snapshots: live figures without a gateway.
+    func showAPITelemetryForSnapshots(samples: [UUID: [APIRequestSample]], rateLimits: [UUID: APIRateLimit],
+                                      performance: [String: VenicePerformance]) {
+        localAPISamples = samples
+        localAPIRateLimits = rateLimits
+        venicePerformance = performance
     }
 
     /// Venice's rate limits for one model, from the account.

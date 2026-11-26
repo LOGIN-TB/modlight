@@ -45,6 +45,9 @@ struct MenuBarView: View {
                             Text(apiLine(entry.source, entry.model, entry.inFlight)).font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
+                        Sparkline(values: model.apiSummary(entry.model.id).minutes.suffix(15).map { Double($0.newInput + $0.cachedInput + $0.output) },
+                                  color: Color(nsColor: entry.model.provider.activityColor))
+                            .frame(width: 60, height: 20)
                     }
                     .accessibilityElement(children: .combine)
                 }

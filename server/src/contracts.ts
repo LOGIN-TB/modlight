@@ -74,6 +74,26 @@ export function openapi(): object {
             apiUsage: { type: 'object', description: 'Tokens and cost of API models: day (yyyy-MM-dd) → model id → totals.',
               additionalProperties: { type: 'object', additionalProperties: ref('APIUsageTotals') } },
             veniceAccount: { oneOf: [ref('APIAccount'), { type: 'null' }], description: 'The Venice account, at most about a minute old; null until first read or without a key.' },
+            apiUsageByHour: { type: 'object', description: 'Like apiUsage, per hour (yyyy-MM-ddTHH, server time zone), the last 48 hours.',
+              additionalProperties: { type: 'object', additionalProperties: ref('APIUsageTotals') } },
+            apiTelemetry: { type: 'object', description: 'Per API model id: its requests of the last 30 minutes and the latest rate limit from the provider.',
+              additionalProperties: { type: 'object', properties: { samples: { type: 'array', items: ref('APIRequestSample') }, rateLimit: ref('APIRateLimit') } } },
+          },
+        },
+        APIRequestSample: {
+          type: 'object',
+          properties: {
+            time: { type: 'string', format: 'date-time' }, promptTokens: { type: 'integer' }, cachedTokens: { type: 'integer' },
+            completionTokens: { type: 'integer' }, usd: { type: 'number' }, ttftMs: { type: 'integer' }, durationMs: { type: 'integer' },
+            status: { type: 'integer' }, streamed: { type: 'boolean' },
+          },
+        },
+        APIRateLimit: {
+          type: 'object',
+          properties: {
+            limitRequests: { type: 'integer' }, remainingRequests: { type: 'integer' }, resetRequests: { type: 'string', format: 'date-time' },
+            limitTokens: { type: 'integer' }, remainingTokens: { type: 'integer' }, resetTokens: { type: 'string', format: 'date-time' },
+            at: { type: 'string', format: 'date-time' },
           },
         },
         APIUsageTotals: {

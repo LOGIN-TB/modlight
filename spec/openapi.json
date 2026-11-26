@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Podlight server",
-    "version": "0.11.1",
+    "version": "0.12.0",
     "description": "Gateway for agents (/v1, client tokens) and control API for Podlight apps (/admin, device tokens from pairing). Plain HTTP; run it behind a reverse proxy with TLS.",
     "license": {
       "name": "MIT"
@@ -1561,6 +1561,96 @@
               }
             ],
             "description": "The Venice account, at most about a minute old; null until first read or without a key."
+          },
+          "apiUsageByHour": {
+            "type": "object",
+            "description": "Like apiUsage, per hour (yyyy-MM-ddTHH, server time zone), the last 48 hours.",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/APIUsageTotals"
+              }
+            }
+          },
+          "apiTelemetry": {
+            "type": "object",
+            "description": "Per API model id: its requests of the last 30 minutes and the latest rate limit from the provider.",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "samples": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APIRequestSample"
+                  }
+                },
+                "rateLimit": {
+                  "$ref": "#/components/schemas/APIRateLimit"
+                }
+              }
+            }
+          }
+        }
+      },
+      "APIRequestSample": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "promptTokens": {
+            "type": "integer"
+          },
+          "cachedTokens": {
+            "type": "integer"
+          },
+          "completionTokens": {
+            "type": "integer"
+          },
+          "usd": {
+            "type": "number"
+          },
+          "ttftMs": {
+            "type": "integer"
+          },
+          "durationMs": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "streamed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "APIRateLimit": {
+        "type": "object",
+        "properties": {
+          "limitRequests": {
+            "type": "integer"
+          },
+          "remainingRequests": {
+            "type": "integer"
+          },
+          "resetRequests": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "limitTokens": {
+            "type": "integer"
+          },
+          "remainingTokens": {
+            "type": "integer"
+          },
+          "resetTokens": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

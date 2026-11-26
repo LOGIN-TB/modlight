@@ -1115,6 +1115,109 @@
         }
       },
       "title": "A key without balances or limits (free tier, nothing set) still checks out."
+    },
+    {
+      "expected": {
+        "body": {
+          "messages": [
+            {
+              "content": "You are Claude Code.",
+              "role": "system"
+            },
+            {
+              "content": "hi",
+              "role": "user"
+            }
+          ],
+          "model": "zai-org-glm-5-3",
+          "prompt_cache_key": "podlight-f070c14bb4258a76601fb400a1f09d5d",
+          "venice_parameters": {
+            "include_venice_system_prompt": false
+          }
+        },
+        "clientWantsUsage": true
+      },
+      "function": "apiForward",
+      "id": "forward-cache-key",
+      "input": {
+        "body": {
+          "messages": [
+            {
+              "content": "You are Claude Code.",
+              "role": "system"
+            },
+            {
+              "content": "hi",
+              "role": "user"
+            }
+          ],
+          "model": "glm"
+        },
+        "path": "/v1/chat/completions",
+        "provider": "venice",
+        "providerModelId": "zai-org-glm-5-3"
+      },
+      "title": "With a system prompt Podlight adds a prompt_cache_key, so Venice routes the agent's requests to a backend that has the prefix cached (only 9 % cache hits were measured without one)."
+    },
+    {
+      "expected": {
+        "body": {
+          "messages": [
+            {
+              "content": "x",
+              "role": "system"
+            }
+          ],
+          "model": "zai-org-glm-5-3",
+          "prompt_cache_key": "mine",
+          "venice_parameters": {
+            "include_venice_system_prompt": false
+          }
+        },
+        "clientWantsUsage": true
+      },
+      "function": "apiForward",
+      "id": "forward-cache-key-own",
+      "input": {
+        "body": {
+          "messages": [
+            {
+              "content": "x",
+              "role": "system"
+            }
+          ],
+          "model": "glm",
+          "prompt_cache_key": "mine"
+        },
+        "path": "/v1/chat/completions",
+        "provider": "venice",
+        "providerModelId": "zai-org-glm-5-3"
+      },
+      "title": "An agent's own prompt_cache_key is kept."
+    },
+    {
+      "expected": {
+        "body": {
+          "input": "hi",
+          "instructions": "You are Codex.",
+          "model": "zai-org-glm-5-3",
+          "prompt_cache_key": "podlight-e5580ea6f1537516ac32a0913995275b"
+        },
+        "clientWantsUsage": true
+      },
+      "function": "apiForward",
+      "id": "forward-cache-key-responses",
+      "input": {
+        "body": {
+          "input": "hi",
+          "instructions": "You are Codex.",
+          "model": "glm"
+        },
+        "path": "/v1/responses",
+        "provider": "venice",
+        "providerModelId": "zai-org-glm-5-3"
+      },
+      "title": "Responses API: keyed on the instructions."
     }
   ],
   "description": "API providers (Venice): catalog to offers, cost of a request from its usage, the request rewrite, which paths a provider serves, provider errors, the account. Since 0.11."

@@ -24,7 +24,9 @@ Models at Venice count too: Podlight adds their per-token costs to the same limi
 
 ![The Costs view](screenshots/en/costs.png)
 
-The figures under "Costs" are Podlight's own count: price per hour times running time, for this Mac's pods only. RunPod's billing is authoritative. "Credit at RunPod" shows what is left in your RunPod account and how long it lasts at what the whole account costs per hour right now, other pods included. Under a day it turns orange, under three hours red.
+"Costs" opens with tiles for what is spent today and this month, what is billed per hour right now, and how long your RunPod and Venice credit lasts. The limits and the chart of the last 30 days are split into pods (green) and Venice (blue). Below are the Venice models by this month's cost and the pods with what they cost while running.
+
+The figures are Podlight's own count: price per hour times running time for pods, each answer's cost for Venice. RunPod's and Venice's billing is authoritative. RunPod credit covers the whole account, other pods included; under a day of runway its tile turns orange.
 
 The refresh button in the toolbar (⌘R) asks RunPod and every server at once. A pod you deleted in RunPod's console disappears from Podlight within seconds anyway.
 

@@ -59,7 +59,10 @@ enum Format {
 
     /// Token counts as people read them: 950, 12.4k, 3.2M.
     static func tokenCount(_ count: Int) -> String {
-        count.formatted(.number.notation(.compactName).precision(.significantDigits(1...3)))
+        let n = Double(count)
+        if count < 1000 { return count.formatted() }
+        if count < 1_000_000 { return (n / 1000).formatted(.number.precision(.fractionLength(count < 10_000 ? 1 : 0))) + "k" }
+        return (n / 1_000_000).formatted(.number.precision(.fractionLength(count < 100_000_000 ? 1 : 0))) + " M"
     }
 
     /// A price per million tokens: "$0.50"; small prices get more decimals.

@@ -131,6 +131,11 @@ public struct ServerSnapshot: Sendable, Equatable {
     public var apiUsage: [String: [String: APIUsageTotals]] = [:]
     /// The server's Venice account, as it last read it. Nil without a key or before 0.11.
     public var veniceAccount: APIAccount?
+    /// Tokens and cost of the server's API models per hour, the last 48. Empty before 0.12.
+    public var apiUsageByHour: [String: [String: APIUsageTotals]] = [:]
+    /// Each API model's requests of the last 30 minutes and latest rate limit. Empty before 0.12.
+    public var apiSamples: [UUID: [APIRequestSample]] = [:]
+    public var apiRateLimits: [UUID: APIRateLimit] = [:]
 
     public func run(_ id: UUID) -> ModelRun { runs[id] ?? ModelRun() }
 
@@ -153,7 +158,12 @@ public struct ServerSnapshot: Sendable, Equatable {
 
 extension ServerSnapshot: Decodable {
     private enum Keys: String, CodingKey {
-        case version, serverTime, models, runs, settings, spendByDay, spend, costPerHour, lastClientRequestAt, telemetry, balance, apiUsage, veniceAccount
+        case version, serverTime, models, runs, settings, spendByDay, spend, costPerHour, lastClientRequestAt, telemetry, balance, apiUsage, veniceAccount, apiUsageByHour, apiTelemetry
+    }
+
+    private struct LiveEntry: Decodable {
+        var samples: [APIRequestSample]
+        var rateLimit: APIRateLimit?
     }
 
     public init(from decoder: Decoder) throws {
@@ -175,6 +185,13 @@ extension ServerSnapshot: Decodable {
         balance = try? c.decodeIfPresent(RunpodBalance.self, forKey: .balance)
         apiUsage = (try? c.decodeIfPresent([String: [String: APIUsageTotals]].self, forKey: .apiUsage)) ?? [:]
         veniceAccount = try? c.decodeIfPresent(APIAccount.self, forKey: .veniceAccount)
+        apiUsageByHour = (try? c.decodeIfPresent([String: [String: APIUsageTotals]].self, forKey: .apiUsageByHour)) ?? [:]
+        let live = (try? c.decodeIfPresent([String: LiveEntry].self, forKey: .apiTelemetry)) ?? [:]
+        for (key, entry) in live {
+            guard let id = UUID(uuidString: key) else { continue }
+            apiSamples[id] = entry.samples
+            if let limit = entry.rateLimit { apiRateLimits[id] = limit }
+        }
     }
 }
 

@@ -37,7 +37,8 @@ class FakeVenice {
       const prompt = body.messages?.at(-1)?.content
       if (prompt === 'broke') return json(402, { error: 'Insufficient balance', code: 'INSUFFICIENT_BALANCE' })
       if (body.stream) {
-        res.writeHead(200, { 'content-type': 'text/event-stream' })
+        res.writeHead(200, { 'content-type': 'text/event-stream', 'x-ratelimit-limit-requests': '100', 'x-ratelimit-remaining-requests': '66',
+          'x-ratelimit-limit-tokens': '2000000', 'x-ratelimit-remaining-tokens': '412000' })
         for (const word of ['Hal', 'lo']) res.write(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { content: word } }] })}\n\n`)
         if (body.stream_options?.include_usage) {
           res.write(`data: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 1_000_000, completion_tokens: 500_000 } })}\n\n`)
@@ -142,6 +143,9 @@ describe('Venice models on the server', () => {
     assert.equal(sent.auth, 'Bearer VENICE_INFERENCE_KEY_test')
     assert.equal(sent.body.model, 'venice-uncensored-1-2')
     assert.equal(sent.body.venice_parameters.include_venice_system_prompt, false)
+    assert.equal(sent.body.prompt_cache_key, undefined, 'no system prompt, no cache key')
+    await agent('/v1/chat/completions', { model: 'uncensored', messages: [{ role: 'system', content: 'You are Claude Code.' }, { role: 'user', content: 'Hi' }] })
+    assert.match(String(venice.requests.at(-1)!.body.prompt_cache_key), /^podlight-[0-9a-f]{32}$/)
 
     const stream = await agent('/v1/chat/completions', { model: 'uncensored', stream: true, messages: [{ role: 'user', content: 'Hi' }] })
     assert.ok(stream.body.includes('"content":"Hal"') && stream.body.includes('[DONE]'))
@@ -149,10 +153,17 @@ describe('Venice models on the server', () => {
     await settle()
 
     const state = (await admin('GET', '/admin/state')).json()
+    const live = state.apiTelemetry[MODEL_ID]
+    assert.equal(live.samples.length, 3)
+    const streamedSample = live.samples.at(-1)
+    assert.equal(streamedSample.streamed, true)
+    assert.ok(streamedSample.ttftMs !== undefined && streamedSample.durationMs >= streamedSample.ttftMs)
+    assert.equal(live.rateLimit.remainingRequests, 66)
+    assert.equal(Object.values(state.apiUsageByHour).length, 1)
     const day = Object.keys(state.apiUsage)[0]!
     const totals = state.apiUsage[day][MODEL_ID]
-    assert.equal(totals.requests, 2)
-    const expected = 0.25 + offer.pricing.input + offer.pricing.output * 0.5
+    assert.equal(totals.requests, 3)
+    const expected = 0.25 * 2 + offer.pricing.input + offer.pricing.output * 0.5
     assert.ok(Math.abs(state.spendByDay[day] - expected) < 1e-9, `spend ${state.spendByDay[day]} vs ${expected}`)
 
     const messages = await agent('/v1/messages', { model: 'uncensored', max_tokens: 100, stream: true, messages: [{ role: 'user', content: 'Hi' }] })

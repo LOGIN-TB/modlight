@@ -69,6 +69,9 @@ public actor PodManager {
     private var starts: [UUID: Task<Void, Error>] = [:]
     /// Telemetry per model while its pod runs, the last 30 minutes. In memory only.
     private var samples: [UUID: [PodTelemetry]] = [:]
+    /// Each request to an API model in the last 30 minutes, and its provider's latest rate limit.
+    private var apiSamples: [UUID: [APIRequestSample]] = [:]
+    private var apiRateLimits: [UUID: APIRateLimit] = [:]
     /// What was last written to each model's record, so unchanged records are not written again.
     private var published: [UUID: String] = [:]
     private var lastRecordCheck: Date?
@@ -835,6 +838,40 @@ public actor PodManager {
     }
 
     public func requestsInFlight(_ id: UUID) -> Int { inFlight[id] ?? 0 }
+
+    /// Everything the gateway learned from one request to an API model: books its usage and cost,
+    /// and keeps the sample and the provider's rate limit for the live view.
+    public func finishAPIRequest(_ id: UUID, usage: APIUsage?, started: Date, firstContent: Date?, ended: Date,
+                                 status: Int, streamed: Bool, rateLimit: APIRateLimit?) async {
+        let cost = if let usage { await recordAPIUsage(id, usage: usage) } else { APICost?.none }
+        let sample = APIRequestSample(
+            time: ended, promptTokens: usage?.promptTokens ?? 0, cachedTokens: usage?.cachedTokens ?? 0,
+            completionTokens: usage?.completionTokens ?? 0, usd: cost?.usd ?? 0,
+            ttftMs: firstContent.map { max(0, Int($0.timeIntervalSince(started) * 1000)) },
+            durationMs: max(0, Int(ended.timeIntervalSince(started) * 1000)), status: status, streamed: streamed)
+        recordAPIRequest(id, sample: sample, rateLimit: rateLimit)
+    }
+
+    /// Notes one finished request to an API model for its live view.
+    public func recordAPIRequest(_ id: UUID, sample: APIRequestSample, rateLimit: APIRateLimit?) {
+        let cutoff = sample.time.addingTimeInterval(-APITelemetry.window)
+        var list = (apiSamples[id] ?? []).filter { $0.time > cutoff }
+        list.append(sample)
+        apiSamples[id] = Array(list.suffix(5000))
+        if let rateLimit { apiRateLimits[id] = rateLimit }
+    }
+
+    /// The last half hour of an API model's requests.
+    public func apiTelemetry(for id: UUID) -> [APIRequestSample] {
+        let cutoff = now().addingTimeInterval(-APITelemetry.window)
+        return (apiSamples[id] ?? []).filter { $0.time > cutoff }
+    }
+
+    /// Every API model's recent requests and rate limit, for the app's live views.
+    public func apiTelemetryByModel() -> (samples: [UUID: [APIRequestSample]], rateLimits: [UUID: APIRateLimit]) {
+        let cutoff = now().addingTimeInterval(-APITelemetry.window)
+        return (apiSamples.mapValues { $0.filter { $0.time > cutoff } }.filter { !$0.value.isEmpty }, apiRateLimits)
+    }
 
     /// Requests in flight per model, only models with at least one: what the menu bar lights up for.
     public func inFlightCounts() -> [UUID: Int] { inFlight.filter { $0.value > 0 } }

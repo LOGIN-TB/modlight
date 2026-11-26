@@ -90,13 +90,13 @@ struct UsageSection: View {
     /// Always the same tiles for a model, a figure not known yet shows "–": tiles that came and
     /// went with each sample made the section jump.
     private func figures(_ s: PodTelemetry) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10, alignment: .top)], alignment: .leading, spacing: 10) {
-            ForEach(Self.tiles(s, engine: item.engine)) { FigureTile(tile: $0) }
+        MetricGrid(minimumTileWidth: 150) {
+            ForEach(Self.tiles(s, engine: item.engine)) { MetricTile($0) }
         }
         .padding(.vertical, 4)
     }
 
-    static func tiles(_ s: PodTelemetry, engine kind: InferenceEngine) -> [FigureTile.Tile] {
+    static func tiles(_ s: PodTelemetry, engine kind: InferenceEngine) -> [MetricTile.Metric] {
         let engine = s.engine
         let none = "–"
         func percent(_ value: Double?) -> String { value.map { ($0 / 100).formatted(.percent.precision(.fractionLength(0))) } ?? none }
@@ -104,32 +104,32 @@ struct UsageSection: View {
         // A watchdog before 0.10 reports only the rate of the last seconds: shown while it is above 0.
         let writing = engine?.generationSpeed ?? engine?.generationTokensPerSecond.flatMap { $0 > 0 ? $0 : nil }
         let reading = engine?.promptSpeed ?? engine?.promptTokensPerSecond.flatMap { $0 > 0 ? $0 : nil }
-        var out: [FigureTile.Tile] = [
+        var out: [MetricTile.Metric] = [
             .init(id: "writing", symbol: "text.cursor", title: String(localized: "Writing"),
-                  value: speed(writing), detail: String(localized: "while it answers")),
+                  value: speed(writing), caption: String(localized: "while it answers")),
             .init(id: "reading", symbol: "doc.text.magnifyingglass", title: String(localized: "Reading"),
-                  value: speed(reading), detail: String(localized: "while it reads the prompt")),
+                  value: speed(reading), caption: String(localized: "while it reads the prompt")),
             .init(id: "cache", symbol: "arrow.triangle.2.circlepath", title: String(localized: "Prompt cache"),
-                  value: percent(engine?.promptCacheHitPercent), detail: String(localized: "of prompt tokens reused")),
+                  value: percent(engine?.promptCacheHitPercent), caption: String(localized: "of prompt tokens reused")),
             .init(id: "requests", symbol: "arrow.left.arrow.right", title: String(localized: "Requests"),
                   value: engine?.running.map { String(localized: "\($0) running") } ?? none,
-                  detail: engine?.waiting.map { String(localized: "\($0) waiting") } ?? String(localized: "waiting: –")),
+                  caption: engine?.waiting.map { String(localized: "\($0) waiting") } ?? String(localized: "waiting: –")),
         ]
         // Only vLLM reports how full its context cache is; for llama.cpp the tile would never fill.
         if kind == .vllm {
             out.append(.init(id: "kv", symbol: "memorychip", title: String(localized: "Context cache"),
-                             value: percent(engine?.kvCachePercent), detail: String(localized: "in use")))
+                             value: percent(engine?.kvCachePercent), caption: String(localized: "in use")))
         }
         out.append(.init(id: "totals", symbol: "sum", title: String(localized: "Since the start"),
                          value: engine?.promptTokensTotal.map { String(localized: "\(compact($0)) read") } ?? none,
-                         detail: engine?.generationTokensTotal.map { String(localized: "\(compact($0)) written") } ?? String(localized: "written: –")))
+                         caption: engine?.generationTokensTotal.map { String(localized: "\(compact($0)) written") } ?? String(localized: "written: –")))
         let gpus = s.gpus ?? []
         for offset in 0..<max(1, gpus.count) {
             let gpu = offset < gpus.count ? gpus[offset] : nil
             let suffix = gpus.count > 1 ? " \(offset + 1)" : ""
             out.append(.init(id: "card\(offset)", symbol: "thermometer.medium", title: String(localized: "Card\(suffix)"),
                              value: gpu?.temperatureC.map { "\(Int($0.rounded())) °C" } ?? none,
-                             detail: gpu.flatMap(power) ?? String(localized: "power: –")))
+                             caption: gpu.flatMap(power) ?? String(localized: "power: –")))
         }
         return out
     }
@@ -204,39 +204,6 @@ struct UsageRing: View {
         .accessibilityLabel(Text(ring.title))
         .accessibilityValue(Text([ring.fraction.map { $0.formatted(.percent.precision(.fractionLength(0))) }, ring.detail]
             .compactMap { $0 }.joined(separator: ", ")))
-    }
-}
-
-/// One figure as a small tile: what it is, the value, and what the value means.
-struct FigureTile: View {
-    struct Tile: Identifiable {
-        let id: String
-        let symbol: String
-        let title: String
-        let value: String
-        let detail: String?
-    }
-
-    let tile: Tile
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Label(tile.title, systemImage: tile.symbol)
-                .font(.caption).foregroundStyle(.secondary)
-                .labelStyle(.titleAndIcon)
-            Text(tile.value)
-                .font(.title3.monospacedDigit().weight(.semibold))
-                .lineLimit(1).minimumScaleFactor(0.8)
-            if let detail = tile.detail {
-                Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 10).padding(.vertical, 8)
-        .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 8))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(tile.title))
-        .accessibilityValue(Text([tile.value, tile.detail].compactMap { $0 }.joined(separator: ", ")))
     }
 }
 

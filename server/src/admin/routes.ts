@@ -116,6 +116,8 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
       telemetry: manager.latestTelemetry(),
       balance: manager.balance(),
       apiUsage: store.apiUsage(),
+      apiUsageByHour: store.apiUsageByHour(),
+      apiTelemetry: manager.apiTelemetry(),
       veniceAccount: manager.veniceAccount(),
     }))
 

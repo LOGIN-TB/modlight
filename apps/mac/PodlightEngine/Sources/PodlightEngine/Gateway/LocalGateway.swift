@@ -199,6 +199,7 @@ public struct LocalGateway: Sendable {
         // after a wake). The request is held anyway, so it is tried again for up to 30 seconds.
         // An API provider is always routed: one try.
         let tries = endpoint.upstream == .pod ? Self.proxyRetries : 0
+        let started = Date()
         var bytes: URLSession.AsyncBytes?
         var response: URLResponse?
         for attempt in 0...tries {
@@ -219,6 +220,10 @@ public struct LocalGateway: Sendable {
         }
         let http = response as? HTTPURLResponse
         let status = http?.statusCode ?? 502
+        let rateLimit = http.flatMap { response in
+            APIRateLimit.from(headers: Dictionary(response.allHeaderFields.compactMap { key, value in
+                (key as? String).map { ($0, "\(value)") } }, uniquingKeysWith: { a, _ in a }), at: Date())
+        }
 
         // A provider's error becomes Podlight's own, in the agent's API shape.
         if case .api(let provider, _) = endpoint.upstream, status >= 400 {
@@ -229,9 +234,11 @@ public struct LocalGateway: Sendable {
                     if body.count >= 64 * 1024 { break }
                 }
             } catch {}
+            let failure = APIForward.failure(provider: provider, status: status, body: body)
+            await manager.finishAPIRequest(endpoint.modelId, usage: nil, started: started, firstContent: nil, ended: Date(),
+                                           status: failure.status, streamed: false, rateLimit: rateLimit)
             await manager.requestEnded(endpoint.modelId)
-            return Self.response(for: .provider(APIForward.failure(provider: provider, status: status, body: body)),
-                                 model: name, anthropic: anthropic)
+            return Self.response(for: .provider(failure), model: name, anthropic: anthropic)
         }
 
         var headers = HTTPFields()
@@ -244,15 +251,23 @@ public struct LocalGateway: Sendable {
             let streamed = (http?.value(forHTTPHeaderField: "Content-Type") ?? "").contains("text/event-stream")
             headers[.contentType] = streamed ? "text/event-stream" : "application/json"
             return Response(status: .init(code: status), headers: headers,
-                            body: Self.bridgedBody(bytes, streamed: streamed, model: name, manager: manager, modelId: modelId))
+                            body: Self.bridgedBody(bytes, streamed: streamed, model: name, manager: manager, modelId: modelId,
+                                                   started: started, status: status, rateLimit: rateLimit))
         }
         let startingMeter = meter
+        let streamedAnswer = (http?.value(forHTTPHeaderField: "Content-Type") ?? "").contains("text/event-stream")
         let responseBody = ResponseBody { writer in
             var meter = startingMeter
             defer {
                 let usage = meter?.finish()
+                let firstContent = meter?.firstContentAt
+                let metered = meter != nil
+                let ended = Date()
                 Task {
-                    if let usage { await manager.recordAPIUsage(modelId, usage: usage) }
+                    if metered {
+                        await manager.finishAPIRequest(modelId, usage: usage, started: started, firstContent: firstContent,
+                                                       ended: ended, status: status, streamed: streamedAnswer, rateLimit: rateLimit)
+                    }
                     await manager.requestEnded(modelId)
                 }
             }
@@ -286,13 +301,18 @@ public struct LocalGateway: Sendable {
     /// A provider's chat completion answer as Anthropic Messages: a stream event by event, or one
     /// message. Usage is booked from the provider's answer either way.
     static func bridgedBody(_ bytes: URLSession.AsyncBytes, streamed: Bool, model: String,
-                            manager: PodManager, modelId: UUID) -> ResponseBody {
+                            manager: PodManager, modelId: UUID, started: Date, status: Int,
+                            rateLimit: APIRateLimit?) -> ResponseBody {
         ResponseBody { writer in
             var usage: APIUsage?
+            var firstContent: Date?
             defer {
                 let booked = usage
+                let first = firstContent
+                let ended = Date()
                 Task {
-                    if let booked { await manager.recordAPIUsage(modelId, usage: booked) }
+                    await manager.finishAPIRequest(modelId, usage: booked, started: started, firstContent: first, ended: ended,
+                                                   status: status, streamed: streamed, rateLimit: rateLimit)
                     await manager.requestEnded(modelId)
                 }
             }
@@ -310,6 +330,7 @@ public struct LocalGateway: Sendable {
                     let payload = Data(line.dropFirst(5))
                     guard let chunk = (try? JSONSerialization.jsonObject(with: payload)) as? [String: Any] else { return }
                     if let found = APIUsage.from(chunk) { usage = found }
+                    if firstContent == nil, APITelemetry.hasContent(chunk) { firstContent = Date() }
                     try await send(translator.feed(chunk))
                 }
                 for try await byte in bytes {
