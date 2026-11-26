@@ -102,12 +102,41 @@ enum SpecRuntime {
             case "noSuitableCard": .noSuitableCard
             case "notReadyInTime": .notReadyInTime
             case "wakeDisabled": .wakeDisabled
+            case "missingProviderKey": .missingProviderKey(ModelProvider(rawValue: e["provider"] as? String ?? "") ?? .venice)
+            case "unsupportedPath": .unsupportedPath(e["path"] as? String ?? "", ModelProvider(rawValue: e["provider"] as? String ?? "") ?? .venice)
             default: .runpod(status: e["status"] as? Int ?? 0, message: e["message"] as? String ?? "")
             }
             let failure = LocalGateway.failure(for: error, model: input["model"] as? String ?? "m")
             got = input["anthropic"] as? Bool == true
                 ? ["status": failure.status, "type": LocalGateway.anthropicType(failure.status)]
                 : ["status": failure.status, "code": failure.code]
+        case "veniceOffers":
+            let path = try #require(input["catalog"] as? String)
+            got = try json(try VeniceClient.offers(from: Data(contentsOf: Spec.root.appendingPathComponent(path))))
+        case "veniceOffer":
+            got = try VeniceClient.offer(from: try #require(input["entry"] as? [String: Any])).map { try json($0) } ?? NSNull()
+        case "apiCost":
+            let usage = try decode(APIUsage.self, input["usage"])
+            let cost = APICost.of(usage, pricing: try decode(APIPricing.self, input["pricing"]))
+            got = ["usd": cost.usd, "source": cost.source.rawValue]
+        case "apiUsage":
+            got = try APIUsage.from(try #require(input["body"] as? [String: Any])).map { try json($0) } ?? NSNull()
+        case "apiForward":
+            let r = APIForward.rewrite(try #require(input["body"] as? [String: Any]), path: try #require(input["path"] as? String),
+                                       provider: try decode(ModelProvider.self, input["provider"]),
+                                       providerModelId: try #require(input["providerModelId"] as? String))
+            got = ["body": r.body, "clientWantsUsage": r.clientWantsUsage]
+        case "apiPathSupported":
+            got = APIForward.supports(try #require(input["path"] as? String), provider: try decode(ModelProvider.self, input["provider"]))
+        case "providerFailure":
+            let f = APIForward.failure(provider: try decode(ModelProvider.self, input["provider"]), status: try decode(Int.self, input["status"]),
+                                       body: Data((input["body"] as? String ?? "").utf8))
+            let failure = LocalGateway.failure(for: .provider(f), model: "m")
+            got = input["anthropic"] as? Bool == true
+                ? ["status": failure.status, "type": LocalGateway.anthropicType(failure.status)]
+                : ["status": failure.status, "code": failure.code]
+        case "veniceAccount":
+            got = try json(try VeniceClient.account(from: JSONSerialization.data(withJSONObject: try #require(input["body"]))))
         case "isValidName":
             got = PodlightModel.isValidName(input["name"] as? String ?? "")
         case "summarizeEngineLog":

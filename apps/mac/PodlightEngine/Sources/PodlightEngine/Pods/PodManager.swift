@@ -32,6 +32,12 @@ public enum PodlightError: Error, Sendable, Equatable {
     /// was booked; Podlight waits for a card up to `ceiling` (when it may), and the user can
     /// start on one of `pricier` instead.
     case cardTooExpensive(wanted: PricedChoice?, ceiling: Double, pricier: [PricedChoice])
+    /// An API model, but no key for its provider in the keychain.
+    case missingProviderKey(ModelProvider)
+    /// The provider answered with an error (balance, key limit, refused key, rate limit …).
+    case provider(ProviderFailure)
+    /// The provider does not serve this API path (e.g. Venice has no legacy `/v1/completions`).
+    case unsupportedPath(String, ModelProvider)
 }
 
 /// Where the gateway forwards a request.

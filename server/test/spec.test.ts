@@ -11,6 +11,8 @@ import { failure, anthropicType, looksDegenerate, summarizeEngineLog, systemMess
 import { MODEL_NAME } from '../src/model.ts'
 import { specPath } from '../src/spec.ts'
 import type { GPUType } from '../src/runpod/types.ts'
+import { costOf, providerFailure, rewriteForProvider, supportsPath, usageFrom } from '../src/providers/api.ts'
+import * as venice from '../src/providers/venice.ts'
 
 // Every case in spec/cases that applies to the server. The spec is the source of truth: when a
 // case fails, fix the code, never the expected value.
@@ -21,7 +23,7 @@ interface SpecCase { id: string; title: string; function: string; input: any; ex
 const APP_ONLY = new Set(['kvProfile', 'ggufQuants', 'ggufKvProfile'])
 
 const FILES = ['scheduler.json', 'scheduler-podlight.json', 'capacity.json', 'gpu-suggest.json', 'pod-plan.json',
-  'hosting.json', 'gateway.json', 'kv-profile.json', 'gguf.json', 'price-guard.json']
+  'hosting.json', 'gateway.json', 'kv-profile.json', 'gguf.json', 'price-guard.json', 'api-provider.json']
 
 const catalogs = new Map<string, GPUType[]>()
 function catalog(path: string): GPUType[] {
@@ -104,6 +106,17 @@ function run(c: SpecCase): unknown {
     case 'isValidName': return MODEL_NAME.test(i.name)
     case 'summarizeEngineLog': return summarizeEngineLog(i.lines)
     case 'looksDegenerate': return looksDegenerate(i.text)
+    case 'veniceOffers': return venice.offers(JSON.parse(readFileSync(specPath(i.catalog), 'utf8')))
+    case 'veniceOffer': return venice.offer(i.entry)
+    case 'apiCost': return costOf(i.usage, i.pricing)
+    case 'apiUsage': return usageFrom(i.body)
+    case 'apiForward': return rewriteForProvider(i.body, i.path, i.provider, i.providerModelId)
+    case 'apiPathSupported': return supportsPath(i.path, i.provider)
+    case 'providerFailure': {
+      const f = failure({ kind: 'provider', failure: providerFailure(i.provider, i.status, i.body) }, 'm')
+      return i.anthropic ? { status: f.status, type: anthropicType(f.status) } : { status: f.status, code: f.code }
+    }
+    case 'veniceAccount': return venice.account(i.body)
     default: throw new Error(`no server implementation for ${c.function}`)
   }
 }

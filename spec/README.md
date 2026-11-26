@@ -16,7 +16,9 @@ against each other.
 | `cases/gateway.json` | System entries rewritten for the Messages API, error status and codes, the served-name rule, the engine-log summary. | Recorded from Swift; Swift and the server |
 | `cases/kv-profile.json`, `cases/gguf.json` | KV cache per token from `config.json` or a GGUF header; GGUF quantisations. | Planning, done in the app only (`status: swift`) |
 | `cases/telemetry.json` | What the pod's watchdog reads from `nvidia-smi` and the engine's `/metrics` (requests, KV cache, token rates). | Parsed in the pod only (`status: pod`), run by `tools/test_watchdog.py`; the app and the server store and show the result |
+| `cases/api-provider.json` | API providers (Venice, since 0.11): catalog entry → offer, cost of a request from its usage, the request rewrite, paths a provider serves, provider errors, the account. 42 cases. | Swift and the server |
 | `fixtures/catalog.json` | A RunPod GPU catalog the card cases are computed against. | |
+| `fixtures/venice-models.json` | Five entries of Venice's text catalog, recorded from `GET /models?type=text` on 2026-11-26. | |
 | `data/gpus.json` | Memory bandwidth per card for the speed estimate. | Swift bundles a byte-identical copy (tested) |
 | `data/regions.json` | Region prefixes and RunPod storage prices. | The server reads it; Swift's constants are tested against it |
 | `pod/boot.sh`, `pod/watchdog.py` | The pod's start script and dead-man switch. | The server sends these; Swift bundles byte-identical copies (tested) |

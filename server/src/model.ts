@@ -60,6 +60,43 @@ export const schedule = z.object({
 })
 export type Schedule = z.infer<typeof schedule>
 
+/** Where a model runs. `runpod`: a pod Podlight starts. Others: an API provider billing per token. */
+export const modelProvider = z.enum(['runpod', 'venice'])
+export type ModelProvider = z.infer<typeof modelProvider>
+
+export const apiPrivacy = z.enum(['private', 'anonymized'])
+export type APIPrivacy = z.infer<typeof apiPrivacy>
+
+/** USD per million tokens. Without a cache rate, cached tokens cost the input price. */
+export const apiRates = z.object({
+  input: z.number().nonnegative(),
+  output: z.number().nonnegative(),
+  cacheRead: optional(z.number().nonnegative()),
+  cacheWrite: optional(z.number().nonnegative()),
+})
+export type APIRates = z.infer<typeof apiRates>
+
+export const apiPricing = apiRates.extend({
+  /** Prompts with more tokens than this are billed at `extended`. */
+  extendedAboveTokens: optional(z.number().int().positive()),
+  extended: optional(apiRates),
+})
+export type APIPricing = z.infer<typeof apiPricing>
+
+export const apiModelSpec = z.object({
+  /** Sent upstream in `model`. */
+  providerModelId: z.string().min(1),
+  displayName: z.string(),
+  privacy: apiPrivacy,
+  /** `tools`, `vision`, `reasoning`, `code`. */
+  capabilities: z.array(z.string()),
+  maxCompletionTokens: optional(z.number().int().positive()),
+  pricing: apiPricing,
+  pricedAt: z.string(),
+  removesAt: optional(z.string()),
+})
+export type APIModelSpec = z.infer<typeof apiModelSpec>
+
 export const MODEL_NAME = /^[a-z0-9][a-z0-9._-]{0,62}$/
 
 /** A model as the Mac app sets it up. `name` is what an agent puts in the `model` field. */
@@ -68,8 +105,8 @@ export const podlightModel = z.object({
   name: z.string().regex(MODEL_NAME, 'lowercase letters, digits, ".", "_" and "-", at most 63'),
   repoId: z.string().min(1),
   format: weightFormat,
-  /** Bytes as Hugging Face reports them (decimal). */
-  weightBytes: z.number().positive(),
+  /** Bytes as Hugging Face reports them (decimal). 0 for API models. */
+  weightBytes: z.number().nonnegative(),
   nativeContextTokens: optional(z.number().int().positive()),
   toolCallParser: optional(z.string()),
   reasoningParser: optional(z.string()),
@@ -88,8 +125,15 @@ export const podlightModel = z.object({
   preferredGPUName: optional(z.string()),
   /** GGUF: the quantisation llama.cpp loads (`-hf repo:quant`). */
   quant: optional(z.string()),
+  /** Where the model runs: a pod (`runpod`) or an API provider. Missing before 0.11: a pod. */
+  provider: modelProvider.default('runpod'),
+  /** API models: the provider's id, prices and traits. */
+  api: optional(apiModelSpec),
 })
 export type PodlightModel = z.infer<typeof podlightModel>
+
+/** Podlight starts and stops a pod for this model; false for API models, which are always ready. */
+export const isPod = (model: Pick<PodlightModel, 'provider'>): boolean => (model.provider ?? 'runpod') === 'runpod'
 
 export type InferenceEngine = 'vllm' | 'llamaCpp'
 export const engineOf = (format: WeightFormat): InferenceEngine => (format === 'gguf' ? 'llamaCpp' : 'vllm')

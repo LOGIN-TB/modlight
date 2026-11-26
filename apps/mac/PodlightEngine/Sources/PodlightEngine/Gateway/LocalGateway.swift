@@ -244,6 +244,12 @@ public struct LocalGateway: Sendable {
         case .cardTooExpensive(let wanted, let ceiling, _):
             let card = wanted.map { "\($0.name) at \(Self.dollars($0.pricePerHour))/h" } ?? "The chosen card"
             return Failure(status: 503, message: "\(card) for \(model) is taken, and the free cards cost more than Podlight's price step allows. Nothing was booked; Podlight keeps trying for a card up to \(Self.dollars(ceiling))/h. Start it on a pricier card in Podlight, or try again later.", code: "card_too_expensive")
+        case .missingProviderKey(let provider):
+            return Failure(status: 503, message: "Podlight has no \(provider.displayName) API key yet. Add it in Podlight → Settings → Providers.", code: "setup_incomplete")
+        case .provider(let failure):
+            return Failure(status: failure.status, message: failure.message, code: failure.code)
+        case .unsupportedPath(let path, let provider):
+            return Failure(status: 404, message: "\(model) runs at \(provider.displayName), which does not serve \(path). Use /v1/chat/completions, /v1/responses or /v1/messages.", code: "unsupported_endpoint")
         case .nameTaken, .modelLookup, .busy:
             return Failure(status: 500, message: "Podlight could not serve \(model).", code: "internal")
         }
@@ -262,6 +268,7 @@ public struct LocalGateway: Sendable {
         switch status {
         case 400: "invalid_request_error"
         case 401: "authentication_error"
+        case 402: "billing_error"
         case 403: "permission_error"
         case 404: "not_found_error"
         case 429: "rate_limit_error"

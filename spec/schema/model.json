@@ -33,7 +33,7 @@
     },
     "weightBytes": {
       "type": "number",
-      "exclusiveMinimum": 0
+      "minimum": 0
     },
     "nativeContextTokens": {
       "anyOf": [
@@ -258,6 +258,172 @@
       "type": [
         "string",
         "null"
+      ]
+    },
+    "provider": {
+      "default": "runpod",
+      "type": "string",
+      "enum": [
+        "runpod",
+        "venice"
+      ]
+    },
+    "api": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "providerModelId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "displayName": {
+              "type": "string"
+            },
+            "privacy": {
+              "type": "string",
+              "enum": [
+                "private",
+                "anonymized"
+              ]
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "maxCompletionTokens": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "pricing": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "output": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "cacheRead": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "cacheWrite": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "extendedAboveTokens": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "extended": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "input": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "output": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "cacheRead": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "cacheWrite": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "input",
+                        "output"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "input",
+                "output"
+              ]
+            },
+            "pricedAt": {
+              "type": "string"
+            },
+            "removesAt": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "providerModelId",
+            "displayName",
+            "privacy",
+            "capabilities",
+            "pricing",
+            "pricedAt"
+          ]
+        },
+        {
+          "type": "null"
+        }
       ]
     }
   },
