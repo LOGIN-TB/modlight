@@ -10,8 +10,10 @@
 #       xcrun notarytool store-credentials modlight-notary \
 #         --key <AuthKey_XXXX.p8> --key-id <KEY ID> --issuer <ISSUER ID>
 #     (or NOTARY_PROFILE=<name> for another profile name)
-#   - the Sparkle signing key in the keychain (account "modlight"), made by Sparkle's
-#     generate_keys --account modlight
+#   - the Sparkle signing key in the keychain (account "modlight", or SPARKLE_ACCOUNT=<name>),
+#     made by Sparkle's generate_keys --account modlight. Its public half is SPARKLE_PUBLIC_KEY in
+#     apps/mac/project.yml. Keys made under the former name: NOTARY_PROFILE=podlight-notary
+#     SPARKLE_ACCOUNT=podlight
 #
 # Output in build/release: Modlight-<version>.dmg (notarised and stapled) and appcast.xml.
 set -euo pipefail
@@ -21,6 +23,7 @@ mac="$root/apps/mac"
 out="$root/build/release"
 derived="$root/build/release-dd"
 profile="${NOTARY_PROFILE:-modlight-notary}"
+sparkle_account="${SPARKLE_ACCOUNT:-modlight}"
 version="$(sed -n 's/^ *MARKETING_VERSION: "\(.*\)"/\1/p' "$mac/project.yml")"
 build_number="$(sed -n 's/^ *CURRENT_PROJECT_VERSION: "\(.*\)"/\1/p' "$mac/project.yml")"
 app="$out/export/Modlight.app"
@@ -111,7 +114,7 @@ fi
 
 echo "==> Appcast"
 sparkle_bin="$(find "$derived/SourcePackages/artifacts" -type d -path "*Sparkle/bin" | head -1)"
-signature="$("$sparkle_bin/sign_update" --account modlight "$dmg")"
+signature="$("$sparkle_bin/sign_update" --account "$sparkle_account" "$dmg")"
 length="$(stat -f%z "$dmg")"
 cat > "$out/appcast.xml" <<XML
 <?xml version="1.0" encoding="utf-8"?>
