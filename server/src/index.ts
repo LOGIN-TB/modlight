@@ -4,7 +4,7 @@ import { openDatabase } from './store/db.ts'
 import { VERSION } from './version.ts'
 import { connectionInfo, lookupPublicIp } from './connection-info.ts'
 
-// Podlight server: one container, one data volume. Speaks plain HTTP; put a reverse proxy with a
+// Modlight server: one container, one data volume. Speaks plain HTTP; put a reverse proxy with a
 // certificate (Coolify, Traefik, Caddy) in front of it before it is reachable from the internet.
 
 const env = process.env
@@ -12,7 +12,7 @@ const dataDir = env.DATA_DIR ?? '/data'
 const port = Number.parseInt(env.PORT ?? '8080', 10)
 const host = env.HOST ?? '0.0.0.0'
 
-const db = openDatabase(env.DATABASE_PATH ?? `${dataDir}/podlight.db`)
+const db = openDatabase(env.DATABASE_PATH ?? `${dataDir}/modlight.db`)
 const key = loadOrCreateMasterKey(env.MASTER_KEY_PATH ?? `${dataDir}/keys/master.key`)
 const server = await buildServer({
   db, sealer: sealer(key),
@@ -23,7 +23,7 @@ const server = await buildServer({
 
 const code = server.pairing.codeAtStart(env.PAIRING_CODE?.trim() || null)
 await server.app.listen({ port, host })
-server.app.log.info(`Podlight server ${VERSION} listening on ${host}:${port}`)
+server.app.log.info(`Modlight server ${VERSION} listening on ${host}:${port}`)
 // Printed plainly, not as log JSON, so it stands out in `docker logs` and Coolify's log view.
 const publicIp = await lookupPublicIp(env)
 console.log(connectionInfo({ env, version: VERSION, port, code, publicIp }).join('\n'))

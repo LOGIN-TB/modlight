@@ -1,5 +1,5 @@
 import Foundation
-import PodlightEngine
+import ModlightEngine
 
 /// Configuration snippets for coding agents, for this Mac's gateway or a server's. Pure text, so
 /// the same code writes both; a server gets its own provider id, so both can sit side by side in
@@ -7,18 +7,18 @@ import PodlightEngine
 struct AgentConfigs {
     /// The key the agent sends: this Mac's gateway key, or a server access key.
     var key: String
-    var models: [PodlightModel]
+    var models: [ModlightModel]
     /// Provider id in config files and the suffix of the shell functions.
-    var provider = "podlight"
+    var provider = "modlight"
     /// Display name in the agents' model lists.
-    var label = "Podlight"
+    var label = "Modlight"
 
-    /// `podlight-office` for a server named "Office".
+    /// `modlight-office` for a server named "Office".
     static func providerID(forServerNamed name: String) -> String {
         let slug = name.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en"))
             .lowercased().replacingOccurrences(of: #"[^a-z0-9]+"#, with: "-", options: .regularExpression)
             .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
-        return slug.isEmpty ? "podlight-server" : "podlight-\(slug)"
+        return slug.isEmpty ? "modlight-server" : "modlight-\(slug)"
     }
 
     /// The environment variable Codex reads the key from.
@@ -94,9 +94,9 @@ struct AgentConfigs {
     /// Claude Code needs at least this much context to work; below it compacts constantly.
     static let claudeCodeMinimumContext = 131_072
 
-    /// Claude Code in the terminal, pointed at Podlight through its Anthropic-compatible route
+    /// Claude Code in the terminal, pointed at Modlight through its Anthropic-compatible route
     /// (code.claude.com/docs/en/llm-gateway, env-vars). The normal Claude Code login stays untouched.
-    private func claudeCodeVariables(baseURL: String, model item: PodlightModel?) -> [String] {
+    private func claudeCodeVariables(baseURL: String, model item: ModlightModel?) -> [String] {
         let name = item?.name ?? "model"
         let context = item?.contextTokens ?? 131_072
         let root = baseURL.hasSuffix("/v1") ? String(baseURL.dropLast(3)) : baseURL
@@ -117,14 +117,14 @@ struct AgentConfigs {
     }
 
     /// Claude Code once, for this terminal.
-    func claudeCodeOnce(baseURL: String, model item: PodlightModel?) -> String {
+    func claudeCodeOnce(baseURL: String, model item: ModlightModel?) -> String {
         claudeCodeVariables(baseURL: baseURL, model: item).joined(separator: " \\\n  ") + " \\\n  claude"
     }
 
-    /// Claude Code permanently as `claude-podlight`, for ~/.zshrc.
-    func claudeCodeFunction(baseURL: String, model item: PodlightModel?) -> String {
+    /// Claude Code permanently as `claude-modlight`, for ~/.zshrc.
+    func claudeCodeFunction(baseURL: String, model item: ModlightModel?) -> String {
         """
-        \(provider == "podlight" ? "claude-podlight" : "claude-\(provider)")() {
+        \(provider == "modlight" ? "claude-modlight" : "claude-\(provider)")() {
           \(claudeCodeVariables(baseURL: baseURL, model: item).joined(separator: " \\\n  ")) \\
             claude "$@"
         }
@@ -146,11 +146,11 @@ struct AgentConfigs {
     }
 
     /// The shell function that selects the provider, for ~/.zshrc.
-    func codexFunction(model item: PodlightModel?) -> String {
+    func codexFunction(model item: ModlightModel?) -> String {
         let name = item?.name ?? "model"
         let context = item?.contextTokens ?? 131_072
         return """
-        \(provider == "podlight" ? "codex-podlight" : "codex-\(provider)")() {
+        \(provider == "modlight" ? "codex-modlight" : "codex-\(provider)")() {
           \(keyVariable)='\(key)' codex \\
             -c model_provider=\(provider) -m '\(name)' \\
             -c model_context_window=\(context) "$@"

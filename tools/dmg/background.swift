@@ -1,4 +1,4 @@
-// Draws the disk image window background: where to drag Podlight, in German and English.
+// Draws the disk image window background: where to drag Modlight, in German and English.
 //   swift tools/dmg/background.swift <out-dir>     → background.png (660×400) and background@2x.png
 // Icons are placed by dmgbuild at (165, 210) and (495, 210); the arrow sits between them.
 import AppKit
@@ -16,7 +16,7 @@ func render(scale: CGFloat) -> Data {
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
     let ctx = NSGraphicsContext.current!.cgContext
 
-    // Soft light field with a hint of Podlight's teal.
+    // Soft light field with a hint of Modlight's teal.
     let colors = [NSColor(red: 0.97, green: 0.98, blue: 0.99, alpha: 1).cgColor,
                   NSColor(red: 0.89, green: 0.95, blue: 0.96, alpha: 1).cgColor] as CFArray
     let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1])!
@@ -48,11 +48,11 @@ func render(scale: CGFloat) -> Data {
         NSAttributedString(string: text, attributes: attributes)
             .draw(in: CGRect(x: 0, y: y, width: 660, height: size * 1.4))
     }
-    centered("Zum Installieren Podlight in den Programme-Ordner ziehen", y: 336, size: 17, weight: .semibold,
+    centered("Zum Installieren Modlight in den Programme-Ordner ziehen", y: 336, size: 17, weight: .semibold,
              color: NSColor(red: 0.08, green: 0.16, blue: 0.22, alpha: 1))
-    centered("Drag Podlight to Applications to install", y: 312, size: 13, weight: .regular,
+    centered("Drag Modlight to Applications to install", y: 312, size: 13, weight: .regular,
              color: NSColor(red: 0.25, green: 0.33, blue: 0.38, alpha: 1))
-    centered("Your own LLM on RunPod · Podlight is not affiliated with RunPod", y: 22, size: 11, weight: .regular,
+    centered("Open models, one endpoint · Modlight is not affiliated with RunPod or Venice", y: 22, size: 11, weight: .regular,
              color: NSColor(red: 0.35, green: 0.42, blue: 0.46, alpha: 0.9))
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])!

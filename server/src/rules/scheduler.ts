@@ -1,7 +1,7 @@
 import type { PodStatus, Schedule } from '../model.ts'
 
 // Should a pod be running right now, and why? A pure function over an explicit `now`.
-// Port of apps/mac/PodlightEngine/Sources/PodlightEngine/Scheduler.swift; both are held to
+// Port of apps/mac/ModlightEngine/Sources/ModlightEngine/Scheduler.swift; both are held to
 // spec/cases/scheduler*.json. Change the spec first, then both implementations.
 
 export type ScheduleReason =

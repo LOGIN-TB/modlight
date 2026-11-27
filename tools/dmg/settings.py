@@ -1,6 +1,6 @@
-# dmgbuild settings for Podlight's disk image. Writes the window layout directly (no Finder
+# dmgbuild settings for Modlight's disk image. Writes the window layout directly (no Finder
 # scripting), so it works headless. Called from tools/mac-release.sh:
-#   dmgbuild -s tools/dmg/settings.py -D app=<Podlight.app> -D background=<background.tiff> "Podlight" <out.dmg>
+#   dmgbuild -s tools/dmg/settings.py -D app=<Modlight.app> -D background=<background.tiff> "Modlight" <out.dmg>
 import os.path
 
 app = defines["app"]  # noqa: F821  (provided by dmgbuild)

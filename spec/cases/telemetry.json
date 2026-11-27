@@ -1,5 +1,5 @@
 {
-  "description": "Pod telemetry (Podlight 0.5, 2026-11-22): what the watchdog in every pod reads from nvidia-smi and from the engine's /metrics, and sends back with each heartbeat. RunPod's API reports no GPU memory in use and no disk, so the pod measures itself. Parsed in spec/pod/watchdog.py only (status: pod), tested by tools/test_watchdog.py; the app and the server only store and show the result. Podlight 0.10 adds the totals since the engine started, the share of prompt tokens taken from the engine's cache and the speed of the requests themselves (tokens per second while reading or writing); the earlier cases gained the totals.",
+  "description": "Pod telemetry (Modlight 0.5, 2026-11-22): what the watchdog in every pod reads from nvidia-smi and from the engine's /metrics, and sends back with each heartbeat. RunPod's API reports no GPU memory in use and no disk, so the pod measures itself. Parsed in spec/pod/watchdog.py only (status: pod), tested by tools/test_watchdog.py; the app and the server only store and show the result. Modlight 0.10 adds the totals since the engine started, the share of prompt tokens taken from the engine's cache and the speed of the requests themselves (tokens per second while reading or writing); the earlier cases gained the totals.",
   "cases": [
     {
       "id": "nvidiaSmi/one-card",

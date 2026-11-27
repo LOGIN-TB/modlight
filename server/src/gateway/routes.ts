@@ -84,7 +84,7 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
       const identity = deps.tokens.verify('client', presentedKey(request))
       if (!identity) {
         await new Promise((resolve) => setTimeout(resolve, delay))
-        return send(reply, 401, 'Wrong or missing API key. Create one in the Podlight app under this server → Connection.',
+        return send(reply, 401, 'Wrong or missing API key. Create one in the Modlight app under this server → Connection.',
           'invalid_api_key', isAnthropic(request.url))
       }
       request.client = identity
@@ -97,7 +97,7 @@ export async function registerGateway(app: FastifyInstance, deps: Deps): Promise
       const data = models.map((m) => {
         const created = m.createdAt ? new Date(m.createdAt) : new Date(0)
         return {
-          id: m.name, object: 'model', type: 'model', display_name: m.name, owned_by: 'podlight',
+          id: m.name, object: 'model', type: 'model', display_name: m.name, owned_by: 'modlight',
           created: Math.floor(created.getTime() / 1000), created_at: created.toISOString().replace(/\.\d{3}Z$/, 'Z'),
           max_model_len: m.contextTokens, context_length: m.contextTokens,
         }

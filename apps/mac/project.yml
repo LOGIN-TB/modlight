@@ -1,6 +1,6 @@
-# Xcode project for the Podlight Mac app. Generated with `xcodegen generate` (tools/mac-build.sh
+# Xcode project for the Modlight Mac app. Generated with `xcodegen generate` (tools/mac-build.sh
 # does it); the .xcodeproj itself is not committed.
-name: Podlight
+name: Modlight
 options:
   bundleIdPrefix: io.github.login-tb
   deploymentTarget:
@@ -9,16 +9,16 @@ options:
   createIntermediateGroups: true
 
 packages:
-  PodlightEngine:
-    path: PodlightEngine
+  ModlightEngine:
+    path: ModlightEngine
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: 2.6.0
 
 settings:
   base:
-    MARKETING_VERSION: "0.12.0"
-    CURRENT_PROJECT_VERSION: "24"
+    MARKETING_VERSION: "0.13.0"
+    CURRENT_PROJECT_VERSION: "25"
     SWIFT_VERSION: "6.0"
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     ENABLE_HARDENED_RUNTIME: YES
@@ -28,7 +28,7 @@ settings:
     DEAD_CODE_STRIPPING: YES
 
 targets:
-  Podlight:
+  Modlight:
     type: application
     platform: macOS
     sources:
@@ -37,13 +37,13 @@ targets:
         type: folder
         buildPhase: resources
     dependencies:
-      - package: PodlightEngine
+      - package: ModlightEngine
       - package: Sparkle
     info:
       path: App/Info.plist
       properties:
-        CFBundleName: Podlight
-        CFBundleDisplayName: Podlight
+        CFBundleName: Modlight
+        CFBundleDisplayName: Modlight
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDevelopmentRegion: en
@@ -51,14 +51,14 @@ targets:
         LSApplicationCategoryType: public.app-category.developer-tools
         LSMinimumSystemVersion: "26.0"
         NSHumanReadableCopyright: "MIT License. Not affiliated with RunPod."
-        SUFeedURL: https://github.com/LOGIN-TB/podlight/releases/latest/download/appcast.xml
+        SUFeedURL: https://github.com/LOGIN-TB/modlight/releases/latest/download/appcast.xml
         SUPublicEDKey: $(SPARKLE_PUBLIC_KEY)
         SUEnableAutomaticChecks: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.github.login-tb.podlight
-        PRODUCT_NAME: Podlight
-        CODE_SIGN_ENTITLEMENTS: App/Podlight.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.login-tb.modlight
+        PRODUCT_NAME: Modlight
+        CODE_SIGN_ENTITLEMENTS: App/Modlight.entitlements
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "Developer ID Application"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

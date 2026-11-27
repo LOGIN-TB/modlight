@@ -1,4 +1,4 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// The settings window (⌘,), with the same content as the "Settings" item in the sidebar.
@@ -9,7 +9,7 @@ struct SettingsView: View {
     }
 }
 
-/// All of Podlight's settings in one place. Things that belong to one model (context, card, cache,
+/// All of Modlight's settings in one place. Things that belong to one model (context, card, cache,
 /// idle stop) live with that model instead.
 struct SettingsContent: View {
     @Environment(AppModel.self) private var model
@@ -35,7 +35,7 @@ struct SettingsContent: View {
             } header: {
                 Text("Costs and safety")
             } footer: {
-                Text("At a limit, Podlight stops this Mac's pods and refuses requests to Venice models until the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Podlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.")
+                Text("At a limit, Modlight stops this Mac's pods and refuses requests to Venice models until the next day or month. Every pod also stops itself when it has not heard from Modlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Modlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
@@ -52,7 +52,7 @@ struct SettingsContent: View {
             } header: {
                 Text("Hosting for new models")
             } footer: {
-                Text("Each model keeps its own location; change it under Edit. Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. With a region chosen, Podlight uses Secure Cloud only, because community hosts report no location. RunPod treats the region as a preference and gives no data residency guarantee, so Podlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.")
+                Text("Each model keeps its own location; change it under Edit. Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. With a region chosen, Modlight uses Secure Cloud only, because community hosts report no location. RunPod treats the region as a preference and gives no data residency guarantee, so Modlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
@@ -80,7 +80,7 @@ struct SettingsContent: View {
                 Text("Network")
             } footer: {
                 Text(settings.allowLAN
-                     ? "Other computers connect with the address under Connection and the same key. The connection is not encrypted: use this only in networks you trust, not in public Wi-Fi. macOS may ask once whether Podlight may accept incoming connections."
+                     ? "Other computers connect with the address under Connection and the same key. The connection is not encrypted: use this only in networks you trust, not in public Wi-Fi. macOS may ask once whether Modlight may accept incoming connections."
                      : "Only programs on this Mac can connect. Switch on the local network to use your models from a second computer.")
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -100,16 +100,16 @@ struct SettingsContent: View {
                     if let hfMessage { Text(hfMessage).foregroundStyle(.secondary) }
                 }
                 Link("Create a token at Hugging Face (Read access is enough)", destination: Links.huggingFaceTokens)
-                Button("Create New Podlight Key…") { model.newGatewayKey() }
+                Button("Create New Modlight Key…") { model.newGatewayKey() }
             } header: {
                 Text("Providers and access")
             } footer: {
-                Text("Venice serves ready models per token; an \"Inference Only\" key is enough. A Hugging Face token is recommended: pods download over addresses RunPod shares with others, and Hugging Face limits anonymous downloads more strictly. It is required for gated models. After a new Podlight key, paste it into your agents' configuration.")
+                Text("Venice serves ready models per token; an \"Inference Only\" key is enough. A Hugging Face token is recommended: pods download over addresses RunPod shares with others, and Hugging Face limits anonymous downloads more strictly. It is required for gated models. After a new Modlight key, paste it into your agents' configuration.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
             Section("General") {
-                Toggle("Open Podlight at login", isOn: Binding(get: { model.launchesAtLogin }, set: { model.launchesAtLogin = $0 }))
+                Toggle("Open Modlight at login", isOn: Binding(get: { model.launchesAtLogin }, set: { model.launchesAtLogin = $0 }))
                 LabeledContent("Version", value: Format.appVersion)
                     .textSelection(.enabled)
             }
@@ -124,7 +124,7 @@ struct SettingsContent: View {
         }
     }
 
-    private func binding<T: Sendable>(_ keyPath: WritableKeyPath<PodlightSettings, T> & Sendable) -> Binding<T> {
+    private func binding<T: Sendable>(_ keyPath: WritableKeyPath<ModlightSettings, T> & Sendable) -> Binding<T> {
         Binding(
             get: { model.state.settings[keyPath: keyPath] },
             set: { value in Task { await model.updateSettings { $0[keyPath: keyPath] = value } } })
@@ -174,7 +174,7 @@ struct LimitField: View {
     }
 }
 
-/// How much more a replacement card may cost than the chosen one before Podlight asks.
+/// How much more a replacement card may cost than the chosen one before Modlight asks.
 struct FallbackPricePicker: View {
     @Binding var percent: Int
 

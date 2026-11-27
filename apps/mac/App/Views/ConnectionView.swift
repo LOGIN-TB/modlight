@@ -1,7 +1,7 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
-/// How an agent reaches Podlight: three values to copy into any OpenAI-compatible tool, and the
+/// How an agent reaches Modlight: three values to copy into any OpenAI-compatible tool, and the
 /// ready-made configuration files for experts.
 struct ConnectionView: View {
     @Environment(AppModel.self) private var model
@@ -59,7 +59,7 @@ struct ConnectionView: View {
             } header: {
                 Text("Connect your agent")
             } footer: {
-                Text("In your coding agent (OpenCode, Cline, Aider, pi, …) choose a custom or OpenAI-compatible provider and enter these three values. A stopped model starts by itself when an agent asks for it; a new pod then needs up to 25 minutes, so start a new model in Podlight first.")
+                Text("In your coding agent (OpenCode, Cline, Aider, pi, …) choose a custom or OpenAI-compatible provider and enter these three values. A stopped model starts by itself when an agent asks for it; a new pod then needs up to 25 minutes, so start a new model in Modlight first.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
@@ -77,7 +77,7 @@ struct ConnectionView: View {
                     .padding(.top, 6)
                 }
             } footer: {
-                Text("These files contain your Podlight key. Keep them in your home folder, never in a project repository.")
+                Text("These files contain your Modlight key. Keep them in your home folder, never in a project repository.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -141,7 +141,7 @@ struct AgentConfigPanel<Accessory: View>: View {
     }
 
     /// The model the Claude Code and Codex snippets are written for.
-    private var agentModel: PodlightModel? {
+    private var agentModel: ModlightModel? {
         configs.models.first { $0.id == agentModelId } ?? configs.models.first
     }
 
@@ -217,13 +217,13 @@ struct AgentConfigPanel<Accessory: View>: View {
             warnings.append(String(localized: "\(item.name) has no tool calls, so the agent cannot edit files or run commands with it."))
         }
         if agent == .claudeCode {
-            warnings.append(String(localized: "Anthropic does not officially support other models in Claude Code. It works through Podlight's Anthropic-compatible route, but web search and some newer features do not."))
+            warnings.append(String(localized: "Anthropic does not officially support other models in Claude Code. It works through Modlight's Anthropic-compatible route, but web search and some newer features do not."))
         }
         return warnings
     }
 
-    private var claudeFunction: String { configs.provider == "podlight" ? "claude-podlight" : "claude-\(configs.provider)" }
-    private var codexFunction: String { configs.provider == "podlight" ? "codex-podlight" : "codex-\(configs.provider)" }
+    private var claudeFunction: String { configs.provider == "modlight" ? "claude-modlight" : "claude-\(configs.provider)" }
+    private var codexFunction: String { configs.provider == "modlight" ? "codex-modlight" : "codex-\(configs.provider)" }
 
     /// What to copy for the chosen agent, one box per place it goes, so each copies on its own.
     private var snippets: [ConfigSnippet] {
@@ -238,10 +238,10 @@ struct AgentConfigPanel<Accessory: View>: View {
                            content: configs.pi(baseURL: baseURL), folder: ".pi/agent")]
         case .claudeCode:
             [ConfigSnippet(id: "claude-once", title: String(localized: "Once, in a terminal"),
-                           hint: String(localized: "Starts Claude Code with Podlight in this terminal. Plain claude keeps your normal login."),
+                           hint: String(localized: "Starts Claude Code with Modlight in this terminal. Plain claude keeps your normal login."),
                            content: configs.claudeCodeOnce(baseURL: baseURL, model: agentModel)),
              ConfigSnippet(id: "claude-function", title: String(localized: "Permanently as \(claudeFunction)"),
-                           hint: String(localized: "Add to ~/.zshrc and open a new terminal; from then on \(claudeFunction) starts Claude Code with Podlight."),
+                           hint: String(localized: "Add to ~/.zshrc and open a new terminal; from then on \(claudeFunction) starts Claude Code with Modlight."),
                            content: configs.claudeCodeFunction(baseURL: baseURL, model: agentModel))]
         case .codex:
             [ConfigSnippet(id: "codex-provider", title: String(localized: "1. Provider for ~/.codex/config.toml"),

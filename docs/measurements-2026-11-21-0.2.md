@@ -1,5 +1,7 @@
 # Messung 2026-11-21: Podlight 0.2 auf echter RunPod-Hardware
 
+> Entstanden unter dem früheren Namen Podlight. · Written under the former name Podlight.
+
 Ausgeführt mit `LiveEUTwoCards` (`apps/mac/PodlightEngine/Tests/PodlightEngineTests/LiveFlowTests.swift`)
 über die echte RunPod-API. Geprüft werden sollten drei Dinge aus 0.2: „Nur EU“, ein Lauf ohne
 behaltene Festplatte und ein Modell auf zwei Karten (Tensor-Parallel 2). Die Zahlen stammen aus den

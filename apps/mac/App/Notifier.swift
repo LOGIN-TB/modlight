@@ -1,8 +1,8 @@
 import Foundation
-import PodlightEngine
+import ModlightEngine
 import UserNotifications
 
-/// Notifications for what happens while Podlight is in the background: a model became ready, a
+/// Notifications for what happens while Modlight is in the background: a model became ready, a
 /// run is about to end (with "extend by one hour"), a limit or the safety stop ended a run, or a
 /// pod landed outside the chosen region. Permission is asked the first time a model is started,
 /// not at launch.
@@ -32,7 +32,7 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     }
 
     /// Looks at what changed since the last reload and says what deserves a notification.
-    func compare(previous: PodlightState, current: PodlightState) {
+    func compare(previous: ModlightState, current: ModlightState) {
         for model in current.models {
             let before = previous.run(model.id), now = current.run(model.id)
             if before.phase != .ready && now.phase == .ready && previous.runs[model.id] != nil {
@@ -51,7 +51,7 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
             }
             if before.managedBy == nil, let other = now.managedBy, previous.runs[model.id] != nil {
                 post(String(localized: "\(model.name) moved to \(PodOwner.displayName(of: other))"),
-                     String(localized: "That Mac manages it now. Take it back in Podlight to use it here."), id: "moved-\(model.id)")
+                     String(localized: "That Mac manages it now. Take it back in Modlight to use it here."), id: "moved-\(model.id)")
             }
             if before.lastReason != now.lastReason, let reason = now.lastReason {
                 switch reason {

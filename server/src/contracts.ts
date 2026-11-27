@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { VERSION } from './admin/routes.ts'
 import { FORWARDED_PATHS } from './gateway/routes.ts'
-import { gpuChoice, hostingPolicy, modelRun, podlightModel, podTelemetry, schedule, serverSettings, settingsPatch } from './model.ts'
+import { gpuChoice, hostingPolicy, modelRun, modlightModel, podTelemetry, schedule, serverSettings, settingsPatch } from './model.ts'
 
 // The documents in spec/ that are generated from the server's own schemas, so they cannot drift:
 // spec/schema/model.json (the model both sides store) and spec/openapi.json (this server's API).
@@ -12,10 +12,10 @@ const schema = (s: z.ZodType) => z.toJSONSchema(s, { target: 'draft-2020-12', io
 export function modelSchema(): object {
   return {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
-    $id: 'https://github.com/LOGIN-TB/podlight/spec/schema/model.json',
-    title: 'PodlightModel',
-    description: 'A model as the Podlight app sets it up and the server stores it. Mirrors PodlightModel in apps/mac/PodlightEngine. Generated from server/src/model.ts.',
-    ...schema(podlightModel),
+    $id: 'https://github.com/LOGIN-TB/modlight/spec/schema/model.json',
+    title: 'ModlightModel',
+    description: 'A model as the Modlight app sets it up and the server stores it. Mirrors ModlightModel in apps/mac/ModlightEngine. Generated from server/src/model.ts.',
+    ...schema(modlightModel),
   }
 }
 
@@ -41,8 +41,8 @@ export function openapi(): object {
   return {
     openapi: '3.1.0',
     info: {
-      title: 'Podlight server', version: VERSION,
-      description: 'Gateway for agents (/v1, client tokens) and control API for Podlight apps (/admin, device tokens from pairing). Plain HTTP; run it behind a reverse proxy with TLS.',
+      title: 'Modlight server', version: VERSION,
+      description: 'Gateway for agents (/v1, client tokens) and control API for Modlight apps (/admin, device tokens from pairing). Plain HTTP; run it behind a reverse proxy with TLS.',
       license: { name: 'MIT' },
     },
     components: {
@@ -52,7 +52,7 @@ export function openapi(): object {
         clientApiKey: { type: 'apiKey', in: 'header', name: 'x-api-key', description: 'Client token, as Claude Code sends ANTHROPIC_API_KEY.' },
       },
       schemas: {
-        PodlightModel: schema(podlightModel),
+        ModlightModel: schema(modlightModel),
         ModelRun: schema(modelRun),
         Schedule: schema(schedule),
         HostingPolicy: schema(hostingPolicy),
@@ -65,7 +65,7 @@ export function openapi(): object {
           type: 'object',
           properties: {
             version: { type: 'string' }, serverTime: { type: 'string', format: 'date-time' },
-            models: { type: 'array', items: ref('PodlightModel') },
+            models: { type: 'array', items: ref('ModlightModel') },
             runs: { type: 'object', additionalProperties: ref('ModelRun'), description: 'Keyed by model id.' },
             settings: ref('Settings'), spendByDay: { type: 'object', additionalProperties: { type: 'number' } },
             spend: ref('Spend'), costPerHour: { type: 'number' }, lastClientRequestAt: { type: ['string', 'null'] },
@@ -148,16 +148,16 @@ export function openapi(): object {
       '/admin/settings/verify-venice': { post: { tags: ['admin'], security: device, summary: 'Check a Venice key (the given one, or the stored one); with the account when valid', responses: { 200: ok('Result', { type: 'object', properties: { result: { enum: ['valid', 'invalid', 'unreachable'] }, account: ref('APIAccount') } }) } } },
       '/admin/catalog/venice': { get: { tags: ['admin'], security: device, summary: 'Venice\'s text models with prices, privacy tier and capabilities', responses: { 200: ok('Catalog'), 502: error } } },
       '/admin/catalog/gpus': { get: { tags: ['admin'], security: device, summary: 'RunPod\'s GPU catalog with availability, through the server\'s key', responses: { 200: ok('Catalog'), 503: error } } },
-      '/admin/models': { get: { tags: ['admin'], security: device, summary: 'Models', responses: { 200: ok('Models', { type: 'array', items: ref('PodlightModel') }) } } },
+      '/admin/models': { get: { tags: ['admin'], security: device, summary: 'Models', responses: { 200: ok('Models', { type: 'array', items: ref('ModlightModel') }) } } },
       '/admin/models/{id}': {
-        put: { tags: ['admin'], security: device, summary: 'Add or replace a model', parameters: idParam, requestBody: { required: true, content: json(ref('PodlightModel')) }, responses: { 200: ok('Model', ref('PodlightModel')), 400: error, 409: error } },
+        put: { tags: ['admin'], security: device, summary: 'Add or replace a model', parameters: idParam, requestBody: { required: true, content: json(ref('ModlightModel')) }, responses: { 200: ok('Model', ref('ModlightModel')), 400: error, 409: error } },
         delete: { tags: ['admin'], security: device, summary: 'Remove a model, deleting its pod and disk', parameters: idParam, responses: { 204: { description: 'Removed' }, 404: error } },
       },
       '/admin/models/{id}/adopt': { post: {
         tags: ['admin'], security: device, parameters: idParam,
         summary: "Take a model over from a Mac with its pod and the pod's key; the pod is renamed to a server pod, nothing is downloaded again",
-        requestBody: { required: true, content: json({ type: 'object', required: ['model', 'podKey'], properties: { model: ref('PodlightModel'), podKey: { type: 'string' }, podId: { type: ['string', 'null'] } } }) },
-        responses: { 200: ok('Model and run', { type: 'object', properties: { model: ref('PodlightModel'), run: ref('ModelRun') } }), 400: error, 409: error },
+        requestBody: { required: true, content: json({ type: 'object', required: ['model', 'podKey'], properties: { model: ref('ModlightModel'), podKey: { type: 'string' }, podId: { type: ['string', 'null'] } } }) },
+        responses: { 200: ok('Model and run', { type: 'object', properties: { model: ref('ModlightModel'), run: ref('ModelRun') } }), 400: error, 409: error },
       } },
       '/admin/models/{id}/start': { post: { tags: ['admin'], security: device, summary: 'Start until a time ("Läuft bis"); without one, idle stop ends it', parameters: idParam,
         requestBody: { content: json({ type: 'object', properties: { until: { type: ['string', 'null'], format: 'date-time' }, newPod: { type: 'boolean', description: 'Delete a stopped pod with its disk and build a new one (when its machine has no free card).' }, maxPricePerHour: { type: ['number', 'null'], description: 'The user approved a pricier card: cards up to this price per hour (whole pod) may be booked. Without it, a fallback may cost at most fallbackPriceStepPercent more than the chosen card; above that the start answers 503 card_too_expensive and the run waits for a card within the price.' } } }) }, responses: { 200: ok('Run', ref('ModelRun')), 429: error, 503: error } } },

@@ -142,5 +142,5 @@ export function cacheKey(body: Json, providerModelId: string): string | null {
     }
   }
   if (!system) return null
-  return 'podlight-' + createHash('sha256').update(`${providerModelId}\n${system}`).digest('hex').slice(0, 32)
+  return 'modlight-' + createHash('sha256').update(`${providerModelId}\n${system}`).digest('hex').slice(0, 32)
 }

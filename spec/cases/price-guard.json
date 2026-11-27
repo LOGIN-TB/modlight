@@ -767,5 +767,5 @@
     }
   ],
   "description" : "Which cards a start may book when the chosen one is taken. The first choice sets the reference price; a fallback may cost up to `stepPercent` more, or up to `maxPricePerHour` when the user approved a pricier card. Prices are per hour for the whole pod (price × cards), rounded to 0.001. Expected: the first choice with its price (`wanted`), the `ceiling`, the cards to try in their order (`within`) and the pricier ones, cheapest first (`above`). Choices come from `podChoices` for the model.",
-  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+  "recordedFrom" : "Swift engine (ModlightEngine), Modlight 0.3.2"
 }

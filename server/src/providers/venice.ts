@@ -31,7 +31,7 @@ export interface APIAccount {
   rateLimits: { model: string; type: string; amount: number }[]
 }
 
-/** `Qwen/Qwen3-8B` → `qwen3-8b`, as PodlightModel.suggestedName in Swift. */
+/** `Qwen/Qwen3-8B` → `qwen3-8b`, as ModlightModel.suggestedName in Swift. */
 export function suggestedName(id: string): string {
   const last = id.split('/').filter(Boolean).pop() ?? id
   return last.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '')

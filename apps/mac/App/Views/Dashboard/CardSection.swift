@@ -7,7 +7,7 @@ import SwiftUI
 ///     CardSection("Spending limits") {
 ///         MeterRow("Today", value: 6.12, limit: 20)
 ///     } accessory: {
-///         InfoButton("At a limit, Podlight stops ...")
+///         InfoButton("At a limit, Modlight stops ...")
 ///     }
 struct CardSection<Content: View, Accessory: View>: View {
     private let title: Text
@@ -75,7 +75,7 @@ private struct SampleDashboard: View {
                         .init("Pods", value: 13.10, color: .green), .init("Venice", value: 3.25, color: .blue)])
                     MeterRow(String("This month"), value: 88.40, limit: 150)
                 } accessory: {
-                    InfoButton(String("At a limit, Podlight stops this Mac's pods and refuses requests to Venice models until the next day or month."))
+                    InfoButton(String("At a limit, Modlight stops this Mac's pods and refuses requests to Venice models until the next day or month."))
                 }
                 CardSection(String("Tokens today")) {
                     TokenMixBar(newInput: 182_400, cachedInput: 640_000, output: 41_300,

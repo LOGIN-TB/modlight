@@ -42,14 +42,14 @@ class WatchdogTest(unittest.TestCase):
     def start(self, **env):
         self.api = FakeRunPod()
         self.port = free_port()
-        self.pidfile = f"/tmp/podlight-test-engine-{self.port}.pid"
-        full = dict(os.environ, RUNPOD_POD_ID="pod123", RUNPOD_API_KEY="pod-scoped", PODLIGHT_API_KEY="gw",
-                    PODLIGHT_HEARTBEAT_MINUTES="0.05", PODLIGHT_BOOT_GRACE_MINUTES="0", PODLIGHT_CHECK_SECONDS="0.3",
-                    PODLIGHT_WATCHDOG_PORT=str(self.port), PODLIGHT_WATCHDOG_HOST="127.0.0.1", PODLIGHT_RUNPOD_API=f"http://127.0.0.1:{self.api.port}",
-                    PODLIGHT_ENGINE_PID_FILE=self.pidfile, PODLIGHT_ENGINE_EXIT_FILE=self.pidfile + ".exit",
-                    PODLIGHT_ENGINE_LOG=self.pidfile + ".log", PODLIGHT_ENGINE_EXIT_GRACE="0")
+        self.pidfile = f"/tmp/modlight-test-engine-{self.port}.pid"
+        full = dict(os.environ, RUNPOD_POD_ID="pod123", RUNPOD_API_KEY="pod-scoped", MODLIGHT_API_KEY="gw",
+                    MODLIGHT_HEARTBEAT_MINUTES="0.05", MODLIGHT_BOOT_GRACE_MINUTES="0", MODLIGHT_CHECK_SECONDS="0.3",
+                    MODLIGHT_WATCHDOG_PORT=str(self.port), MODLIGHT_WATCHDOG_HOST="127.0.0.1", MODLIGHT_RUNPOD_API=f"http://127.0.0.1:{self.api.port}",
+                    MODLIGHT_ENGINE_PID_FILE=self.pidfile, MODLIGHT_ENGINE_EXIT_FILE=self.pidfile + ".exit",
+                    MODLIGHT_ENGINE_LOG=self.pidfile + ".log", MODLIGHT_ENGINE_EXIT_GRACE="0")
         full.update(env)
-        self.output = open(f"/tmp/podlight-test-watchdog-{self.port}.log", "w+")
+        self.output = open(f"/tmp/modlight-test-watchdog-{self.port}.log", "w+")
         self.proc = subprocess.Popen([sys.executable, "-I", WATCHDOG], env=full,
                                      stdout=self.output, stderr=subprocess.STDOUT)
         for _ in range(200):
@@ -111,7 +111,7 @@ class WatchdogTest(unittest.TestCase):
 
     def test_stops_when_the_engine_has_exited(self):
         dead = subprocess.Popen(["true"]); dead.wait()
-        self.start(PODLIGHT_HEARTBEAT_MINUTES="10")
+        self.start(MODLIGHT_HEARTBEAT_MINUTES="10")
         with open(self.pidfile, "w") as f: f.write(str(dead.pid))
         self.assertEqual(len(self.wait_for_stop(10)), 1)
 
@@ -125,8 +125,8 @@ class WatchdogTest(unittest.TestCase):
             conn.close()
 
     def test_an_engine_exit_waits_for_the_grace_period_and_serves_the_log(self):
-        # Podlight reads why the engine failed during the grace period; RunPod keeps no output.
-        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_ENGINE_EXIT_GRACE="3")
+        # Modlight reads why the engine failed during the grace period; RunPod keeps no output.
+        self.start(MODLIGHT_HEARTBEAT_MINUTES="10", MODLIGHT_ENGINE_EXIT_GRACE="3")
         with open(self.pidfile + ".log", "w") as f:
             f.write("INFO starting\nValueError: The model's max seq len is larger than the KV cache\n")
         with open(self.pidfile + ".exit", "w") as f:
@@ -135,7 +135,7 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(self.api.stops, [], "must not stop before the grace period")
         status, body = self.get("/")
         self.assertEqual((status, body["engineAlive"], body["engineExitCode"]), (200, False, 1))
-        # The log size lets Podlight tell a working engine from a hung one.
+        # The log size lets Modlight tell a working engine from a hung one.
         self.assertEqual(body["engineLogBytes"], os.path.getsize(self.pidfile + ".log"))
         status, log = self.get("/log")
         self.assertIn("KV cache", log["lines"][-1])
@@ -144,7 +144,7 @@ class WatchdogTest(unittest.TestCase):
 
     def test_a_past_deadline_from_the_environment_is_ignored(self):
         # A resumed pod keeps its creation-time environment; that old deadline must not fire.
-        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_DEADLINE=str(int(time.time()) - 3600))
+        self.start(MODLIGHT_HEARTBEAT_MINUTES="10", MODLIGHT_DEADLINE=str(int(time.time()) - 3600))
         time.sleep(2)
         self.assertEqual(self.api.stops, [])
 
@@ -168,8 +168,8 @@ class WatchdogTest(unittest.TestCase):
             with open(os.path.join(cgroup, name), "w") as f: f.write(text)
         engine = FakeEngine()
         self.addCleanup(engine.close)
-        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_TELEMETRY_SECONDS="0.3", PODLIGHT_NVIDIA_SMI=smi,
-                   PODLIGHT_CGROUP=cgroup, PODLIGHT_ENGINE_URL=f"http://127.0.0.1:{engine.port}")
+        self.start(MODLIGHT_HEARTBEAT_MINUTES="10", MODLIGHT_TELEMETRY_SECONDS="0.3", MODLIGHT_NVIDIA_SMI=smi,
+                   MODLIGHT_CGROUP=cgroup, MODLIGHT_ENGINE_URL=f"http://127.0.0.1:{engine.port}")
         time.sleep(0.5)
         # One second of CPU time later, on a container allowed two CPUs.
         with open(os.path.join(cgroup, "cpu.stat"), "w") as f: f.write("usage_usec 2000000\n")
@@ -203,8 +203,8 @@ class WatchdogTest(unittest.TestCase):
     def test_warms_the_engine_up_before_it_counts_as_ready(self):
         engine = WarmEngine()
         self.addCleanup(engine.close)
-        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_TELEMETRY_SECONDS="0", PODLIGHT_ENGINE_URL=f"http://127.0.0.1:{engine.port}",
-                   PODLIGHT_SERVED_NAME="coder", PODLIGHT_MAX_LEN="4096", PODLIGHT_WARMUP_TOKENS="3000")
+        self.start(MODLIGHT_HEARTBEAT_MINUTES="10", MODLIGHT_TELEMETRY_SECONDS="0", MODLIGHT_ENGINE_URL=f"http://127.0.0.1:{engine.port}",
+                   MODLIGHT_SERVED_NAME="coder", MODLIGHT_MAX_LEN="4096", MODLIGHT_WARMUP_TOKENS="3000")
         # The engine still loads: not warm.
         self.assertFalse(self.get("/")[1]["engineWarm"])
         engine.loaded.set()
@@ -226,7 +226,7 @@ class WatchdogTest(unittest.TestCase):
         engine = WarmEngine(fail=True)
         self.addCleanup(engine.close)
         engine.loaded.set()
-        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_TELEMETRY_SECONDS="0", PODLIGHT_ENGINE_URL=f"http://127.0.0.1:{engine.port}")
+        self.start(MODLIGHT_HEARTBEAT_MINUTES="10", MODLIGHT_TELEMETRY_SECONDS="0", MODLIGHT_ENGINE_URL=f"http://127.0.0.1:{engine.port}")
         deadline = time.time() + 10
         while not self.get("/")[1]["engineWarm"] and time.time() < deadline:
             time.sleep(0.05)
@@ -234,8 +234,8 @@ class WatchdogTest(unittest.TestCase):
         self.assertTrue(any("warm-up did not finish" in line for line in self.get("/log")[1]["lines"]))
 
     def test_missing_sources_leave_a_working_heartbeat(self):
-        self.start(PODLIGHT_HEARTBEAT_MINUTES="10", PODLIGHT_TELEMETRY_SECONDS="0.2", PODLIGHT_NVIDIA_SMI="/nonexistent",
-                   PODLIGHT_CGROUP="/nonexistent", PODLIGHT_PROC="/nonexistent", PODLIGHT_ENGINE_URL="http://127.0.0.1:9")
+        self.start(MODLIGHT_HEARTBEAT_MINUTES="10", MODLIGHT_TELEMETRY_SECONDS="0.2", MODLIGHT_NVIDIA_SMI="/nonexistent",
+                   MODLIGHT_CGROUP="/nonexistent", MODLIGHT_PROC="/nonexistent", MODLIGHT_ENGINE_URL="http://127.0.0.1:9")
         time.sleep(0.6)
         status, body = self.post_json("/heartbeat", {"deadline": None})
         self.assertEqual(status, 200)

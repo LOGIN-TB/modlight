@@ -1,13 +1,13 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// Every start has an end. The sheet asks for it and shows what the run will cost.
 struct StartSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    let model_: PodlightModel
+    let model_: ModlightModel
 
-    init(model: PodlightModel, question: PriceQuestion? = nil) {
+    init(model: ModlightModel, question: PriceQuestion? = nil) {
         model_ = model
         _question = State(initialValue: question)
         _pick = State(initialValue: question?.pricier.first)
@@ -35,9 +35,9 @@ struct StartSheet: View {
     private var stopsEarlier: String {
         let minutes = model.heartbeatMinutes(in: source)
         if case .server = source {
-            return String(localized: "It stops earlier when no requests come in for \(model_.schedule.idleStopMinutes) minutes, and by itself if the server \(model.name(of: source)) is unreachable for more than \(minutes) minutes. It keeps running when this Mac sleeps or Podlight quits. You can extend it while it runs.")
+            return String(localized: "It stops earlier when no requests come in for \(model_.schedule.idleStopMinutes) minutes, and by itself if the server \(model.name(of: source)) is unreachable for more than \(minutes) minutes. It keeps running when this Mac sleeps or Modlight quits. You can extend it while it runs.")
         }
-        return String(localized: "It stops earlier when no requests come in for \(model_.schedule.idleStopMinutes) minutes, and by itself if this Mac sleeps or Podlight quits for more than \(minutes) minutes. You can extend it while it runs.")
+        return String(localized: "It stops earlier when no requests come in for \(model_.schedule.idleStopMinutes) minutes, and by itself if this Mac sleeps or Modlight quits for more than \(minutes) minutes. You can extend it while it runs.")
     }
 
     var body: some View {
@@ -52,8 +52,8 @@ struct StartSheet: View {
     private func priceBody(_ q: PriceQuestion) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("\(q.wanted?.name ?? String(localized: "The chosen card")) Is Taken").font(.title2.weight(.semibold))
-            Text(q.wanted.map { String(localized: "The card you chose costs \(Format.perHour($0.pricePerHour)). Free right now are only cards that cost more than \(Format.perHour(q.ceiling)), the most a replacement may cost without asking. Podlight has booked nothing.") }
-                 ?? String(localized: "Free right now are only cards that cost more than \(Format.perHour(q.ceiling)). Podlight has booked nothing."))
+            Text(q.wanted.map { String(localized: "The card you chose costs \(Format.perHour($0.pricePerHour)). Free right now are only cards that cost more than \(Format.perHour(q.ceiling)), the most a replacement may cost without asking. Modlight has booked nothing.") }
+                 ?? String(localized: "Free right now are only cards that cost more than \(Format.perHour(q.ceiling)). Modlight has booked nothing."))
                 .font(.callout).fixedSize(horizontal: false, vertical: true)
             Form {
                 Picker("Start instead on", selection: $pick) {
@@ -69,7 +69,7 @@ struct StartSheet: View {
             }
             .formStyle(.grouped)
             if let until = q.waitsUntil {
-                Text("Or wait: Podlight tries every 30 seconds until \(Format.time(until)) for a card up to \(Format.perHour(q.ceiling)) and then starts by itself. The model's page shows the waiting; Stop Waiting ends it.")
+                Text("Or wait: Modlight tries every 30 seconds until \(Format.time(until)) for a card up to \(Format.perHour(q.ceiling)) and then starts by itself. The model's page shows the waiting; Stop Waiting ends it.")
                     .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             HStack {

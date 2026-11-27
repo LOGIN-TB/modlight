@@ -1,58 +1,60 @@
-# Podlight
+# Modlight
 
-**Your own LLM on RunPod, or a ready one at Venice, for the coding agent on your Mac, and on a server for when your Mac is off.**
-Pick a model on Hugging Face, let Podlight suggest a GPU and show what it will cost, start it for
-as long as you need, and point OpenCode, Claude Code, Codex or any OpenAI-compatible client at it. When the time is
-up, or nobody is asking, the pod stops. It also stops when your Mac sleeps or the app is gone.
-Or add a ready model from [Venice.ai](https://venice.ai), billed per token with nothing to start, and
-reach it through the same address and key: Podlight routes each model to where it runs.
+**Open models for your coding agent: one address, one key, wherever the model runs, with costs under control. On your Mac, and on a server for when your Mac is off.**
+Point OpenCode, Claude Code, Codex or any OpenAI-compatible client at Modlight once; it sends each
+model's requests to where that model runs. Today that is your own GPU pod at RunPod (pick a model on
+Hugging Face, Modlight suggests the card, shows what it will cost and stops the pod when the time is
+up, nobody is asking, or your Mac sleeps) and ready models at [Venice.ai](https://venice.ai), billed
+per token with nothing to start. More providers of open models are planned.
 
-> **Status: 0.12.0.** Local mode on the Mac, usable from other computers on your network, and server
+*Modlight was called Podlight until 0.12.*
+
+> **Status: 0.13.0.** Local mode on the Mac, usable from other computers on your network, and server
 > mode: a container that keeps models reachable while your Mac is off, controlled from the app. vLLM
 > and llama.cpp (GGUF) on RunPod, and Venice's ready models per token; Claude Code and Codex as well
 > as OpenAI-compatible agents. Built and tested on real RunPod hardware; Venice against its recorded
 > catalog and a stand-in for its API. See [What has been tested](#what-has-been-tested) and [Known limits](#known-limits).
 
-*Podlight is an independent project. It is not affiliated with or endorsed by RunPod or Venice.*
+*Modlight is an independent project. It is not affiliated with or endorsed by RunPod or Venice.*
 
 ## Install
 
-Download `Podlight-<version>.dmg` from [Releases](https://github.com/LOGIN-TB/podlight/releases),
-open it and drag Podlight to Applications. It needs macOS 26 or later. Podlight updates itself
-(Podlight → Check for Updates).
+Download `Modlight-<version>.dmg` from [Releases](https://github.com/LOGIN-TB/modlight/releases),
+open it and drag Modlight to Applications. It needs macOS 26 or later. Modlight updates itself
+(Modlight → Check for Updates).
 
-On first launch Podlight asks for your RunPod API key, your Venice API key, or both, and shows where
+On first launch Modlight asks for your RunPod API key, your Venice API key, or both, and shows where
 to create them. Then:
 
 1. **Add a model**: search Hugging Face or paste a link. Safetensors, AWQ, GPTQ, FP8 and NVFP4 run
    on vLLM; GGUF runs on llama.cpp, with the quantisation of your choice. Choose where it may run
-   and the context (up to the model's own limit); Podlight suggests the cards that hold it, also
+   and the context (up to the model's own limit); Modlight suggests the cards that hold it, also
    several in one pod, with price per hour, estimated speed and data center.
 2. **Start** it and choose how long it runs. A new pod takes a few minutes up to 25 (the GPU host
    downloads the engine, 9 GB for vLLM or 4 GB for llama.cpp, then the model); resuming a stopped
    one with a kept disk takes about a minute.
    Or choose **Ready model at Venice**: search Venice's catalog (private models by default), see the
    price per million tokens, give it a name. It is ready at once and costs nothing until it is used.
-3. **Connect your agent**: Podlight → Connection shows the address, the key and the model name to
+3. **Connect your agent**: Modlight → Connection shows the address, the key and the model name to
    copy into any OpenAI-compatible agent. Ready-made configuration for OpenCode, pi, Claude Code and
    Codex is there for experts.
 
-The overview, Podlight's first screen, shows what runs and costs and what to do next.
+The overview, Modlight's first screen, shows what runs and costs and what to do next.
 
-The built-in help (Help → Podlight Help) explains each step in German and English.
+The built-in help (Help → Modlight Help) explains each step in German and English.
 
 ## Venice: ready models per token
 
 [Venice.ai](https://venice.ai) serves open and third-party models through an OpenAI-compatible API.
-An "Inference Only" key from venice.ai → Settings → API is enough. In Podlight:
+An "Inference Only" key from venice.ai → Settings → API is enough. In Modlight:
 
 - **Same way in.** A Venice model has a served name like any other; agents use the same address and
-  key. Podlight sends the request on with Venice's model id and your Venice key, and turns Venice's own
-  system prompt off (agents bring their own). Claude Code works too: Podlight translates the
+  key. Modlight sends the request on with Venice's model id and your Venice key, and turns Venice's own
+  system prompt off (agents bring their own). Claude Code works too: Modlight translates the
   Anthropic Messages API to chat completions and back, streaming and tool calls included.
 - **Live figures.** A Venice model's page shows requests in flight, tokens per minute (new, cached,
   output), time to first token and output speed against Venice's public median, its rate limits
-  from Venice's response headers, cost per hour now and the balance's runway. Podlight sends a
+  from Venice's response headers, cost per hour now and the balance's runway. Modlight sends a
   `prompt_cache_key` per agent and system prompt, so more of the resent conversation is billed at
   the cache rate.
 - **Costs as they happen.** Each answer's usage (Venice's own `cost` where it gives one, else tokens ×
@@ -68,10 +70,10 @@ The built-in help (page "Venice") walks through account, credit, key and first m
 
 ## How it keeps costs down
 
-- **Every start has an end.** You choose "runs until"; Podlight shows the most it can cost.
+- **Every start has an end.** You choose "runs until"; Modlight shows the most it can cost.
 - **Idle stop.** No requests for 30 minutes (adjustable, never off): the pod stops.
 - **Safety stop inside the pod.** A watchdog in every pod stops it after 15 minutes without a
-  heartbeat from Podlight: Mac asleep, app quit or crashed, network gone. It uses the key RunPod
+  heartbeat from Modlight: Mac asleep, app quit or crashed, network gone. It uses the key RunPod
   injects into each pod, which can see and stop only that pod
   ([measured](docs/measurements-2026-11-20-dead-man-switch.md)). Your API key never leaves your Mac.
 - **Spending limits** per day and month, checked before a request may wake a pod.
@@ -84,7 +86,7 @@ The built-in help (page "Venice") walks through account, credit, key and first m
 
 | | **This Mac** | **Server** (since 0.4) |
 |---|---|---|
-| Where the endpoint runs | inside Podlight, on `127.0.0.1:7635`, optionally for the local network | in a Docker or Coolify container, behind HTTPS |
+| Where the endpoint runs | inside Modlight, on `127.0.0.1:7635`, optionally for the local network | in a Docker or Coolify container, behind HTTPS |
 | Who pays RunPod | the Mac's RunPod key | the server's own RunPod key |
 | Agents use | the Mac's key | access keys created in the app, optionally limited to models |
 | When the Mac is off | pods stop themselves after 15 minutes | models stay reachable; pods stop by the server's rules |
@@ -96,7 +98,7 @@ time; the app shows the Mac and every server side by side. Set up a server with
 code, then **Add Server…** in the app.
 
 **Hosting per model:** anywhere, EU only, or EU and EEA, optionally Secure Cloud only. RunPod treats
-regions as a preference, so Podlight checks where each pod landed and deletes it if it is outside.
+regions as a preference, so Modlight checks where each pod landed and deletes it if it is outside.
 
 **APIs:** OpenAI chat completions, the OpenAI Responses API (Codex) and the Anthropic Messages API
 (Claude Code), on both engines.
@@ -112,7 +114,7 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
   checked before a wake, card fallback, Messages API pass-through, "runs until" with the watchdog's
   deadline, region check, engine failure, and that pods it did not create are never touched. The
   Swift client of the app is tested against the real Node server.
-- **Engine** (`apps/mac/PodlightEngine`, `swift test`): RunPod and Hugging Face clients against
+- **Engine** (`apps/mac/ModlightEngine`, `swift test`): RunPod and Hugging Face clients against
   recorded responses, GPU suggestion, pod plan, and an end-to-end run of the gateway against a fake
   RunPod and a fake vLLM.
 - **Watchdog** (`tools/test_watchdog.py`): stops without heartbeat, at its deadline, when the
@@ -138,7 +140,7 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
 - MLX builds are recognised and declined: they run on Apple chips only.
 - Venice has been tested against its recorded catalog and a stand-in for its API, not yet with a
   paid key in a full agent session. Whether a streamed answer carries Venice's `cost` is not
-  documented; without it Podlight counts tokens × the stored prices, which can differ slightly from
+  documented; without it Modlight counts tokens × the stored prices, which can differ slightly from
   Venice's bill (discounts, DIEM). Legacy `/v1/completions` is not offered for Venice models.
 - Several cards in one pod (vLLM tensor parallel, llama.cpp layer split) are covered by tests and have
   been used in practice since 0.3, but are not part of the documented measurements: RunPod had no
@@ -165,12 +167,12 @@ regions as a preference, so Podlight checks where each pod landed and deletes it
 
 ```bash
 brew install xcodegen
-cd apps/mac/PodlightEngine && swift test
-cd .. && xcodegen generate && open Podlight.xcodeproj
+cd apps/mac/ModlightEngine && swift test
+cd .. && xcodegen generate && open Modlight.xcodeproj
 ```
 
 The server: `cd server && npm ci && npm test`; the image: `docker build -f server/Dockerfile .` from
-the repository root. CI publishes `ghcr.io/login-tb/podlight-server` from `main`.
+the repository root. CI publishes `ghcr.io/login-tb/modlight-server` from `main`.
 
 Releases: `tools/mac-release.sh` archives, signs with Developer ID, notarises, builds the disk image
 and writes the Sparkle appcast.
@@ -180,7 +182,7 @@ and writes the Sparkle appcast.
 | Path | What |
 |---|---|
 | `apps/mac/App` | The SwiftUI app |
-| `apps/mac/PodlightEngine` | Rules, RunPod, Venice and Hugging Face clients, pod lifecycle, local gateway with the Messages bridge, the client for servers |
+| `apps/mac/ModlightEngine` | Rules, RunPod, Venice and Hugging Face clients, pod lifecycle, local gateway with the Messages bridge, the client for servers |
 | [`server/`](server/README.md) | Server mode: gateway, control API and pod lifecycle as a container (Node 24, Fastify, SQLite) |
 | [`spec/`](spec/README.md) | Language-neutral rules and cases, the pod's start script and watchdog, the server API, help texts |
 | [`docs/`](docs/) | HIG plan and audit, measurements |
@@ -194,15 +196,15 @@ and writes the Sparkle appcast.
 Modell auf Hugging Face auswählen (auch GGUF), Standort, Karte und Kosten vorschlagen lassen, für eine
 feste Zeit starten und OpenCode, Claude Code, Codex oder einen anderen OpenAI-kompatiblen Client damit
 verbinden. Ist die Zeit um oder fragt niemand mehr an, stoppt der Pod. Das gilt auch, wenn der Mac
-schläft oder Podlight beendet ist. Oder du nimmst ein fertiges Modell aus dem Katalog von Venice.ai:
-abgerechnet pro Token, ohne Start, erreichbar über dieselbe Adresse und denselben Key. Podlight zeigt
+schläft oder Modlight beendet ist. Oder du nimmst ein fertiges Modell aus dem Katalog von Venice.ai:
+abgerechnet pro Token, ohne Start, erreichbar über dieselbe Adresse und denselben Key. Modlight zeigt
 Token-Kosten und Guthaben, und die Ausgabenlimits gelten für beides.
 
-Installation: DMG von [Releases](https://github.com/LOGIN-TB/podlight/releases) laden, Podlight in
-den Programme-Ordner ziehen (macOS 26 oder neuer). Beim ersten Start fragt Podlight nach deinem
+Installation: DMG von [Releases](https://github.com/LOGIN-TB/modlight/releases) laden, Modlight in
+den Programme-Ordner ziehen (macOS 26 oder neuer). Beim ersten Start fragt Modlight nach deinem
 RunPod- oder Venice-API-Key (oder beiden) und zeigt, wo du sie anlegst. Die eingebaute Hilfe erklärt alle Schritte auf Deutsch.
 
-Podlight ist ein unabhängiges Projekt und steht in keiner Verbindung zu RunPod oder Venice.
+Modlight ist ein unabhängiges Projekt und steht in keiner Verbindung zu RunPod oder Venice.
 
 ## License
 

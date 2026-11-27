@@ -1,3 +1,4 @@
+# Written under the former name Podlight.
 # Runs INSIDE the spike pod. Answers two questions for Podlight's dead-man switch:
 #  1. Does RunPod put a key into the container, and what may it do?
 #  2. Can the pod stop itself with it?

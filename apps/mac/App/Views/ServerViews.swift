@@ -1,7 +1,7 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
-/// Pairs the app with a Podlight server: its address and the code from its log.
+/// Pairs the app with a Modlight server: its address and the code from its log.
 struct AddServerSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -28,23 +28,23 @@ struct AddServerSheet: View {
 
     private static let compose = """
         services:
-          podlight:
-            image: ghcr.io/login-tb/podlight-server:latest
+          modlight:
+            image: ghcr.io/login-tb/modlight-server:latest
             pull_policy: always
             restart: unless-stopped
             volumes:
-              - podlight-data:/data
+              - modlight-data:/data
             ports:
               - "8080:8080"
         volumes:
-          podlight-data:
+          modlight-data:
         """
 
     /// One command on the server: installs or updates it and prints the box once it answers, in
     /// the app's language.
     private static var install: String {
-        let lang = Locale.current.language.languageCode?.identifier == "de" ? "PODLIGHT_LANG=de " : ""
-        return "curl -fsSL https://raw.githubusercontent.com/LOGIN-TB/podlight/main/server/install.sh | \(lang)sh"
+        let lang = Locale.current.language.languageCode?.identifier == "de" ? "MODLIGHT_LANG=de " : ""
+        return "curl -fsSL https://raw.githubusercontent.com/LOGIN-TB/modlight/main/server/install.sh | \(lang)sh"
     }
 
     var body: some View {
@@ -53,7 +53,7 @@ struct AddServerSheet: View {
             Divider()
             Form {
                 Section {
-                    TextField("Address", text: $address, prompt: Text("podlight.example.com"))
+                    TextField("Address", text: $address, prompt: Text("modlight.example.com"))
                         .textContentType(.URL)
                     if let addressProblem {
                         Text(Describe.address(addressProblem)).font(.caption).foregroundStyle(.red)
@@ -64,21 +64,21 @@ struct AddServerSheet: View {
                     TextField("Pairing code", text: $code, prompt: Text("ABCD-EFGH-JKLM"))
                     TextField("Name", text: $name, prompt: Text("e.g. Office"))
                 } footer: {
-                    Text("Address and pairing code are in the server's log, in the box PODLIGHT SERVER – CONNECTION. The code works once and for 30 minutes; docker exec <container> podlight-code makes a new one.")
+                    Text("Address and pairing code are in the server's log, in the box MODLIGHT SERVER – CONNECTION. The code works once and for 30 minutes; docker exec <container> modlight-code makes a new one.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Section {
                     DisclosureGroup("How do I set up a server?", isExpanded: $showHelp) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("A Podlight server keeps models reachable for agents while this Mac is off. It runs as one container, for example on a VPS, a NAS or with Coolify:")
+                            Text("A Modlight server keeps models reachable for agents while this Mac is off. It runs as one container, for example on a VPS, a NAS or with Coolify:")
                                 .fixedSize(horizontal: false, vertical: true)
                             SnippetBox(snippet: ConfigSnippet(id: "install", title: String(localized: "Install with one command"),
                                                               hint: String(localized: "On the server, as root or a user in the docker group. It fetches the current image, starts the server and shows address and pairing code. Run it again to update."),
                                                               content: Self.install), copied: $copied) { EmptyView() }
                             SnippetBox(snippet: ConfigSnippet(id: "compose", title: String(localized: "Or: docker-compose.yml"),
-                                                              hint: String(localized: "docker compose up -d starts it in the background and shows nothing of the server. Then docker compose exec podlight podlight-info shows address and pairing code. In Coolify, use this file as a Docker Compose resource and run podlight-info in the container's terminal."),
+                                                              hint: String(localized: "docker compose up -d starts it in the background and shows nothing of the server. Then docker compose exec modlight modlight-info shows address and pairing code. In Coolify, use this file as a Docker Compose resource and run modlight-info in the container's terminal."),
                                                               content: Self.compose), copied: $copied) { EmptyView() }
-                            Text("Give it an https address before it is reachable from the internet: in Coolify, set a domain for the service; elsewhere, put a reverse proxy such as Caddy in front of it. After pairing, Podlight offers to bring this Mac's RunPod key, rules and models along.")
+                            Text("Give it an https address before it is reachable from the internet: in Coolify, set a domain for the service; elsewhere, put a reverse proxy such as Caddy in front of it. After pairing, Modlight offers to bring this Mac's RunPod key, rules and models along.")
                                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                             Link("Server documentation", destination: Links.serverDocs)
                         }
@@ -239,7 +239,7 @@ struct ServerConnectionView: View {
         let allowed = newKey?.models.map { ids in server.models.filter { ids.contains($0.id) } } ?? server.models
         return AgentConfigs(key: newKey?.token ?? "PASTE-ACCESS-KEY", models: allowed,
                             provider: AgentConfigs.providerID(forServerNamed: server.entry.name),
-                            label: "Podlight · \(server.entry.name)")
+                            label: "Modlight · \(server.entry.name)")
     }
 
     private func test() async {
@@ -351,7 +351,7 @@ struct ServerStatusLine: View {
     var body: some View {
         switch server.status {
         case .online:
-            Label(server.snapshot.map { String(localized: "Connected · Podlight server \($0.version)") } ?? String(localized: "Connected"),
+            Label(server.snapshot.map { String(localized: "Connected · Modlight server \($0.version)") } ?? String(localized: "Connected"),
                   systemImage: "checkmark.circle.fill")
                 .foregroundStyle(.green)
         case .connecting:
@@ -439,7 +439,7 @@ struct ServerSettingsView: View {
                 Section {
                     Button("Remove Server…", role: .destructive) { confirmingRemove = true }
                 } footer: {
-                    Text("Podlight on this Mac forgets the server. Models on it keep running under the server's own rules, and the server keeps them.")
+                    Text("Modlight on this Mac forgets the server. Models on it keep running under the server's own rules, and the server keeps them.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -492,7 +492,7 @@ struct ServerSettingsView: View {
         } header: {
             Text("Access")
         } footer: {
-            Text("The server starts and pays for its pods with its own RunPod key, and for Venice models with its own Venice key, both stored encrypted on the server. Podlight on this Mac never reads them back.")
+            Text("The server starts and pays for its pods with its own RunPod key, and for Venice models with its own Venice key, both stored encrypted on the server. Modlight on this Mac never reads them back.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

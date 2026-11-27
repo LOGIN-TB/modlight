@@ -1,7 +1,7 @@
-// Draws Podlight's app icon and writes the macOS AppIcon set.
+// Draws Modlight's app icon and writes the macOS AppIcon set.
 //   swift tools/make-icon.swift apps/mac/App/Assets.xcassets/AppIcon.appiconset
 // A lit bulb on a dark-to-teal field: "light on while you work, off when you don't". No RunPod
-// marks: Podlight is independent of RunPod.
+// marks: Modlight is independent of RunPod.
 import AppKit
 
 let out = URL(fileURLWithPath: CommandLine.arguments[1], isDirectory: true)

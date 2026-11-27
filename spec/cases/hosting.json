@@ -1196,5 +1196,5 @@
     }
   ],
   "description" : "Where a pod may run (spec/data/regions.json) and what its disks cost. A region always means Secure Cloud, because community pods report no data center.",
-  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+  "recordedFrom" : "Swift engine (ModlightEngine), Modlight 0.3.2"
 }

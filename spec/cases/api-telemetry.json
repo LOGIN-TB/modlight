@@ -1041,7 +1041,7 @@
       "title": "Responses API: response.created is not."
     },
     {
-      "expected": "podlight-5878d4f89f44244fb6df4e2e688ab6e7",
+      "expected": "modlight-5878d4f89f44244fb6df4e2e688ab6e7",
       "function": "apiCacheKey",
       "id": "cachekey-system",
       "input": {
@@ -1062,7 +1062,7 @@
       "title": "The same model and system prompt always give the same key, whatever follows."
     },
     {
-      "expected": "podlight-49f19aaf9aa15aadcaad9a08752b18ab",
+      "expected": "modlight-49f19aaf9aa15aadcaad9a08752b18ab",
       "function": "apiCacheKey",
       "id": "cachekey-parts",
       "input": {
@@ -1092,7 +1092,7 @@
       "title": "System content as parts is joined; developer messages count as system."
     },
     {
-      "expected": "podlight-cf41bf896936e406990d6dfc7c562d33",
+      "expected": "modlight-cf41bf896936e406990d6dfc7c562d33",
       "function": "apiCacheKey",
       "id": "cachekey-responses",
       "input": {

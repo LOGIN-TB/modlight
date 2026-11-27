@@ -1042,7 +1042,7 @@
     },
     {
       "id": "response-tool-calls",
-      "title": "Response: reasoning_content becomes a thinking block first; tool_calls become tool_use blocks with the arguments parsed; arguments that are not a JSON object give input {} and keep the text in raw_arguments; empty arguments are {}; tool_calls is tool_use; no id gives msg_podlight",
+      "title": "Response: reasoning_content becomes a thinking block first; tool_calls become tool_use blocks with the arguments parsed; arguments that are not a JSON object give input {} and keep the text in raw_arguments; empty arguments are {}; tool_calls is tool_use; no id gives msg_modlight",
       "function": "anthropicResponse",
       "input": {
         "requestModel": "m",
@@ -1091,7 +1091,7 @@
         }
       },
       "expected": {
-        "id": "msg_podlight",
+        "id": "msg_modlight",
         "type": "message",
         "role": "assistant",
         "model": "m",
@@ -1282,7 +1282,7 @@
         "body": {}
       },
       "expected": {
-        "id": "msg_podlight",
+        "id": "msg_modlight",
         "type": "message",
         "role": "assistant",
         "model": "m",
@@ -2079,7 +2079,7 @@
         {
           "type": "message_start",
           "message": {
-            "id": "msg_podlight",
+            "id": "msg_modlight",
             "type": "message",
             "role": "assistant",
             "model": "m",

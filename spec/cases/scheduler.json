@@ -1,5 +1,5 @@
 {
-  "description": "Scheduler rules shared by every Podlight implementation (Swift app, Node service, later C#). Recorded from the Node service tests of RunPod Launcher (apps/service/src/scheduler/decide.test.ts, 36 tests) on 2026-11-20 and re-verified against the real function after reduction. Times are ISO 8601 UTC; weekdays 0=Sunday.",
+  "description": "Scheduler rules shared by every Modlight implementation (Swift app, Node service, later C#). Recorded from the Node service tests of RunPod Launcher (apps/service/src/scheduler/decide.test.ts, 36 tests) on 2026-11-20 and re-verified against the real function after reduction. Times are ISO 8601 UTC; weekdays 0=Sunday.",
   "source": "LOGIN-TB/runpod-launcher, branch service-as-brain, apps/service/src/scheduler/decide.ts",
   "functions": {
     "decide": "input {schedule, pod, spend, now} -> {do: start|stop|nothing, because: reason}",

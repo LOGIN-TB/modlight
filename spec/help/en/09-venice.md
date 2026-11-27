@@ -1,8 +1,8 @@
 # Venice
 
-Venice.ai is a second provider next to RunPod. Instead of renting a card and loading a model onto it, you pick a ready model from Venice's catalog. It answers right away; there is no pod. You pay per token, so only for what your agent actually sends and receives. For the agent nothing changes: same address, same key, and the model is called whatever you name it in Podlight.
+Venice.ai is a second provider next to RunPod. Instead of renting a card and loading a model onto it, you pick a ready model from Venice's catalog. It answers right away; there is no pod. You pay per token, so only for what your agent actually sends and receives. For the agent nothing changes: same address, same key, and the model is called whatever you name it in Modlight.
 
-![A Venice model in Podlight](screenshots/en/venice-model.png)
+![A Venice model in Modlight](screenshots/en/venice-model.png)
 
 ## Pod or Venice?
 
@@ -28,13 +28,13 @@ Venice deducts in this order: DIEM first, then earned credit, then plan credit, 
 ## Creating an API key
 
 - Open https://venice.ai/settings/api and click "Generate New API Key".
-- "Inference Only" is enough as the type. Podlight does not need an Admin key.
-- If you like, set an expiry date and a daily limit in USD or DIEM. Venice then refuses anything beyond it, regardless of Podlight.
+- "Inference Only" is enough as the type. Modlight does not need an Admin key.
+- If you like, set an expiry date and a daily limit in USD or DIEM. Venice then refuses anything beyond it, regardless of Modlight.
 - Copy the key. Venice shows it only this once. It starts with `VENICE_INFERENCE_KEY_`.
 
-## Adding the key to Podlight
+## Adding the key to Modlight
 
-Paste the key under Settings → Providers and access, or during setup when Podlight asks about Venice. Podlight checks it right away and shows your Venice balance and plan. The key is kept in this Mac's keychain and only sent to Venice.
+Paste the key under Settings → Providers and access, or during setup when Modlight asks about Venice. Modlight checks it right away and shows your Venice balance and plan. The key is kept in this Mac's keychain and only sent to Venice.
 
 ![The Venice key step](screenshots/en/setup-venice.png)
 
@@ -60,7 +60,7 @@ If your agent sends code that must not leave your hands, stay with "Private".
 
 ## Using it
 
-You reach a Venice model like any other model in Podlight: with the address and key under "Connection" and the name you gave it. This works with OpenCode, Codex, Claude Code and any program that speaks to OpenAI. For Claude Code, Podlight translates between the Anthropic interface and Venice's. You don't have to change an existing configuration, only the model name.
+You reach a Venice model like any other model in Modlight: with the address and key under "Connection" and the name you gave it. This works with OpenCode, Codex, Claude Code and any program that speaks to OpenAI. For Claude Code, Modlight translates between the Anthropic interface and Venice's. You don't have to change an existing configuration, only the model name.
 
 ## Costs and limits
 
@@ -79,11 +79,11 @@ A Venice model's page shows live what it does and costs:
 
 An agent sends the whole conversation with every request, often tens of thousands of tokens, so the input price usually matters more than the output price. When the start of a request is already in Venice's cache, that part costs a fraction, about a fifth for many models.
 
-Venice spreads requests over several machines, though, and without a hint the next request often lands on one that does not know the start. Since 0.12 Podlight therefore sends a fixed cache key (`prompt_cache_key`) per agent and system prompt. If your agent sets one itself, its own is kept. "What today's cost is for" shows how the cost splits into new input, cache and output; when the cache barely helps, Podlight estimates there what the day would have cost at 70 %.
+Venice spreads requests over several machines, though, and without a hint the next request often lands on one that does not know the start. Since 0.12 Modlight therefore sends a fixed cache key (`prompt_cache_key`) per agent and system prompt. If your agent sets one itself, its own is kept. "What today's cost is for" shows how the cost splits into new input, cache and output; when the cache barely helps, Modlight estimates there what the day would have cost at 70 %.
 
-Podlight checks your Venice balance regularly. The refresh button in the toolbar (⌘R) checks right away.
+Modlight checks your Venice balance regularly. The refresh button in the toolbar (⌘R) checks right away.
 
-The spending limits under Settings → Costs and safety (or under Costs) cover pods and Venice together. At a limit, Podlight sends no more requests to Venice until the next day or month. A daily limit on the key itself (see above) applies on top, directly at Venice.
+The spending limits under Settings → Costs and safety (or under Costs) cover pods and Venice together. At a limit, Modlight sends no more requests to Venice until the next day or month. A daily limit on the key itself (see above) applies on top, directly at Venice.
 
 ### When Venice refuses
 

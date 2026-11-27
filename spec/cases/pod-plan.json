@@ -7,7 +7,7 @@
         "request" : {
           "cloud" : "SECURE",
           "cmd" : [
-            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+            "echo \"$MODLIGHT_BOOT_B64\" | base64 -d > /tmp/modlight-boot.sh && exec bash /tmp/modlight-boot.sh"
           ],
           "disk" : 42,
           "entrypoint" : [
@@ -16,18 +16,18 @@
           ],
           "env" : {
             "HF_XET_HIGH_PERFORMANCE" : "1",
-            "PODLIGHT_API_KEY" : "POD_KEY",
-            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
-            "PODLIGHT_ENGINE" : "vllm",
-            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
-            "PODLIGHT_MAX_LEN" : "65536",
-            "PODLIGHT_MAX_SEQS" : "4",
-            "PODLIGHT_MODEL" : "QuantTrio/Qwen3.8-27B-AWQ",
-            "PODLIGHT_REASONING_PARSER" : "qwen3",
-            "PODLIGHT_SERVED_NAME" : "qwen-27b-awq",
-            "PODLIGHT_TOOL_PARSER" : "qwen3_xml",
-            "PODLIGHT_TP" : "1",
-            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+            "MODLIGHT_API_KEY" : "POD_KEY",
+            "MODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "MODLIGHT_ENGINE" : "vllm",
+            "MODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "MODLIGHT_MAX_LEN" : "65536",
+            "MODLIGHT_MAX_SEQS" : "4",
+            "MODLIGHT_MODEL" : "QuantTrio/Qwen3.8-27B-AWQ",
+            "MODLIGHT_REASONING_PARSER" : "qwen3",
+            "MODLIGHT_SERVED_NAME" : "qwen-27b-awq",
+            "MODLIGHT_TOOL_PARSER" : "qwen3_xml",
+            "MODLIGHT_TP" : "1",
+            "MODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
           },
           "gpu" : {
             "count" : 1,
@@ -35,7 +35,7 @@
             "minCudaVersion" : "13.0"
           },
           "image" : "vllm/vllm-openai:v0.28.0",
-          "name" : "podlight-qwen-27b-awq",
+          "name" : "modlight-qwen-27b-awq",
           "ports" : [
             "8000/http",
             "8001/http"
@@ -96,7 +96,7 @@
         "request" : {
           "cloud" : "SECURE",
           "cmd" : [
-            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+            "echo \"$MODLIGHT_BOOT_B64\" | base64 -d > /tmp/modlight-boot.sh && exec bash /tmp/modlight-boot.sh"
           ],
           "disk" : 42,
           "entrypoint" : [
@@ -106,19 +106,19 @@
           "env" : {
             "HF_TOKEN" : "hf_test",
             "HF_XET_HIGH_PERFORMANCE" : "1",
-            "PODLIGHT_API_KEY" : "POD_KEY",
-            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
-            "PODLIGHT_DEADLINE" : "1795284600",
-            "PODLIGHT_ENGINE" : "vllm",
-            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
-            "PODLIGHT_MAX_LEN" : "65536",
-            "PODLIGHT_MAX_SEQS" : "4",
-            "PODLIGHT_MODEL" : "QuantTrio/Qwen3.8-27B-AWQ",
-            "PODLIGHT_REASONING_PARSER" : "qwen3",
-            "PODLIGHT_SERVED_NAME" : "qwen-27b-awq",
-            "PODLIGHT_TOOL_PARSER" : "qwen3_xml",
-            "PODLIGHT_TP" : "1",
-            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+            "MODLIGHT_API_KEY" : "POD_KEY",
+            "MODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "MODLIGHT_DEADLINE" : "1795284600",
+            "MODLIGHT_ENGINE" : "vllm",
+            "MODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "MODLIGHT_MAX_LEN" : "65536",
+            "MODLIGHT_MAX_SEQS" : "4",
+            "MODLIGHT_MODEL" : "QuantTrio/Qwen3.8-27B-AWQ",
+            "MODLIGHT_REASONING_PARSER" : "qwen3",
+            "MODLIGHT_SERVED_NAME" : "qwen-27b-awq",
+            "MODLIGHT_TOOL_PARSER" : "qwen3_xml",
+            "MODLIGHT_TP" : "1",
+            "MODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
           },
           "gpu" : {
             "count" : 1,
@@ -126,7 +126,7 @@
             "minCudaVersion" : "13.0"
           },
           "image" : "vllm/vllm-openai:v0.28.0",
-          "name" : "podlight-qwen-27b-awq",
+          "name" : "modlight-qwen-27b-awq",
           "ports" : [
             "8000/http",
             "8001/http"
@@ -187,7 +187,7 @@
         "request" : {
           "cloud" : "SECURE",
           "cmd" : [
-            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+            "echo \"$MODLIGHT_BOOT_B64\" | base64 -d > /tmp/modlight-boot.sh && exec bash /tmp/modlight-boot.sh"
           ],
           "disk" : 30,
           "entrypoint" : [
@@ -198,19 +198,19 @@
             "HF_HOME" : "/workspace/hf",
             "HF_XET_HIGH_PERFORMANCE" : "1",
             "LLAMA_CACHE" : "/workspace/llama-cache",
-            "PODLIGHT_API_KEY" : "POD_KEY",
-            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
-            "PODLIGHT_DEADLINE" : "1795284600",
-            "PODLIGHT_ENGINE" : "vllm",
-            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
-            "PODLIGHT_MAX_LEN" : "32768",
-            "PODLIGHT_MAX_SEQS" : "4",
-            "PODLIGHT_MODEL" : "Qwen/Qwen3.8-27B-FP8",
-            "PODLIGHT_REASONING_PARSER" : "qwen3",
-            "PODLIGHT_SERVED_NAME" : "qwen-27b-fp8",
-            "PODLIGHT_TOOL_PARSER" : "qwen3_xml",
-            "PODLIGHT_TP" : "1",
-            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+            "MODLIGHT_API_KEY" : "POD_KEY",
+            "MODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "MODLIGHT_DEADLINE" : "1795284600",
+            "MODLIGHT_ENGINE" : "vllm",
+            "MODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "MODLIGHT_MAX_LEN" : "32768",
+            "MODLIGHT_MAX_SEQS" : "4",
+            "MODLIGHT_MODEL" : "Qwen/Qwen3.8-27B-FP8",
+            "MODLIGHT_REASONING_PARSER" : "qwen3",
+            "MODLIGHT_SERVED_NAME" : "qwen-27b-fp8",
+            "MODLIGHT_TOOL_PARSER" : "qwen3_xml",
+            "MODLIGHT_TP" : "1",
+            "MODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
           },
           "gpu" : {
             "count" : 1,
@@ -224,7 +224,7 @@
               "size" : 46
             }
           },
-          "name" : "podlight-qwen-27b-fp8",
+          "name" : "modlight-qwen-27b-fp8",
           "ports" : [
             "8000/http",
             "8001/http"
@@ -290,7 +290,7 @@
         "request" : {
           "cloud" : "COMMUNITY",
           "cmd" : [
-            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+            "echo \"$MODLIGHT_BOOT_B64\" | base64 -d > /tmp/modlight-boot.sh && exec bash /tmp/modlight-boot.sh"
           ],
           "disk" : 42,
           "entrypoint" : [
@@ -299,18 +299,18 @@
           ],
           "env" : {
             "HF_XET_HIGH_PERFORMANCE" : "1",
-            "PODLIGHT_API_KEY" : "POD_KEY",
-            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
-            "PODLIGHT_ENGINE" : "llamacpp",
-            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
-            "PODLIGHT_MAX_LEN" : "131072",
-            "PODLIGHT_MAX_SEQS" : "4",
-            "PODLIGHT_MODEL" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
-            "PODLIGHT_PARALLEL" : "2",
-            "PODLIGHT_QUANT" : "Q4_K_M",
-            "PODLIGHT_SERVED_NAME" : "coder-30b-gguf",
-            "PODLIGHT_TP" : "2",
-            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+            "MODLIGHT_API_KEY" : "POD_KEY",
+            "MODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "MODLIGHT_ENGINE" : "llamacpp",
+            "MODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "MODLIGHT_MAX_LEN" : "131072",
+            "MODLIGHT_MAX_SEQS" : "4",
+            "MODLIGHT_MODEL" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+            "MODLIGHT_PARALLEL" : "2",
+            "MODLIGHT_QUANT" : "Q4_K_M",
+            "MODLIGHT_SERVED_NAME" : "coder-30b-gguf",
+            "MODLIGHT_TP" : "2",
+            "MODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
           },
           "gpu" : {
             "count" : 2,
@@ -318,7 +318,7 @@
             "minCudaVersion" : "12.8"
           },
           "image" : "ghcr.io/ggml-org/llama.cpp:full-cuda12-b12602",
-          "name" : "podlight-coder-30b-gguf",
+          "name" : "modlight-coder-30b-gguf",
           "ports" : [
             "8000/http",
             "8001/http"
@@ -383,7 +383,7 @@
         "request" : {
           "cloud" : "SECURE",
           "cmd" : [
-            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+            "echo \"$MODLIGHT_BOOT_B64\" | base64 -d > /tmp/modlight-boot.sh && exec bash /tmp/modlight-boot.sh"
           ],
           "dataCenterIds" : [
             "EU-RO-1",
@@ -399,19 +399,19 @@
             "HF_TOKEN" : "hf_test",
             "HF_XET_HIGH_PERFORMANCE" : "1",
             "LLAMA_CACHE" : "/workspace/llama-cache",
-            "PODLIGHT_API_KEY" : "POD_KEY",
-            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
-            "PODLIGHT_DEADLINE" : "1795284600",
-            "PODLIGHT_ENGINE" : "llamacpp",
-            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
-            "PODLIGHT_MAX_LEN" : "131072",
-            "PODLIGHT_MAX_SEQS" : "4",
-            "PODLIGHT_MODEL" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
-            "PODLIGHT_PARALLEL" : "2",
-            "PODLIGHT_QUANT" : "Q4_K_M",
-            "PODLIGHT_SERVED_NAME" : "coder-30b-gguf",
-            "PODLIGHT_TP" : "1",
-            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+            "MODLIGHT_API_KEY" : "POD_KEY",
+            "MODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "MODLIGHT_DEADLINE" : "1795284600",
+            "MODLIGHT_ENGINE" : "llamacpp",
+            "MODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "MODLIGHT_MAX_LEN" : "131072",
+            "MODLIGHT_MAX_SEQS" : "4",
+            "MODLIGHT_MODEL" : "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+            "MODLIGHT_PARALLEL" : "2",
+            "MODLIGHT_QUANT" : "Q4_K_M",
+            "MODLIGHT_SERVED_NAME" : "coder-30b-gguf",
+            "MODLIGHT_TP" : "1",
+            "MODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
           },
           "gpu" : {
             "count" : 1,
@@ -425,7 +425,7 @@
               "size" : 32
             }
           },
-          "name" : "podlight-coder-30b-gguf",
+          "name" : "modlight-coder-30b-gguf",
           "ports" : [
             "8000/http",
             "8001/http"
@@ -492,7 +492,7 @@
         "request" : {
           "cloud" : "SECURE",
           "cmd" : [
-            "echo \"$PODLIGHT_BOOT_B64\" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh"
+            "echo \"$MODLIGHT_BOOT_B64\" | base64 -d > /tmp/modlight-boot.sh && exec bash /tmp/modlight-boot.sh"
           ],
           "disk" : 66,
           "entrypoint" : [
@@ -501,17 +501,17 @@
           ],
           "env" : {
             "HF_XET_HIGH_PERFORMANCE" : "1",
-            "PODLIGHT_API_KEY" : "POD_KEY",
-            "PODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
-            "PODLIGHT_ENGINE" : "vllm",
-            "PODLIGHT_HEARTBEAT_MINUTES" : "15",
-            "PODLIGHT_MAX_LEN" : "131072",
-            "PODLIGHT_MAX_SEQS" : "4",
-            "PODLIGHT_MODEL" : "casperhansen/llama-3.3-70b-instruct-awq",
-            "PODLIGHT_SERVED_NAME" : "llama-70b-awq",
-            "PODLIGHT_TOOL_PARSER" : "hermes",
-            "PODLIGHT_TP" : "4",
-            "PODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
+            "MODLIGHT_API_KEY" : "POD_KEY",
+            "MODLIGHT_BOOT_B64" : "<base64 of spec/pod/boot.sh>",
+            "MODLIGHT_ENGINE" : "vllm",
+            "MODLIGHT_HEARTBEAT_MINUTES" : "15",
+            "MODLIGHT_MAX_LEN" : "131072",
+            "MODLIGHT_MAX_SEQS" : "4",
+            "MODLIGHT_MODEL" : "casperhansen/llama-3.3-70b-instruct-awq",
+            "MODLIGHT_SERVED_NAME" : "llama-70b-awq",
+            "MODLIGHT_TOOL_PARSER" : "hermes",
+            "MODLIGHT_TP" : "4",
+            "MODLIGHT_WATCHDOG_B64" : "<base64 of spec/pod/watchdog.py>"
           },
           "gpu" : {
             "count" : 4,
@@ -519,7 +519,7 @@
             "minCudaVersion" : "13.0"
           },
           "image" : "vllm/vllm-openai:v0.28.0",
-          "name" : "podlight-llama-70b-awq",
+          "name" : "modlight-llama-70b-awq",
           "ports" : [
             "8000/http",
             "8001/http"
@@ -1205,6 +1205,6 @@
       "title" : "Cards tried for tiny-limit-six"
     }
   ],
-  "description" : "The pod Podlight asks RunPod for, and the order of cards it tries. `podRequest` expects the request body (CreatePodRequest; absent optional fields are left out) with the two base64 pod scripts replaced by markers, plus disk sizes and the storage cost per hour. `podChoices` expects the cards tried in order.",
-  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+  "description" : "The pod Modlight asks RunPod for, and the order of cards it tries. `podRequest` expects the request body (CreatePodRequest; absent optional fields are left out) with the two base64 pod scripts replaced by markers, plus disk sizes and the storage cost per hour. `podChoices` expects the cards tried in order.",
+  "recordedFrom" : "Swift engine (ModlightEngine), Modlight 0.3.2"
 }

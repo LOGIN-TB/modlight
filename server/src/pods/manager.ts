@@ -1,5 +1,5 @@
 import { generateToken } from '../crypto.ts'
-import { hostingOf, iso, isPod, type ModelProvider, type ModelRun, parseDate, type PodlightModel, podStatus, type PodTelemetry, podTelemetry, type PricedChoice, type ServerSettings } from '../model.ts'
+import { hostingOf, iso, isPod, type ModelProvider, type ModelRun, parseDate, type ModlightModel, podStatus, type PodTelemetry, podTelemetry, type PricedChoice, type ServerSettings } from '../model.ts'
 import { allows, dataCenterIds, needsPlacementCheck, StoragePricing } from '../rules/hosting.ts'
 import * as podPlan from '../rules/podPlan.ts'
 import { admitWake, decide, type Spend } from '../rules/scheduler.ts'
@@ -251,7 +251,7 @@ export class PodManager {
 
   // MARK: Models
 
-  save(model: PodlightModel): void {
+  save(model: ModlightModel): void {
     this.store.saveModel({ ...model, schedule: { ...model.schedule, idleStopMinutes: Math.max(5, model.schedule.idleStopMinutes) } })
   }
 
@@ -261,7 +261,7 @@ export class PodManager {
    * and lets go, other Macs no longer offer it. Without a pod (or one RunPod no longer has) only
    * the model comes over.
    */
-  async adopt(model: PodlightModel, podKey: string, podId: string | null): Promise<void> {
+  async adopt(model: ModlightModel, podKey: string, podId: string | null): Promise<void> {
     if (this.store.model(model.id)) throw new AdoptRefused('This model is already on the server.', 'already_here')
     let pod: Pod | null = null
     const client = podId ? this.client() : null
@@ -274,8 +274,8 @@ export class PodManager {
       if (pod?.status === 'TERMINATED') pod = null
     }
     if (pod) {
-      if (!pod.name.startsWith('podlight-') || pod.name.startsWith('podlight-srv-')) {
-        throw new AdoptRefused('That pod was not created by Podlight on a Mac.', 'not_a_mac_pod')
+      if (!pod.name.startsWith('modlight-') || pod.name.startsWith('modlight-srv-')) {
+        throw new AdoptRefused('That pod was not created by Modlight on a Mac.', 'not_a_mac_pod')
       }
       if (!['RUNNING', 'EXITED'].includes(pod.status)) {
         throw new AdoptRefused('The pod is starting or stopping. Try again when it runs or has stopped.', 'pod_busy')
@@ -292,7 +292,7 @@ export class PodManager {
     if (!pod || !client) return
 
     try {
-      await client.rename(pod.id, `podlight-srv-${model.name}`.slice(0, 60))
+      await client.rename(pod.id, `modlight-srv-${model.name}`.slice(0, 60))
     } catch (error) {
       this.store.removeModel(model.id)
       throw this.asFailure(error)
@@ -452,7 +452,7 @@ export class PodManager {
     }
   }
 
-  private async createPod(id: string, model: PodlightModel, client: RunpodClient, podKey: string, runUntil: Date | null, manual: boolean,
+  private async createPod(id: string, model: ModlightModel, client: RunpodClient, podKey: string, runUntil: Date | null, manual: boolean,
     maxPricePerHour: number | null, retrying: WaitingForCard | null): Promise<void> {
     const settings = this.settings.read()
     this.store.updateRun(id, (r) => { r.phase = 'creating'; r.lastReason = null; r.lastMessage = null; r.fellBackFrom = null })
@@ -465,7 +465,7 @@ export class PodManager {
       if (choices.length === 0) throw new GatewayFailure({ kind: 'noSuitableCard' })
       const request = podPlan.request(model, {
         podKey, huggingFaceToken: this.settings.secret('huggingFaceToken'), runUntil,
-        heartbeatMinutes: settings.heartbeatMinutes, dataCenterIds: dataCenterIds(hosting, catalog), namePrefix: 'podlight-srv-',
+        heartbeatMinutes: settings.heartbeatMinutes, dataCenterIds: dataCenterIds(hosting, catalog), namePrefix: 'modlight-srv-',
       })
       // Fallbacks up to the price step only; pricier cards that may be free are offered.
       const guarded = podPlan.priceGuard(choices, catalog, settings.fallbackPriceStepPercent, maxPricePerHour)
@@ -666,7 +666,7 @@ export class PodManager {
   }
 
   /** An API model: no wake, no wait. The spend limits apply as they do to waking a pod. */
-  private apiEndpoint(model: PodlightModel): PodEndpoint {
+  private apiEndpoint(model: ModlightModel): PodEndpoint {
     const wake = admitWake(this.spend())
     if (!wake.admit) throw new GatewayFailure({ kind: 'limitReached', limit: wake.because })
     const provider = model.provider
@@ -951,7 +951,7 @@ export class PodManager {
         case 'STARTING': case 'PROVISIONING': r.phase = 'loading'; break
         case 'EXITED': case 'TERMINATED':
           if (r.phase !== 'failed') r.phase = 'stopped'
-          // Stopped by something other than Podlight: most likely the pod's own watchdog.
+          // Stopped by something other than Modlight: most likely the pod's own watchdog.
           if (wasRunning && before !== 'stopping' && !r.stoppedAt) {
             r.stoppedAt = t
             r.lastReason = r.lastReason ?? 'stopped-outside'
@@ -962,7 +962,7 @@ export class PodManager {
     })
   }
 
-  /** RunPod no longer has the pod (deleted, at RunPod or by Podlight): the run lets go of it. */
+  /** RunPod no longer has the pod (deleted, at RunPod or by Modlight): the run lets go of it. */
   private podGone(id: string, podId: string): void {
     const run = this.store.run(id)
     if (run.podId !== podId) return // Someone else got here first.

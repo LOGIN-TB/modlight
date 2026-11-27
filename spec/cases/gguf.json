@@ -1,5 +1,5 @@
 {
-  "description": "GGUF repositories (Podlight 0.3, 2026-11-21): grouping a repository's files into quantisations, and the KV cache per token from a GGUF header's metadata (f16 cache, llama.cpp's default). Implemented by the Swift engine; the Node service follows in milestone 2.",
+  "description": "GGUF repositories (Modlight 0.3, 2026-11-21): grouping a repository's files into quantisations, and the KV cache per token from a GGUF header's metadata (f16 cache, llama.cpp's default). Implemented by the Swift engine; the Node service follows in milestone 2.",
   "cases": [
     {
       "id": "ggufQuants/unsloth-layout",

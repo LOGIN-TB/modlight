@@ -1,3 +1,4 @@
+# Written under the former name Podlight.
 # Runs INSIDE the spike pod. Question: can the key RunPod injects into a pod see OTHER pods?
 # Read-only towards the foreign pod. Only status codes and field NAMES are reported, never values.
 import json, os, threading, time, urllib.request, urllib.error, http.server

@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   engine:
-    name: PodlightEngine against spec/
+    name: ModlightEngine against spec/
     # Pinned rather than macos-latest: a runner-image rollover that silently swaps the Xcode
     # version should show up as a deliberate change here, not as a mystery failure.
     runs-on: macos-26
@@ -37,7 +37,7 @@ jobs:
           swift --version
 
       - name: swift test
-        working-directory: apps/mac/PodlightEngine
+        working-directory: apps/mac/ModlightEngine
         run: swift test
 
       # The dead-man switch runs inside every pod; tested against a fake RunPod API.
@@ -74,7 +74,7 @@ jobs:
         working-directory: apps/mac
         run: |
           xcodegen generate
-          xcodebuild -project Podlight.xcodeproj -scheme Podlight -configuration Debug \
+          xcodebuild -project Modlight.xcodeproj -scheme Modlight -configuration Debug \
             -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build | tail -5
 
 

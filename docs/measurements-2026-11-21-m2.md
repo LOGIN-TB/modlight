@@ -1,5 +1,7 @@
 # Messung 2026-11-21: Podlight-Server (0.4) auf echter RunPod-Hardware
 
+> Entstanden unter dem früheren Namen Podlight. · Written under the former name Podlight.
+
 Der Server lief als Container aus `server/Dockerfile` (lokal gebaut, `podlight-server:dev`) auf diesem
 Mac unter Docker (colima). Gesteuert wurde er über die Admin-API, wie es die App tut: koppeln,
 RunPod-Schlüssel setzen, Modell anlegen, Zugangsschlüssel anlegen. Die Agenten-Anfragen gingen mit

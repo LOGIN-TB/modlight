@@ -1,4 +1,4 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// The main window: the overview, the models, then Connection, Costs and Settings in the sidebar; the chosen
@@ -74,18 +74,18 @@ private struct Sidebar: View {
                     Label(server.entry.name, systemImage: "server.rack")
                 }
             }
-            Section("Podlight") {
+            Section("Modlight") {
                 Label("Settings", systemImage: "gearshape").tag(SidebarItem.settings)
                 Button { model.showingAddServer = true } label: { Label("Add Server…", systemImage: "plus.circle") }
                     .buttonStyle(.borderless)
-                    .help("Run models on a Podlight server, so agents can use them while this Mac is off")
+                    .help("Run models on a Modlight server, so agents can use them while this Mac is off")
             }
         }
         .listStyle(.sidebar)
         .safeAreaBar(edge: .bottom) {
             VStack(alignment: .leading, spacing: 4) {
                 GatewayStatusBadge()
-                Text("Podlight \(Format.appVersion)").font(.caption2).foregroundStyle(.tertiary)
+                Text("Modlight \(Format.appVersion)").font(.caption2).foregroundStyle(.tertiary)
                     .textSelection(.enabled)
             }
             .padding(.horizontal, 12).padding(.vertical, 8)
@@ -172,7 +172,7 @@ struct NoModelView: View {
     var body: some View {
         if !model.hasAnyProvider {
             ContentUnavailableView {
-                Label("Connect Podlight to RunPod or Venice", systemImage: "key")
+                Label("Connect Modlight to RunPod or Venice", systemImage: "key")
             } description: {
                 Text("RunPod for models on your own rented GPU, Venice for ready models billed per token. Setting up takes about a minute.")
             } actions: {
@@ -182,7 +182,7 @@ struct NoModelView: View {
             ContentUnavailableView {
                 Label("No Models Yet", systemImage: "cpu")
             } description: {
-                Text("Choose a model from Hugging Face for your own pod, or a ready model at Venice. Podlight shows what it costs.")
+                Text("Choose a model from Hugging Face for your own pod, or a ready model at Venice. Modlight shows what it costs.")
             } actions: {
                 Button("Add Model…") { model.showingAddModel = true }.buttonStyle(.glassProminent)
             }
@@ -190,7 +190,7 @@ struct NoModelView: View {
     }
 }
 
-/// Whether agents can reach Podlight right now, at the foot of the sidebar.
+/// Whether agents can reach Modlight right now, at the foot of the sidebar.
 struct GatewayStatusBadge: View {
     @Environment(AppModel.self) private var model
 

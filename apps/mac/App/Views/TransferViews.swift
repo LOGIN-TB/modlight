@@ -1,4 +1,4 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// What to bring from this Mac to a server: right after pairing, from Server Settings, or for one
@@ -30,7 +30,7 @@ struct TransferSheet: View {
     private var server: ServerMirror? { model.server(request.serverID) }
     private var serverHasKey: Bool { server?.snapshot?.settings.hasRunpodKey == true }
     private var ready: Set<UUID> { Set(model.modelsReadyToHandOver.map(\.id)) }
-    private var candidates: [PodlightModel] { model.state.models.filter { model.state.run($0.id).managedBy == nil } }
+    private var candidates: [ModlightModel] { model.state.models.filter { model.state.run($0.id).managedBy == nil } }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

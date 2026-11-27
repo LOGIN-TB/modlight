@@ -41,18 +41,18 @@
         }
       }
     },
-    "%@ (%@) is taken. Podlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself.": {
+    "%@ (%@) is taken. Modlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ (%2$@) ist belegt. Podlight versucht es bis %3$@ alle 30 Sekunden mit Karten bis %4$@ und startet dann von selbst."
+            "value": "%1$@ (%2$@) ist belegt. Modlight versucht es bis %3$@ alle 30 Sekunden mit Karten bis %4$@ und startet dann von selbst."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "%1$@ (%2$@) is taken. Podlight tries every 30 seconds until %3$@ for a card up to %4$@ and then starts by itself."
+            "value": "%1$@ (%2$@) is taken. Modlight tries every 30 seconds until %3$@ for a card up to %4$@ and then starts by itself."
           }
         }
       }
@@ -113,18 +113,18 @@
         }
       }
     },
-    "%@ cost about %@ per hour. Once Podlight has quit, agents on this Mac can no longer reach them.\n\nIf you keep them running, each pod stops itself after %lld minutes without Podlight.": {
+    "%@ cost about %@ per hour. Once Modlight has quit, agents on this Mac can no longer reach them.\n\nIf you keep them running, each pod stops itself after %lld minutes without Modlight.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ kosten zusammen etwa %2$@ pro Stunde. Ist Podlight beendet, erreichen Agenten auf diesem Mac sie nicht mehr.\n\nLässt du sie weiterlaufen, stoppt sich jeder Pod nach %3$lld Minuten ohne Kontakt zu Podlight selbst."
+            "value": "%1$@ kosten zusammen etwa %2$@ pro Stunde. Ist Modlight beendet, erreichen Agenten auf diesem Mac sie nicht mehr.\n\nLässt du sie weiterlaufen, stoppt sich jeder Pod nach %3$lld Minuten ohne Kontakt zu Modlight selbst."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "%1$@ cost about %2$@ per hour. Once Podlight has quit, agents on this Mac can no longer reach them.\n\nIf you keep them running, each pod stops itself after %3$lld minutes without Podlight."
+            "value": "%1$@ cost about %2$@ per hour. Once Modlight has quit, agents on this Mac can no longer reach them.\n\nIf you keep them running, each pod stops itself after %3$lld minutes without Modlight."
           }
         }
       }
@@ -399,34 +399,34 @@
         }
       }
     },
-    "%@ was taken; Podlight used %@ for %@ instead of %@.": {
+    "%@ was taken; Modlight used %@ for %@ instead of %@.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ war belegt; Podlight hat %2$@ für %3$@ statt %4$@ genommen."
+            "value": "%1$@ war belegt; Modlight hat %2$@ für %3$@ statt %4$@ genommen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "%1$@ was taken; Podlight used %2$@ for %3$@ instead of %4$@."
+            "value": "%1$@ was taken; Modlight used %2$@ for %3$@ instead of %4$@."
           }
         }
       }
     },
-    "%@ was taken; Podlight used %@.": {
+    "%@ was taken; Modlight used %@.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ war vergeben, Podlight hat %2$@ genommen."
+            "value": "%1$@ war vergeben, Modlight hat %2$@ genommen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "%1$@ was taken; Podlight used %2$@."
+            "value": "%1$@ was taken; Modlight used %2$@."
           }
         }
       }
@@ -923,12 +923,12 @@
         }
       }
     },
-    "2. Under \"API Keys\", click \"Create API Key\" and name it \"Podlight\".": {
+    "2. Under \"API Keys\", click \"Create API Key\" and name it \"Modlight\".": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "2. Klicke unter „API Keys“ auf „Create API Key“ und nenne ihn „Podlight“."
+            "value": "2. Klicke unter „API Keys“ auf „Create API Key“ und nenne ihn „Modlight“."
           }
         }
       }
@@ -1013,12 +1013,12 @@
         }
       }
     },
-    "A Podlight server keeps models reachable for agents while this Mac is off. It runs as one container, for example on a VPS, a NAS or with Coolify:": {
+    "A Modlight server keeps models reachable for agents while this Mac is off. It runs as one container, for example on a VPS, a NAS or with Coolify:": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ein Podlight-Server hält Modelle für Agenten erreichbar, auch wenn dieser Mac aus ist. Er läuft als ein Container, etwa auf einem VPS, einem NAS oder mit Coolify:"
+            "value": "Ein Modlight-Server hält Modelle für Agenten erreichbar, auch wenn dieser Mac aus ist. Er läuft als ein Container, etwa auf einem VPS, einem NAS oder mit Coolify:"
           }
         }
       }
@@ -1353,32 +1353,32 @@
         }
       }
     },
-    "Add to ~/.zshrc and open a new terminal; from then on %@ starts Claude Code with Podlight.": {
+    "Add to ~/.zshrc and open a new terminal; from then on %@ starts Claude Code with Modlight.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "In ~/.zshrc einfügen und ein neues Terminal öffnen. Danach startet %@ Claude Code mit Podlight."
+            "value": "In ~/.zshrc einfügen und ein neues Terminal öffnen. Danach startet %@ Claude Code mit Modlight."
           }
         }
       }
     },
-    "Add your %@ API key first (Podlight → Settings → Providers).": {
+    "Add your %@ API key first (Modlight → Settings → Providers).": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Füge zuerst deinen %@-API-Key hinzu (Podlight → Einstellungen → Anbieter)."
+            "value": "Füge zuerst deinen %@-API-Key hinzu (Modlight → Einstellungen → Anbieter)."
           }
         }
       }
     },
-    "Add your RunPod API key first (Podlight → Settings → Providers).": {
+    "Add your RunPod API key first (Modlight → Settings → Providers).": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trage zuerst deinen RunPod-API-Key ein (Podlight → Einstellungen → Anbieter)."
+            "value": "Trage zuerst deinen RunPod-API-Key ein (Modlight → Einstellungen → Anbieter)."
           }
         }
       }
@@ -1403,12 +1403,12 @@
         }
       }
     },
-    "Address and pairing code are in the server's log, in the box PODLIGHT SERVER – CONNECTION. The code works once and for 30 minutes; docker exec <container> podlight-code makes a new one.": {
+    "Address and pairing code are in the server's log, in the box MODLIGHT SERVER – CONNECTION. The code works once and for 30 minutes; docker exec <container> modlight-code makes a new one.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adresse und Kopplungscode stehen im Log des Servers, im Kasten PODLIGHT-SERVER – VERBINDUNG. Der Code gilt einmal und 30 Minuten lang; docker exec <container> podlight-code erzeugt einen neuen."
+            "value": "Adresse und Kopplungscode stehen im Log des Servers, im Kasten MODLIGHT-SERVER – VERBINDUNG. Der Code gilt einmal und 30 Minuten lang; docker exec <container> modlight-code erzeugt einen neuen."
           }
         }
       }
@@ -1563,12 +1563,12 @@
         }
       }
     },
-    "An agent sends the whole conversation with every request, so input tokens dominate. Tokens the provider already has in its cache cost a fraction. Podlight sends a cache key per agent and system prompt so that requests land where the prefix is cached.": {
+    "An agent sends the whole conversation with every request, so input tokens dominate. Tokens the provider already has in its cache cost a fraction. Modlight sends a cache key per agent and system prompt so that requests land where the prefix is cached.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ein Agent schickt bei jeder Anfrage den ganzen bisherigen Verlauf mit, deshalb überwiegen die Eingabe-Token. Token, die der Anbieter schon im Cache hat, kosten nur einen Bruchteil. Podlight schickt pro Agent und System-Prompt einen Cache-Schlüssel mit, damit die Anfragen dort landen, wo der Anfang schon im Cache liegt."
+            "value": "Ein Agent schickt bei jeder Anfrage den ganzen bisherigen Verlauf mit, deshalb überwiegen die Eingabe-Token. Token, die der Anbieter schon im Cache hat, kosten nur einen Bruchteil. Modlight schickt pro Agent und System-Prompt einen Cache-Schlüssel mit, damit die Anfragen dort landen, wo der Anfang schon im Cache liegt."
           }
         }
       }
@@ -1623,12 +1623,12 @@
         }
       }
     },
-    "Anthropic does not officially support other models in Claude Code. It works through Podlight's Anthropic-compatible route, but web search and some newer features do not.": {
+    "Anthropic does not officially support other models in Claude Code. It works through Modlight's Anthropic-compatible route, but web search and some newer features do not.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anthropic unterstützt andere Modelle in Claude Code nicht offiziell. Über Podlights Anthropic-kompatible Schnittstelle funktioniert es, die Websuche und einige neuere Funktionen aber nicht."
+            "value": "Anthropic unterstützt andere Modelle in Claude Code nicht offiziell. Über Modlights Anthropic-kompatible Schnittstelle funktioniert es, die Websuche und einige neuere Funktionen aber nicht."
           }
         }
       }
@@ -1703,22 +1703,22 @@
         }
       }
     },
-    "At a limit, Podlight stops this Mac's pods and refuses requests to Venice models until the next day or month. Every pod also stops itself when it has not heard from Podlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Podlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.": {
+    "At a limit, Modlight stops this Mac's pods and refuses requests to Venice models until the next day or month. Every pod also stops itself when it has not heard from Modlight for the set time, for example while this Mac sleeps. When the chosen card is taken, Modlight takes another one only up to the set extra cost; above that it asks, or, when nobody started it by hand, waits for a cheaper card.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ist ein Limit erreicht, stoppt Podlight die Pods dieses Macs und lehnt Anfragen an Venice-Modelle bis zum nächsten Tag oder Monat ab. Jeder Pod stoppt sich außerdem selbst, wenn er die eingestellte Zeit nichts von Podlight hört, etwa während dieser Mac schläft. Ist die gewählte Karte vergeben, nimmt Podlight eine andere nur bis zum eingestellten Aufpreis; darüber fragt es nach oder wartet, wenn niemand von Hand gestartet hat, auf eine günstigere Karte."
+            "value": "Ist ein Limit erreicht, stoppt Modlight die Pods dieses Macs und lehnt Anfragen an Venice-Modelle bis zum nächsten Tag oder Monat ab. Jeder Pod stoppt sich außerdem selbst, wenn er die eingestellte Zeit nichts von Modlight hört, etwa während dieser Mac schläft. Ist die gewählte Karte vergeben, nimmt Modlight eine andere nur bis zum eingestellten Aufpreis; darüber fragt es nach oder wartet, wenn niemand von Hand gestartet hat, auf eine günstigere Karte."
           }
         }
       }
     },
-    "At a limit, Podlight stops this Mac's pods, does not start or wake them again, and refuses requests to Venice models until the next day or month.": {
+    "At a limit, Modlight stops this Mac's pods, does not start or wake them again, and refuses requests to Venice models until the next day or month.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ist ein Limit erreicht, stoppt Podlight die Pods dieses Macs, startet oder weckt sie nicht wieder und lehnt Anfragen an Venice-Modelle ab, bis zum nächsten Tag oder Monat."
+            "value": "Ist ein Limit erreicht, stoppt Modlight die Pods dieses Macs, startet oder weckt sie nicht wieder und lehnt Anfragen an Venice-Modelle ab, bis zum nächsten Tag oder Monat."
           }
         }
       }
@@ -1883,12 +1883,12 @@
         }
       }
     },
-    "Certified data centers instead of community hosts. With a region, Podlight always uses Secure Cloud, because community hosts report no location.": {
+    "Certified data centers instead of community hosts. With a region, Modlight always uses Secure Cloud, because community hosts report no location.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zertifizierte Rechenzentren statt Community-Rechnern. Mit einer Region nutzt Podlight immer Secure Cloud, weil Community-Rechner keinen Standort melden."
+            "value": "Zertifizierte Rechenzentren statt Community-Rechnern. Mit einer Region nutzt Modlight immer Secure Cloud, weil Community-Rechner keinen Standort melden."
           }
         }
       }
@@ -1953,12 +1953,12 @@
         }
       }
     },
-    "Choose a model from Hugging Face for your own pod, or a ready model at Venice. Podlight shows what it costs.": {
+    "Choose a model from Hugging Face for your own pod, or a ready model at Venice. Modlight shows what it costs.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähle ein Modell von Hugging Face für deinen eigenen Pod oder ein fertiges Modell bei Venice. Podlight zeigt, was es kostet."
+            "value": "Wähle ein Modell von Hugging Face für deinen eigenen Pod oder ein fertiges Modell bei Venice. Modlight zeigt, was es kostet."
           }
         }
       }
@@ -2053,12 +2053,12 @@
         }
       }
     },
-    "Connect Podlight to RunPod or Venice": {
+    "Connect Modlight to RunPod or Venice": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podlight mit RunPod oder Venice verbinden"
+            "value": "Modlight mit RunPod oder Venice verbinden"
           }
         }
       }
@@ -2103,12 +2103,12 @@
         }
       }
     },
-    "Connected · Podlight server %@": {
+    "Connected · Modlight server %@": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verbunden · Podlight-Server %@"
+            "value": "Verbunden · Modlight-Server %@"
           }
         }
       }
@@ -2393,12 +2393,12 @@
         }
       }
     },
-    "Create New Podlight Key…": {
+    "Create New Modlight Key…": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neuen Podlight-Schlüssel erstellen …"
+            "value": "Neuen Modlight-Schlüssel erstellen …"
           }
         }
       }
@@ -2673,12 +2673,12 @@
         }
       }
     },
-    "Each model keeps its own location; change it under Edit. Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. With a region chosen, Podlight uses Secure Cloud only, because community hosts report no location. RunPod treats the region as a preference and gives no data residency guarantee, so Podlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.": {
+    "Each model keeps its own location; change it under Edit. Secure Cloud runs in certified data centers (RunPod names SOC 2, ISO 27001, PCI DSS) instead of on community hosts, usually at a higher price. With a region chosen, Modlight uses Secure Cloud only, because community hosts report no location. RunPod treats the region as a preference and gives no data residency guarantee, so Modlight checks where each pod landed and deletes it straight away if it is outside. Fewer cards are available with these limits.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jedes Modell behält seinen eigenen Standort; ändern lässt er sich unter „Bearbeiten“. Secure Cloud läuft in zertifizierten Rechenzentren (RunPod nennt SOC 2, ISO 27001, PCI DSS) statt auf Community-Rechnern, meist zu einem höheren Preis. Mit einer gewählten Region nutzt Podlight nur Secure Cloud, weil Community-Rechner keinen Standort melden. RunPod behandelt die Region als Wunsch und garantiert keinen Datenstandort. Podlight prüft deshalb, wo jeder Pod gelandet ist, und löscht ihn sofort, wenn er außerhalb liegt. Mit diesen Einschränkungen gibt es weniger Karten."
+            "value": "Jedes Modell behält seinen eigenen Standort; ändern lässt er sich unter „Bearbeiten“. Secure Cloud läuft in zertifizierten Rechenzentren (RunPod nennt SOC 2, ISO 27001, PCI DSS) statt auf Community-Rechnern, meist zu einem höheren Preis. Mit einer gewählten Region nutzt Modlight nur Secure Cloud, weil Community-Rechner keinen Standort melden. RunPod behandelt die Region als Wunsch und garantiert keinen Datenstandort. Modlight prüft deshalb, wo jeder Pod gelandet ist, und löscht ihn sofort, wenn er außerhalb liegt. Mit diesen Einschränkungen gibt es weniger Karten."
           }
         }
       }
@@ -2743,12 +2743,12 @@
         }
       }
     },
-    "Enter the server's address, e.g. podlight.example.com.": {
+    "Enter the server's address, e.g. modlight.example.com.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib die Adresse des Servers ein, z. B. podlight.example.com."
+            "value": "Gib die Adresse des Servers ein, z. B. modlight.example.com."
           }
         }
       }
@@ -2949,12 +2949,12 @@
         }
       }
     },
-    "Free right now are only cards that cost more than %@. Podlight has booked nothing.": {
+    "Free right now are only cards that cost more than %@. Modlight has booked nothing.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Frei sind gerade nur Karten, die mehr als %@ kosten. Podlight hat nichts gebucht."
+            "value": "Frei sind gerade nur Karten, die mehr als %@ kosten. Modlight hat nichts gebucht."
           }
         }
       }
@@ -2969,12 +2969,12 @@
         }
       }
     },
-    "From Hugging Face for a pod, or a ready one from Venice; Podlight shows the price.": {
+    "From Hugging Face for a pod, or a ready one from Venice; Modlight shows the price.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Von Hugging Face für einen Pod oder ein fertiges von Venice; Podlight zeigt den Preis."
+            "value": "Von Hugging Face für einen Pod oder ein fertiges von Venice; Modlight zeigt den Preis."
           }
         }
       }
@@ -3059,12 +3059,12 @@
         }
       }
     },
-    "Give it an https address before it is reachable from the internet: in Coolify, set a domain for the service; elsewhere, put a reverse proxy such as Caddy in front of it. After pairing, Podlight offers to bring this Mac's RunPod key, rules and models along.": {
+    "Give it an https address before it is reachable from the internet: in Coolify, set a domain for the service; elsewhere, put a reverse proxy such as Caddy in front of it. After pairing, Modlight offers to bring this Mac's RunPod key, rules and models along.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib ihm eine https-Adresse, bevor er aus dem Internet erreichbar ist: In Coolify trägst du eine Domain für den Dienst ein, sonst stellst du einen Reverse Proxy wie Caddy davor. Nach dem Koppeln bietet Podlight an, RunPod-Schlüssel, Regeln und Modelle dieses Macs mitzunehmen."
+            "value": "Gib ihm eine https-Adresse, bevor er aus dem Internet erreichbar ist: In Coolify trägst du eine Domain für den Dienst ein, sonst stellst du einen Reverse Proxy wie Caddy davor. Nach dem Koppeln bietet Modlight an, RunPod-Schlüssel, Regeln und Modelle dieses Macs mitzunehmen."
           }
         }
       }
@@ -3239,12 +3239,12 @@
         }
       }
     },
-    "I Use a Podlight Server…": {
+    "I Use a Modlight Server…": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ich nutze einen Podlight-Server …"
+            "value": "Ich nutze einen Modlight-Server …"
           }
         }
       }
@@ -3279,12 +3279,12 @@
         }
       }
     },
-    "In your coding agent (OpenCode, Cline, Aider, pi, …) choose a custom or OpenAI-compatible provider and enter these three values. A stopped model starts by itself when an agent asks for it; a new pod then needs up to 25 minutes, so start a new model in Podlight first.": {
+    "In your coding agent (OpenCode, Cline, Aider, pi, …) choose a custom or OpenAI-compatible provider and enter these three values. A stopped model starts by itself when an agent asks for it; a new pod then needs up to 25 minutes, so start a new model in Modlight first.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähle in deinem Coding-Agenten (OpenCode, Cline, Aider, pi, …) einen eigenen oder OpenAI-kompatiblen Anbieter und trage diese drei Werte ein. Ein gestopptes Modell startet von selbst, wenn ein Agent es anfragt. Ein neuer Pod braucht dann bis zu 25 Minuten, starte ein neues Modell deshalb zuerst in Podlight."
+            "value": "Wähle in deinem Coding-Agenten (OpenCode, Cline, Aider, pi, …) einen eigenen oder OpenAI-kompatiblen Anbieter und trage diese drei Werte ein. Ein gestopptes Modell startet von selbst, wenn ein Agent es anfragt. Ein neuer Pod braucht dann bis zu 25 Minuten, starte ein neues Modell deshalb zuerst in Modlight."
           }
         }
       }
@@ -3319,34 +3319,34 @@
         }
       }
     },
-    "It stops earlier when no requests come in for %lld minutes, and by itself if the server %@ is unreachable for more than %lld minutes. It keeps running when this Mac sleeps or Podlight quits. You can extend it while it runs.": {
+    "It stops earlier when no requests come in for %lld minutes, and by itself if the server %@ is unreachable for more than %lld minutes. It keeps running when this Mac sleeps or Modlight quits. You can extend it while it runs.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Er stoppt früher, wenn %1$lld Minuten lang keine Anfragen kommen, und von selbst, wenn der Server %2$@ länger als %3$lld Minuten nicht erreichbar ist. Schläft dieser Mac oder wird Podlight beendet, läuft er weiter. Du kannst ihn verlängern, während er läuft."
+            "value": "Er stoppt früher, wenn %1$lld Minuten lang keine Anfragen kommen, und von selbst, wenn der Server %2$@ länger als %3$lld Minuten nicht erreichbar ist. Schläft dieser Mac oder wird Modlight beendet, läuft er weiter. Du kannst ihn verlängern, während er läuft."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "It stops earlier when no requests come in for %1$lld minutes, and by itself if the server %2$@ is unreachable for more than %3$lld minutes. It keeps running when this Mac sleeps or Podlight quits. You can extend it while it runs."
+            "value": "It stops earlier when no requests come in for %1$lld minutes, and by itself if the server %2$@ is unreachable for more than %3$lld minutes. It keeps running when this Mac sleeps or Modlight quits. You can extend it while it runs."
           }
         }
       }
     },
-    "It stops earlier when no requests come in for %lld minutes, and by itself if this Mac sleeps or Podlight quits for more than %lld minutes. You can extend it while it runs.": {
+    "It stops earlier when no requests come in for %lld minutes, and by itself if this Mac sleeps or Modlight quits for more than %lld minutes. You can extend it while it runs.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Er stoppt früher, wenn %1$lld Minuten lang keine Anfrage kommt, und von selbst, wenn dieser Mac schläft oder Podlight länger als %2$lld Minuten beendet ist. Solange er läuft, kannst du verlängern."
+            "value": "Er stoppt früher, wenn %1$lld Minuten lang keine Anfrage kommt, und von selbst, wenn dieser Mac schläft oder Modlight länger als %2$lld Minuten beendet ist. Solange er läuft, kannst du verlängern."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "It stops earlier when no requests come in for %1$lld minutes, and by itself if this Mac sleeps or Podlight quits for more than %2$lld minutes. You can extend it while it runs."
+            "value": "It stops earlier when no requests come in for %1$lld minutes, and by itself if this Mac sleeps or Modlight quits for more than %2$lld minutes. You can extend it while it runs."
           }
         }
       }
@@ -3521,12 +3521,12 @@
         }
       }
     },
-    "Longer contexts need more memory, so they may need a larger card or several. Speeds are estimates from memory bandwidth. If the chosen card is taken when you start, Podlight tries the next ones in this list.": {
+    "Longer contexts need more memory, so they may need a larger card or several. Speeds are estimates from memory bandwidth. If the chosen card is taken when you start, Modlight tries the next ones in this list.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mehr Kontext braucht mehr Speicher, also eine größere Karte oder mehrere. Das Tempo ist aus der Speicherbandbreite geschätzt. Ist die gewählte Karte beim Start vergeben, probiert Podlight die nächsten aus dieser Liste."
+            "value": "Mehr Kontext braucht mehr Speicher, also eine größere Karte oder mehrere. Das Tempo ist aus der Speicherbandbreite geschätzt. Ist die gewählte Karte beim Start vergeben, probiert Modlight die nächsten aus dieser Liste."
           }
         }
       }
@@ -3681,12 +3681,12 @@
         }
       }
     },
-    "Models another Mac set up with the same RunPod key, running or stopped, checked every minute. Starting or taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Models of a Mac with Podlight before 0.7 appear only while they have a pod.": {
+    "Models another Mac set up with the same RunPod key, running or stopped, checked every minute. Starting or taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Models of a Mac with Modlight before 0.7 appear only while they have a pod.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modelle, die ein anderer Mac mit demselben RunPod-Key angelegt hat, laufend oder gestoppt, jede Minute neu geprüft. Starten oder Übernehmen holt ein Modell auf diesen Mac: Ab dann startet, stoppt und berechnet es dieser Mac, und der andere gibt es ab. Modelle eines Macs mit Podlight vor 0.7 erscheinen nur, solange sie einen Pod haben."
+            "value": "Modelle, die ein anderer Mac mit demselben RunPod-Key angelegt hat, laufend oder gestoppt, jede Minute neu geprüft. Starten oder Übernehmen holt ein Modell auf diesen Mac: Ab dann startet, stoppt und berechnet es dieser Mac, und der andere gibt es ab. Modelle eines Macs mit Modlight vor 0.7 erscheinen nur, solange sie einen Pod haben."
           }
         }
       }
@@ -3711,12 +3711,208 @@
         }
       }
     },
-    "Models on your Podlight servers are not affected and keep running under the servers' rules.": {
+    "Models on your Modlight servers are not affected and keep running under the servers' rules.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modelle auf deinen Podlight-Servern sind davon nicht betroffen und laufen nach den Regeln der Server weiter."
+            "value": "Modelle auf deinen Modlight-Servern sind davon nicht betroffen und laufen nach den Regeln der Server weiter."
+          }
+        }
+      }
+    },
+    "Modlight": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight"
+          }
+        }
+      }
+    },
+    "Modlight %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight %@"
+          }
+        }
+      }
+    },
+    "Modlight Help": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight-Hilfe"
+          }
+        }
+      }
+    },
+    "Modlight could not be moved (%@). Drag it into Applications in the Finder instead.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight konnte nicht verschoben werden (%@). Zieh es stattdessen im Finder in den Programme-Ordner."
+          }
+        }
+      }
+    },
+    "Modlight could not use the keychain: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight konnte den Schlüsselbund nicht verwenden: %@"
+          }
+        }
+      }
+    },
+    "Modlight gives the coding agent on this Mac, for example OpenCode or Claude Code, language models of your choice, behind one address and one key. You decide where each model runs.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight gibt dem Coding-Agenten auf diesem Mac, etwa OpenCode oder Claude Code, Sprachmodelle deiner Wahl, hinter einer Adresse und einem Key. Wo jedes Modell läuft, entscheidest du."
+          }
+        }
+      }
+    },
+    "Modlight is connected to RunPod": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight ist mit RunPod verbunden"
+          }
+        }
+      }
+    },
+    "Modlight is connected to RunPod and Venice": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight ist mit RunPod und Venice verbunden"
+          }
+        }
+      }
+    },
+    "Modlight is connected to Venice": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight ist mit Venice verbunden"
+          }
+        }
+      }
+    },
+    "Modlight is running from the disk image or your Downloads folder. In Applications it starts reliably at login and updates itself.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight läuft aus dem Disk-Image oder deinem Download-Ordner. Im Programme-Ordner startet es zuverlässig bei der Anmeldung und aktualisiert sich selbst."
+          }
+        }
+      }
+    },
+    "Modlight moves into the Applications folder": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight wandert in den Programme-Ordner"
+          }
+        }
+      }
+    },
+    "Modlight on GitHub": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight auf GitHub"
+          }
+        }
+      }
+    },
+    "Modlight on this Mac forgets the server. Models on it keep running under the server's own rules, and the server keeps them.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight auf diesem Mac vergisst den Server. Die Modelle dort laufen nach den Regeln des Servers weiter, und der Server behält sie."
+          }
+        }
+      }
+    },
+    "Modlight tries every 30 seconds until %@ and then resumes the pod with its disk, without downloading the model again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight versucht es bis %@ alle 30 Sekunden und setzt den Pod dann mit seiner Festplatte fort, ohne das Modell neu zu laden."
+          }
+        }
+      }
+    },
+    "Modlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight versucht es bis %1$@ alle 30 Sekunden mit Karten bis %2$@ und startet dann von selbst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Modlight tries every 30 seconds until %1$@ for a card up to %2$@ and then starts by itself."
+          }
+        }
+      }
+    },
+    "Modlight: nothing running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight: nichts läuft"
+          }
+        }
+      }
+    },
+    "Modlight: pods running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight: Pods laufen"
+          }
+        }
+      }
+    },
+    "Modlight: pods running, requests to %@ running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight: Pods laufen, Anfragen an %@ laufen"
+          }
+        }
+      }
+    },
+    "Modlight: requests to %@ running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modlight: Anfragen an %@ laufen"
           }
         }
       }
@@ -3731,22 +3927,22 @@
         }
       }
     },
-    "Move Podlight": {
+    "Move Modlight": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podlight verschieben"
+            "value": "Modlight verschieben"
           }
         }
       }
     },
-    "Move Podlight to Applications?": {
+    "Move Modlight to Applications?": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podlight in den Programme-Ordner verschieben?"
+            "value": "Modlight in den Programme-Ordner verschieben?"
           }
         }
       }
@@ -3881,12 +4077,12 @@
         }
       }
     },
-    "Next, add a model. For a pod, Podlight checks whether it suits a coding agent, suggests a GPU and shows the cost per hour. Nothing is started or charged until you press Start.": {
+    "Next, add a model. For a pod, Modlight checks whether it suits a coding agent, suggests a GPU and shows the cost per hour. Nothing is started or charged until you press Start.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Füge als Nächstes ein Modell hinzu. Für einen Pod prüft Podlight, ob es zu einem Coding-Agenten passt, schlägt eine Karte vor und zeigt die Kosten pro Stunde. Gestartet und berechnet wird erst, wenn du auf „Starten“ drückst."
+            "value": "Füge als Nächstes ein Modell hinzu. Für einen Pod prüft Modlight, ob es zu einem Coding-Agenten passt, schlägt eine Karte vor und zeigt die Kosten pro Stunde. Gestartet und berechnet wird erst, wenn du auf „Starten“ drückst."
           }
         }
       }
@@ -4297,12 +4493,12 @@
         }
       }
     },
-    "Only %@ of the input came from the cache. Podlight now sends a cache key per agent; at 70 %% today would have cost about %@.": {
+    "Only %@ of the input came from the cache. Modlight now sends a cache key per agent; at 70 %% today would have cost about %@.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nur %1$@ der Eingabe kamen aus dem Cache. Podlight schickt jetzt pro Agent einen Cache-Schlüssel mit; bei 70 %% hätte heute etwa %2$@ gekostet."
+            "value": "Nur %1$@ der Eingabe kamen aus dem Cache. Modlight schickt jetzt pro Agent einen Cache-Schlüssel mit; bei 70 %% hätte heute etwa %2$@ gekostet."
           }
         }
       }
@@ -4347,22 +4543,22 @@
         }
       }
     },
-    "Open Podlight": {
+    "Open Modlight": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podlight öffnen"
+            "value": "Modlight öffnen"
           }
         }
       }
     },
-    "Open Podlight at login": {
+    "Open Modlight at login": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podlight bei der Anmeldung öffnen"
+            "value": "Modlight bei der Anmeldung öffnen"
           }
         }
       }
@@ -4437,18 +4633,18 @@
         }
       }
     },
-    "Or wait: Podlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself. The model's page shows the waiting; Stop Waiting ends it.": {
+    "Or wait: Modlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself. The model's page shows the waiting; Stop Waiting ends it.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oder warten: Podlight versucht es bis %1$@ alle 30 Sekunden mit Karten bis %2$@ und startet dann von selbst. Die Seite des Modells zeigt das Warten; „Warten beenden“ bricht es ab."
+            "value": "Oder warten: Modlight versucht es bis %1$@ alle 30 Sekunden mit Karten bis %2$@ und startet dann von selbst. Die Seite des Modells zeigt das Warten; „Warten beenden“ bricht es ab."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "Or wait: Podlight tries every 30 seconds until %1$@ for a card up to %2$@ and then starts by itself. The model's page shows the waiting; Stop Waiting ends it."
+            "value": "Or wait: Modlight tries every 30 seconds until %1$@ for a card up to %2$@ and then starts by itself. The model's page shows the waiting; Stop Waiting ends it."
           }
         }
       }
@@ -4463,12 +4659,12 @@
         }
       }
     },
-    "Other computers connect with the address under Connection and the same key. The connection is not encrypted: use this only in networks you trust, not in public Wi-Fi. macOS may ask once whether Podlight may accept incoming connections.": {
+    "Other computers connect with the address under Connection and the same key. The connection is not encrypted: use this only in networks you trust, not in public Wi-Fi. macOS may ask once whether Modlight may accept incoming connections.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Andere Rechner verbinden sich mit der Adresse unter „Verbindung“ und demselben Schlüssel. Die Verbindung ist nicht verschlüsselt: Nutze das nur in Netzen, denen du vertraust, nicht im öffentlichen WLAN. macOS fragt eventuell einmal, ob Podlight eingehende Verbindungen annehmen darf."
+            "value": "Andere Rechner verbinden sich mit der Adresse unter „Verbindung“ und demselben Schlüssel. Die Verbindung ist nicht verschlüsselt: Nutze das nur in Netzen, denen du vertraust, nicht im öffentlichen WLAN. macOS fragt eventuell einmal, ob Modlight eingehende Verbindungen annehmen darf."
           }
         }
       }
@@ -4639,202 +4835,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dauerhaft als %@"
-          }
-        }
-      }
-    },
-    "Podlight": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight"
-          }
-        }
-      }
-    },
-    "Podlight %@": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight %@"
-          }
-        }
-      }
-    },
-    "Podlight Help": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight-Hilfe"
-          }
-        }
-      }
-    },
-    "Podlight could not be moved (%@). Drag it into Applications in the Finder instead.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight konnte nicht verschoben werden (%@). Zieh es stattdessen im Finder in den Programme-Ordner."
-          }
-        }
-      }
-    },
-    "Podlight could not use the keychain: %@": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight konnte den Schlüsselbund nicht verwenden: %@"
-          }
-        }
-      }
-    },
-    "Podlight gives the coding agent on this Mac, for example OpenCode or Claude Code, language models of your choice, behind one address and one key. You decide where each model runs.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight gibt dem Coding-Agenten auf diesem Mac, etwa OpenCode oder Claude Code, Sprachmodelle deiner Wahl, hinter einer Adresse und einem Key. Wo jedes Modell läuft, entscheidest du."
-          }
-        }
-      }
-    },
-    "Podlight is connected to RunPod": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight ist mit RunPod verbunden"
-          }
-        }
-      }
-    },
-    "Podlight is connected to RunPod and Venice": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight ist mit RunPod und Venice verbunden"
-          }
-        }
-      }
-    },
-    "Podlight is connected to Venice": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight ist mit Venice verbunden"
-          }
-        }
-      }
-    },
-    "Podlight is running from the disk image or your Downloads folder. In Applications it starts reliably at login and updates itself.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight läuft aus dem Disk-Image oder deinem Download-Ordner. Im Programme-Ordner startet es zuverlässig bei der Anmeldung und aktualisiert sich selbst."
-          }
-        }
-      }
-    },
-    "Podlight moves into the Applications folder": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight wandert in den Programme-Ordner"
-          }
-        }
-      }
-    },
-    "Podlight on GitHub": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight auf GitHub"
-          }
-        }
-      }
-    },
-    "Podlight on this Mac forgets the server. Models on it keep running under the server's own rules, and the server keeps them.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight auf diesem Mac vergisst den Server. Die Modelle dort laufen nach den Regeln des Servers weiter, und der Server behält sie."
-          }
-        }
-      }
-    },
-    "Podlight tries every 30 seconds until %@ and then resumes the pod with its disk, without downloading the model again.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight versucht es bis %@ alle 30 Sekunden und setzt den Pod dann mit seiner Festplatte fort, ohne das Modell neu zu laden."
-          }
-        }
-      }
-    },
-    "Podlight tries every 30 seconds until %@ for a card up to %@ and then starts by itself.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight versucht es bis %1$@ alle 30 Sekunden mit Karten bis %2$@ und startet dann von selbst."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Podlight tries every 30 seconds until %1$@ for a card up to %2$@ and then starts by itself."
-          }
-        }
-      }
-    },
-    "Podlight: nothing running": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight: nichts läuft"
-          }
-        }
-      }
-    },
-    "Podlight: pods running": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight: Pods laufen"
-          }
-        }
-      }
-    },
-    "Podlight: pods running, requests to %@ running": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight: Pods laufen, Anfragen an %@ laufen"
-          }
-        }
-      }
-    },
-    "Podlight: requests to %@ running": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podlight: Anfragen an %@ laufen"
           }
         }
       }
@@ -5369,12 +5369,12 @@
         }
       }
     },
-    "Run models on a Podlight server, so agents can use them while this Mac is off": {
+    "Run models on a Modlight server, so agents can use them while this Mac is off": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modelle auf einem Podlight-Server betreiben, damit Agenten sie nutzen können, während dieser Mac aus ist"
+            "value": "Modelle auf einem Modlight-Server betreiben, damit Agenten sie nutzen können, während dieser Mac aus ist"
           }
         }
       }
@@ -5489,12 +5489,12 @@
         }
       }
     },
-    "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions under Edit.": {
+    "RunPod placed the pod outside your chosen region, so Modlight deleted it straight away. Try again, or allow more regions under Edit.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "RunPod hat den Pod außerhalb deiner Region angelegt, deshalb hat Podlight ihn sofort gelöscht. Versuch es noch einmal oder erlaube unter „Bearbeiten“ mehr Regionen."
+            "value": "RunPod hat den Pod außerhalb deiner Region angelegt, deshalb hat Modlight ihn sofort gelöscht. Versuch es noch einmal oder erlaube unter „Bearbeiten“ mehr Regionen."
           }
         }
       }
@@ -5529,12 +5529,12 @@
         }
       }
     },
-    "RunPod: your own model on a rented GPU, billed per hour. Podlight suggests the card, and every start has an end.": {
+    "RunPod: your own model on a rented GPU, billed per hour. Modlight suggests the card, and every start has an end.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "RunPod: dein eigenes Modell auf einer gemieteten Karte, abgerechnet pro Stunde. Podlight schlägt die Karte vor, und jeder Start hat ein Ende."
+            "value": "RunPod: dein eigenes Modell auf einer gemieteten Karte, abgerechnet pro Stunde. Modlight schlägt die Karte vor, und jeder Start hat ein Ende."
           }
         }
       }
@@ -5549,12 +5549,12 @@
         }
       }
     },
-    "Running models are billed for the GPU and their storage. A stopped model costs nothing unless it keeps its disk: RunPod bills that disk by the hour (0.20 USD per GB and month) until Podlight deletes it after %lld days without use. These costs are included in the figures above.": {
+    "Running models are billed for the GPU and their storage. A stopped model costs nothing unless it keeps its disk: RunPod bills that disk by the hour (0.20 USD per GB and month) until Modlight deletes it after %lld days without use. These costs are included in the figures above.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Laufende Modelle kosten Karte und Speicher. Ein gestopptes Modell kostet nichts, außer es behält seine Festplatte: Die berechnet RunPod stundenweise (0,20 USD pro GB und Monat), bis Podlight sie nach %lld Tagen ohne Nutzung löscht. Diese Kosten sind in den Zahlen oben enthalten."
+            "value": "Laufende Modelle kosten Karte und Speicher. Ein gestopptes Modell kostet nichts, außer es behält seine Festplatte: Die berechnet RunPod stundenweise (0,20 USD pro GB und Monat), bis Modlight sie nach %lld Tagen ohne Nutzung löscht. Diese Kosten sind in den Zahlen oben enthalten."
           }
         }
       }
@@ -5661,12 +5661,12 @@
         }
       }
     },
-    "Same address and key as every other model. Claude Code works too; Podlight translates its requests.": {
+    "Same address and key as every other model. Claude Code works too; Modlight translates its requests.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gleiche Adresse und gleicher Key wie bei jedem anderen Modell. Auch Claude Code funktioniert; Podlight übersetzt seine Anfragen."
+            "value": "Gleiche Adresse und gleicher Key wie bei jedem anderen Modell. Auch Claude Code funktioniert; Modlight übersetzt seine Anfragen."
           }
         }
       }
@@ -6137,12 +6137,12 @@
         }
       }
     },
-    "Start it once in Podlight": {
+    "Start it once in Modlight": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einmal in Podlight starten"
+            "value": "Einmal in Modlight starten"
           }
         }
       }
@@ -6183,12 +6183,12 @@
         }
       }
     },
-    "Start test failed: the model answered only with repeated characters, so Podlight stopped it. This build of the model does not work on this card (often a broken quantisation); try another build, such as a GGUF, or another card. Its answer:": {
+    "Start test failed: the model answered only with repeated characters, so Modlight stopped it. This build of the model does not work on this card (often a broken quantisation); try another build, such as a GGUF, or another card. Its answer:": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Starttest fehlgeschlagen: Das Modell antwortete nur mit wiederholten Zeichen, deshalb hat Podlight es gestoppt. Diese Fassung des Modells funktioniert auf dieser Karte nicht (oft eine fehlerhafte Quantisierung); nimm eine andere Fassung, etwa eine GGUF, oder eine andere Karte. Seine Antwort:"
+            "value": "Starttest fehlgeschlagen: Das Modell antwortete nur mit wiederholten Zeichen, deshalb hat Modlight es gestoppt. Diese Fassung des Modells funktioniert auf dieser Karte nicht (oft eine fehlerhafte Quantisierung); nimm eine andere Fassung, etwa eine GGUF, oder eine andere Karte. Seine Antwort:"
           }
         }
       }
@@ -6223,12 +6223,12 @@
         }
       }
     },
-    "Starts Claude Code with Podlight in this terminal. Plain claude keeps your normal login.": {
+    "Starts Claude Code with Modlight in this terminal. Plain claude keeps your normal login.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Startet Claude Code in diesem Terminal mit Podlight. Der normale Befehl claude behält deine übliche Anmeldung."
+            "value": "Startet Claude Code in diesem Terminal mit Modlight. Der normale Befehl claude behält deine übliche Anmeldung."
           }
         }
       }
@@ -6433,22 +6433,22 @@
         }
       }
     },
-    "Stopped outside Podlight, most likely by its own safety stop (no contact with Podlight, or its end passed).": {
+    "Stopped outside Modlight, most likely by its own safety stop (no contact with Modlight, or its end passed).": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Außerhalb von Podlight gestoppt, vermutlich durch die eigene Notbremse (kein Kontakt zu Podlight oder Ende überschritten)."
+            "value": "Außerhalb von Modlight gestoppt, vermutlich durch die eigene Notbremse (kein Kontakt zu Modlight oder Ende überschritten)."
           }
         }
       }
     },
-    "Stopped when Podlight quit.": {
+    "Stopped when Modlight quit.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beim Beenden von Podlight gestoppt."
+            "value": "Beim Beenden von Modlight gestoppt."
           }
         }
       }
@@ -6683,12 +6683,12 @@
         }
       }
     },
-    "That Mac manages it now. Take it back in Podlight to use it here.": {
+    "That Mac manages it now. Take it back in Modlight to use it here.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der andere Mac verwaltet es jetzt. Hol es in Podlight zurück, um es hier zu nutzen."
+            "value": "Der andere Mac verwaltet es jetzt. Hol es in Modlight zurück, um es hier zu nutzen."
           }
         }
       }
@@ -6713,12 +6713,12 @@
         }
       }
     },
-    "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept, and Podlight keeps trying to resume it until the end you chose. You can also start on a new card (the model is downloaded again).": {
+    "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept, and Modlight keeps trying to resume it until the end you chose. You can also start on a new card (the model is downloaded again).": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Karte auf dem Rechner des Pods ist gerade belegt. Der Pod und seine Festplatte mit dem Modell bleiben erhalten, und Podlight versucht bis zu dem gewählten Ende, ihn fortzusetzen. Du kannst ihn auch auf einer neuen Karte starten (das Modell wird dann neu geladen)."
+            "value": "Die Karte auf dem Rechner des Pods ist gerade belegt. Der Pod und seine Festplatte mit dem Modell bleiben erhalten, und Modlight versucht bis zu dem gewählten Ende, ihn fortzusetzen. Du kannst ihn auch auf einer neuen Karte starten (das Modell wird dann neu geladen)."
           }
         }
       }
@@ -6743,18 +6743,18 @@
         }
       }
     },
-    "The card you chose costs %@. Free right now are only cards that cost more than %@, the most a replacement may cost without asking. Podlight has booked nothing.": {
+    "The card you chose costs %@. Free right now are only cards that cost more than %@, the most a replacement may cost without asking. Modlight has booked nothing.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die gewählte Karte kostet %1$@. Frei sind gerade nur Karten, die mehr als %2$@ kosten – so viel darf ein Ersatz ohne Rückfrage höchstens kosten. Podlight hat nichts gebucht."
+            "value": "Die gewählte Karte kostet %1$@. Frei sind gerade nur Karten, die mehr als %2$@ kosten – so viel darf ein Ersatz ohne Rückfrage höchstens kosten. Modlight hat nichts gebucht."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "The card you chose costs %1$@. Free right now are only cards that cost more than %2$@, the most a replacement may cost without asking. Podlight has booked nothing."
+            "value": "The card you chose costs %1$@. Free right now are only cards that cost more than %2$@, the most a replacement may cost without asking. Modlight has booked nothing."
           }
         }
       }
@@ -6779,22 +6779,22 @@
         }
       }
     },
-    "The engine made no progress for 10 minutes while loading (often a stalled download on that machine), so Podlight stopped the pod. Start again, or start on a new card. Its last line:": {
+    "The engine made no progress for 10 minutes while loading (often a stalled download on that machine), so Modlight stopped the pod. Start again, or start on a new card. Its last line:": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Engine kam beim Laden zehn Minuten nicht voran (oft ein abgerissener Download auf diesem Rechner), deshalb hat Podlight den Pod gestoppt. Starte erneut oder auf einer neuen Karte. Ihre letzte Zeile:"
+            "value": "Die Engine kam beim Laden zehn Minuten nicht voran (oft ein abgerissener Download auf diesem Rechner), deshalb hat Modlight den Pod gestoppt. Starte erneut oder auf einer neuen Karte. Ihre letzte Zeile:"
           }
         }
       }
     },
-    "The engine stopped with an error, so Podlight ended the pod:": {
+    "The engine stopped with an error, so Modlight ended the pod:": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Engine ist mit einem Fehler abgebrochen, deshalb hat Podlight den Pod beendet:"
+            "value": "Die Engine ist mit einem Fehler abgebrochen, deshalb hat Modlight den Pod beendet:"
           }
         }
       }
@@ -6899,12 +6899,12 @@
         }
       }
     },
-    "The model is stopped. Start it in Podlight.": {
+    "The model is stopped. Start it in Modlight.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das Modell ist gestoppt. Starte es in Podlight."
+            "value": "Das Modell ist gestoppt. Starte es in Modlight."
           }
         }
       }
@@ -6939,18 +6939,18 @@
         }
       }
     },
-    "The next start takes about a minute instead of 10–25. RunPod bills the disk (%lld GB) by the hour, also while the model is stopped, until Podlight deletes it after %lld days without use.": {
+    "The next start takes about a minute instead of 10–25. RunPod bills the disk (%lld GB) by the hour, also while the model is stopped, until Modlight deletes it after %lld days without use.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der nächste Start dauert etwa eine Minute statt 10–25. RunPod berechnet die Festplatte (%lld GB) stundenweise, auch im gestoppten Zustand, bis Podlight sie nach %lld Tagen ohne Nutzung löscht."
+            "value": "Der nächste Start dauert etwa eine Minute statt 10–25. RunPod berechnet die Festplatte (%lld GB) stundenweise, auch im gestoppten Zustand, bis Modlight sie nach %lld Tagen ohne Nutzung löscht."
           }
         },
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "The next start takes about a minute instead of 10–25. RunPod bills the disk (%1$lld GB) by the hour, also while the model is stopped, until Podlight deletes it after %2$lld days without use."
+            "value": "The next start takes about a minute instead of 10–25. RunPod bills the disk (%1$lld GB) by the hour, also while the model is stopped, until Modlight deletes it after %2$lld days without use."
           }
         }
       }
@@ -6995,12 +6995,12 @@
         }
       }
     },
-    "The pod was not created by Podlight on a Mac, so the server does not take it.": {
+    "The pod was not created by Modlight on a Mac, so the server does not take it.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Pod stammt nicht von Podlight auf einem Mac, deshalb übernimmt der Server ihn nicht."
+            "value": "Der Pod stammt nicht von Modlight auf einem Mac, deshalb übernimmt der Server ihn nicht."
           }
         }
       }
@@ -7065,22 +7065,22 @@
         }
       }
     },
-    "The server sent an answer Podlight does not understand. Is it a Podlight server of the same version? (%@)": {
+    "The server sent an answer Modlight does not understand. Is it a Modlight server of the same version? (%@)": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Server hat eine Antwort geschickt, die Podlight nicht versteht. Ist es ein Podlight-Server derselben Version? (%@)"
+            "value": "Der Server hat eine Antwort geschickt, die Modlight nicht versteht. Ist es ein Modlight-Server derselben Version? (%@)"
           }
         }
       }
     },
-    "The server starts and pays for its pods with its own RunPod key, and for Venice models with its own Venice key, both stored encrypted on the server. Podlight on this Mac never reads them back.": {
+    "The server starts and pays for its pods with its own RunPod key, and for Venice models with its own Venice key, both stored encrypted on the server. Modlight on this Mac never reads them back.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Server startet und bezahlt seine Pods mit seinem eigenen RunPod-Key und Venice-Modelle mit seinem eigenen Venice-Key; beide liegen verschlüsselt auf dem Server. Podlight auf diesem Mac liest sie nie zurück."
+            "value": "Der Server startet und bezahlt seine Pods mit seinem eigenen RunPod-Key und Venice-Modelle mit seinem eigenen Venice-Key; beide liegen verschlüsselt auf dem Server. Modlight auf diesem Mac liest sie nie zurück."
           }
         }
       }
@@ -7125,22 +7125,22 @@
         }
       }
     },
-    "These figures are Podlight's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Podlight.": {
+    "These figures are Modlight's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Modlight.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Zahlen zählt Podlight selbst: Pods als Preis pro Stunde × Laufzeit, Venice-Modelle aus den Kosten oder Token jeder Antwort. Die genauen Beträge, auch für Nutzung außerhalb von Podlight, zeigen deine Konten bei RunPod und Venice."
+            "value": "Diese Zahlen zählt Modlight selbst: Pods als Preis pro Stunde × Laufzeit, Venice-Modelle aus den Kosten oder Token jeder Antwort. Die genauen Beträge, auch für Nutzung außerhalb von Modlight, zeigen deine Konten bei RunPod und Venice."
           }
         }
       }
     },
-    "These figures are the server's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Podlight.": {
+    "These figures are the server's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Modlight.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Zahlen zählt der Server selbst: Pods als Preis pro Stunde × Laufzeit, Venice-Modelle aus den Kosten oder Token jeder Antwort. Die genauen Beträge, auch für Nutzung außerhalb von Podlight, zeigen deine Konten bei RunPod und Venice."
+            "value": "Diese Zahlen zählt der Server selbst: Pods als Preis pro Stunde × Laufzeit, Venice-Modelle aus den Kosten oder Token jeder Antwort. Die genauen Beträge, auch für Nutzung außerhalb von Modlight, zeigen deine Konten bei RunPod und Venice."
           }
         }
       }
@@ -7165,12 +7165,12 @@
         }
       }
     },
-    "These files contain your Podlight key. Keep them in your home folder, never in a project repository.": {
+    "These files contain your Modlight key. Keep them in your home folder, never in a project repository.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Dateien enthalten deinen Podlight-Schlüssel. Lege sie in deinem Benutzerordner ab, nie in einem Projekt-Repository."
+            "value": "Diese Dateien enthalten deinen Modlight-Schlüssel. Lege sie in deinem Benutzerordner ab, nie in einem Projekt-Repository."
           }
         }
       }
@@ -7271,12 +7271,12 @@
         }
       }
     },
-    "This pod was created by an earlier Podlight version and reports no usage. It will after the model is started on a new pod.": {
+    "This pod was created by an earlier Modlight version and reports no usage. It will after the model is started on a new pod.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieser Pod stammt aus einer früheren Podlight-Version und meldet keine Auslastung. Das ändert sich, sobald das Modell auf einem neuen Pod startet."
+            "value": "Dieser Pod stammt aus einer früheren Modlight-Version und meldet keine Auslastung. Das ändert sich, sobald das Modell auf einem neuen Pod startet."
           }
         }
       }
@@ -7731,12 +7731,12 @@
         }
       }
     },
-    "Venice models stay in Podlight but answer agents with an error until a key is added again.": {
+    "Venice models stay in Modlight but answer agents with an error until a key is added again.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Venice-Modelle bleiben in Podlight, antworten Agenten aber mit einem Fehler, bis wieder ein Key eingetragen ist."
+            "value": "Venice-Modelle bleiben in Modlight, antworten Agenten aber mit einem Fehler, bis wieder ein Key eingetragen ist."
           }
         }
       }
@@ -7771,12 +7771,12 @@
         }
       }
     },
-    "Venice serves ready models per token; an \"Inference Only\" key is enough. A Hugging Face token is recommended: pods download over addresses RunPod shares with others, and Hugging Face limits anonymous downloads more strictly. It is required for gated models. After a new Podlight key, paste it into your agents' configuration.": {
+    "Venice serves ready models per token; an \"Inference Only\" key is enough. A Hugging Face token is recommended: pods download over addresses RunPod shares with others, and Hugging Face limits anonymous downloads more strictly. It is required for gated models. After a new Modlight key, paste it into your agents' configuration.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Venice bietet fertige Modelle pro Token an; ein Key vom Typ „Inference Only“ genügt. Ein Hugging-Face-Token wird empfohlen: Pods laden über Adressen, die RunPod mit anderen teilt, und Hugging Face begrenzt anonyme Downloads strenger. Für gesperrte Modelle ist er nötig. Nach einem neuen Podlight-Key trage ihn in die Konfiguration deiner Agenten ein."
+            "value": "Venice bietet fertige Modelle pro Token an; ein Key vom Typ „Inference Only“ genügt. Ein Hugging-Face-Token wird empfohlen: Pods laden über Adressen, die RunPod mit anderen teilt, und Hugging Face begrenzt anonyme Downloads strenger. Für gesperrte Modelle ist er nötig. Nach einem neuen Modlight-Key trage ihn in die Konfiguration deiner Agenten ein."
           }
         }
       }
@@ -7861,12 +7861,12 @@
         }
       }
     },
-    "Welcome to Podlight": {
+    "Welcome to Modlight": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Willkommen bei Podlight"
+            "value": "Willkommen bei Modlight"
           }
         }
       }
@@ -8047,12 +8047,12 @@
         }
       }
     },
-    "an older Podlight version": {
+    "an older Modlight version": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "einer älteren Podlight-Version"
+            "value": "einer älteren Modlight-Version"
           }
         }
       }
@@ -8067,12 +8067,12 @@
         }
       }
     },
-    "docker compose up -d starts it in the background and shows nothing of the server. Then docker compose exec podlight podlight-info shows address and pairing code. In Coolify, use this file as a Docker Compose resource and run podlight-info in the container's terminal.": {
+    "docker compose up -d starts it in the background and shows nothing of the server. Then docker compose exec modlight modlight-info shows address and pairing code. In Coolify, use this file as a Docker Compose resource and run modlight-info in the container's terminal.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "docker compose up -d startet ihn im Hintergrund und zeigt vom Server nichts an. Danach zeigt docker compose exec podlight podlight-info Adresse und Kopplungscode. In Coolify diese Datei als Docker-Compose-Ressource verwenden und podlight-info im Terminal des Containers aufrufen."
+            "value": "docker compose up -d startet ihn im Hintergrund und zeigt vom Server nichts an. Danach zeigt docker compose exec modlight modlight-info Adresse und Kopplungscode. In Coolify diese Datei als Docker-Compose-Ressource verwenden und modlight-info im Terminal des Containers aufrufen."
           }
         }
       }
@@ -8153,6 +8153,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Median, letzte 30 min"
+          }
+        }
+      }
+    },
+    "modlight.example.com": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "modlight.example.com"
           }
         }
       }
@@ -8263,16 +8273,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "pi"
-          }
-        }
-      }
-    },
-    "podlight.example.com": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "podlight.example.com"
           }
         }
       }
