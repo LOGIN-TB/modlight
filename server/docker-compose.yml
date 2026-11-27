@@ -1,18 +1,18 @@
-# Podlight server, e.g. as a Coolify "Docker Compose" resource.
+# Modlight server, e.g. as a Coolify "Docker Compose" resource.
 #
 # The container speaks plain HTTP on port 8080. Put it behind a reverse proxy with a certificate
 # (Coolify does this when you give the service a domain) before it is reachable from the internet:
-# the Podlight app only connects to https:// addresses, except localhost and private LAN addresses.
+# the Modlight app only connects to https:// addresses, except localhost and private LAN addresses.
 #
-# Quickest: curl -fsSL https://raw.githubusercontent.com/LOGIN-TB/podlight/main/server/install.sh | sh
+# Quickest: curl -fsSL https://raw.githubusercontent.com/LOGIN-TB/modlight/main/server/install.sh | sh
 # starts this file and prints the box below once the server answers.
 #
-# After the start the log shows a box "PODLIGHT SERVER – CONNECTION" with the address to enter in
-# the app and the pairing code. In the Podlight app: Add Server…
-# A new pairing code later: docker exec <container> podlight-code (Coolify: the container's terminal).
+# After the start the log shows a box "MODLIGHT SERVER – CONNECTION" with the address to enter in
+# the app and the pairing code. In the Modlight app: Add Server…
+# A new pairing code later: docker exec <container> modlight-code (Coolify: the container's terminal).
 services:
-  podlight:
-    image: ghcr.io/login-tb/podlight-server:latest
+  modlight:
+    image: ghcr.io/login-tb/modlight-server:latest
     # Fetch the newest image on every `docker compose up`, so an update is one command.
     pull_policy: always
     restart: unless-stopped
@@ -21,21 +21,21 @@ services:
       # generated secrets (SERVICE_PASSWORD_PAIRING). Single use, 30 minutes.
       - PAIRING_CODE=${PAIRING_CODE:-}
       # Coolify: makes the service reachable under the domain you set for it; the box shows it.
-      - SERVICE_FQDN_PODLIGHT_8080
-      - SERVICE_URL_PODLIGHT_8080
+      - SERVICE_FQDN_MODLIGHT_8080
+      - SERVICE_URL_MODLIGHT_8080
       # Optional: the address of this machine in your network, so the box shows the LAN address.
       - HOST_IP=${HOST_IP:-}
       # Optional: the https address when you run your own reverse proxy (not needed in Coolify).
       - PUBLIC_URL=${PUBLIC_URL:-}
       # Language of the connection box: en or de.
-      - PODLIGHT_LANG=${PODLIGHT_LANG:-en}
+      - MODLIGHT_LANG=${MODLIGHT_LANG:-en}
       # The box asks api.ipify.org once for the public IP; false turns that off.
       - PUBLIC_IP_LOOKUP=${PUBLIC_IP_LOOKUP:-true}
     volumes:
       # Database and master key. Back it up; losing it means pairing again and re-adding models.
-      - podlight-data:/data
+      - modlight-data:/data
     ports:
       # Remove this line when a reverse proxy on the same host forwards to the container.
       - "8080:8080"
 volumes:
-  podlight-data:
+  modlight-data:

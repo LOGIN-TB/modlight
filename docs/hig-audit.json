@@ -1,5 +1,5 @@
 {
-  "project": "Podlight (macOS)",
+  "project": "Modlight (macOS)",
   "scope": "macOS 26+, SwiftUI; Journeys Einrichtung, Modell anlegen, Starten/Stoppen, Beenden, Kosten",
   "expected_ids": [
     "PL-NAV-001",
@@ -89,7 +89,7 @@
       "status": "pass",
       "evidence": [
         "Setup shown inline in the main window, resumable via Help → Run Setup Again",
-        "Quit with setup open verified 2026-11-20 (-PodlightQuitAfter test hook)"
+        "Quit with setup open verified 2026-11-20 (-ModlightQuitAfter test hook)"
       ],
       "reason": ""
     },

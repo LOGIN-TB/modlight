@@ -160,7 +160,7 @@ export async function createWithFallback(client: RunpodClient, base: CreatePodRe
       cloud: choice.cloud,
       gpu: { ...base.gpu, id: choice.gpuId, count: choice.count },
       // The engine must split across exactly the cards this attempt gets (seen live 2026-11-21).
-      env: base.env.PODLIGHT_TP !== undefined ? { ...base.env, PODLIGHT_TP: String(choice.count) } : base.env,
+      env: base.env.MODLIGHT_TP !== undefined ? { ...base.env, MODLIGHT_TP: String(choice.count) } : base.env,
     }
     try {
       const pod = await client.createPod(request)

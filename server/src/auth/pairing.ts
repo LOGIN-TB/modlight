@@ -52,10 +52,10 @@ export class Pairing {
 
   redeem(presented: string, deviceName: string): { ok: true; token: string; id: string } | { ok: false; reason: string } {
     const row = this.row()
-    if (!row) return { ok: false, reason: 'No pairing code is open. Run podlight-code in the server\'s container, or create one in a paired app.' }
-    if (row.redeemed) return { ok: false, reason: 'This pairing code has already been used. Create a new one in a paired app, or run podlight-code in the server\'s container.' }
-    if (row.attempts >= Pairing.MAX_ATTEMPTS) return { ok: false, reason: 'Too many wrong attempts. Run podlight-code in the server\'s container for a new code.' }
-    if (Date.parse(row.expires_at) <= Date.now()) return { ok: false, reason: 'This pairing code has expired. Run podlight-code in the server\'s container for a new one.' }
+    if (!row) return { ok: false, reason: 'No pairing code is open. Run modlight-code in the server\'s container, or create one in a paired app.' }
+    if (row.redeemed) return { ok: false, reason: 'This pairing code has already been used. Create a new one in a paired app, or run modlight-code in the server\'s container.' }
+    if (row.attempts >= Pairing.MAX_ATTEMPTS) return { ok: false, reason: 'Too many wrong attempts. Run modlight-code in the server\'s container for a new code.' }
+    if (Date.parse(row.expires_at) <= Date.now()) return { ok: false, reason: 'This pairing code has expired. Run modlight-code in the server\'s container for a new one.' }
 
     const normalise = (value: string): string => value.trim().toUpperCase().replace(/\s+/g, '')
     if (!safeEqual(normalise(presented), normalise(row.code))) {

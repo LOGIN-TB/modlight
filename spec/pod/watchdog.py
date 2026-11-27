@@ -1,14 +1,14 @@
-# Podlight dead-man switch. Runs inside every pod Podlight starts, beside the engine.
+# Modlight dead-man switch. Runs inside every pod Modlight starts, beside the engine.
 #
 # The pod stops itself when
-#   - Podlight has not sent a heartbeat for PODLIGHT_HEARTBEAT_MINUTES (Mac asleep, app quit or
+#   - Modlight has not sent a heartbeat for MODLIGHT_HEARTBEAT_MINUTES (Mac asleep, app quit or
 #     crashed, network gone), or
 #   - the hard deadline has passed ("Läuft bis" plus a grace period), or
 #   - the engine process has exited (a pod that cannot answer must not bill).
 #
 # It stops itself with the key RunPod injects into every pod (RUNPOD_API_KEY). Measured on
 # 2026-11-20: that key can read and stop only its own pod. Stop, not terminate: the disk is kept
-# so the next start is fast, and Podlight deletes unused pods itself after three days.
+# so the next start is fast, and Modlight deletes unused pods itself after three days.
 #
 # Standard library only: it must run in any image that has python3.
 import json, os, socketserver, subprocess, sys, threading, time, urllib.request, urllib.error
@@ -16,30 +16,30 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 POD_ID = os.environ.get("RUNPOD_POD_ID", "")
 RUNPOD_KEY = os.environ.get("RUNPOD_API_KEY", "")
-GATEWAY_KEY = os.environ.get("PODLIGHT_API_KEY", "")
-MINUTES = float(os.environ.get("PODLIGHT_HEARTBEAT_MINUTES", "15"))
-BOOT_GRACE_MINUTES = float(os.environ.get("PODLIGHT_BOOT_GRACE_MINUTES", "20"))
-PORT = int(os.environ.get("PODLIGHT_WATCHDOG_PORT", "8001"))
-HOST = os.environ.get("PODLIGHT_WATCHDOG_HOST", "0.0.0.0")  # all interfaces in the pod; tests use loopback
-API = os.environ.get("PODLIGHT_RUNPOD_API", "https://api.runpod.io")  # overridable for tests only
-CHECK_SECONDS = float(os.environ.get("PODLIGHT_CHECK_SECONDS", "15"))
-ENGINE_PID_FILE = os.environ.get("PODLIGHT_ENGINE_PID_FILE", "/tmp/podlight-engine.pid")
-ENGINE_EXIT_FILE = os.environ.get("PODLIGHT_ENGINE_EXIT_FILE", "/tmp/podlight-engine.exit")
-ENGINE_LOG = os.environ.get("PODLIGHT_ENGINE_LOG", "/tmp/podlight-engine.log")
-# After the engine exits, wait this long before stopping, so Podlight can read the reason.
-ENGINE_EXIT_GRACE = float(os.environ.get("PODLIGHT_ENGINE_EXIT_GRACE", "120"))
+GATEWAY_KEY = os.environ.get("MODLIGHT_API_KEY", "")
+MINUTES = float(os.environ.get("MODLIGHT_HEARTBEAT_MINUTES", "15"))
+BOOT_GRACE_MINUTES = float(os.environ.get("MODLIGHT_BOOT_GRACE_MINUTES", "20"))
+PORT = int(os.environ.get("MODLIGHT_WATCHDOG_PORT", "8001"))
+HOST = os.environ.get("MODLIGHT_WATCHDOG_HOST", "0.0.0.0")  # all interfaces in the pod; tests use loopback
+API = os.environ.get("MODLIGHT_RUNPOD_API", "https://api.runpod.io")  # overridable for tests only
+CHECK_SECONDS = float(os.environ.get("MODLIGHT_CHECK_SECONDS", "15"))
+ENGINE_PID_FILE = os.environ.get("MODLIGHT_ENGINE_PID_FILE", "/tmp/modlight-engine.pid")
+ENGINE_EXIT_FILE = os.environ.get("MODLIGHT_ENGINE_EXIT_FILE", "/tmp/modlight-engine.exit")
+ENGINE_LOG = os.environ.get("MODLIGHT_ENGINE_LOG", "/tmp/modlight-engine.log")
+# After the engine exits, wait this long before stopping, so Modlight can read the reason.
+ENGINE_EXIT_GRACE = float(os.environ.get("MODLIGHT_ENGINE_EXIT_GRACE", "120"))
 # Telemetry: how often it is measured, and where. The paths are overridable for tests only.
-TELEMETRY_SECONDS = float(os.environ.get("PODLIGHT_TELEMETRY_SECONDS", "5"))
-NVIDIA_SMI = os.environ.get("PODLIGHT_NVIDIA_SMI", "nvidia-smi")
-CGROUP = os.environ.get("PODLIGHT_CGROUP", "/sys/fs/cgroup")
-PROC = os.environ.get("PODLIGHT_PROC", "/proc")
-ENGINE_URL = os.environ.get("PODLIGHT_ENGINE_URL", "http://127.0.0.1:8000")
-DISKS = {"disk": os.environ.get("PODLIGHT_DISK_PATH", "/"), "volume": os.environ.get("PODLIGHT_VOLUME_PATH", "/workspace")}
+TELEMETRY_SECONDS = float(os.environ.get("MODLIGHT_TELEMETRY_SECONDS", "5"))
+NVIDIA_SMI = os.environ.get("MODLIGHT_NVIDIA_SMI", "nvidia-smi")
+CGROUP = os.environ.get("MODLIGHT_CGROUP", "/sys/fs/cgroup")
+PROC = os.environ.get("MODLIGHT_PROC", "/proc")
+ENGINE_URL = os.environ.get("MODLIGHT_ENGINE_URL", "http://127.0.0.1:8000")
+DISKS = {"disk": os.environ.get("MODLIGHT_DISK_PATH", "/"), "volume": os.environ.get("MODLIGHT_VOLUME_PATH", "/workspace")}
 # Warm-up prompt length; 0 turns the warm-up off.
-WARMUP_TOKENS = int(os.environ.get("PODLIGHT_WARMUP_TOKENS", "3000"))
-WARMUP_TIMEOUT = float(os.environ.get("PODLIGHT_WARMUP_TIMEOUT", "900"))
-SERVED_NAME = os.environ.get("PODLIGHT_SERVED_NAME", "")
-MAX_LEN = int(os.environ.get("PODLIGHT_MAX_LEN") or 0)
+WARMUP_TOKENS = int(os.environ.get("MODLIGHT_WARMUP_TOKENS", "3000"))
+WARMUP_TIMEOUT = float(os.environ.get("MODLIGHT_WARMUP_TIMEOUT", "900"))
+SERVED_NAME = os.environ.get("MODLIGHT_SERVED_NAME", "")
+MAX_LEN = int(os.environ.get("MODLIGHT_MAX_LEN") or 0)
 
 state = {
     "started": time.time(),
@@ -47,7 +47,7 @@ state = {
     "last_heartbeat": None,
     # A resumed pod keeps the environment it was created with, so its deadline may be long past;
     # only a future one counts. The app's heartbeat sets the current one.
-    "deadline": (lambda d: d if d and d > time.time() else None)(float(os.environ.get("PODLIGHT_DEADLINE") or 0)),
+    "deadline": (lambda d: d if d and d > time.time() else None)(float(os.environ.get("MODLIGHT_DEADLINE") or 0)),
     "stopping": None,
     "engine_exited_at": None,
 }
@@ -57,7 +57,7 @@ opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 def log(msg):
-    print(f"[podlight-watchdog] {msg}", flush=True)
+    print(f"[modlight-watchdog] {msg}", flush=True)
 
 
 def stop(reason):
@@ -120,7 +120,7 @@ def engine_alive():
         return None if not os.path.exists(ENGINE_PID_FILE) else False
 
 
-# Until the warm-up has run, Podlight does not report the engine as ready.
+# Until the warm-up has run, Modlight does not report the engine as ready.
 warm_state = {"warm": WARMUP_TOKENS <= 0}
 
 
@@ -133,13 +133,13 @@ def warmup_prompt(tokens, max_len):
 def engine_log_line(text):
     try:
         with open(ENGINE_LOG, "a") as f:
-            f.write(f"[podlight] {text}\n")
+            f.write(f"[modlight] {text}\n")
     except OSError:
         pass
 
 
 def warm_up():
-    """Sends one long prompt as soon as the engine answers, before Podlight calls it ready.
+    """Sends one long prompt as soon as the engine answers, before Modlight calls it ready.
 
     The stock llama.cpp image carries finished GPU code only for some cards. On others (A100,
     H100, H200, B200) the driver compiles it on first use: on an H200 the first 2048 tokens of
@@ -378,7 +378,7 @@ GPU_QUERY = "index,name,utilization.gpu,memory.used,memory.total,temperature.gpu
 # covers only the last fraction of a second, so the sample reports the average over the readings
 # since the previous sample: a short burst of requests between two samples still shows.
 gpu_lines = {"cards": {}, "loads": {}, "time": 0.0}
-GPU_READ_MS = int(os.environ.get("PODLIGHT_GPU_READ_MS", "1000"))
+GPU_READ_MS = int(os.environ.get("MODLIGHT_GPU_READ_MS", "1000"))
 
 
 def gpu_reader():
@@ -503,10 +503,10 @@ class Handler(BaseHTTPRequestHandler):
                 "engineAlive": engine_alive(),
                 "engineExitCode": engine_exit_code(),
                 "uptimeSeconds": int(time.time() - state["started"]),
-                # Grows while the engine works; Podlight takes a loading engine whose log, disks,
+                # Grows while the engine works; Modlight takes a loading engine whose log, disks,
                 # GPU memory and CPU all stand still for ten minutes as hung.
                 "engineLogBytes": engine_log_bytes(),
-                # False while the warm-up runs; Podlight waits for it before calling the model ready.
+                # False while the warm-up runs; Modlight waits for it before calling the model ready.
                 "engineWarm": warm_state["warm"],
                 "telemetry": telemetry_state["latest"],
             }
@@ -555,7 +555,7 @@ def text_only_check(repo):
     """Asks Hugging Face for the repository's files and config. Any failure answers False: then
     vLLM starts as before."""
     endpoint = os.environ.get("HF_ENDPOINT", "https://huggingface.co").rstrip("/")
-    headers = {"User-Agent": "podlight-pod"}
+    headers = {"User-Agent": "modlight-pod"}
     token = os.environ.get("HF_TOKEN")
     if token:
         headers["Authorization"] = "Bearer " + token

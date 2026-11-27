@@ -1,25 +1,25 @@
 import AppKit
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// Renders the main screens with sample data into PNG files, then quits:
-///   Podlight.app/Contents/MacOS/Podlight -PodlightSnapshots /path/to/dir [-AppleLanguages "(de)"]
+///   Modlight.app/Contents/MacOS/Modlight -ModlightSnapshots /path/to/dir [-AppleLanguages "(de)"]
 /// Used for the help pages and to check the interface without screen-recording permission.
 /// Touches no real state: a throwaway store and keychain service, removed afterwards.
 @MainActor
 enum Snapshots {
     static var requestedDirectory: URL? {
         let args = CommandLine.arguments
-        guard let i = args.firstIndex(of: "-PodlightSnapshots"), i + 1 < args.count else { return nil }
+        guard let i = args.firstIndex(of: "-ModlightSnapshots"), i + 1 < args.count else { return nil }
         return URL(fileURLWithPath: args[i + 1], isDirectory: true)
     }
 
     static func run(into folder: URL) async {
-        let service = "io.github.login-tb.podlight.snapshots"
-        let storeURL = FileManager.default.temporaryDirectory.appendingPathComponent("podlight-snapshot-\(UUID()).json")
+        let service = "io.github.login-tb.modlight.snapshots"
+        let storeURL = FileManager.default.temporaryDirectory.appendingPathComponent("modlight-snapshot-\(UUID()).json")
         let keychain = KeychainStore(service: service)
         try? keychain.write("rp-sample", for: .runpodAPIKey)
-        try? keychain.write("pl-SampleKeyForScreenshotsOnly", for: .gatewayKey)
+        try? keychain.write("ml-SampleKeyForScreenshotsOnly", for: .gatewayKey)
         try? keychain.write("VENICE_INFERENCE_KEY_sample", for: .veniceAPIKey)
         defer {
             for item in [KeychainStore.Item.runpodAPIKey, .gatewayKey, .veniceAPIKey] { try? keychain.delete(item) }
@@ -126,7 +126,7 @@ enum Snapshots {
         }
 
         // Server mode, with a sample server that is never contacted.
-        let entry = ServerEntry(name: "Office", baseURL: URL(string: "https://podlight.example.com")!)
+        let entry = ServerEntry(name: "Office", baseURL: URL(string: "https://modlight.example.com")!)
         _ = try? await model.manager.store.update { $0.servers = [entry] }
         await model.reloadState()
         if let server = model.server(entry.id), let sample = sampleServer() {
@@ -162,7 +162,7 @@ enum Snapshots {
         let started = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-25 * 60))
         let until = ISO8601DateFormatter().string(from: Date().addingTimeInterval(3 * 3600))
         let last = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-90))
-        let today = PodlightState.dayKey(.now)
+        let today = ModlightState.dayKey(.now)
         let json = """
         {"version":"0.10.1","serverTime":"\(started)",
          "models":[{"id":"6F1D2C1E-4E57-4D7B-9A57-7E3E1C1E0001","name":"coder-office","repoId":"Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ",
@@ -242,15 +242,15 @@ enum Snapshots {
     nonisolated static func sampleOtherMacsPods() -> [ForeignPod] {
         func pod(_ id: String, _ name: String, _ status: String, gpu: String, cost: Double, disk: Int) -> ForeignPod? {
             let json = """
-            {"id":"\(id)","name":"podlight-\(name)@studio-mac-7c1e","status":"\(status)","cloud":"SECURE","cost":\(cost),"disk":30,
+            {"id":"\(id)","name":"modlight-\(name)@studio-mac-7c1e","status":"\(status)","cloud":"SECURE","cost":\(cost),"disk":30,
              "gpu":{"id":"\(gpu)","count":1},"mounts":{"persistent":{"size":\(disk),"path":"/workspace"}},
-             "env":{"PODLIGHT_API_KEY":"sample","PODLIGHT_MODEL":"Qwen/Qwen3-32B-AWQ","PODLIGHT_SERVED_NAME":"\(name)",
-                    "PODLIGHT_ENGINE":"vllm","PODLIGHT_MAX_LEN":"32768"}}
+             "env":{"MODLIGHT_API_KEY":"sample","MODLIGHT_MODEL":"Qwen/Qwen3-32B-AWQ","MODLIGHT_SERVED_NAME":"\(name)",
+                    "MODLIGHT_ENGINE":"vllm","MODLIGHT_MAX_LEN":"32768"}}
             """
             return (try? JSONDecoder().decode(RunpodPod.self, from: Data(json.utf8))).flatMap(ForeignPod.init)
         }
         // A model the other Mac has set up but not running: no pod, only its record.
-        var stopped = PodlightModel(name: "huihui-qwen3.8-27b", repoId: "huihui-ai/Qwen3.8-27B-GGUF", format: .gguf,
+        var stopped = ModlightModel(name: "huihui-qwen3.8-27b", repoId: "huihui-ai/Qwen3.8-27B-GGUF", format: .gguf,
                                     weightBytes: 17e9, nativeContextTokens: 262_144, toolCallParser: "qwen3_coder",
                                     reasoningParser: nil, contextTokens: 131_072,
                                     preferredGPU: GPUChoice(gpuId: "NVIDIA A40", cloud: .secure))
@@ -268,7 +268,7 @@ enum Snapshots {
             APIModelOffer(provider: .venice, providerModelId: id, displayName: name, description: nil, contextTokens: context,
                           maxCompletionTokens: 32_768, privacy: privacy, capabilities: caps, traits: traits,
                           pricing: APIPricing(input: input, output: output, cacheRead: cached), removesAt: nil,
-                          suggestedName: PodlightModel.suggestedName(for: id))
+                          suggestedName: ModlightModel.suggestedName(for: id))
         }
         return [
             offer("qwen3-coder-480b", "Qwen3 Coder 480B", .private, ["tools", "code"], context: 262_144, input: 0.75, output: 3, cached: 0.375, traits: ["default_code"]),
@@ -306,13 +306,13 @@ enum Snapshots {
                    rateLimits: [.init(model: "zai-org-glm-5-3", type: "RPM", amount: 50), .init(model: "zai-org-glm-5-3", type: "TPM", amount: 1_000_000)])
     }
 
-    nonisolated static func sampleState() -> PodlightState {
-        var state = PodlightState()
-        let coder = PodlightModel(name: "qwen3-coder-30b", repoId: "Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ", format: .awq,
+    nonisolated static func sampleState() -> ModlightState {
+        var state = ModlightState()
+        let coder = ModlightModel(name: "qwen3-coder-30b", repoId: "Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ", format: .awq,
                                   weightBytes: 17.4e9, nativeContextTokens: 262_144, toolCallParser: "qwen3_xml",
                                   reasoningParser: nil, contextTokens: 65_536,
                                   preferredGPU: GPUChoice(gpuId: "NVIDIA L40S", cloud: .secure))
-        var small = PodlightModel(name: "qwen3-8b", repoId: "Qwen/Qwen3-8B-AWQ", format: .awq, weightBytes: 6.1e9,
+        var small = ModlightModel(name: "qwen3-8b", repoId: "Qwen/Qwen3-8B-AWQ", format: .awq, weightBytes: 6.1e9,
                                   nativeContextTokens: 131_072, toolCallParser: "hermes", reasoningParser: "qwen3",
                                   contextTokens: 32_768, preferredGPU: GPUChoice(gpuId: "NVIDIA GeForce RTX 4090", cloud: .community))
         small.expectedPricePerHour = 0.34
@@ -348,7 +348,7 @@ enum Snapshots {
             guard let day = calendar.date(byAdding: .day, value: -offset, to: .now) else { continue }
             let weekday = calendar.component(.weekday, from: day)
             let amount = weekday == 1 || weekday == 7 ? 0 : [1.2, 2.6, 0.9, 3.4, 1.8][offset % 5]
-            state.spendByDay[PodlightState.dayKey(day)] = amount
+            state.spendByDay[ModlightState.dayKey(day)] = amount
         }
         for (offset, requests) in [(0, 640), (1, 1200), (2, 180)] {
             guard let day = calendar.date(byAdding: .day, value: -offset, to: .now) else { continue }

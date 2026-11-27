@@ -1,6 +1,6 @@
 import type { GPUChoice, PodStatus, RunpodCloud } from '../model.ts'
 
-// Shapes of RunPod's REST API v2 (https://api.runpod.io/v2) as far as Podlight uses them; the same
+// Shapes of RunPod's REST API v2 (https://api.runpod.io/v2) as far as Modlight uses them; the same
 // subset as RunpodModels.swift. Unknown fields are ignored.
 
 /** RunPod reports `LOW` or `NONE` in practice. Neither is a promise. */
@@ -38,7 +38,7 @@ export interface Pod {
   cost?: number | null
   image?: string | null
   dataCenterId?: string | null
-  /** The pod's environment; Podlight's pods carry their start script and watchdog here. */
+  /** The pod's environment; Modlight's pods carry their start script and watchdog here. */
   env?: Record<string, string> | null
   /** Container disk in GB. */
   disk?: number | null

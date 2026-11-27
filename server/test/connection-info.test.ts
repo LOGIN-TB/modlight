@@ -9,21 +9,21 @@ const box = (env: Record<string, string | undefined>, extra: Partial<Parameters<
 
 describe('connection box', () => {
   test('Coolify: the domain from SERVICE_URL, without the internal port, comes first', () => {
-    const text = box({ SERVICE_URL_PODLIGHT_8080: 'https://podlight.example.com', SERVICE_FQDN_PODLIGHT_8080: 'podlight.example.com', HOSTNAME: 'abc123' })
-    assert.match(text, /https:\/\/podlight\.example\.com {3}\(Coolify domain\)/)
+    const text = box({ SERVICE_URL_MODLIGHT_8080: 'https://modlight.example.com', SERVICE_FQDN_MODLIGHT_8080: 'modlight.example.com', HOSTNAME: 'abc123' })
+    assert.match(text, /https:\/\/modlight\.example\.com {3}\(Coolify domain\)/)
     assert.match(text, /ABCD-EFGH-JKLM {6}valid 30 min \(until 10:30 UTC\)/)
-    assert.match(text, /docker exec abc123 podlight-code/)
+    assert.match(text, /docker exec abc123 modlight-code/)
     assert.doesNotMatch(text, /IP of this server/)
   })
 
   test('a FQDN without scheme gets https, several domains use the first', () => {
-    assert.deepEqual(publicUrl({ SERVICE_FQDN_PODLIGHT_8080: 'a.example.com,b.example.com' }), { url: 'https://a.example.com', source: 'coolify' })
+    assert.deepEqual(publicUrl({ SERVICE_FQDN_MODLIGHT_8080: 'a.example.com,b.example.com' }), { url: 'https://a.example.com', source: 'coolify' })
     assert.deepEqual(publicUrl({ PUBLIC_URL: 'https://own.example.com/', SERVICE_URL_X: 'https://c.example.com' }), { url: 'https://own.example.com', source: 'own' })
-    assert.equal(publicUrl({ SERVICE_FQDN_PODLIGHT_8080: '' }), null)
+    assert.equal(publicUrl({ SERVICE_FQDN_MODLIGHT_8080: '' }), null)
   })
 
   test('a plain-http public domain (Coolify sslip.io) is flagged', () => {
-    const text = box({ SERVICE_URL_PODLIGHT_8080: 'http://podlight.203.0.113.7.sslip.io' })
+    const text = box({ SERVICE_URL_MODLIGHT_8080: 'http://modlight.203.0.113.7.sslip.io' })
     assert.match(text, /only accepts https/)
   })
 
@@ -41,14 +41,14 @@ describe('connection box', () => {
   })
 
   test('the public IP is left out when an https domain is there', () => {
-    const text = box({ PUBLIC_URL: 'https://podlight.example.com' }, { publicIp: '203.0.113.7' })
+    const text = box({ PUBLIC_URL: 'https://modlight.example.com' }, { publicIp: '203.0.113.7' })
     assert.doesNotMatch(text, /203\.0\.113\.7/)
   })
 
   test('already paired, expired code, German', () => {
     assert.match(box({}, { code: null }), /Already paired/)
     assert.match(box({}, { code: { code: 'X', expiresAt: '2026-11-24T09:00:00Z' } }), /expired/)
-    const de = box({ PODLIGHT_LANG: 'de', HOST_IP: '10.0.0.5' })
+    const de = box({ MODLIGHT_LANG: 'de', HOST_IP: '10.0.0.5' })
     assert.match(de, /VERBINDUNG/)
     assert.match(de, /Kopplungscode/)
     assert.match(de, /gültig 30 Min\./)

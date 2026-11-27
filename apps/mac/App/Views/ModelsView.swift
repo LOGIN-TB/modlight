@@ -1,9 +1,9 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 struct ModelRow: View {
     @Environment(AppModel.self) private var model
-    let item: PodlightModel
+    let item: ModlightModel
     let run: ModelRun
 
     private var summary: String {
@@ -85,7 +85,7 @@ enum PhaseText {
 /// One model: its state, what it costs, what it is, and the actions for it in the toolbar.
 struct ModelDetailView: View {
     @Environment(AppModel.self) private var model
-    let item: PodlightModel
+    let item: ModlightModel
     @State private var confirmingDelete = false
     @State private var showingEngineLog = false
     /// A pricier card the user is about to approve while the model waits for one within its price.
@@ -117,11 +117,11 @@ struct ModelDetailView: View {
                     HStack(spacing: 10) {
                         ProgressView().controlSize(.small)
                         if let ceiling = waiting.maxPricePerHour {
-                            Text(waiting.wanted.map { String(localized: "\($0.name) (\(Format.perHour($0.pricePerHour))) is taken. Podlight tries every 30 seconds until \(Format.time(waiting.until)) for a card up to \(Format.perHour(ceiling)) and then starts by itself.") }
-                                 ?? String(localized: "Podlight tries every 30 seconds until \(Format.time(waiting.until)) for a card up to \(Format.perHour(ceiling)) and then starts by itself."))
+                            Text(waiting.wanted.map { String(localized: "\($0.name) (\(Format.perHour($0.pricePerHour))) is taken. Modlight tries every 30 seconds until \(Format.time(waiting.until)) for a card up to \(Format.perHour(ceiling)) and then starts by itself.") }
+                                 ?? String(localized: "Modlight tries every 30 seconds until \(Format.time(waiting.until)) for a card up to \(Format.perHour(ceiling)) and then starts by itself."))
                                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         } else {
-                            Text("Podlight tries every 30 seconds until \(Format.time(waiting.until)) and then resumes the pod with its disk, without downloading the model again.")
+                            Text("Modlight tries every 30 seconds until \(Format.time(waiting.until)) and then resumes the pod with its disk, without downloading the model again.")
                                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: 0)
@@ -173,11 +173,11 @@ struct ModelDetailView: View {
                 }
                 if let fallback = run.fellBackFrom, !fallback.isEmpty, !isIdle {
                     if let wanted = run.wantedPricePerHour, let price = run.pricePerHour, price > wanted + 0.005 {
-                        Label("\(fallback.joined(separator: ", ")) was taken; Podlight used \(run.gpuName ?? "another card") for \(Format.perHour(price)) instead of \(Format.perHour(wanted)).",
+                        Label("\(fallback.joined(separator: ", ")) was taken; Modlight used \(run.gpuName ?? "another card") for \(Format.perHour(price)) instead of \(Format.perHour(wanted)).",
                               systemImage: "arrow.triangle.branch")
                             .font(.callout).foregroundStyle(.orange)
                     } else {
-                        Label("\(fallback.joined(separator: ", ")) was taken; Podlight used \(run.gpuName ?? "another card").",
+                        Label("\(fallback.joined(separator: ", ")) was taken; Modlight used \(run.gpuName ?? "another card").",
                               systemImage: "arrow.triangle.branch")
                             .font(.caption).foregroundStyle(.secondary)
                     }
@@ -332,7 +332,7 @@ struct ModelDetailView: View {
 /// visit, so the model's status says what to do next right where the user looks.
 struct ModelActions: View {
     @Environment(AppModel.self) private var model
-    let item: PodlightModel
+    let item: ModlightModel
     let run: ModelRun
     var prominent = false
 

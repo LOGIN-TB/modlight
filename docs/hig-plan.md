@@ -1,4 +1,4 @@
-# HIG-Umsetzungsplan: Podlight für macOS
+# HIG-Umsetzungsplan: Modlight für macOS
 
 > Arbeitsplan nach dem Skill `apple-hig` (LOGIN-TB/claude-skills, Stand 2026-11-16).
 > Produktentscheidungen: Interview vom 2026-11-20. Quellen-IDs `[n]` verweisen auf
@@ -25,8 +25,8 @@
   Full Keyboard Access, Erhöhter Kontrast, Transparenz reduzieren, Bewegung reduzieren.
 - **Vorhandene Vorgaben:** keine eigene Marke außer Name und Icon; Deutsch und Englisch.
 - **Nichtziele:** kein iOS/iPadOS, kein Mac App Store, keine eigene App-Einstellung für Hell/Dunkel [26],
-  keine Konten oder Anmeldung bei Podlight selbst, keine KI-Funktionen in der App, kein Chat-Fenster
-  (Podlight ist Schnittstelle, nicht Client).
+  keine Konten oder Anmeldung bei Modlight selbst, keine KI-Funktionen in der App, kein Chat-Fenster
+  (Modlight ist Schnittstelle, nicht Client).
 - **Quellen zuletzt geprüft:** Skill-Paraphrasen 2026-11-16. Vor der Implementierung von
   Menüleisten-Extra, Liquid Glass und Alert-Stil die Originalseiten [164][70][113] erneut lesen.
 
@@ -100,10 +100,10 @@ Herkunft: **HIG** = Apple-Empfehlung, **ENG** = Engineering-Ableitung, **PROD** 
 - **Modalitäten:** Einrichtung (eigenes Fenster beim Erststart, später über Hilfe-Menü erneut),
   Start-Sheet, Neues Modell (Sheet mit Schritten Suche → Variante → GPU → Laufzeit/Zeitplan →
   Name), Beenden-Alert. Keine Sheet-Kaskaden [153].
-- **Menüleiste:** Podlight · Ablage (Neues Modell ⌘N) · Bearbeiten (Undo) · Modell (Starten ⌘R,
+- **Menüleiste:** Modlight · Ablage (Neues Modell ⌘N) · Bearbeiten (Undo) · Modell (Starten ⌘R,
   Stoppen ⌘., Verlängern) · Verbindung (OpenCode-Konfig kopieren ⇧⌘C) · Fenster · Hilfe
-  (Podlight-Hilfe, Einrichtung erneut, RunPod-Konsole öffnen).
-- **Menüleisten-Extra:** Status je laufendem Pod, Restzeit, $/h, Stopp, „Podlight öffnen“.
+  (Modlight-Hilfe, Einrichtung erneut, RunPod-Konsole öffnen).
+- **Menüleisten-Extra:** Status je laufendem Pod, Restzeit, $/h, Stopp, „Modlight öffnen“.
 - **Wiederherstellung:** letzte Auswahl und Fenstergröße.
 
 ## Zustandsmatrix

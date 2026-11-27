@@ -1,5 +1,5 @@
 import AppKit
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 extension ModelProvider {
@@ -68,10 +68,10 @@ struct MenuBarLamp: Equatable {
     }()
     @MainActor private static var cache: [String: NSImage] = [:]
 
-    /// `-PodlightLampPreview pod|venice|both` at launch shows that state, to check the colours in
+    /// `-ModlightLampPreview pod|venice|both` at launch shows that state, to check the colours in
     /// the menu bar without a running pod or a paid request.
     static var preview: MenuBarLamp? {
-        switch UserDefaults.standard.string(forKey: "PodlightLampPreview") {
+        switch UserDefaults.standard.string(forKey: "ModlightLampPreview") {
         case "pod": MenuBarLamp(podActive: true, apiProviders: [])
         case "venice": MenuBarLamp(podActive: false, apiProviders: [.venice])
         case "both": MenuBarLamp(podActive: true, apiProviders: [.venice])
@@ -82,10 +82,10 @@ struct MenuBarLamp: Equatable {
     var accessibilityText: String {
         let names = apiProviders.map(\.displayName).joined(separator: ", ")
         switch (podActive, apiProviders.isEmpty) {
-        case (false, true): return String(localized: "Podlight: nothing running")
-        case (true, true): return String(localized: "Podlight: pods running")
-        case (false, false): return String(localized: "Podlight: requests to \(names) running")
-        case (true, false): return String(localized: "Podlight: pods running, requests to \(names) running")
+        case (false, true): return String(localized: "Modlight: nothing running")
+        case (true, true): return String(localized: "Modlight: pods running")
+        case (false, false): return String(localized: "Modlight: requests to \(names) running")
+        case (true, false): return String(localized: "Modlight: pods running, requests to \(names) running")
         }
     }
 }

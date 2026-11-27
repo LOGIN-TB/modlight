@@ -1,32 +1,32 @@
 #!/usr/bin/env bash
 #
-# Builds, signs, notarises and packages Podlight for Mac, and writes the Sparkle appcast.
+# Builds, signs, notarises and packages Modlight for Mac, and writes the Sparkle appcast.
 #
 #   tools/mac-release.sh            # version from apps/mac/project.yml
 #
 # Needs on this Mac:
 #   - the "Developer ID Application" certificate in the keychain
 #   - notarisation credentials as a notarytool keychain profile, created once with
-#       xcrun notarytool store-credentials podlight-notary \
+#       xcrun notarytool store-credentials modlight-notary \
 #         --key <AuthKey_XXXX.p8> --key-id <KEY ID> --issuer <ISSUER ID>
 #     (or NOTARY_PROFILE=<name> for another profile name)
-#   - the Sparkle signing key in the keychain (account "podlight"), made by Sparkle's
-#     generate_keys --account podlight
+#   - the Sparkle signing key in the keychain (account "modlight"), made by Sparkle's
+#     generate_keys --account modlight
 #
-# Output in build/release: Podlight-<version>.dmg (notarised and stapled) and appcast.xml.
+# Output in build/release: Modlight-<version>.dmg (notarised and stapled) and appcast.xml.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mac="$root/apps/mac"
 out="$root/build/release"
 derived="$root/build/release-dd"
-profile="${NOTARY_PROFILE:-podlight-notary}"
+profile="${NOTARY_PROFILE:-modlight-notary}"
 version="$(sed -n 's/^ *MARKETING_VERSION: "\(.*\)"/\1/p' "$mac/project.yml")"
 build_number="$(sed -n 's/^ *CURRENT_PROJECT_VERSION: "\(.*\)"/\1/p' "$mac/project.yml")"
-app="$out/export/Podlight.app"
-dmg="$out/Podlight-$version.dmg"
+app="$out/export/Modlight.app"
+dmg="$out/Modlight-$version.dmg"
 
-echo "==> Podlight $version ($build_number)"
+echo "==> Modlight $version ($build_number)"
 # The app shows this version in its sidebar, settings and menu bar. A release tag on this commit
 # must name the same version, so the number users see is the one they downloaded.
 tag="$(git -C "$root" describe --tags --exact-match HEAD 2>/dev/null || true)"
@@ -50,14 +50,14 @@ echo "==> Generating the Xcode project"
 xcodegen generate --spec "$mac/project.yml" >/dev/null
 
 echo "==> Archiving (universal)"
-xcodebuild -project "$mac/Podlight.xcodeproj" -scheme Podlight -configuration Release \
-  -derivedDataPath "$derived" -archivePath "$out/Podlight.xcarchive" \
+xcodebuild -project "$mac/Modlight.xcodeproj" -scheme Modlight -configuration Release \
+  -derivedDataPath "$derived" -archivePath "$out/Modlight.xcarchive" \
   -destination 'generic/platform=macOS' ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
   archive | grep -E "error:|warning: .*App/|ARCHIVE (SUCCEEDED|FAILED)" || true
-[[ -d "$out/Podlight.xcarchive" ]] || { echo "archive failed"; exit 1; }
+[[ -d "$out/Modlight.xcarchive" ]] || { echo "archive failed"; exit 1; }
 
 echo "==> Exporting with Developer ID"
-xcodebuild -exportArchive -archivePath "$out/Podlight.xcarchive" -exportPath "$out/export" \
+xcodebuild -exportArchive -archivePath "$out/Modlight.xcarchive" -exportPath "$out/export" \
   -exportOptionsPlist "$mac/ExportOptions.plist" | grep -E "error|EXPORT (SUCCEEDED|FAILED)" || true
 [[ -d "$app" ]] || { echo "export failed"; exit 1; }
 
@@ -82,8 +82,8 @@ staple() {
 echo "==> Notarising the app"
 # The app is stapled before the disk image is made, so a copy dragged out of the image carries
 # its ticket and opens even without a network connection.
-ditto -c -k --keepParent "$app" "$out/Podlight.zip"
-notarise "$out/Podlight.zip"
+ditto -c -k --keepParent "$app" "$out/Modlight.zip"
+notarise "$out/Modlight.zip"
 staple "$app"
 
 echo "==> Building the disk image"
@@ -96,7 +96,7 @@ tiffutil -cathidpicheck "$assets/background.png" "$assets/background@2x.png" -ou
 venv="$root/build/dmg-venv"
 [[ -x "$venv/bin/dmgbuild" ]] || { python3 -m venv "$venv" && "$venv/bin/pip" install --quiet "dmgbuild==1.6.5"; }
 "$venv/bin/dmgbuild" -s "$root/tools/dmg/settings.py" -D app="$app" -D background="$assets/background.tiff" \
-  "Podlight" "$dmg" >/dev/null
+  "Modlight" "$dmg" >/dev/null
 codesign --sign "Developer ID Application" --timestamp "$dmg"
 
 echo "==> Notarising the disk image"
@@ -111,21 +111,21 @@ fi
 
 echo "==> Appcast"
 sparkle_bin="$(find "$derived/SourcePackages/artifacts" -type d -path "*Sparkle/bin" | head -1)"
-signature="$("$sparkle_bin/sign_update" --account podlight "$dmg")"
+signature="$("$sparkle_bin/sign_update" --account modlight "$dmg")"
 length="$(stat -f%z "$dmg")"
 cat > "$out/appcast.xml" <<XML
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
-    <title>Podlight</title>
+    <title>Modlight</title>
     <item>
-      <title>Podlight $version</title>
+      <title>Modlight $version</title>
       <pubDate>$(LC_ALL=C date -u "+%a, %d %b %Y %H:%M:%S +0000")</pubDate>
       <sparkle:version>$build_number</sparkle:version>
       <sparkle:shortVersionString>$version</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <sparkle:releaseNotesLink>https://github.com/LOGIN-TB/podlight/releases/tag/v$version</sparkle:releaseNotesLink>
-      <enclosure url="https://github.com/LOGIN-TB/podlight/releases/download/v$version/Podlight-$version.dmg"
+      <sparkle:releaseNotesLink>https://github.com/LOGIN-TB/modlight/releases/tag/v$version</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/LOGIN-TB/modlight/releases/download/v$version/Modlight-$version.dmg"
                  type="application/octet-stream" $signature />
     </item>
   </channel>

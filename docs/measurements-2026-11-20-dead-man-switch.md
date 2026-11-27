@@ -1,5 +1,7 @@
 # Messung 2026-11-20: Kann ein Pod sich selbst stoppen?
 
+> Entstanden unter dem früheren Namen Podlight. · Written under the former name Podlight.
+
 Frage aus dem Redesign (Entscheidung 4, 20, 21): Ein lokal gestarteter Pod soll sich selbst
 stoppen, wenn Podlight sich 15 Minuten nicht meldet (Mac schläft, App abgestürzt, Netz weg).
 Dafür braucht der Pod eine Möglichkeit, sich selbst anzuhalten. Vorher war nur ein

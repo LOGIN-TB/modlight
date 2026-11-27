@@ -5535,6 +5535,6 @@
       "title" : "odd-heads, euEEA, goal balanced"
     }
   ],
-  "description" : "Which cards Podlight offers for a model, best first for the model's goal; also the fallback order when a pod is created. Input: a model (spec/schema/model.json), the catalog fixture, a hosting policy. Expected: the options in order. Compare numbers with a relative tolerance of 1e-9.",
-  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+  "description" : "Which cards Modlight offers for a model, best first for the model's goal; also the fallback order when a pod is created. Input: a model (spec/schema/model.json), the catalog fixture, a hosting policy. Expected: the options in order. Compare numbers with a relative tolerance of 1e-9.",
+  "recordedFrom" : "Swift engine (ModlightEngine), Modlight 0.3.2"
 }

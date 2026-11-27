@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { ANYWHERE, engineOf, type GPUChoice, type HostingPolicy, type PodlightModel, type SuggestionGoal } from '../model.ts'
+import { ANYWHERE, engineOf, type GPUChoice, type HostingPolicy, type ModlightModel, type SuggestionGoal } from '../model.ts'
 import { type GPUType, mayBeAvailable, mayHaveCuda, maxCards, pricePerHour } from '../runpod/types.ts'
 import { specPath } from '../spec.ts'
 import { bytesToGiB, CardSupport, DEFAULT_KV_BYTES_PER_TOKEN, plan } from './capacity.ts'
@@ -36,11 +36,11 @@ export function tokensPerSecond(gpuId: string, weightsGB: number): number | null
   return (entry.bandwidthGBs / weightsGB) * speeds.speedModel.efficiency * (entry.measuredFactor ?? 1)
 }
 
-const formatRuns = (format: PodlightModel['format'], gpuId: string): boolean =>
+const formatRuns = (format: ModlightModel['format'], gpuId: string): boolean =>
   format === 'fp8' ? CardSupport.fp8(gpuId) : format === 'nvfp4' ? CardSupport.nvfp4(gpuId) : true
 
 export function options(
-  model: PodlightModel, catalog: GPUType[], goal: SuggestionGoal,
+  model: ModlightModel, catalog: GPUType[], goal: SuggestionGoal,
   { context: requested = 65_536, concurrency = 1, hosting = ANYWHERE as HostingPolicy, includeUnavailable = false } = {},
 ): GPUOption[] {
   const context = Math.min(requested, model.nativeContextTokens ?? requested)

@@ -1,12 +1,12 @@
 import Charts
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// An API model's page: is it in use right now, what it cost and why, how fast it answers, how
 /// close it is to its limits. Figures first, charts next, details folded away.
 struct APIModelDetailView: View {
     @Environment(AppModel.self) private var model
-    let item: PodlightModel
+    let item: ModlightModel
     @State private var confirmingDelete = false
 
     private var source: Source { model.source(of: item.id) }
@@ -30,7 +30,7 @@ struct APIModelDetailView: View {
                                 outputUsd: price(\.output, today.completionTokens),
                                 hint: cacheHint(today), tint: tint)
                 } accessory: {
-                    InfoButton("An agent sends the whole conversation with every request, so input tokens dominate. Tokens the provider already has in its cache cost a fraction. Podlight sends a cache key per agent and system prompt so that requests land where the prefix is cached.")
+                    InfoButton("An agent sends the whole conversation with every request, so input tokens dominate. Tokens the provider already has in its cache cost a fraction. Modlight sends a cache key per agent and system prompt so that requests land where the prefix is cached.")
                 }
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: 16) {
@@ -178,7 +178,7 @@ struct APIModelDetailView: View {
         let cached = pricing.cacheRead ?? pricing.input
         let at70 = (Double(today.promptTokens) * (0.3 * pricing.input + 0.7 * cached) + Double(today.completionTokens) * pricing.output) / 1_000_000
         guard at70 < today.usd * 0.9 else { return nil }
-        return String(localized: "Only \(Self.percent(share)) of the input came from the cache. Podlight now sends a cache key per agent; at 70 % today would have cost about \(Format.money(at70)).")
+        return String(localized: "Only \(Self.percent(share)) of the input came from the cache. Modlight now sends a cache key per agent; at 70 % today would have cost about \(Format.money(at70)).")
     }
 
     // MARK: Live
@@ -325,7 +325,7 @@ struct APIModelDetailView: View {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.name).font(.body.monospaced()).textSelection(.enabled)
-                    Text("Same address and key as every other model. Claude Code works too; Podlight translates its requests.")
+                    Text("Same address and key as every other model. Claude Code works too; Modlight translates its requests.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()

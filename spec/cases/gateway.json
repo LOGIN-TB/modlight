@@ -729,5 +729,5 @@
     }
   ],
   "description" : "What the gateway changes and says. `systemMessagesAsReminders` (Anthropic Messages API only): expected is the rewritten body, or null when the body must be forwarded unchanged. `gatewayError`: status and code (OpenAI shape) or error type (Anthropic shape); the message text may differ per implementation. `isValidName`: the served-name rule. `summarizeEngineLog`: the lines shown when an engine dies.",
-  "recordedFrom" : "Swift engine (PodlightEngine), Podlight 0.3.2"
+  "recordedFrom" : "Swift engine (ModlightEngine), Modlight 0.3.2"
 }

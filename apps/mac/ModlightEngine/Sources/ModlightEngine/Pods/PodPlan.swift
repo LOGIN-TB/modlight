@@ -1,0 +1,176 @@
+import Foundation
+
+/// Builds the RunPod request for a model: a stock engine image (vLLM, or llama.cpp for GGUF),
+/// Modlight's start script as the container command, the dead-man switch beside the engine, and
+/// optionally a disk that survives stop/start.
+public enum PodPlan {
+    /// Pinned: `latest` has broken freshly released architectures before. v0.28.0 is the version
+    /// RunPod Launcher was measured with (2026-08-30), and its parser names are the ones used here.
+    public static let image = "vllm/vllm-openai:v0.28.0"
+    /// The image is built on CUDA 13.0.2 (NVIDIA_REQUIRE_CUDA=cuda>=13.0, read from its config on
+    /// 2026-11-20). A host with an older driver cannot start it, and RunPod has 12.4 hosts.
+    public static let minCudaVersion = "13.0"
+
+    /// llama.cpp's server image, `full` because it carries the Python the watchdog needs. Pinned to
+    /// a build; its cuda12 flavour needs a host with CUDA 12.8 or newer (NVIDIA_REQUIRE_CUDA).
+    public static let llamaImage = "ghcr.io/ggml-org/llama.cpp:full-cuda12-b12602"
+    public static let llamaMinCudaVersion = "12.8"
+
+    public static func image(for engine: InferenceEngine) -> String { engine == .vllm ? image : llamaImage }
+    public static func minCudaVersion(for engine: InferenceEngine) -> String {
+        engine == .vllm ? minCudaVersion : llamaMinCudaVersion
+    }
+    public static let enginePort = 8000
+    public static let watchdogPort = 8001
+    /// Extra time past "Läuft bis" before the pod's own deadline fires. The app stops it on time;
+    /// the deadline is only the backstop for when the app cannot.
+    public static let deadlineGrace: TimeInterval = 10 * 60
+
+    /// A stopped pod resumes with the environment it was created with, so it would run the start
+    /// script and watchdog of the version that made it. Before a resume, Modlight puts in the
+    /// current ones and the new deadline. RunPod accepts a new environment for a stopped pod and
+    /// keeps it stopped (measured 2026-11-23). Nil when nothing changes.
+    public static func freshenedEnv(_ env: [String: String], runUntil: Date?) -> [String: String]? {
+        guard env["MODLIGHT_API_KEY"] != nil else { return nil } // not Modlight's
+        var fresh = env
+        fresh["MODLIGHT_WATCHDOG_B64"] = resource("watchdog", "py").base64EncodedString()
+        fresh["MODLIGHT_BOOT_B64"] = resource("boot", "sh").base64EncodedString()
+        fresh["MODLIGHT_DEADLINE"] = runUntil.map { String(Int($0.addingTimeInterval(deadlineGrace).timeIntervalSince1970)) }
+        return fresh == env ? nil : fresh
+    }
+
+    public static func request(for model: ModlightModel, podKey: String, huggingFaceToken: String?,
+                               runUntil: Date?, heartbeatMinutes: Int, dataCenterIds: [String]? = nil,
+                               owner: String? = nil) -> CreatePodRequest {
+        let cards = model.preferredGPU?.count ?? 1
+        var env: [String: String] = [
+            "MODLIGHT_MODEL": model.repoId,
+            "MODLIGHT_SERVED_NAME": model.name,
+            "MODLIGHT_API_KEY": podKey,
+            "MODLIGHT_MAX_LEN": String(model.contextTokens),
+            // vLLM queues what does not fit; a small cap keeps hybrid-attention models startable.
+            "MODLIGHT_MAX_SEQS": String(max(4, model.concurrency * 2)),
+            "MODLIGHT_HEARTBEAT_MINUTES": String(heartbeatMinutes),
+            "MODLIGHT_WATCHDOG_B64": resource("watchdog", "py").base64EncodedString(),
+            "MODLIGHT_BOOT_B64": resource("boot", "sh").base64EncodedString(),
+            "MODLIGHT_TP": String(cards),
+            "MODLIGHT_ENGINE": model.engine == .vllm ? "vllm" : "llamacpp",
+            // Xet's high-performance mode replaced hf_transfer for fast Hub downloads.
+            "HF_XET_HIGH_PERFORMANCE": "1",
+        ]
+        // With a kept disk, downloads go there so a resumed pod starts without downloading.
+        if model.keepDisk {
+            env["HF_HOME"] = "/workspace/hf"
+            env["LLAMA_CACHE"] = "/workspace/llama-cache"
+        }
+        if model.engine == .llamaCpp {
+            env["MODLIGHT_QUANT"] = model.quant ?? "Q4_K_M"
+            env["MODLIGHT_PARALLEL"] = String(max(1, model.concurrency))
+        }
+        if let parser = model.toolCallParser { env["MODLIGHT_TOOL_PARSER"] = parser }
+        if let parser = model.reasoningParser { env["MODLIGHT_REASONING_PARSER"] = parser }
+        if let token = huggingFaceToken, !token.isEmpty { env["HF_TOKEN"] = token }
+        if let runUntil { env["MODLIGHT_DEADLINE"] = String(Int(runUntil.addingTimeInterval(deadlineGrace).timeIntervalSince1970)) }
+
+        return CreatePodRequest(
+            name: PodOwner.podName(model: model.name, owner: owner),
+            image: image(for: model.engine),
+            cloud: model.preferredGPU?.cloud ?? .secure,
+            gpu: .init(id: model.preferredGPU?.gpuId ?? "placeholder", count: cards, minCudaVersion: minCudaVersion(for: model.engine)),
+            disk: containerGB(for: model),
+            ports: ["\(enginePort)/http", "\(watchdogPort)/http"],
+            env: env,
+            entrypoint: ["/bin/bash", "-c"],
+            cmd: [#"echo "$MODLIGHT_BOOT_B64" | base64 -d > /tmp/modlight-boot.sh && exec bash /tmp/modlight-boot.sh"#],
+            mounts: model.keepDisk ? .init(persistentGB: persistentGB(for: model)) : nil,
+            dataCenterIds: dataCenterIds)
+    }
+
+    /// Room for the weights plus tokenizer, compile caches and a margin.
+    public static func persistentGB(for model: ModlightModel) -> Int {
+        Int((model.weightBytes / 1_000_000_000 * 1.15).rounded(.up)) + 10
+    }
+
+    /// Without a kept disk the download lands on the container disk, which must hold it.
+    public static func containerGB(for model: ModlightModel) -> Int {
+        model.keepDisk ? 30 : Int((model.weightBytes / 1_000_000_000 * 1.15).rounded(.up)) + 20
+    }
+
+    /// Storage cost per hour while this model's pod runs.
+    public static func storagePerHour(for model: ModlightModel) -> Double {
+        StoragePricing.runningPerHour(containerGB: containerGB(for: model),
+                                      volumeGB: model.keepDisk ? persistentGB(for: model) : 0)
+    }
+
+    /// RunPod's HTTP proxy for one port of a pod.
+    public static func proxyURL(_ podId: String, _ port: Int) -> URL {
+        URL(string: "https://\(podId)-\(port).proxy.runpod.net")!
+    }
+
+    static func resource(_ name: String, _ ext: String) -> Data {
+        guard let url = Bundle.module.url(forResource: name, withExtension: ext),
+              let data = try? Data(contentsOf: url) else {
+            preconditionFailure("missing bundled resource \(name).\(ext)")
+        }
+        return data
+    }
+
+    /// The cards of a start split by price. The first choice (the user's card, or the best
+    /// suggestion) sets the reference; a fallback may cost up to `stepPercent` more, or up to
+    /// `maxPricePerHour` when the user approved a pricier card. Pricier ones are not booked
+    /// without asking: that is how a 0.79 $/h start once ended on a card for 7.99 $/h.
+    /// Prices are per hour for the whole pod (price × cards). A card without a price counts as
+    /// too expensive; without a reference price and no maximum, nothing is held back.
+    public static func priceGuard(choices: [GPUChoice], catalog: [RunpodGPUType], stepPercent: Int,
+                                  maxPricePerHour: Double? = nil) -> PriceGuard {
+        let cards = Dictionary(catalog.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        func priced(_ choice: GPUChoice) -> PricedChoice? {
+            guard let card = cards[choice.gpuId], let price = card.pricePerHour(in: choice.cloud) else { return nil }
+            let name = choice.count > 1 ? "\(choice.count) × \(card.name)" : card.name
+            return PricedChoice(choice: choice, name: name, pricePerHour: (price * Double(choice.count) * 1000).rounded() / 1000)
+        }
+        guard let first = choices.first else { return PriceGuard(wanted: nil, ceiling: nil, within: [], above: []) }
+        let wanted = priced(first)
+        let ceiling = maxPricePerHour ?? wanted.map { ($0.pricePerHour * (1 + Double(max(0, stepPercent)) / 100) * 1000).rounded() / 1000 }
+        guard let ceiling else { return PriceGuard(wanted: wanted, ceiling: nil, within: choices, above: []) }
+        var within: [GPUChoice] = []
+        var above: [PricedChoice] = []
+        for choice in choices {
+            let item = priced(choice)
+            if let item, item.pricePerHour <= ceiling + 1e-9 {
+                within.append(choice)
+            } else if let item {
+                above.append(item)
+            }
+        }
+        above.sort { $0.pricePerHour < $1.pricePerHour }
+        return PriceGuard(wanted: wanted, ceiling: ceiling, within: within, above: above)
+    }
+
+    /// The fallback order for a start: the user's card first, then the suggestion for the goal.
+    /// Every fallback holds the configured context (vLLM refuses to start otherwise, after the
+    /// download) and obeys the hosting rules.
+    public static func choices(for model: ModlightModel, catalog: [RunpodGPUType], hosting: HostingPolicy = .anywhere,
+                               limit: Int = 6) -> [GPUChoice] {
+        var ordered = GPUSuggestion.options(for: model.info, catalog: catalog, goal: model.goal,
+                                            context: model.contextTokens, concurrency: model.concurrency,
+                                            hosting: hosting).map(\.choice)
+        if let preferred = model.preferredGPU, hosting.clouds.contains(preferred.cloud) {
+            ordered.removeAll { $0 == preferred }
+            ordered.insert(preferred, at: 0)
+        }
+        return Array(ordered.prefix(limit))
+    }
+}
+
+/// The cards a start may book without asking, and the pricier ones it may only offer.
+public struct PriceGuard: Sendable, Equatable {
+    /// The first choice with its price; nil when the catalog has no price for it.
+    public var wanted: PricedChoice?
+    /// The most a card may cost per hour; nil when there is no reference price.
+    public var ceiling: Double?
+    /// Cards to try, in the original order.
+    public var within: [GPUChoice]
+    /// Cards above the ceiling, cheapest first.
+    public var above: [PricedChoice]
+}

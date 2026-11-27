@@ -32,7 +32,7 @@ export function systemMessagesAsReminders(body: Json): Json | null {
 
 const isObject = (value: unknown): value is Json => typeof value === 'object' && value !== null && !Array.isArray(value)
 
-/** Things that stop a request, each with its own sentence. Mirrors PodlightError in Swift. */
+/** Things that stop a request, each with its own sentence. Mirrors ModlightError in Swift. */
 export type GatewayError =
   | { kind: 'unknownModel' }
   | { kind: 'missingRunpodKey' }
@@ -66,12 +66,12 @@ export interface Failure {
 export function failure(error: GatewayError, model: string): Failure {
   switch (error.kind) {
     case 'unknownModel':
-      return { status: 404, code: 'model_not_found', message: `This Podlight server has no model named "${model}". GET /v1/models lists them.` }
+      return { status: 404, code: 'model_not_found', message: `This Modlight server has no model named "${model}". GET /v1/models lists them.` }
     case 'missingRunpodKey':
-      return { status: 503, code: 'setup_incomplete', message: 'This Podlight server has no RunPod API key yet. Add it in the Podlight app under this server.' }
+      return { status: 503, code: 'setup_incomplete', message: 'This Modlight server has no RunPod API key yet. Add it in the Modlight app under this server.' }
     case 'limitReached': {
       const limit = error.limit === 'monthly-limit' ? 'monthly' : 'daily'
-      return { status: 429, code: 'spend_limit', message: `The server's ${limit} spending limit is reached, so ${model} stays stopped. Raise the limit in the Podlight app.` }
+      return { status: 429, code: 'spend_limit', message: `The server's ${limit} spending limit is reached, so ${model} stays stopped. Raise the limit in the Modlight app.` }
     }
     case 'noCapacity':
       return { status: 503, code: 'no_capacity', message: `RunPod has no free card for ${model} right now (tried: ${error.tried.join(', ')}). Try again in a few minutes.` }
@@ -80,19 +80,19 @@ export function failure(error: GatewayError, model: string): Failure {
     case 'notReadyInTime':
       return { status: 503, code: 'starting', message: `${model} is still starting. A new pod can take up to 25 minutes; a resumed one about a minute. Try again shortly.` }
     case 'wakeDisabled':
-      return { status: 503, code: 'stopped', message: `${model} is stopped. Start it in the Podlight app.` }
+      return { status: 503, code: 'stopped', message: `${model} is stopped. Start it in the Modlight app.` }
     case 'runpod':
       return { status: 502, code: 'runpod_error', message: `RunPod refused (${error.status}): ${error.message.slice(0, 200)}` }
     case 'notAllowed':
       return { status: 403, code: 'model_not_allowed', message: `This access key may not use ${model}.` }
     case 'cardTooExpensive': {
       const card = error.wanted ? `${error.wanted.name} at ${dollars(error.wanted.pricePerHour)}/h` : 'The chosen card'
-      return { status: 503, code: 'card_too_expensive', message: `${card} for ${model} is taken, and the free cards cost more than the server's price step allows. Nothing was booked; the server keeps trying for a card up to ${dollars(error.ceiling)}/h. Start it on a pricier card in the Podlight app, or try again later.` }
+      return { status: 503, code: 'card_too_expensive', message: `${card} for ${model} is taken, and the free cards cost more than the server's price step allows. Nothing was booked; the server keeps trying for a card up to ${dollars(error.ceiling)}/h. Start it on a pricier card in the Modlight app, or try again later.` }
     }
     case 'hostBusy':
-      return { status: 503, code: 'host_busy', message: `The card on the machine of ${model}'s pod is taken right now, so it could not resume. Its disk with the model is kept, and the server keeps trying to resume it for half an hour. Try again in a few minutes, or start it on a new card in the Podlight app.` }
+      return { status: 503, code: 'host_busy', message: `The card on the machine of ${model}'s pod is taken right now, so it could not resume. Its disk with the model is kept, and the server keeps trying to resume it for half an hour. Try again in a few minutes, or start it on a new card in the Modlight app.` }
     case 'missingProviderKey':
-      return { status: 503, code: 'setup_incomplete', message: `This Podlight server has no ${providerName(error.provider)} API key yet. Add it in the Podlight app under this server.` }
+      return { status: 503, code: 'setup_incomplete', message: `This Modlight server has no ${providerName(error.provider)} API key yet. Add it in the Modlight app under this server.` }
     case 'provider':
       return { status: error.failure.status, code: error.failure.code, message: error.failure.message }
     case 'unsupportedPath':
@@ -116,7 +116,7 @@ export function anthropicType(status: number): string {
 /** OpenAI's error shape, or Anthropic's for the Messages API so Claude Code shows the message. */
 export function errorBody(status: number, message: string, code: string, anthropic: boolean): Json {
   if (anthropic) return { type: 'error', error: { type: anthropicType(status), message } }
-  return { error: { message, type: 'podlight_error', code } }
+  return { error: { message, type: 'modlight_error', code } }
 }
 
 /** True for an answer made of one or two characters repeated, as a model gives when its numbers are

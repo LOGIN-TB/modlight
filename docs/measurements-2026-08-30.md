@@ -1,5 +1,7 @@
 # Walking skeleton: measured, not assumed
 
+> Entstanden unter dem früheren Namen Podlight. · Written under the former name Podlight.
+
 Everything below came from a real run on RunPod on 2026-08-30, not from
 documentation. Where it contradicts what the plan assumed, the measurement wins.
 

@@ -166,7 +166,7 @@ function usage(value: unknown): Json {
     cache_read_input_tokens: cached, cache_creation_input_tokens: 0 }
 }
 
-const messageId = (id: unknown): string => `msg_${str(id) || 'podlight'}`
+const messageId = (id: unknown): string => `msg_${str(id) || 'modlight'}`
 
 /** The reasoning text of a message or delta: `reasoning_content` (Venice, DeepSeek) or `reasoning` (vLLM). */
 const reasoning = (m: Json): string => str(m.reasoning_content) ?? str(m.reasoning) ?? ''

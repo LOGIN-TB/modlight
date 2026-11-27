@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { engineOf, type GPUChoice, type HostingPolicy, type InferenceEngine, type PodlightModel, type PricedChoice, ANYWHERE } from '../model.ts'
+import { engineOf, type GPUChoice, type HostingPolicy, type InferenceEngine, type ModlightModel, type PricedChoice, ANYWHERE } from '../model.ts'
 import type { CreatePodRequest, GPUType } from '../runpod/types.ts'
 import { pricePerHour } from '../runpod/types.ts'
 import { sameChoice } from '../runpod/types.ts'
@@ -7,11 +7,11 @@ import { specPath } from '../spec.ts'
 import { options } from './gpuSuggestion.ts'
 import { clouds, StoragePricing } from './hosting.ts'
 
-// The pod Podlight asks RunPod for: a stock engine image, Podlight's start script (spec/pod/boot.sh)
+// The pod Modlight asks RunPod for: a stock engine image, Modlight's start script (spec/pod/boot.sh)
 // as the command, the dead-man switch (spec/pod/watchdog.py) beside the engine, optionally a kept
 // disk. Port of PodPlan.swift; held to spec/cases/pod-plan.json.
 
-/** Pinned; v0.28.0 is the version Podlight was measured with. Needs CUDA 13.0 hosts. */
+/** Pinned; v0.28.0 is the version Modlight was measured with. Needs CUDA 13.0 hosts. */
 export const VLLM_IMAGE = 'vllm/vllm-openai:v0.28.0'
 /** `full` carries the Python the watchdog needs. Needs CUDA 12.8 hosts. */
 export const LLAMA_IMAGE = 'ghcr.io/ggml-org/llama.cpp:full-cuda12-b12602'
@@ -32,35 +32,35 @@ export interface RequestOptions {
   runUntil: Date | null
   heartbeatMinutes: number
   dataCenterIds?: string[] | null
-  /** `podlight-` on the Mac, `podlight-srv-` on the server, so pods are told apart at RunPod. */
+  /** `modlight-` on the Mac, `modlight-srv-` on the server, so pods are told apart at RunPod. */
   namePrefix?: string
 }
 
 /** A stopped pod resumes with the environment it was created with; before a resume it gets this
  * version's start script, watchdog and the new deadline. Null when nothing changes. */
 export function freshenedEnv(env: Record<string, string>, runUntil: Date | null): Record<string, string> | null {
-  if (env.PODLIGHT_API_KEY === undefined) return null
-  const fresh: Record<string, string> = { ...env, PODLIGHT_WATCHDOG_B64: POD_SCRIPTS.watchdog, PODLIGHT_BOOT_B64: POD_SCRIPTS.boot }
-  if (runUntil) fresh.PODLIGHT_DEADLINE = String(Math.trunc((runUntil.getTime() + DEADLINE_GRACE_MS) / 1000))
-  else delete fresh.PODLIGHT_DEADLINE
+  if (env.MODLIGHT_API_KEY === undefined) return null
+  const fresh: Record<string, string> = { ...env, MODLIGHT_WATCHDOG_B64: POD_SCRIPTS.watchdog, MODLIGHT_BOOT_B64: POD_SCRIPTS.boot }
+  if (runUntil) fresh.MODLIGHT_DEADLINE = String(Math.trunc((runUntil.getTime() + DEADLINE_GRACE_MS) / 1000))
+  else delete fresh.MODLIGHT_DEADLINE
   const same = Object.keys(fresh).length === Object.keys(env).length && Object.entries(fresh).every(([k, v]) => env[k] === v)
   return same ? null : fresh
 }
 
-export function request(model: PodlightModel, o: RequestOptions): CreatePodRequest {
+export function request(model: ModlightModel, o: RequestOptions): CreatePodRequest {
   const engine = engineOf(model.format)
   const cards = model.preferredGPU?.count ?? 1
   const env: Record<string, string> = {
-    PODLIGHT_MODEL: model.repoId,
-    PODLIGHT_SERVED_NAME: model.name,
-    PODLIGHT_API_KEY: o.podKey,
-    PODLIGHT_MAX_LEN: String(model.contextTokens),
-    PODLIGHT_MAX_SEQS: String(Math.max(4, model.concurrency * 2)),
-    PODLIGHT_HEARTBEAT_MINUTES: String(o.heartbeatMinutes),
-    PODLIGHT_WATCHDOG_B64: POD_SCRIPTS.watchdog,
-    PODLIGHT_BOOT_B64: POD_SCRIPTS.boot,
-    PODLIGHT_TP: String(cards),
-    PODLIGHT_ENGINE: engine === 'vllm' ? 'vllm' : 'llamacpp',
+    MODLIGHT_MODEL: model.repoId,
+    MODLIGHT_SERVED_NAME: model.name,
+    MODLIGHT_API_KEY: o.podKey,
+    MODLIGHT_MAX_LEN: String(model.contextTokens),
+    MODLIGHT_MAX_SEQS: String(Math.max(4, model.concurrency * 2)),
+    MODLIGHT_HEARTBEAT_MINUTES: String(o.heartbeatMinutes),
+    MODLIGHT_WATCHDOG_B64: POD_SCRIPTS.watchdog,
+    MODLIGHT_BOOT_B64: POD_SCRIPTS.boot,
+    MODLIGHT_TP: String(cards),
+    MODLIGHT_ENGINE: engine === 'vllm' ? 'vllm' : 'llamacpp',
     HF_XET_HIGH_PERFORMANCE: '1',
   }
   if (model.keepDisk) {
@@ -68,16 +68,16 @@ export function request(model: PodlightModel, o: RequestOptions): CreatePodReque
     env.LLAMA_CACHE = '/workspace/llama-cache'
   }
   if (engine === 'llamaCpp') {
-    env.PODLIGHT_QUANT = model.quant ?? 'Q4_K_M'
-    env.PODLIGHT_PARALLEL = String(Math.max(1, model.concurrency))
+    env.MODLIGHT_QUANT = model.quant ?? 'Q4_K_M'
+    env.MODLIGHT_PARALLEL = String(Math.max(1, model.concurrency))
   }
-  if (model.toolCallParser) env.PODLIGHT_TOOL_PARSER = model.toolCallParser
-  if (model.reasoningParser) env.PODLIGHT_REASONING_PARSER = model.reasoningParser
+  if (model.toolCallParser) env.MODLIGHT_TOOL_PARSER = model.toolCallParser
+  if (model.reasoningParser) env.MODLIGHT_REASONING_PARSER = model.reasoningParser
   if (o.huggingFaceToken) env.HF_TOKEN = o.huggingFaceToken
-  if (o.runUntil) env.PODLIGHT_DEADLINE = String(Math.trunc((o.runUntil.getTime() + DEADLINE_GRACE_MS) / 1000))
+  if (o.runUntil) env.MODLIGHT_DEADLINE = String(Math.trunc((o.runUntil.getTime() + DEADLINE_GRACE_MS) / 1000))
 
   const body: CreatePodRequest = {
-    name: `${o.namePrefix ?? 'podlight-'}${model.name}`.slice(0, 60),
+    name: `${o.namePrefix ?? 'modlight-'}${model.name}`.slice(0, 60),
     image: imageFor(engine),
     cloud: model.preferredGPU?.cloud ?? 'SECURE',
     gpu: { id: model.preferredGPU?.gpuId ?? 'placeholder', count: cards, minCudaVersion: minCudaVersion(engine) },
@@ -85,7 +85,7 @@ export function request(model: PodlightModel, o: RequestOptions): CreatePodReque
     ports: [`${ENGINE_PORT}/http`, `${WATCHDOG_PORT}/http`],
     env,
     entrypoint: ['/bin/bash', '-c'],
-    cmd: ['echo "$PODLIGHT_BOOT_B64" | base64 -d > /tmp/podlight-boot.sh && exec bash /tmp/podlight-boot.sh'],
+    cmd: ['echo "$MODLIGHT_BOOT_B64" | base64 -d > /tmp/modlight-boot.sh && exec bash /tmp/modlight-boot.sh'],
   }
   if (model.keepDisk) body.mounts = { persistent: { size: Math.max(10, persistentGB(model)), path: '/workspace' } }
   if (o.dataCenterIds) body.dataCenterIds = o.dataCenterIds
@@ -93,19 +93,19 @@ export function request(model: PodlightModel, o: RequestOptions): CreatePodReque
 }
 
 /** Room for the weights plus tokenizer, compile caches and a margin. */
-export const persistentGB = (model: PodlightModel): number => Math.ceil((model.weightBytes / 1_000_000_000) * 1.15) + 10
+export const persistentGB = (model: ModlightModel): number => Math.ceil((model.weightBytes / 1_000_000_000) * 1.15) + 10
 
 /** Without a kept disk the download lands on the container disk, which must hold it. */
-export const containerGB = (model: PodlightModel): number =>
+export const containerGB = (model: ModlightModel): number =>
   model.keepDisk ? 30 : Math.ceil((model.weightBytes / 1_000_000_000) * 1.15) + 20
 
-export const storagePerHour = (model: PodlightModel): number =>
+export const storagePerHour = (model: ModlightModel): number =>
   StoragePricing.runningPerHour(containerGB(model), model.keepDisk ? persistentGB(model) : 0)
 
 export const proxyURL = (podId: string, port: number): string => `https://${podId}-${port}.proxy.runpod.net`
 
 /** The fallback order for a start: the user's card first, then the suggestion for the goal. */
-export function choices(model: PodlightModel, catalog: GPUType[], hosting: HostingPolicy = ANYWHERE, limit = 6): GPUChoice[] {
+export function choices(model: ModlightModel, catalog: GPUType[], hosting: HostingPolicy = ANYWHERE, limit = 6): GPUChoice[] {
   const ordered = options(model, catalog, model.goal, { context: model.contextTokens, concurrency: model.concurrency, hosting })
     .map((o) => o.choice)
   const preferred = model.preferredGPU

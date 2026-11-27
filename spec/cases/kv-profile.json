@@ -1,5 +1,5 @@
 {
-  "description": "KV cache per token read from a model's config.json (Podlight 0.2, 2026-11-21). Implemented by the Swift engine; the Node service follows in milestone 2. bytesPerToken is compared with a tolerance of 1e-6.",
+  "description": "KV cache per token read from a model's config.json (Modlight 0.2, 2026-11-21). Implemented by the Swift engine; the Node service follows in milestone 2. bytesPerToken is compared with a tolerance of 1e-6.",
   "cases": [
     {
       "id": "kvProfile/hybrid-qwen3.8-27b-matches-the-measurement",

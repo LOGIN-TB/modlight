@@ -92,7 +92,7 @@ export function supportsPath(path: string, provider: ModelProvider): boolean {
 
 export interface ProviderFailure { status: number; code: string; message: string }
 
-/** A provider's error answer as Podlight's own: used-up balance, key limit, refused key, rate
+/** A provider's error answer as Modlight's own: used-up balance, key limit, refused key, rate
  * limit; anything else keeps its status. */
 export function providerFailure(provider: ModelProvider, status: number, text: string): ProviderFailure {
   let json: Json | null = null
@@ -111,7 +111,7 @@ export function providerFailure(provider: ModelProvider, status: number, text: s
     return { status: 402, code: 'provider_balance', message: `Your ${name} balance is used up. Top it up at venice.ai, then try again.` }
   }
   if (status === 401 || status === 403) {
-    return { status: 502, code: 'provider_auth', message: `${name} refused the server's API key (${status}). Check it in the Podlight app under this server.` }
+    return { status: 502, code: 'provider_auth', message: `${name} refused the server's API key (${status}). Check it in the Modlight app under this server.` }
   }
   if (status === 429) return { status: 429, code: 'provider_rate_limit', message: `${name} is rate-limiting this key. Try again in a moment.` }
   const shown = detail ? detail.slice(0, 300) : 'no details'

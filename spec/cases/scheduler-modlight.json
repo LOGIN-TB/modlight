@@ -1,0 +1,244 @@
+{
+  "description": "New rules from the Modlight redesign (2026-11-20). Agreed; `status` names which implementations pass them: 'swift' = ModlightEngine (apps/mac/ModlightEngine), the Node server does not yet (milestone 2). They extend scheduler.json and do not change any of its expectations. Same input format, plus an optional `session` on decide and a new function `admitWake`.",
+  "functions": {
+    "decide": "as in scheduler.json; input may add session {runUntil: ISO timestamp | null}",
+    "admitWake": "input {spend} -> {admit: boolean, because: reason}. Called by the gateway BEFORE it wakes a stopped pod for an incoming request."
+  },
+  "cases": [
+    {
+      "id": "decide/run-until-stops-a-running-pod-at-its-end",
+      "title": "every start has an end: the pod stops when 'Läuft bis' is reached, even inside the window",
+      "function": "decide",
+      "input": {
+        "schedule": {
+          "enabled": true,
+          "timezone": "Europe/Berlin",
+          "weekdays": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "startAt": "07:00",
+          "stopAt": "19:00",
+          "idleStopMinutes": 30,
+          "maxRuntimeHours": 12
+        },
+        "pod": {
+          "status": "RUNNING",
+          "startedAt": "2026-09-01T08:00:00.000Z",
+          "lastRequestAt": "2026-09-01T09:59:00.000Z",
+          "idleStoppedAt": null,
+          "engineReady": true,
+          "paused": false,
+          "startedManually": true,
+          "inFlightRequests": 0
+        },
+        "spend": {
+          "todayUsd": 0,
+          "monthUsd": 0,
+          "dailyLimitUsd": null,
+          "monthlyLimitUsd": null
+        },
+        "session": {
+          "runUntil": "2026-09-01T10:00:00.000Z"
+        },
+        "now": "2026-09-01T10:00:00.000Z"
+      },
+      "expected": {
+        "do": "stop",
+        "because": "run-until"
+      }
+    },
+    {
+      "id": "decide/run-until-not-yet-reached",
+      "title": "one minute before its end the pod keeps running",
+      "function": "decide",
+      "input": {
+        "schedule": {
+          "enabled": false,
+          "timezone": "Europe/Berlin",
+          "weekdays": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "startAt": "07:00",
+          "stopAt": "19:00",
+          "idleStopMinutes": 30,
+          "maxRuntimeHours": 12
+        },
+        "pod": {
+          "status": "RUNNING",
+          "startedAt": "2026-09-01T08:00:00.000Z",
+          "lastRequestAt": "2026-09-01T09:58:00.000Z",
+          "idleStoppedAt": null,
+          "engineReady": true,
+          "paused": false,
+          "startedManually": true,
+          "inFlightRequests": 0
+        },
+        "spend": {
+          "todayUsd": 0,
+          "monthUsd": 0,
+          "dailyLimitUsd": null,
+          "monthlyLimitUsd": null
+        },
+        "session": {
+          "runUntil": "2026-09-01T10:00:00.000Z"
+        },
+        "now": "2026-09-01T09:59:00.000Z"
+      },
+      "expected": {
+        "do": "nothing",
+        "because": "schedule-disabled"
+      }
+    },
+    {
+      "id": "decide/run-until-overrides-work-in-progress",
+      "title": "like the runtime ceiling, the end of a run is not deferred by a request in flight (the user was warned 10 minutes before and could extend)",
+      "function": "decide",
+      "input": {
+        "schedule": {
+          "enabled": false,
+          "timezone": "Europe/Berlin",
+          "weekdays": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "startAt": "07:00",
+          "stopAt": "19:00",
+          "idleStopMinutes": 30,
+          "maxRuntimeHours": 12
+        },
+        "pod": {
+          "status": "RUNNING",
+          "startedAt": "2026-09-01T08:00:00.000Z",
+          "lastRequestAt": "2026-09-01T09:59:30.000Z",
+          "idleStoppedAt": null,
+          "engineReady": true,
+          "paused": false,
+          "startedManually": true,
+          "inFlightRequests": 1
+        },
+        "spend": {
+          "todayUsd": 0,
+          "monthUsd": 0,
+          "dailyLimitUsd": null,
+          "monthlyLimitUsd": null
+        },
+        "session": {
+          "runUntil": "2026-09-01T10:00:00.000Z"
+        },
+        "now": "2026-09-01T10:00:30.000Z"
+      },
+      "expected": {
+        "do": "stop",
+        "because": "run-until"
+      }
+    },
+    {
+      "id": "decide/spend-limit-still-comes-before-run-until",
+      "title": "a spend limit is reported as the reason even when the run has also ended",
+      "function": "decide",
+      "input": {
+        "schedule": {
+          "enabled": false,
+          "timezone": "Europe/Berlin",
+          "weekdays": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "startAt": "07:00",
+          "stopAt": "19:00",
+          "idleStopMinutes": 30,
+          "maxRuntimeHours": 12
+        },
+        "pod": {
+          "status": "RUNNING",
+          "startedAt": "2026-09-01T08:00:00.000Z",
+          "lastRequestAt": "2026-09-01T09:59:00.000Z",
+          "idleStoppedAt": null,
+          "engineReady": true,
+          "paused": false,
+          "startedManually": true,
+          "inFlightRequests": 0
+        },
+        "spend": {
+          "todayUsd": 5,
+          "monthUsd": 5,
+          "dailyLimitUsd": 5,
+          "monthlyLimitUsd": null
+        },
+        "session": {
+          "runUntil": "2026-09-01T10:00:00.000Z"
+        },
+        "now": "2026-09-01T10:00:00.000Z"
+      },
+      "expected": {
+        "do": "stop",
+        "because": "daily-limit"
+      }
+    },
+    {
+      "id": "admitWake/refused-at-the-daily-limit",
+      "title": "a request cannot wake a pod once the daily limit is reached (bug in RunPod Launcher: resolve.ts woke it and the next tick stopped it again)",
+      "function": "admitWake",
+      "input": {
+        "spend": {
+          "todayUsd": 5.01,
+          "monthUsd": 20,
+          "dailyLimitUsd": 5,
+          "monthlyLimitUsd": 100
+        }
+      },
+      "expected": {
+        "admit": false,
+        "because": "daily-limit"
+      }
+    },
+    {
+      "id": "admitWake/refused-at-the-monthly-limit",
+      "title": "the monthly limit refuses a wake just the same",
+      "function": "admitWake",
+      "input": {
+        "spend": {
+          "todayUsd": 1,
+          "monthUsd": 100,
+          "dailyLimitUsd": null,
+          "monthlyLimitUsd": 100
+        }
+      },
+      "expected": {
+        "admit": false,
+        "because": "monthly-limit"
+      }
+    },
+    {
+      "id": "admitWake/admitted-below-the-limits",
+      "title": "below both limits the wake goes ahead",
+      "function": "admitWake",
+      "input": {
+        "spend": {
+          "todayUsd": 4.99,
+          "monthUsd": 20,
+          "dailyLimitUsd": 5,
+          "monthlyLimitUsd": 100
+        }
+      },
+      "expected": {
+        "admit": true,
+        "because": "within-limits"
+      }
+    }
+  ]
+}

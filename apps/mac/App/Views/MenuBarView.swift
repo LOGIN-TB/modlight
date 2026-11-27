@@ -1,4 +1,4 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// The menu bar panel: what runs, until when, at what price, and a way to stop it. Everything
@@ -57,7 +57,7 @@ struct MenuBarView: View {
             LabeledContent("Today", value: Format.money(spend.todayUsd)).font(.callout).foregroundStyle(.secondary)
             Divider()
             HStack {
-                Button("Open Podlight") {
+                Button("Open Modlight") {
                     openWindow(id: "main")
                     NSApp.activate()
                 }
@@ -71,7 +71,7 @@ struct MenuBarView: View {
         .onAppear { if model.openMainWindow == nil { model.openMainWindow = { openWindow(id: "main") } } ; if Snapshots.requestedDirectory == nil { model.launch() } }
     }
 
-    private func apiLine(_ source: Source, _ item: PodlightModel, _ inFlight: Int) -> String {
+    private func apiLine(_ source: Source, _ item: ModlightModel, _ inFlight: Int) -> String {
         var parts = [item.provider.displayName]
         if case .server = source { parts.insert(model.name(of: source), at: 0) }
         parts.append(inFlight > 0 ? String(localized: "\(inFlight) requests running") : String(localized: "just used"))

@@ -1,5 +1,5 @@
 import Charts
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// What the pods and Venice models of this Mac or of one server cost, against the limits that stop them.
@@ -43,8 +43,8 @@ struct CostsView: View {
         }
     }
 
-    private var apiModels: [PodlightModel] { model.models(in: source).filter { !$0.isPod } }
-    private var podModels: [PodlightModel] { model.models(in: source).filter(\.isPod) }
+    private var apiModels: [ModlightModel] { model.models(in: source).filter { !$0.isPod } }
+    private var podModels: [ModlightModel] { model.models(in: source).filter(\.isPod) }
     /// What API models cost per hour at the moment, from the last 15 minutes.
     private var apiPerHour: Double { apiModels.map { model.apiSummary($0.id).usdPerHour }.reduce(0, +) }
 
@@ -73,15 +73,15 @@ struct CostsView: View {
                     }
                 } accessory: {
                     InfoButton(source == .local
-                               ? "At a limit, Podlight stops this Mac's pods, does not start or wake them again, and refuses requests to Venice models until the next day or month."
+                               ? "At a limit, Modlight stops this Mac's pods, does not start or wake them again, and refuses requests to Venice models until the next day or month."
                                : "At a limit, the server stops its pods, does not start or wake them again, and refuses requests to Venice models until the next day or month. Days are counted in the server's time zone.")
                 }
                 CardSection("Last 30 days") {
                     thirtyDays(split)
                 } accessory: {
                     InfoButton(source == .local
-                               ? "These figures are Podlight's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Podlight."
-                               : "These figures are the server's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Podlight.")
+                               ? "These figures are Modlight's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Modlight."
+                               : "These figures are the server's own count: pods as price per hour × running time, Venice models from the cost or tokens in each answer. Your RunPod and Venice accounts show the exact charges, including use outside Modlight.")
                 }
                 if !apiModels.isEmpty {
                     CardSection("Venice models this month") { apiRanking }
@@ -102,7 +102,7 @@ struct CostsView: View {
                             }
                         }
                     } accessory: {
-                        InfoButton("Running models are billed for the GPU and their storage. A stopped model costs nothing unless it keeps its disk: RunPod bills that disk by the hour (0.20 USD per GB and month) until Podlight deletes it after \(model.deleteStoppedAfterDays(in: source)) days without use. These costs are included in the figures above.")
+                        InfoButton("Running models are billed for the GPU and their storage. A stopped model costs nothing unless it keeps its disk: RunPod bills that disk by the hour (0.20 USD per GB and month) until Modlight deletes it after \(model.deleteStoppedAfterDays(in: source)) days without use. These costs are included in the figures above.")
                     }
                 }
                 HStack(spacing: 16) {
@@ -170,7 +170,7 @@ struct CostsView: View {
         let start = calendar.startOfDay(for: .now)
         let parts: [DayPart] = (0..<30).reversed().flatMap { offset -> [DayPart] in
             guard let date = calendar.date(byAdding: .day, value: -offset, to: start) else { return [] }
-            let day = split[PodlightState.dayKey(date)] ?? (0, 0)
+            let day = split[ModlightState.dayKey(date)] ?? (0, 0)
             return [DayPart(date: date, kind: String(localized: "Pods"), usd: day.pods),
                     DayPart(date: date, kind: "Venice", usd: day.api)]
         }
@@ -216,7 +216,7 @@ struct CostsView: View {
 }
 
 private struct ModelCostRow: View {
-    let item: PodlightModel
+    let item: ModlightModel
     let run: ModelRun
     let keptGB: Int?
 

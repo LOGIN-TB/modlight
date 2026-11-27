@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type { Pairing } from '../auth/pairing.ts'
 import type { Identity, TokenStore } from '../auth/tokens.ts'
 import { GatewayFailure, failure } from '../gateway/shape.ts'
-import { iso, podlightModel, settingsPatch } from '../model.ts'
+import { iso, modlightModel, settingsPatch } from '../model.ts'
 import { AdoptRefused, type PodManager } from '../pods/manager.ts'
 import { RunpodClient } from '../runpod/client.ts'
 import { audit, type Db } from '../store/db.ts'
@@ -11,7 +11,7 @@ import type { SettingsStore } from '../store/settings.ts'
 import { NameTakenError, type StateStore } from '../store/state.ts'
 import { presentedKey } from '../gateway/routes.ts'
 
-// The control API for Podlight apps: pairing, settings, models, runs, client tokens. Every
+// The control API for Modlight apps: pairing, settings, models, runs, client tokens. Every
 // /admin route needs a device token; a client token is refused here, as a device token is on /v1.
 
 import { VERSION } from '../version.ts'
@@ -43,7 +43,7 @@ const tokenBody = z.object({ name: z.string().min(1).max(100), models: z.array(z
 const tokenPatch = z.object({ name: z.string().min(1).max(100).optional(), models: z.array(z.guid()).nullish() })
 const verifyBody = z.object({ runpodApiKey: z.string().optional() })
 const verifyVeniceBody = z.object({ veniceApiKey: z.string().optional() })
-const adoptBody = z.object({ model: podlightModel, podKey: z.string().min(16).max(200), podId: z.string().min(1).max(64).nullish() })
+const adoptBody = z.object({ model: modlightModel, podKey: z.string().min(16).max(200), podId: z.string().min(1).max(64).nullish() })
 
 function problem(reply: FastifyReply, status: number, message: string, code: string): FastifyReply {
   return reply.code(status).send({ error: { message, code } })
@@ -53,7 +53,7 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
   const { tokens, pairing, settings, store, manager } = deps
   const delay = deps.wrongKeyDelayMs ?? 1000
 
-  app.get('/health', async () => ({ status: 'ok', name: 'Podlight', version: VERSION, paired: tokens.activeDevices() > 0 }))
+  app.get('/health', async () => ({ status: 'ok', name: 'Modlight', version: VERSION, paired: tokens.activeDevices() > 0 }))
 
   app.post('/pair', async (request, reply) => {
     const body = pairBody.safeParse(request.body)
@@ -155,7 +155,7 @@ export async function registerAdmin(app: FastifyInstance, deps: Deps): Promise<v
     admin.get('/admin/models', async () => store.models())
 
     admin.put<{ Params: { id: string } }>('/admin/models/:id', async (request, reply) => {
-      const model = podlightModel.parse(request.body)
+      const model = modlightModel.parse(request.body)
       if (model.id.toLowerCase() !== request.params.id.toLowerCase()) return problem(reply, 400, 'The id in the path and the body differ.', 'invalid_request')
       manager.save(model)
       audit(deps.db, actor(request), 'model saved', model.name)

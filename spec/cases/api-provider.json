@@ -294,7 +294,7 @@
           "type": "text"
         }
       },
-      "title": "A model without token prices is not offered: Podlight could not show or limit its cost."
+      "title": "A model without token prices is not offered: Modlight could not show or limit its cost."
     },
     {
       "expected": {
@@ -375,7 +375,7 @@
           "providerCostUsd": 0.00731
         }
       },
-      "title": "The answer's own cost.usd wins over Podlight's arithmetic: Venice knows discounts and DIEM."
+      "title": "The answer's own cost.usd wins over Modlight's arithmetic: Venice knows discounts and DIEM."
     },
     {
       "expected": {
@@ -715,7 +715,7 @@
         "provider": "venice",
         "providerModelId": "zai-org-glm-5-3"
       },
-      "title": "A stream always asks for usage so Podlight can count tokens; the agent did not ask, so Podlight drops that chunk."
+      "title": "A stream always asks for usage so Modlight can count tokens; the agent did not ask, so Modlight drops that chunk."
     },
     {
       "expected": {
@@ -807,7 +807,7 @@
         "path": "/v1/chat/completions",
         "provider": "venice"
       },
-      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Modlight's bridge; legacy completions are not served."
     },
     {
       "expected": true,
@@ -817,7 +817,7 @@
         "path": "/v1/responses",
         "provider": "venice"
       },
-      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Modlight's bridge; legacy completions are not served."
     },
     {
       "expected": true,
@@ -827,7 +827,7 @@
         "path": "/v1/embeddings",
         "provider": "venice"
       },
-      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Modlight's bridge; legacy completions are not served."
     },
     {
       "expected": true,
@@ -837,7 +837,7 @@
         "path": "/v1/messages",
         "provider": "venice"
       },
-      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Modlight's bridge; legacy completions are not served."
     },
     {
       "expected": true,
@@ -847,7 +847,7 @@
         "path": "/v1/messages/count_tokens",
         "provider": "venice"
       },
-      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Modlight's bridge; legacy completions are not served."
     },
     {
       "expected": false,
@@ -857,7 +857,7 @@
         "path": "/v1/completions",
         "provider": "venice"
       },
-      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Modlight's bridge; legacy completions are not served."
     },
     {
       "expected": false,
@@ -867,7 +867,7 @@
         "path": "/v1/responses/input_tokens",
         "provider": "venice"
       },
-      "title": "Venice serves chat completions, responses and embeddings; Messages go through Podlight's bridge; legacy completions are not served."
+      "title": "Venice serves chat completions, responses and embeddings; Messages go through Modlight's bridge; legacy completions are not served."
     },
     {
       "expected": {
@@ -927,7 +927,7 @@
         "provider": "venice",
         "status": 401
       },
-      "title": "A refused provider key is a bad gateway for the agent, not a 401: the agent's own Podlight key was fine."
+      "title": "A refused provider key is a bad gateway for the agent, not a 401: the agent's own Modlight key was fine."
     },
     {
       "expected": {
@@ -1130,7 +1130,7 @@
             }
           ],
           "model": "zai-org-glm-5-3",
-          "prompt_cache_key": "podlight-f070c14bb4258a76601fb400a1f09d5d",
+          "prompt_cache_key": "modlight-f070c14bb4258a76601fb400a1f09d5d",
           "venice_parameters": {
             "include_venice_system_prompt": false
           }
@@ -1157,7 +1157,7 @@
         "provider": "venice",
         "providerModelId": "zai-org-glm-5-3"
       },
-      "title": "With a system prompt Podlight adds a prompt_cache_key, so Venice routes the agent's requests to a backend that has the prefix cached (only 9 % cache hits were measured without one)."
+      "title": "With a system prompt Modlight adds a prompt_cache_key, so Venice routes the agent's requests to a backend that has the prefix cached (only 9 % cache hits were measured without one)."
     },
     {
       "expected": {
@@ -1201,7 +1201,7 @@
           "input": "hi",
           "instructions": "You are Codex.",
           "model": "zai-org-glm-5-3",
-          "prompt_cache_key": "podlight-e5580ea6f1537516ac32a0913995275b"
+          "prompt_cache_key": "modlight-e5580ea6f1537516ac32a0913995275b"
         },
         "clientWantsUsage": true
       },

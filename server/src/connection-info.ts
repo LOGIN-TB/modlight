@@ -1,5 +1,5 @@
-// The box the server prints when it starts (and `podlight-code` prints on demand): everything
-// someone needs to connect the Podlight app, readable in `docker logs` and Coolify's log view.
+// The box the server prints when it starts (and `modlight-code` prints on demand): everything
+// someone needs to connect the Modlight app, readable in `docker logs` and Coolify's log view.
 // Pure apart from the public-IP lookup, so every variant is tested.
 
 type Env = Record<string, string | undefined>
@@ -19,8 +19,8 @@ const RULE = '═'.repeat(72)
 
 const TEXT = {
   en: {
-    title: (v: string) => `PODLIGHT SERVER ${v} – CONNECTION`,
-    address: 'Address for the Podlight app',
+    title: (v: string) => `MODLIGHT SERVER ${v} – CONNECTION`,
+    address: 'Address for the Modlight app',
     domain: 'your domain',
     coolify: 'Coolify domain',
     plainHttp: 'This address is plain http. The app only accepts https here: give the service an https domain.',
@@ -37,12 +37,12 @@ const TEXT = {
     expired: 'expired: create a new one (see below)',
     paired: 'Already paired. For another Mac: Server Settings › Pair Another Mac… in a paired app,',
     paired2: 'or the command below.',
-    steps: 'In the Podlight app: Add Server…, then enter the address and the pairing code.',
-    newCode: (container: string) => `New pairing code: docker exec ${container} podlight-code`,
+    steps: 'In the Modlight app: Add Server…, then enter the address and the pairing code.',
+    newCode: (container: string) => `New pairing code: docker exec ${container} modlight-code`,
   },
   de: {
-    title: (v: string) => `PODLIGHT-SERVER ${v} – VERBINDUNG`,
-    address: 'Adresse für die Podlight-App',
+    title: (v: string) => `MODLIGHT-SERVER ${v} – VERBINDUNG`,
+    address: 'Adresse für die Modlight-App',
     domain: 'deine Domain',
     coolify: 'Coolify-Domain',
     plainHttp: 'Diese Adresse ist nur http. Die App verlangt hier https: gib dem Dienst eine https-Domain.',
@@ -59,13 +59,13 @@ const TEXT = {
     expired: 'abgelaufen: neuen erzeugen (siehe unten)',
     paired: 'Schon gekoppelt. Für einen weiteren Mac: in einer gekoppelten App Server-Einstellungen › Weiteren Mac koppeln …,',
     paired2: 'oder der Befehl unten.',
-    steps: 'In der Podlight-App: Server hinzufügen …, dann Adresse und Kopplungscode eingeben.',
-    newCode: (container: string) => `Neuer Kopplungscode: docker exec ${container} podlight-code`,
+    steps: 'In der Modlight-App: Server hinzufügen …, dann Adresse und Kopplungscode eingeben.',
+    newCode: (container: string) => `Neuer Kopplungscode: docker exec ${container} modlight-code`,
   },
 } as const
 
 export function language(env: Env): Lang {
-  const chosen = (env.PODLIGHT_LANG ?? env.LANG ?? '').toLowerCase()
+  const chosen = (env.MODLIGHT_LANG ?? env.LANG ?? '').toLowerCase()
   return chosen.startsWith('de') ? 'de' : 'en'
 }
 

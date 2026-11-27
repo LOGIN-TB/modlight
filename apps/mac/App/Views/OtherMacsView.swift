@@ -1,7 +1,7 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
-/// Podlight pods in the RunPod account that another Mac manages, with "Take Over…".
+/// Modlight pods in the RunPod account that another Mac manages, with "Take Over…".
 struct OtherMacsSection: View {
     @Environment(AppModel.self) private var model
 
@@ -26,7 +26,7 @@ struct OtherMacsSection: View {
                     .accessibilityLabel(Text("Refresh"))
             }
         } footer: {
-            Text("Models another Mac set up with the same RunPod key, running or stopped, checked every minute. Starting or taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Models of a Mac with Podlight before 0.7 appear only while they have a pod.")
+            Text("Models another Mac set up with the same RunPod key, running or stopped, checked every minute. Starting or taking one over moves it to this Mac: from then on this Mac starts, stops and bills it, and the other Mac lets go. Models of a Mac with Modlight before 0.7 appear only while they have a pod.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -40,7 +40,7 @@ struct OtherMacPodRow: View {
     enum Action: Identifiable { case start, takeOver; var id: Self { self } }
 
     private var owner: String {
-        pod.owner.map { PodOwner.displayName(of: $0) } ?? String(localized: "an older Podlight version")
+        pod.owner.map { PodOwner.displayName(of: $0) } ?? String(localized: "an older Modlight version")
     }
 
     private var gpu: String {

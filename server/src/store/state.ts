@@ -1,6 +1,6 @@
 import type { Sealer } from '../crypto.ts'
 import type { APIUsage, APIUsageTotals } from '../providers/api.ts'
-import { emptyRun, modelRun, type ModelRun, podlightModel, type PodlightModel } from '../model.ts'
+import { emptyRun, modelRun, type ModelRun, modlightModel, type ModlightModel } from '../model.ts'
 import type { Spend } from '../rules/scheduler.ts'
 import type { Db } from './db.ts'
 
@@ -13,26 +13,26 @@ export class StateStore {
     this.sealer = sealer
   }
 
-  models(): PodlightModel[] {
+  models(): ModlightModel[] {
     const rows = this.db.prepare('SELECT json FROM models ORDER BY position, name').all() as Array<{ json: string }>
     return rows.flatMap((r) => {
-      const parsed = podlightModel.safeParse(JSON.parse(r.json))
+      const parsed = modlightModel.safeParse(JSON.parse(r.json))
       return parsed.success ? [parsed.data] : []
     })
   }
 
-  model(id: string): PodlightModel | null {
+  model(id: string): ModlightModel | null {
     const row = this.db.prepare('SELECT json FROM models WHERE id = ? COLLATE NOCASE').get(id) as { json: string } | undefined
-    return row ? podlightModel.parse(JSON.parse(row.json)) : null
+    return row ? modlightModel.parse(JSON.parse(row.json)) : null
   }
 
-  modelNamed(name: string): PodlightModel | null {
+  modelNamed(name: string): ModlightModel | null {
     const row = this.db.prepare('SELECT json FROM models WHERE name = ?').get(name) as { json: string } | undefined
-    return row ? podlightModel.parse(JSON.parse(row.json)) : null
+    return row ? modlightModel.parse(JSON.parse(row.json)) : null
   }
 
   /** Inserts or replaces. Throws when another model already has the name. */
-  saveModel(model: PodlightModel): void {
+  saveModel(model: ModlightModel): void {
     const clash = this.db.prepare('SELECT id FROM models WHERE name = ? AND id <> ? COLLATE NOCASE').get(model.name, model.id)
     if (clash) throw new NameTakenError(model.name)
     const position = (this.db.prepare('SELECT COALESCE(MAX(position), 0) + 1 AS p FROM models').get() as { p: number }).p

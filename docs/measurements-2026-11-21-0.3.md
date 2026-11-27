@@ -1,5 +1,7 @@
 # Messung 2026-11-21: Podlight 0.3 auf echter RunPod-Hardware
 
+> Entstanden unter dem früheren Namen Podlight. · Written under the former name Podlight.
+
 Ausgeführt mit `Live03Tests` (`apps/mac/PodlightEngine/Tests/PodlightEngineTests/LiveFlowTests.swift`)
 über die echte RunPod-API, je einmal pro Engine. Der Ablauf geht durch `PodManager` und das lokale
 Gateway wie in der App: Modell bei Hugging Face lesen, billigste passende Karte, starten, warten, die

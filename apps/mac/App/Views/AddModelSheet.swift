@@ -1,4 +1,4 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// Adding a model in four short steps: find it, check it, choose context and card, name it.
@@ -6,7 +6,7 @@ import SwiftUI
 struct AddModelSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    private let editing: PodlightModel?
+    private let editing: ModlightModel?
     /// Where the model is set up: this Mac or a server. Fixed for an existing model.
     private let target: Source
 
@@ -44,7 +44,7 @@ struct AddModelSheet: View {
     @State private var idleMinutes = 30
     @State private var keepDisk = false
 
-    init(editing: PodlightModel? = nil, target: Source = .local) {
+    init(editing: ModlightModel? = nil, target: Source = .local) {
         self.editing = editing
         self.target = target
         guard let editing else { return }
@@ -403,7 +403,7 @@ struct AddModelSheet: View {
                 }
                 Toggle("Secure Cloud only", isOn: Binding(get: { secureOnly || region != .anywhere }, set: { secureOnly = $0 }))
                     .disabled(region != .anywhere)
-                    .help("Certified data centers instead of community hosts. With a region, Podlight always uses Secure Cloud, because community hosts report no location.")
+                    .help("Certified data centers instead of community hosts. With a region, Modlight always uses Secure Cloud, because community hosts report no location.")
                 Picker("Context", selection: $context) {
                     ForEach(GPUSuggestion.contextSteps(upTo: info?.nativeContextTokens), id: \.self) {
                         Text("\(Format.tokens($0)) tokens").tag($0)
@@ -456,7 +456,7 @@ struct AddModelSheet: View {
                 TableColumn("Speed (est.)") { o in Text(Format.speed(o.estimatedTokensPerSecond)) }.width(100)
                 TableColumn("Where") { o in Text(o.dataCenters.isEmpty ? "–" : o.dataCenters.prefix(2).joined(separator: ", ")) }.width(110)
             }
-            Text("Longer contexts need more memory, so they may need a larger card or several. Speeds are estimates from memory bandwidth. If the chosen card is taken when you start, Podlight tries the next ones in this list.")
+            Text("Longer contexts need more memory, so they may need a larger card or several. Speeds are estimates from memory bandwidth. If the chosen card is taken when you start, Modlight tries the next ones in this list.")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -468,19 +468,19 @@ struct AddModelSheet: View {
 
     private func prepareFinish() {
         guard let info else { return }
-        if name.isEmpty { name = PodlightModel.suggestedName(for: info.repoId) }
+        if name.isEmpty { name = ModlightModel.suggestedName(for: info.repoId) }
     }
 
     private var nameIsValid: Bool {
-        PodlightModel.isValidName(name) && !model.models(in: target).contains { $0.name == name && $0.id != editing?.id }
+        ModlightModel.isValidName(name) && !model.models(in: target).contains { $0.name == name && $0.id != editing?.id }
     }
 
     /// The model as it would be saved, for cost previews.
-    private var draft: PodlightModel? {
+    private var draft: ModlightModel? {
         guard let info, let option = selectedOption else { return nil }
-        var schedule = editing?.schedule ?? PodlightModel.defaultSchedule
+        var schedule = editing?.schedule ?? ModlightModel.defaultSchedule
         schedule.idleStopMinutes = idleMinutes
-        var item = PodlightModel(id: editing?.id ?? UUID(), name: name, repoId: info.repoId, format: info.format,
+        var item = ModlightModel(id: editing?.id ?? UUID(), name: name, repoId: info.repoId, format: info.format,
                                  weightBytes: info.weightBytes, nativeContextTokens: info.nativeContextTokens,
                                  toolCallParser: info.toolCallParser, reasoningParser: info.reasoningParser,
                                  contextTokens: option.contextTokens, goal: goal, preferredGPU: option.choice,
@@ -512,7 +512,7 @@ struct AddModelSheet: View {
                     LabeledContent("Storage while running", value: Format.storagePerHour(PodPlan.storagePerHour(for: draft)))
                     LabeledContent("Storage while stopped", value: keepDisk ? Format.keptDisk(gb: gb) : String(localized: "nothing"))
                     Text(keepDisk
-                         ? "The next start takes about a minute instead of 10–25. RunPod bills the disk (\(gb) GB) by the hour, also while the model is stopped, until Podlight deletes it after \(model.deleteStoppedAfterDays(in: target)) days without use."
+                         ? "The next start takes about a minute instead of 10–25. RunPod bills the disk (\(gb) GB) by the hour, also while the model is stopped, until Modlight deletes it after \(model.deleteStoppedAfterDays(in: target)) days without use."
                          : "Nothing is billed while the model is stopped. Each start downloads the model again, which takes 10–25 minutes. Keeping it on disk would cost \(Format.keptDisk(gb: gb)) while stopped.")
                         .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }

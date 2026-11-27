@@ -1,5 +1,7 @@
 # Messung 2026-11-20: Podlight 0.1 auf echter RunPod-Hardware
 
+> Entstanden unter dem früheren Namen Podlight. · Written under the former name Podlight.
+
 Der ganze lokale Ablauf, ausgeführt mit `LiveFlowTests` (`apps/mac/PodlightEngine/Tests`) über die
 echte RunPod-API und einen echten Pod. Die Uhrzeiten stammen aus dem Testprotokoll, der Pod-Status aus
 RunPods eigener API.

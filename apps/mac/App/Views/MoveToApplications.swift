@@ -1,12 +1,12 @@
 import AppKit
 import SwiftUI
 
-/// Offers to move Podlight into the Applications folder when it runs from the disk image or
+/// Offers to move Modlight into the Applications folder when it runs from the disk image or
 /// Downloads. A Finder window cannot animate, so the animation lives here instead of in the DMG.
 @MainActor
 enum MoveToApplications {
     static let declinedKey = "declinedMoveToApplications"
-    static let destination = URL(fileURLWithPath: "/Applications/Podlight.app")
+    static let destination = URL(fileURLWithPath: "/Applications/Modlight.app")
 
     /// Not for development builds, not when already installed, not after "Not Now".
     static var shouldOffer: Bool {
@@ -39,7 +39,7 @@ struct MoveToApplicationsView: View {
 
     var body: some View {
         VStack(spacing: 22) {
-            Text("Move Podlight to Applications?").font(.title2.weight(.semibold))
+            Text("Move Modlight to Applications?").font(.title2.weight(.semibold))
             HStack(spacing: 0) {
                 ZStack {
                     Image(nsImage: NSApp.applicationIconImage)
@@ -58,8 +58,8 @@ struct MoveToApplicationsView: View {
             }
             .frame(height: 100)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("Podlight moves into the Applications folder"))
-            Text("Podlight is running from the disk image or your Downloads folder. In Applications it starts reliably at login and updates itself.")
+            .accessibilityLabel(Text("Modlight moves into the Applications folder"))
+            Text("Modlight is running from the disk image or your Downloads folder. In Applications it starts reliably at login and updates itself.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -75,7 +75,7 @@ struct MoveToApplicationsView: View {
                 Spacer()
                 Button("Move to Applications") {
                     do { try MoveToApplications.moveAndRelaunch() } catch {
-                        self.error = String(localized: "Podlight could not be moved (\(error.localizedDescription)). Drag it into Applications in the Finder instead.")
+                        self.error = String(localized: "Modlight could not be moved (\(error.localizedDescription)). Drag it into Applications in the Finder instead.")
                     }
                 }
                 .buttonStyle(.glassProminent)

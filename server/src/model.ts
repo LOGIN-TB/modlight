@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-// The shapes Podlight shares between the Mac app and the server. They mirror the Swift types in
-// apps/mac/PodlightEngine (PodlightModel, ModelRun, HostingPolicy, ...) field for field, so a model
+// The shapes Modlight shares between the Mac app and the server. They mirror the Swift types in
+// apps/mac/ModlightEngine (ModlightModel, ModelRun, HostingPolicy, ...) field for field, so a model
 // set up on the Mac is stored here unchanged. `spec/schema/model.json` is emitted from these.
 //
 // Swift leaves out optional fields that are nil; JSON from it has no key rather than `null`.
@@ -60,7 +60,7 @@ export const schedule = z.object({
 })
 export type Schedule = z.infer<typeof schedule>
 
-/** Where a model runs. `runpod`: a pod Podlight starts. Others: an API provider billing per token. */
+/** Where a model runs. `runpod`: a pod Modlight starts. Others: an API provider billing per token. */
 export const modelProvider = z.enum(['runpod', 'venice'])
 export type ModelProvider = z.infer<typeof modelProvider>
 
@@ -100,7 +100,7 @@ export type APIModelSpec = z.infer<typeof apiModelSpec>
 export const MODEL_NAME = /^[a-z0-9][a-z0-9._-]{0,62}$/
 
 /** A model as the Mac app sets it up. `name` is what an agent puts in the `model` field. */
-export const podlightModel = z.object({
+export const modlightModel = z.object({
   id: z.guid(),
   name: z.string().regex(MODEL_NAME, 'lowercase letters, digits, ".", "_" and "-", at most 63'),
   repoId: z.string().min(1),
@@ -130,10 +130,10 @@ export const podlightModel = z.object({
   /** API models: the provider's id, prices and traits. */
   api: optional(apiModelSpec),
 })
-export type PodlightModel = z.infer<typeof podlightModel>
+export type ModlightModel = z.infer<typeof modlightModel>
 
-/** Podlight starts and stops a pod for this model; false for API models, which are always ready. */
-export const isPod = (model: Pick<PodlightModel, 'provider'>): boolean => (model.provider ?? 'runpod') === 'runpod'
+/** Modlight starts and stops a pod for this model; false for API models, which are always ready. */
+export const isPod = (model: Pick<ModlightModel, 'provider'>): boolean => (model.provider ?? 'runpod') === 'runpod'
 
 export type InferenceEngine = 'vllm' | 'llamaCpp'
 export const engineOf = (format: WeightFormat): InferenceEngine => (format === 'gguf' ? 'llamaCpp' : 'vllm')

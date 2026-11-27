@@ -10,7 +10,7 @@ import type { Db } from '../store/db.ts'
 
 export type TokenKind = 'device' | 'client'
 const TABLE: Record<TokenKind, string> = { device: 'devices', client: 'client_tokens' }
-const PREFIX: Record<TokenKind, string> = { device: 'pld-', client: 'pl-' }
+const PREFIX: Record<TokenKind, string> = { device: 'mld-', client: 'ml-' }
 
 export interface Identity {
   id: string

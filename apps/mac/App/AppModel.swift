@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 import Observation
-import PodlightEngine
+import ModlightEngine
 import ServiceManagement
 
 /// What the sidebar shows: each model, then the app's own areas.
@@ -25,7 +25,7 @@ final class AppModel {
     let manager: PodManager
     let notifier = Notifier()
 
-    private(set) var state = PodlightState()
+    private(set) var state = ModlightState()
     /// The latest telemetry per model on this Mac whose pod runs, from the pod's watchdog.
     private(set) var localTelemetry: [UUID: PodTelemetry] = [:]
     /// Requests the gateway on this Mac is answering right now, per model.
@@ -38,7 +38,7 @@ final class AppModel {
     private var venicePerformanceAt: Date?
     /// Ticks with the state reload, so "answered a moment ago" goes out on time.
     private(set) var now = Date.now
-    /// Podlight pods in the RunPod account that another Mac manages, offered for taking over.
+    /// Modlight pods in the RunPod account that another Mac manages, offered for taking over.
     private(set) var otherMacsPods: [ForeignPod] = []
     /// Pods being taken over right now, for a progress indicator on their row.
     private(set) var takingOver: Set<String> = []
@@ -67,8 +67,8 @@ final class AppModel {
     var actionError: String?
     var showingSetup = false
     var showingAddModel = false
-    var editingModel: PodlightModel?
-    var startingModel: PodlightModel?
+    var editingModel: ModlightModel?
+    var startingModel: ModlightModel?
     /// The start sheet builds a new pod on a new card (after "the machine's card is busy").
     var startingOnNewCard = false
     /// A model just added with "Add and Start…": its start sheet opens when the add sheet is gone.
@@ -80,7 +80,7 @@ final class AppModel {
     var transfer: TransferRequest?
     /// The server paired a moment ago, for the transfer offer once the pairing sheet is gone.
     var justPaired: UUID?
-    /// The Podlight servers this app controls, in the order the user added them.
+    /// The Modlight servers this app controls, in the order the user added them.
     var servers: [ServerMirror] = []
     var selection: SidebarItem?
     /// Set by any view that has SwiftUI's openWindow action, so the Dock and the menu bar can
@@ -90,12 +90,12 @@ final class AppModel {
     private var gatewayTask: Task<Void, Never>?
     private var loops: [Task<Void, Never>] = []
 
-    init(storeURL: URL = StateStore.defaultURL(), keychainService: String = "io.github.login-tb.podlight") {
+    init(storeURL: URL = StateStore.defaultURL(), keychainService: String = "io.github.login-tb.modlight") {
         keychain = KeychainStore(service: keychainService)
         manager = PodManager(store: StateStore(url: storeURL), keychain: keychain)
         refreshSecrets()
         if gatewayKey == nil {
-            let key = "pl-" + PodManager.randomKey()
+            let key = "ml-" + PodManager.randomKey()
             try? keychain.write(key, for: .gatewayKey)
             gatewayKey = key
         }
@@ -196,7 +196,7 @@ final class AppModel {
         startingModel = model(id)
     }
 
-    var selectedModel: PodlightModel? {
+    var selectedModel: ModlightModel? {
         guard case .model(let id) = selection else { return nil }
         return model(id)
     }
@@ -349,7 +349,7 @@ final class AppModel {
     }
 
     func newGatewayKey() {
-        let key = "pl-" + PodManager.randomKey()
+        let key = "ml-" + PodManager.randomKey()
         try? keychain.write(key, for: .gatewayKey)
         refreshSecrets()
     }
@@ -366,7 +366,7 @@ final class AppModel {
     /// Saves a model where it lives; a new one goes to `source` (the add sheet's target).
     /// Returns false when it could not be saved; the reason is in `actionError`.
     @discardableResult
-    func save(_ model: PodlightModel, to target: Source? = nil) async -> Bool {
+    func save(_ model: ModlightModel, to target: Source? = nil) async -> Bool {
         let where_ = target ?? source(of: model.id)
         do {
             switch where_ {
@@ -387,7 +387,7 @@ final class AppModel {
         }
     }
 
-    func remove(_ model: PodlightModel) async {
+    func remove(_ model: ModlightModel) async {
         let where_ = source(of: model.id)
         do {
             switch where_ {
@@ -408,7 +408,7 @@ final class AppModel {
     /// Starts a model. Returns a question when the chosen card is taken and only pricier ones are
     /// free: nothing was booked, and the user decides. `maxPricePerHour` is that decision.
     @discardableResult
-    func start(_ model: PodlightModel, until: Date, newPod: Bool = false, maxPricePerHour: Double? = nil) async -> PriceQuestion? {
+    func start(_ model: ModlightModel, until: Date, newPod: Bool = false, maxPricePerHour: Double? = nil) async -> PriceQuestion? {
         actionError = nil
         notifier.requestPermissionOnce()
         var question: PriceQuestion?
@@ -421,9 +421,9 @@ final class AppModel {
                 try await server.client(keychain).start(model.id, until: until, newPod: newPod, maxPricePerHour: maxPricePerHour)
                 await server.refresh(keychain)
             }
-        } catch PodlightError.hostBusy {
+        } catch ModlightError.hostBusy {
             // The model's page shows the waiting and what the user can do instead.
-        } catch PodlightError.cardTooExpensive(let wanted, let ceiling, let pricier) {
+        } catch ModlightError.cardTooExpensive(let wanted, let ceiling, let pricier) {
             question = PriceQuestion(wanted: wanted, ceiling: ceiling, pricier: pricier,
                                      waitsUntil: state.run(model.id).waitingForCard?.until)
         } catch ServerError.refused(_, _, "host_busy") {
@@ -525,7 +525,7 @@ final class AppModel {
     }
 
     /// Takes a model back that another Mac took over.
-    func takeBack(_ model: PodlightModel) async {
+    func takeBack(_ model: ModlightModel) async {
         actionError = nil
         do { try await manager.takeBack(model.id) } catch { actionError = Describe.error(error) }
         await reloadState()
@@ -535,7 +535,7 @@ final class AppModel {
     /// For screenshots only.
     func showOtherMacsPodsForSnapshots(_ pods: [ForeignPod]) { otherMacsPods = pods }
 
-    func stop(_ model: PodlightModel) async {
+    func stop(_ model: ModlightModel) async {
         do {
             switch source(of: model.id) {
             case .local:
@@ -551,7 +551,7 @@ final class AppModel {
         await reloadState()
     }
 
-    func extend(_ model: PodlightModel, by interval: TimeInterval) async {
+    func extend(_ model: ModlightModel, by interval: TimeInterval) async {
         let base = max(run(model.id).runUntil ?? .now, .now)
         let until = base.addingTimeInterval(interval)
         switch source(of: model.id) {
@@ -565,7 +565,7 @@ final class AppModel {
         await reloadState()
     }
 
-    func updateSettings(_ change: @escaping @Sendable (inout PodlightSettings) -> Void) async {
+    func updateSettings(_ change: @escaping @Sendable (inout ModlightSettings) -> Void) async {
         _ = try? await manager.store.update { change(&$0.settings) }
         await reloadState()
     }
@@ -573,7 +573,7 @@ final class AppModel {
     // MARK: Costs
 
     /// What a run of `model` until `end` costs at most: cards plus storage.
-    func maximumCost(of model: PodlightModel, until end: Date) -> Double? {
+    func maximumCost(of model: ModlightModel, until end: Date) -> Double? {
         let run = run(model.id)
         guard let price = run.pricePerHour ?? model.expectedPricePerHour else { return nil }
         let storage = run.storagePerHour ?? PodPlan.storagePerHour(for: model)
@@ -582,14 +582,14 @@ final class AppModel {
 
     /// Size of the disk a model keeps while its pod is stopped, if it keeps one: the pod's own
     /// once it has one, else the planned size.
-    func keptDiskGB(_ model: PodlightModel) -> Int? {
+    func keptDiskGB(_ model: ModlightModel) -> Int? {
         guard model.keepDisk else { return nil }
         return run(model.id).persistentGB ?? PodPlan.persistentGB(for: model)
     }
 
     // MARK: Quit
 
-    var runningLocalPods: [(PodlightModel, ModelRun)] { state.activeRuns }
+    var runningLocalPods: [(ModlightModel, ModelRun)] { state.activeRuns }
 
     func stopAllAndQuit() {
         Task {
@@ -629,7 +629,7 @@ struct PriceQuestion: Equatable {
     var ceiling: Double
     /// Cards that may be free, cheapest first.
     var pricier: [PricedChoice]
-    /// Podlight keeps trying within the price until then; nil when it does not wait.
+    /// Modlight keeps trying within the price until then; nil when it does not wait.
     var waitsUntil: Date?
 
     /// "+240 %" against the chosen card, or nil without its price.

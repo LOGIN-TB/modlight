@@ -1,4 +1,4 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// First run: a provider (RunPod for own pods, Venice for ready models, or both), for pods the
@@ -31,10 +31,10 @@ struct SetupView: View {
     private var welcome: some View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: "lightbulb.max").font(.system(size: 44)).foregroundStyle(.tint).accessibilityHidden(true)
-            Text("Welcome to Podlight").font(.largeTitle.weight(.semibold))
-            Text("Podlight gives the coding agent on this Mac, for example OpenCode or Claude Code, language models of your choice, behind one address and one key. You decide where each model runs.")
+            Text("Welcome to Modlight").font(.largeTitle.weight(.semibold))
+            Text("Modlight gives the coding agent on this Mac, for example OpenCode or Claude Code, language models of your choice, behind one address and one key. You decide where each model runs.")
             VStack(alignment: .leading, spacing: 10) {
-                Label("RunPod: your own model on a rented GPU, billed per hour. Podlight suggests the card, and every start has an end.", systemImage: "cpu")
+                Label("RunPod: your own model on a rented GPU, billed per hour. Modlight suggests the card, and every start has an end.", systemImage: "cpu")
                 Label("Venice: ready models, billed per token, with nothing to start. Private ones keep no data.", systemImage: "sparkles")
                 Label("Spending limits cover both. Your keys stay in this Mac's keychain.", systemImage: "lock")
             }
@@ -47,7 +47,7 @@ struct SetupView: View {
                 Button("Later") { dismiss() }.keyboardShortcut(.cancelAction)
                 Spacer()
                 // A server has its own keys: nothing to set up on this Mac.
-                Button("I Use a Podlight Server…") { dismiss(); model.showingAddServer = true }
+                Button("I Use a Modlight Server…") { dismiss(); model.showingAddServer = true }
                 Button("Set Up Venice") { page = 4 }
                 Button("Set Up RunPod") { page = 1 }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
             }
@@ -56,9 +56,9 @@ struct SetupView: View {
 
     private var doneTitle: String {
         switch (model.hasRunpodKey, model.hasVeniceKey) {
-        case (true, true): String(localized: "Podlight is connected to RunPod and Venice")
-        case (false, true): String(localized: "Podlight is connected to Venice")
-        default: String(localized: "Podlight is connected to RunPod")
+        case (true, true): String(localized: "Modlight is connected to RunPod and Venice")
+        case (false, true): String(localized: "Modlight is connected to Venice")
+        default: String(localized: "Modlight is connected to RunPod")
         }
     }
 
@@ -67,7 +67,7 @@ struct SetupView: View {
             Image(systemName: "checkmark.circle.fill").font(.system(size: 44)).foregroundStyle(.green).accessibilityHidden(true)
             Text(doneTitle).font(.largeTitle.weight(.semibold))
             if model.hasRunpodKey {
-                Text("Next, add a model. For a pod, Podlight checks whether it suits a coding agent, suggests a GPU and shows the cost per hour. Nothing is started or charged until you press Start.")
+                Text("Next, add a model. For a pod, Modlight checks whether it suits a coding agent, suggests a GPU and shows the cost per hour. Nothing is started or charged until you press Start.")
             } else {
                 Text("Next, add a ready model from Venice's catalog. It costs nothing until an agent uses it.")
             }
@@ -112,7 +112,7 @@ struct RunpodKeyStep: View {
             Text("Your RunPod API key").font(.title.weight(.semibold))
             VStack(alignment: .leading, spacing: 6) {
                 Text("1. Open RunPod's settings and sign in.")
-                Text("2. Under \"API Keys\", click \"Create API Key\" and name it \"Podlight\".")
+                Text("2. Under \"API Keys\", click \"Create API Key\" and name it \"Modlight\".")
                 Text("3. Choose the permission \"All\", or \"Restricted\" with read and write access to Pods.")
                 Text("4. Copy the key and paste it here. RunPod shows it only once.")
             }

@@ -1,8 +1,8 @@
 {
-  "name": "podlight-server",
-  "version": "0.12.0",
+  "name": "modlight-server",
+  "version": "0.13.0",
   "private": true,
-  "description": "Podlight server mode: the OpenAI/Anthropic-compatible gateway and pod lifecycle as a container, controlled by the Podlight app",
+  "description": "Modlight server mode: the OpenAI/Anthropic-compatible gateway and pod lifecycle as a container, controlled by the Modlight app",
   "license": "MIT",
   "type": "module",
   "engines": {

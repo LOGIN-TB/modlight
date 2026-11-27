@@ -1,5 +1,7 @@
 # Messung 2026-11-22: Auslastung der Pods (0.5) auf echter RunPod-Hardware
 
+> Entstanden unter dem früheren Namen Podlight. · Written under the former name Podlight.
+
 Geprüft wurde, ob der Watchdog im Pod die Auslastung misst und mit jedem Heartbeat zurückgibt, und ob
 Mac und Server sie als Verlauf halten. Mac-Seite: `LiveTelemetryTests` (`PODLIGHT_LIVE_TELEMETRY=vllm|llamacpp`,
 12 Last-Anfragen nach dem Start). Server-Seite: Node-Server lokal mit festem `PAIRING_CODE`, gesteuert

@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { describe, test } from 'node:test'
-import { podlightModel, type HostingPolicy, type Schedule } from '../src/model.ts'
+import { modlightModel, type HostingPolicy, type Schedule } from '../src/model.ts'
 import * as capacity from '../src/rules/capacity.ts'
 import { options } from '../src/rules/gpuSuggestion.ts'
 import * as hosting from '../src/rules/hosting.ts'
@@ -24,7 +24,7 @@ interface SpecCase { id: string; title: string; function: string; input: any; ex
 /** Planning functions that run only in the app (Hugging Face and GGUF analysis). */
 const APP_ONLY = new Set(['kvProfile', 'ggufQuants', 'ggufKvProfile'])
 
-const FILES = ['scheduler.json', 'scheduler-podlight.json', 'capacity.json', 'gpu-suggest.json', 'pod-plan.json',
+const FILES = ['scheduler.json', 'scheduler-modlight.json', 'capacity.json', 'gpu-suggest.json', 'pod-plan.json',
   'hosting.json', 'gateway.json', 'kv-profile.json', 'gguf.json', 'price-guard.json', 'api-provider.json',
   'anthropic-bridge.json', 'api-telemetry.json']
 
@@ -79,19 +79,19 @@ function run(c: SpecCase): unknown {
       return capacity.plan(i.gpuMemoryGib, i.weightsGib, i.nativeContextTokens ?? null, { contextTokens: i.contextTokens ?? 0, concurrency: i.concurrency ?? 1 })
     case 'gpuSupports': return { fp8: capacity.CardSupport.fp8(i.gpuId), nvfp4: capacity.CardSupport.nvfp4(i.gpuId) }
     case 'gpuOptions': {
-      const model = podlightModel.parse(i.model)
+      const model = modlightModel.parse(i.model)
       return options(model, catalog(i.catalog), i.goal, { context: i.context, concurrency: i.concurrency, hosting: i.hosting as HostingPolicy })
         .map((o) => ({ choice: o.choice, pricePerHour: o.pricePerHour, estimatedTokensPerSecond: o.estimatedTokensPerSecond,
           contextTokens: o.contextTokens, contextCeiling: o.contextCeiling, dataCenters: o.dataCenters }))
     }
-    case 'podChoices': return podPlan.choices(podlightModel.parse(i.model), catalog(i.catalog), i.hosting)
+    case 'podChoices': return podPlan.choices(modlightModel.parse(i.model), catalog(i.catalog), i.hosting)
     case 'priceGuard': return podPlan.priceGuard(i.choices, catalog(i.catalog), i.stepPercent, i.maxPricePerHour ?? null)
     case 'podRequest': {
-      const model = podlightModel.parse(i.model)
+      const model = modlightModel.parse(i.model)
       const request = podPlan.request(model, { podKey: i.podKey, huggingFaceToken: i.huggingFaceToken, runUntil: date(i.runUntil),
-        heartbeatMinutes: i.heartbeatMinutes, dataCenterIds: i.dataCenterIds, namePrefix: 'podlight-' })
-      request.env.PODLIGHT_WATCHDOG_B64 = '<base64 of spec/pod/watchdog.py>'
-      request.env.PODLIGHT_BOOT_B64 = '<base64 of spec/pod/boot.sh>'
+        heartbeatMinutes: i.heartbeatMinutes, dataCenterIds: i.dataCenterIds, namePrefix: 'modlight-' })
+      request.env.MODLIGHT_WATCHDOG_B64 = '<base64 of spec/pod/watchdog.py>'
+      request.env.MODLIGHT_BOOT_B64 = '<base64 of spec/pod/boot.sh>'
       return { request, persistentGB: podPlan.persistentGB(model), containerGB: podPlan.containerGB(model), storagePerHour: podPlan.storagePerHour(model) }
     }
     case 'hostingClouds': return hosting.clouds(i.hosting)

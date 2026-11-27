@@ -185,7 +185,7 @@ const model = (id = MODEL_ID, name = 'coder', extra: Record<string, unknown> = {
   keepDisk: false, ...extra,
 })
 
-describe('Podlight server', () => {
+describe('Modlight server', () => {
   let runpod: FakeRunPod
   let pod: FakePod
   let servers: HttpServer[] = []
@@ -324,8 +324,8 @@ describe('Podlight server', () => {
   const MAC_KEY = 'mac-pod-key-0123456789abcdef'
   const macPod = (status: string, extra: Partial<FakeRunpodPod> = {}): FakeRunpodPod => {
     const p: FakeRunpodPod = {
-      id: 'macpod1', name: 'podlight-small@studio-mac-7c1e', status, cost: 0.44, dataCenterId: 'EU-RO-1',
-      env: { PODLIGHT_API_KEY: MAC_KEY, PODLIGHT_MODEL: 'Qwen/Qwen3-8B-AWQ', HF_HOME: '/workspace/hf' },
+      id: 'macpod1', name: 'modlight-small@studio-mac-7c1e', status, cost: 0.44, dataCenterId: 'EU-RO-1',
+      env: { MODLIGHT_API_KEY: MAC_KEY, MODLIGHT_MODEL: 'Qwen/Qwen3-8B-AWQ', HF_HOME: '/workspace/hf' },
       gpu: { id: 'NVIDIA L40S', count: 1 }, disk: 20, mounts: { persistent: { size: 30 } }, ...extra,
     }
     runpod.pods.set(p.id, p)
@@ -338,7 +338,7 @@ describe('Podlight server', () => {
     macPod('RUNNING')
     const response = await handOver('macpod1')
     assert.equal(response.statusCode, 200, response.body)
-    assert.equal(runpod.pods.get('macpod1')!.name, 'podlight-srv-small')
+    assert.equal(runpod.pods.get('macpod1')!.name, 'modlight-srv-small')
     assert.equal(runpod.requests.some((r) => r.method === 'POST' && r.path === '/v2/pods'), false)
     const run = s.store.run(OTHER_ID)
     assert.equal(run.podId, 'macpod1')
@@ -362,18 +362,18 @@ describe('Podlight server', () => {
     assert.equal((await admin('POST', `/admin/models/${OTHER_ID}/start`, {})).statusCode, 200)
     assert.equal(runpod.requests.some((r) => r.method === 'POST' && r.path === '/v2/pods'), false, 'no new pod, no new download')
     assert.equal(runpod.pods.get('macpod1')!.status, 'RUNNING')
-    assert.equal(runpod.pods.get('macpod1')!.env.PODLIGHT_API_KEY, MAC_KEY)
+    assert.equal(runpod.pods.get('macpod1')!.env.MODLIGHT_API_KEY, MAC_KEY)
     assert.equal(s.store.run(OTHER_ID).podId, 'macpod1')
   })
 
   test('handing over is refused for server pods, name clashes, pods outside the region, and busy pods', async () => {
-    macPod('RUNNING', { name: 'podlight-srv-small' })
+    macPod('RUNNING', { name: 'modlight-srv-small' })
     assert.equal((await handOver('macpod1')).json().error.code, 'not_a_mac_pod')
     macPod('RUNNING')
     const clash = await handOver('macpod1', 'coder')
     assert.equal(clash.statusCode, 409)
     assert.equal(clash.json().error.code, 'name_taken')
-    assert.equal(runpod.pods.get('macpod1')!.name, 'podlight-small@studio-mac-7c1e', 'nothing renamed')
+    assert.equal(runpod.pods.get('macpod1')!.name, 'modlight-small@studio-mac-7c1e', 'nothing renamed')
     macPod('RUNNING', { dataCenterId: 'US-TX-3' })
     assert.equal((await handOver('macpod1', 'small', { hosting: { region: 'eu', secureOnly: true } })).json().error.code, 'outside_region')
     macPod('STARTING')
@@ -436,9 +436,9 @@ describe('Podlight server', () => {
     const creates = runpod.requests.filter((r) => r.method === 'POST' && r.path === '/v2/pods')
     assert.equal(creates.length, 2)
     assert.equal(creates[0]!.body.gpu.count, 2)
-    assert.equal(creates[0]!.body.env.PODLIGHT_TP, '2')
-    assert.match(creates[0]!.body.name, /^podlight-srv-coder/)
-    assert.equal(creates[1]!.body.env.PODLIGHT_TP, String(creates[1]!.body.gpu.count))
+    assert.equal(creates[0]!.body.env.MODLIGHT_TP, '2')
+    assert.match(creates[0]!.body.name, /^modlight-srv-coder/)
+    assert.equal(creates[1]!.body.env.MODLIGHT_TP, String(creates[1]!.body.gpu.count))
 
     const reached = pod.engineRequests.at(-1)!
     assert.equal(reached.path, '/v1/messages?beta=true')
@@ -490,7 +490,7 @@ describe('Podlight server', () => {
     const started = await admin('POST', `/admin/models/${MODEL_ID}/start`, { until: until.toISOString() })
     assert.equal(started.statusCode, 200)
     const create = runpod.requests.find((r) => r.method === 'POST' && r.path === '/v2/pods')!
-    assert.equal(create.body.env.PODLIGHT_DEADLINE, String(Math.trunc((until.getTime() + 600_000) / 1000)))
+    assert.equal(create.body.env.MODLIGHT_DEADLINE, String(Math.trunc((until.getTime() + 600_000) / 1000)))
     await s.manager.tick()
     assert.equal(pod.heartbeats.length, 1)
     // Stored to the second, as Swift reads ISO dates.
@@ -513,16 +513,16 @@ describe('Podlight server', () => {
     const podId = s.store.run(MODEL_ID).podId!
     const stopped = runpod.pods.get(podId)!
     assert.equal(stopped.status, 'EXITED')
-    const key = stopped.env.PODLIGHT_API_KEY
+    const key = stopped.env.MODLIGHT_API_KEY
     assert.ok(key)
     // As made by an older version.
-    stopped.env = { ...stopped.env, PODLIGHT_BOOT_B64: 'old', PODLIGHT_WATCHDOG_B64: 'old' }
+    stopped.env = { ...stopped.env, MODLIGHT_BOOT_B64: 'old', MODLIGHT_WATCHDOG_B64: 'old' }
     assert.equal((await admin('POST', `/admin/models/${MODEL_ID}/start`, {})).statusCode, 200)
     const patch = runpod.requests.find((r) => r.method === 'PATCH' && r.path === `/v2/pods/${podId}`)
     assert.ok(patch, 'the env is replaced before the resume')
-    assert.equal(runpod.pods.get(podId)!.env.PODLIGHT_BOOT_B64, POD_SCRIPTS.boot)
-    assert.equal(runpod.pods.get(podId)!.env.PODLIGHT_WATCHDOG_B64, POD_SCRIPTS.watchdog)
-    assert.equal(runpod.pods.get(podId)!.env.PODLIGHT_API_KEY, key, 'the rest stays')
+    assert.equal(runpod.pods.get(podId)!.env.MODLIGHT_BOOT_B64, POD_SCRIPTS.boot)
+    assert.equal(runpod.pods.get(podId)!.env.MODLIGHT_WATCHDOG_B64, POD_SCRIPTS.watchdog)
+    assert.equal(runpod.pods.get(podId)!.env.MODLIGHT_API_KEY, key, 'the rest stays')
     assert.equal(runpod.pods.get(podId)!.status, 'RUNNING')
   })
 

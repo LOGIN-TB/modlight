@@ -3,7 +3,7 @@ import SwiftUI
 /// A small ⓘ that shows a paragraph in a popover: the explanation a long section footer used to
 /// carry, out of the way until someone asks.
 ///
-///     CardSection("Spending limits") { ... } accessory: { InfoButton("At a limit, Podlight stops ...") }
+///     CardSection("Spending limits") { ... } accessory: { InfoButton("At a limit, Modlight stops ...") }
 struct InfoButton: View {
     private let text: Text
     @State private var shown = false
@@ -43,7 +43,7 @@ struct InfoButton: View {
 #Preview("Info button", traits: .fixedLayout(width: 360, height: 120)) {
     HStack {
         Text(verbatim: "Spending limits").font(.headline)
-        InfoButton(String("At a limit, Podlight stops this Mac's pods, does not start or wake them again, and refuses requests to Venice models until the next day or month."))
+        InfoButton(String("At a limit, Modlight stops this Mac's pods, does not start or wake them again, and refuses requests to Venice models until the next day or month."))
     }
     .padding()
 }
@@ -51,7 +51,7 @@ struct InfoButton: View {
 #Preview("Info button · dark", traits: .fixedLayout(width: 360, height: 120)) {
     HStack {
         Text(verbatim: "Last 30 days").font(.headline)
-        InfoButton(String("These figures are Podlight's own count."))
+        InfoButton(String("These figures are Modlight's own count."))
     }
     .padding()
     .preferredColorScheme(.dark)

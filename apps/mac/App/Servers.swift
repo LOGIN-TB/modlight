@@ -1,8 +1,8 @@
 import Foundation
 import Observation
-import PodlightEngine
+import ModlightEngine
 
-/// Where a model lives and runs: this Mac, or one of the Podlight servers the app controls.
+/// Where a model lives and runs: this Mac, or one of the Modlight servers the app controls.
 enum Source: Hashable, Sendable {
     case local
     case server(UUID)
@@ -59,7 +59,7 @@ final class ServerMirror: Identifiable {
     }
 
     func run(_ id: UUID) -> ModelRun { snapshot?.run(id) ?? ModelRun() }
-    var models: [PodlightModel] { snapshot?.models ?? [] }
+    var models: [ModlightModel] { snapshot?.models ?? [] }
     var canStart: Bool { status == .online && snapshot?.settings.hasRunpodKey == true }
     /// The server has a Venice key, so Venice models can be added there.
     var acceptsVenice: Bool { status == .online && snapshot?.settings.hasVeniceKey == true }
@@ -76,7 +76,7 @@ extension AppModel {
 
     func server(_ id: UUID) -> ServerMirror? { servers.first { $0.id == id } }
 
-    func models(in source: Source) -> [PodlightModel] {
+    func models(in source: Source) -> [ModlightModel] {
         switch source {
         case .local: state.models
         case .server(let id): server(id)?.models ?? []
@@ -110,7 +110,7 @@ extension AppModel {
         }
     }
 
-    func model(_ id: UUID) -> PodlightModel? {
+    func model(_ id: UUID) -> ModlightModel? {
         state.models.first { $0.id == id } ?? servers.lazy.compactMap { $0.models.first { $0.id == id } }.first
     }
 
@@ -121,7 +121,7 @@ extension AppModel {
         }
     }
 
-    func canStart(_ model: PodlightModel) -> Bool { model.isPod && canStart(in: source(of: model.id)) && run(model.id).managedBy == nil }
+    func canStart(_ model: ModlightModel) -> Bool { model.isPod && canStart(in: source(of: model.id)) && run(model.id).managedBy == nil }
 
     /// A model can be added here: pods need RunPod, API models their provider's key.
     func canAdd(in source: Source) -> Bool {
@@ -167,7 +167,7 @@ extension AppModel {
         }
     }
 
-    func activeRuns(in source: Source) -> [(PodlightModel, ModelRun)] {
+    func activeRuns(in source: Source) -> [(ModlightModel, ModelRun)] {
         switch source {
         case .local: state.activeRuns
         case .server(let id): server(id)?.snapshot?.activeRuns ?? []
@@ -175,7 +175,7 @@ extension AppModel {
     }
 
     /// Everything running anywhere, with where it runs.
-    var allActiveRuns: [(Source, PodlightModel, ModelRun)] {
+    var allActiveRuns: [(Source, ModlightModel, ModelRun)] {
         state.activeRuns.map { (.local, $0.0, $0.1) }
             + servers.flatMap { s in (s.snapshot?.activeRuns ?? []).map { (.server(s.id), $0.0, $0.1) } }
     }
@@ -206,7 +206,7 @@ extension AppModel {
     func gpuCatalog(for source: Source) async throws -> [RunpodGPUType] {
         switch source {
         case .local:
-            guard let client = runpod() else { throw PodlightError.missingRunpodKey }
+            guard let client = runpod() else { throw ModlightError.missingRunpodKey }
             return try await client.gpuCatalog()
         case .server(let id):
             guard let server = server(id) else { throw ServerError.unreachable("") }
@@ -337,7 +337,7 @@ extension AppModel {
 
     /// Models of this Mac that can move to a server right now: not managed elsewhere, and not
     /// starting, stopping or waiting for a card.
-    var modelsReadyToHandOver: [PodlightModel] {
+    var modelsReadyToHandOver: [ModlightModel] {
         state.models.filter { item in
             let run = state.run(item.id)
             return run.managedBy == nil && run.waitingForCard == nil && run.replacing == nil
@@ -374,7 +374,7 @@ extension AppModel {
 /// A stopped pod's kept disk and what it costs.
 struct KeptDisk: Identifiable {
     let source: Source
-    let model: PodlightModel
+    let model: ModlightModel
     let gb: Int
     var id: UUID { model.id }
     var perHour: Double { StoragePricing.stoppedPerHour(volumeGB: gb) }
@@ -422,7 +422,7 @@ extension AppModel {
     }
 
     /// `yyyy-MM-dd` of today and `yyyy-MM` of this month, as the usage is kept.
-    static var todayKey: String { PodlightState.dayKey(.now) }
+    static var todayKey: String { ModlightState.dayKey(.now) }
     static var monthKey: String { String(todayKey.prefix(7)) }
 }
 
@@ -435,15 +435,15 @@ extension AppModel {
 
     /// API models answering now or a moment ago, on this Mac and on every server, with the
     /// requests in flight (known on this Mac only).
-    var activeAPIModels: [(source: Source, model: PodlightModel, inFlight: Int)] {
+    var activeAPIModels: [(source: Source, model: ModlightModel, inFlight: Int)] {
         func recent(_ run: ModelRun) -> Bool {
             run.lastRequestAt.map { now.timeIntervalSince($0) < Self.apiActivityWindow } ?? false
         }
-        let local = state.models.filter { !$0.isPod }.compactMap { item -> (Source, PodlightModel, Int)? in
+        let local = state.models.filter { !$0.isPod }.compactMap { item -> (Source, ModlightModel, Int)? in
             let flying = localInFlight[item.id] ?? 0
             return flying > 0 || recent(state.run(item.id)) ? (.local, item, flying) : nil
         }
-        let remote = servers.flatMap { server -> [(Source, PodlightModel, Int)] in
+        let remote = servers.flatMap { server -> [(Source, ModlightModel, Int)] in
             guard let snapshot = server.snapshot else { return [] }
             return snapshot.models.filter { !$0.isPod && recent(snapshot.run($0.id)) }.map { (.server(server.id), $0, 0) }
         }
@@ -520,7 +520,7 @@ extension AppModel {
     }
 
     /// Venice's public figures for an API model.
-    func performance(of item: PodlightModel) -> VenicePerformance? {
+    func performance(of item: ModlightModel) -> VenicePerformance? {
         guard item.provider == .venice, let id = item.api?.providerModelId else { return nil }
         return venicePerformance[id]
     }

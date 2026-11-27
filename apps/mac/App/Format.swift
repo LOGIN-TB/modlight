@@ -1,5 +1,5 @@
 import Foundation
-import PodlightEngine
+import ModlightEngine
 
 /// Numbers, money and times as people read them, in their own locale.
 enum Format {
@@ -86,10 +86,10 @@ enum Format {
 enum Describe {
     static func error(_ error: Error) -> String {
         switch error {
-        case let e as PodlightError:
+        case let e as ModlightError:
             switch e {
             case .missingRunpodKey:
-                return String(localized: "Add your RunPod API key first (Podlight → Settings → Providers).")
+                return String(localized: "Add your RunPod API key first (Modlight → Settings → Providers).")
             case .limitReached(let which):
                 return which == "monthly-limit"
                     ? String(localized: "The monthly spending limit is reached. Raise it in Settings to start again.")
@@ -107,15 +107,15 @@ enum Describe {
             case .notReadyInTime:
                 return String(localized: "The model is still loading. A new pod can take up to 25 minutes; resuming one takes about a minute.")
             case .wakeDisabled:
-                return String(localized: "The model is stopped. Start it in Podlight.")
+                return String(localized: "The model is stopped. Start it in Modlight.")
             case .keychain(let message):
-                return String(localized: "Podlight could not use the keychain: \(message)")
+                return String(localized: "Modlight could not use the keychain: \(message)")
             case .managedElsewhere(let mac):
                 return String(localized: "\(mac) manages this model now. Take it back to use it on this Mac.")
             case .nameTaken(let name):
                 return String(localized: "This Mac already has a model named \(name). Rename or remove it first, then take the pod over.")
             case .hostBusy:
-                return String(localized: "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept, and Podlight keeps trying to resume it until the end you chose. You can also start on a new card (the model is downloaded again).")
+                return String(localized: "The card on the machine of this model's pod is taken right now. The pod and its disk with the model are kept, and Modlight keeps trying to resume it until the end you chose. You can also start on a new card (the model is downloaded again).")
             case .busy:
                 return String(localized: "The model is starting, stopping or waiting for a card. Hand it over once it runs or has stopped.")
             case .cardTooExpensive(let wanted, let ceiling, _):
@@ -124,7 +124,7 @@ enum Describe {
             case .modelLookup(let message):
                 return String(localized: "Hugging Face could not describe the model, so it cannot be taken over yet: \(message)")
             case .missingProviderKey(let provider):
-                return String(localized: "Add your \(provider.displayName) API key first (Podlight → Settings → Providers).")
+                return String(localized: "Add your \(provider.displayName) API key first (Modlight → Settings → Providers).")
             case .provider(let failure):
                 return failure.message
             case .unsupportedPath(let path, let provider):
@@ -147,7 +147,7 @@ enum Describe {
         switch code {
         case "name_taken": return String(localized: "The server already has a model with this name. Rename one of them first.")
         case "already_here": return String(localized: "This model is already on the server.")
-        case "not_a_mac_pod": return String(localized: "The pod was not created by Podlight on a Mac, so the server does not take it.")
+        case "not_a_mac_pod": return String(localized: "The pod was not created by Modlight on a Mac, so the server does not take it.")
         case "pod_busy": return String(localized: "The pod is starting or stopping. Hand the model over once it runs or has stopped.")
         case "outside_region": return String(localized: "The pod runs outside the server's region, and the server would delete it there. Allow that region on the server first. (\(message))")
         case "setup_incomplete": return String(localized: "The server has no RunPod API key yet. Copy this Mac's key to it first.")
@@ -164,13 +164,13 @@ enum Describe {
         case .refused(_, let message, _):
             message
         case .unexpected(let message):
-            String(localized: "The server sent an answer Podlight does not understand. Is it a Podlight server of the same version? (\(message))")
+            String(localized: "The server sent an answer Modlight does not understand. Is it a Modlight server of the same version? (\(message))")
         }
     }
 
     static func address(_ problem: ServerAddress.Problem) -> String {
         switch problem {
-        case .invalid: String(localized: "Enter the server's address, e.g. podlight.example.com.")
+        case .invalid: String(localized: "Enter the server's address, e.g. modlight.example.com.")
         case .insecure: String(localized: "Use an https:// address. Plain http is allowed only for this Mac and your local network, because the keys would travel unencrypted.")
         }
     }
@@ -180,27 +180,27 @@ enum Describe {
         switch code {
         case nil: nil
         case "manual": String(localized: "Stopped by you.")
-        case "app-quit": String(localized: "Stopped when Podlight quit.")
+        case "app-quit": String(localized: "Stopped when Modlight quit.")
         case "run-until": String(localized: "Stopped at the end you chose.")
         case "idle-timeout": String(localized: "Stopped because no requests came in.")
         case "max-runtime": String(localized: "Stopped at the maximum runtime.")
         case "daily-limit": String(localized: "Stopped at today's spending limit.")
         case "monthly-limit": String(localized: "Stopped at the monthly spending limit.")
         case "outside-schedule": String(localized: "Stopped when the schedule window closed.")
-        case "stopped-outside": String(localized: "Stopped outside Podlight, most likely by its own safety stop (no contact with Podlight, or its end passed).")
+        case "stopped-outside": String(localized: "Stopped outside Modlight, most likely by its own safety stop (no contact with Modlight, or its end passed).")
         case "pod-gone": String(localized: "The pod no longer exists at RunPod.")
         case "deleted-unused": String(localized: "Deleted after three days unused. The next start builds a new pod.")
         case "no-capacity": String(localized: "No free card at RunPod.")
         case "no-suitable-card": String(localized: "No card can hold this model.")
         case "runpod-error": String(localized: "RunPod reported an error.")
         case "pod-error": String(localized: "The pod is in an error state at RunPod.")
-        case "engine-exited": String(localized: "The engine stopped with an error, so Podlight ended the pod:")
-        case "outside-region": String(localized: "RunPod placed the pod outside your chosen region, so Podlight deleted it straight away. Try again, or allow more regions under Edit.")
+        case "engine-exited": String(localized: "The engine stopped with an error, so Modlight ended the pod:")
+        case "outside-region": String(localized: "RunPod placed the pod outside your chosen region, so Modlight deleted it straight away. Try again, or allow more regions under Edit.")
         case "host-busy": String(localized: "The card on the pod's machine was taken, so it could not resume. Its disk with the model is kept.")
         case "card-too-expensive": String(localized: "The chosen card was taken, and the free ones cost more than the set extra cost. Nothing was booked.")
-        case "engine-stuck": String(localized: "The engine made no progress for 10 minutes while loading (often a stalled download on that machine), so Podlight stopped the pod. Start again, or start on a new card. Its last line:")
+        case "engine-stuck": String(localized: "The engine made no progress for 10 minutes while loading (often a stalled download on that machine), so Modlight stopped the pod. Start again, or start on a new card. Its last line:")
         case "gpu-unusable": String(localized: "The RunPod machine could not use its card (a CUDA error before the model was loaded). That is the machine, not the model: start on a new card, or choose another card type under Edit.")
-        case "garbage-output": String(localized: "Start test failed: the model answered only with repeated characters, so Podlight stopped it. This build of the model does not work on this card (often a broken quantisation); try another build, such as a GGUF, or another card. Its answer:")
+        case "garbage-output": String(localized: "Start test failed: the model answered only with repeated characters, so Modlight stopped it. This build of the model does not work on this card (often a broken quantisation); try another build, such as a GGUF, or another card. Its answer:")
         case "taken-over": String(localized: "Taken over from another Mac.")
         case "taken-back": String(localized: "Taken back from another Mac.")
         default: code

@@ -1,4 +1,4 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 // Venice: ready models billed per token. The key, the catalog to add from, an API model's page
@@ -107,7 +107,7 @@ struct VeniceKeySettings: View {
         .confirmationDialog("Remove the Venice key?", isPresented: $confirmingRemove) {
             Button("Remove", role: .destructive) { model.removeVeniceKey() }
         } message: {
-            Text("Venice models stay in Podlight but answer agents with an error until a key is added again.")
+            Text("Venice models stay in Modlight but answer agents with an error until a key is added again.")
         }
     }
 }
@@ -282,7 +282,7 @@ struct AddVeniceModelView: View {
     private var takenNames: Set<String> { Set(model.models(in: target).map(\.name)) }
     private var nameProblem: String? {
         if name.isEmpty { return nil }
-        if !PodlightModel.isValidName(name) { return String(localized: "Lowercase letters, digits, \".\", \"_\" and \"-\".") }
+        if !ModlightModel.isValidName(name) { return String(localized: "Lowercase letters, digits, \".\", \"_\" and \"-\".") }
         if takenNames.contains(name) { return String(localized: "There is already a model with this name.") }
         return nil
     }
@@ -386,7 +386,7 @@ struct AddVeniceModelView: View {
     }
 
     private func uniqueName(_ base: String) -> String {
-        let start = PodlightModel.isValidName(base) ? base : "venice-model"
+        let start = ModlightModel.isValidName(base) ? base : "venice-model"
         var candidate = start
         var n = 2
         while takenNames.contains(candidate) { candidate = "\(start)-\(n)"; n += 1 }
@@ -449,7 +449,7 @@ struct VeniceOfferRow: View {
 struct RenameAPIModelSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    let item: PodlightModel
+    let item: ModlightModel
     @State private var name = ""
 
     var body: some View {
@@ -467,7 +467,7 @@ struct RenameAPIModelSheet: View {
                     Task { if await model.save(renamed) { dismiss() } }
                 }
                 .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
-                .disabled(!PodlightModel.isValidName(name) || model.models(in: model.source(of: item.id)).contains { $0.name == name && $0.id != item.id })
+                .disabled(!ModlightModel.isValidName(name) || model.models(in: model.source(of: item.id)).contains { $0.name == name && $0.id != item.id })
             }
         }
         .padding(20)

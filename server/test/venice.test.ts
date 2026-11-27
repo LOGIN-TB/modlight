@@ -11,7 +11,7 @@ import { offers } from '../src/providers/venice.ts'
 import { specPath } from '../src/spec.ts'
 
 // Venice models on the server, against a fake Venice: the request is rewritten and sent with the
-// server's Venice key, usage is booked, errors become Podlight's, Claude Code goes through the
+// server's Venice key, usage is booked, errors become Modlight's, Claude Code goes through the
 // bridge, and RunPod is never asked. Nothing here reaches the internet.
 
 class FakeVenice {
@@ -133,7 +133,7 @@ describe('Venice models on the server', () => {
     assert.equal(venice.requests.length, 0)
   })
 
-  test('requests are rewritten, metered and booked; errors and limits answer like Podlight', async () => {
+  test('requests are rewritten, metered and booked; errors and limits answer like Modlight', async () => {
     await admin('PATCH', '/admin/settings', { veniceApiKey: 'VENICE_INFERENCE_KEY_test' })
     const plain = await agent('/v1/chat/completions', { model: 'uncensored', messages: [{ role: 'user', content: 'Hi' }] })
     assert.equal(plain.statusCode, 200)
@@ -145,7 +145,7 @@ describe('Venice models on the server', () => {
     assert.equal(sent.body.venice_parameters.include_venice_system_prompt, false)
     assert.equal(sent.body.prompt_cache_key, undefined, 'no system prompt, no cache key')
     await agent('/v1/chat/completions', { model: 'uncensored', messages: [{ role: 'system', content: 'You are Claude Code.' }, { role: 'user', content: 'Hi' }] })
-    assert.match(String(venice.requests.at(-1)!.body.prompt_cache_key), /^podlight-[0-9a-f]{32}$/)
+    assert.match(String(venice.requests.at(-1)!.body.prompt_cache_key), /^modlight-[0-9a-f]{32}$/)
 
     const stream = await agent('/v1/chat/completions', { model: 'uncensored', stream: true, messages: [{ role: 'user', content: 'Hi' }] })
     assert.ok(stream.body.includes('"content":"Hal"') && stream.body.includes('[DONE]'))

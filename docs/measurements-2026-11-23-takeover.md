@@ -1,5 +1,7 @@
 # Messung 2026-11-23: Modelle zwischen zwei Macs übernehmen (0.6)
 
+> Entstanden unter dem früheren Namen Podlight. · Written under the former name Podlight.
+
 ## Vorab-Prüfung an eigenen Test-Pods (busybox, `sleep`, zusammen etwa 2 Cent)
 - `PATCH /v2/pods/{id} {"name": …}` benennt einen Pod um, **ohne Neustart**. Im Betrieb blieb er
   RUNNING und `startedAt` unverändert, gestoppt blieb er EXITED.

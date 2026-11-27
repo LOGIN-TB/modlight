@@ -1,5 +1,5 @@
 import Charts
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// What a running pod is doing: GPU, memory, disk and the engine's own figures, as its watchdog
@@ -7,7 +7,7 @@ import SwiftUI
 /// memory in use, so these come from inside the pod.
 struct UsageSection: View {
     @Environment(AppModel.self) private var model
-    let item: PodlightModel
+    let item: ModlightModel
     let run: ModelRun
     @State private var history: [PodTelemetry] = []
 
@@ -42,7 +42,7 @@ struct UsageSection: View {
     /// Before the first sample: still starting, or a pod whose watchdog predates telemetry.
     private var waitingText: String {
         if run.phase == .ready, run.lastHeartbeatAt != nil {
-            return String(localized: "This pod was created by an earlier Podlight version and reports no usage. It will after the model is started on a new pod.")
+            return String(localized: "This pod was created by an earlier Modlight version and reports no usage. It will after the model is started on a new pod.")
         }
         return String(localized: "Usage appears once the pod answers.")
     }

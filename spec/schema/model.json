@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/LOGIN-TB/podlight/spec/schema/model.json",
-  "title": "PodlightModel",
-  "description": "A model as the Podlight app sets it up and the server stores it. Mirrors PodlightModel in apps/mac/PodlightEngine. Generated from server/src/model.ts.",
+  "$id": "https://github.com/LOGIN-TB/modlight/spec/schema/model.json",
+  "title": "ModlightModel",
+  "description": "A model as the Modlight app sets it up and the server stores it. Mirrors ModlightModel in apps/mac/ModlightEngine. Generated from server/src/model.ts.",
   "type": "object",
   "properties": {
     "id": {

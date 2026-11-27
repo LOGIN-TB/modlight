@@ -1,4 +1,4 @@
-import PodlightEngine
+import ModlightEngine
 import SwiftUI
 
 /// The first thing the app shows: what is running and what it costs, what to do next, the
@@ -130,9 +130,9 @@ struct OverviewView: View {
             Step(id: "hf", title: "Add a Hugging Face token", detail: "Recommended for pods: downloads are limited more strictly without one, and gated models need it.",
                  done: model.hasHuggingFaceToken || !model.hasRunpodKey || snapshots.contains { $0.settings.hasHuggingFaceToken }, optional: true,
                  action: "Open Settings") { model.selection = .settings },
-            Step(id: "model", title: "Add a model", detail: "From Hugging Face for a pod, or a ready one from Venice; Podlight shows the price.",
+            Step(id: "model", title: "Add a model", detail: "From Hugging Face for a pod, or a ready one from Venice; Modlight shows the price.",
                  done: firstModel != nil, optional: false, action: "Add Model…") { model.addModel(to: .local) },
-            Step(id: "start", title: "Start it once in Podlight", detail: "The first start takes 10–25 minutes, longer than an agent waits. Venice models need no start.",
+            Step(id: "start", title: "Start it once in Modlight", detail: "The first start takes 10–25 minutes, longer than an agent waits. Venice models need no start.",
                  done: localStarted || serverStarted || apiModelAdded, optional: false, action: "Show Model") {
                      if let firstModel { model.selection = .model(firstModel) }
                  },
@@ -310,7 +310,7 @@ private struct ServerOverviewSection: View {
 struct APIActivityRow: View {
     @Environment(AppModel.self) private var model
     let source: Source
-    let item: PodlightModel
+    let item: ModlightModel
     let inFlight: Int
 
     var body: some View {

@@ -1,19 +1,19 @@
 #!/bin/sh
-# Podlight server: install or update with Docker Compose, then show how to connect.
+# Modlight server: install or update with Docker Compose, then show how to connect.
 #
-#   curl -fsSL https://raw.githubusercontent.com/LOGIN-TB/podlight/main/server/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/LOGIN-TB/modlight/main/server/install.sh | sh
 #
 # `docker compose up -d` starts the container in the background and never shows its log, so the
 # box with address and pairing code stays out of sight. This script pulls the current image,
 # starts the server, waits until it answers and prints the box.
 #
-# It works in the current folder when its compose file already holds the Podlight server, and
-# otherwise in ./podlight, where it puts the compose file from the repository. Running it again
+# It works in the current folder when its compose file already holds the Modlight server, and
+# otherwise in ./modlight, where it puts the compose file from the repository. Running it again
 # updates the server; the data volume and the pairing stay.
 #
 # Optional, as environment variables:
-#   PODLIGHT_DIR   the folder to use
-#   PODLIGHT_LANG  de or en for the box (default: from LANG)
+#   MODLIGHT_DIR   the folder to use
+#   MODLIGHT_LANG  de or en for the box (default: from LANG)
 #   HOST_IP        this machine's address in your network (default: found out, private ones only)
 #
 # Everything is wrapped in main() so that `curl … | sh` reads the whole script before running it.
@@ -21,10 +21,10 @@
 main() {
   set -eu
 
-  RAW=${PODLIGHT_RAW:-https://raw.githubusercontent.com/LOGIN-TB/podlight/main/server}
-  SERVICE=${PODLIGHT_SERVICE:-podlight}
+  RAW=${MODLIGHT_RAW:-https://raw.githubusercontent.com/LOGIN-TB/modlight/main/server}
+  SERVICE=${MODLIGHT_SERVICE:-modlight}
 
-  case "${PODLIGHT_LANG:-${LC_ALL:-${LANG:-}}}" in de*) LANGUAGE=de ;; *) LANGUAGE=en ;; esac
+  case "${MODLIGHT_LANG:-${LC_ALL:-${LANG:-}}}" in de*) LANGUAGE=de ;; *) LANGUAGE=en ;; esac
 
   command -v docker >/dev/null 2>&1 || fail "Docker is not installed. See https://docs.docker.com/engine/install/" \
                                             "Docker ist nicht installiert. Siehe https://docs.docker.com/engine/install/"
@@ -36,34 +36,34 @@ main() {
   docker info >/dev/null 2>&1 || fail "Docker does not answer. Is it running, and may this user use it (root or the docker group)?" \
                                       "Docker antwortet nicht. Läuft es, und darf dieser Benutzer es nutzen (root oder Gruppe docker)?"
 
-  # The folder: given, here when this compose file already runs Podlight, otherwise ./podlight.
-  if [ -n "${PODLIGHT_DIR:-}" ]; then dir=$PODLIGHT_DIR
+  # The folder: given, here when this compose file already runs Modlight, otherwise ./modlight.
+  if [ -n "${MODLIGHT_DIR:-}" ]; then dir=$MODLIGHT_DIR
   elif compose_file . >/dev/null; then dir=.
-  else dir=./podlight
+  else dir=./modlight
   fi
   mkdir -p "$dir"
   cd "$dir"
   if ! compose_file . >/dev/null; then
     for f in compose.yaml compose.yml docker-compose.yaml docker-compose.yml; do
-      [ -f "$f" ] && fail "$(pwd)/$f belongs to something else. Choose another folder with PODLIGHT_DIR=…" \
-                          "$(pwd)/$f gehört zu etwas anderem. Wähle mit PODLIGHT_DIR=… einen anderen Ordner."
+      [ -f "$f" ] && fail "$(pwd)/$f belongs to something else. Choose another folder with MODLIGHT_DIR=…" \
+                          "$(pwd)/$f gehört zu etwas anderem. Wähle mit MODLIGHT_DIR=… einen anderen Ordner."
     done
     say "Fetching docker-compose.yml into $(pwd) …" "Lade docker-compose.yml nach $(pwd) …"
     download "$RAW/docker-compose.yml" docker-compose.yml
   fi
 
-  # A language chosen at an earlier run stays, unless PODLIGHT_LANG says otherwise now.
-  if [ -z "${PODLIGHT_LANG:-}" ]; then
-    case "$(env_value PODLIGHT_LANG)" in de) LANGUAGE=de ;; en) LANGUAGE=en ;; esac
+  # A language chosen at an earlier run stays, unless MODLIGHT_LANG says otherwise now.
+  if [ -z "${MODLIGHT_LANG:-}" ]; then
+    case "$(env_value MODLIGHT_LANG)" in de) LANGUAGE=de ;; en) LANGUAGE=en ;; esac
   fi
 
   # The address in your network: the container cannot see it, so it goes into .env as HOST_IP.
   host_ip=${HOST_IP:-$(env_value HOST_IP)}
   [ -n "$host_ip" ] || host_ip=$(private_ip)
   [ -n "$host_ip" ] && set_env HOST_IP "$host_ip"
-  set_env PODLIGHT_LANG "$LANGUAGE"
+  set_env MODLIGHT_LANG "$LANGUAGE"
 
-  say "Fetching the current Podlight server image …" "Lade das aktuelle Image des Podlight-Servers …"
+  say "Fetching the current Modlight server image …" "Lade das aktuelle Image des Modlight-Servers …"
   $COMPOSE pull "$SERVICE" </dev/null
   $COMPOSE up -d </dev/null
 
@@ -83,27 +83,27 @@ main() {
 
   # The box, with what only the host knows: its address and the port it publishes.
   published=$($COMPOSE port "$SERVICE" 8080 </dev/null 2>/dev/null | head -n 1 | sed 's/.*://') || published=""
-  set -- -e "PODLIGHT_LANG=$LANGUAGE"
+  set -- -e "MODLIGHT_LANG=$LANGUAGE"
   [ -n "$host_ip" ] && set -- "$@" -e "HOST_IP=$host_ip"
   [ -n "$published" ] && set -- "$@" -e "HOST_PORT=$published"
   printf '\n'
-  $COMPOSE exec -T "$@" "$SERVICE" podlight-info </dev/null \
-    || fail "This server image is older than 0.8.0 and has no podlight-info. Check the image line in the compose file." \
-            "Dieses Server-Image ist älter als 0.8.0 und kennt podlight-info nicht. Prüfe die image-Zeile in der Compose-Datei."
+  $COMPOSE exec -T "$@" "$SERVICE" modlight-info </dev/null \
+    || fail "This server image is older than 0.8.0 and has no modlight-info. Check the image line in the compose file." \
+            "Dieses Server-Image ist älter als 0.8.0 und kennt modlight-info nicht. Prüfe die image-Zeile in der Compose-Datei."
   printf '\n'
-  say "Show this again:  cd $(pwd) && $COMPOSE exec $SERVICE podlight-info" \
-      "Erneut anzeigen:  cd $(pwd) && $COMPOSE exec $SERVICE podlight-info"
-  say "New pairing code: cd $(pwd) && $COMPOSE exec $SERVICE podlight-code" \
-      "Neuer Kopplungscode: cd $(pwd) && $COMPOSE exec $SERVICE podlight-code"
+  say "Show this again:  cd $(pwd) && $COMPOSE exec $SERVICE modlight-info" \
+      "Erneut anzeigen:  cd $(pwd) && $COMPOSE exec $SERVICE modlight-info"
+  say "New pairing code: cd $(pwd) && $COMPOSE exec $SERVICE modlight-code" \
+      "Neuer Kopplungscode: cd $(pwd) && $COMPOSE exec $SERVICE modlight-code"
 }
 
 say() { if [ "$LANGUAGE" = de ]; then printf '%s\n' "$2"; else printf '%s\n' "$1"; fi; }
-fail() { say "podlight: $1" "podlight: $2" >&2; exit 1; }
+fail() { say "modlight: $1" "modlight: $2" >&2; exit 1; }
 
-# Prints the compose file in $1 that runs the Podlight server image; fails when there is none.
+# Prints the compose file in $1 that runs the Modlight server image; fails when there is none.
 compose_file() {
   for f in compose.yaml compose.yml docker-compose.yaml docker-compose.yml; do
-    if [ -f "$1/$f" ] && grep -q 'podlight-server' "$1/$f"; then printf '%s\n' "$f"; return 0; fi
+    if [ -f "$1/$f" ] && grep -q 'modlight-server' "$1/$f"; then printf '%s\n' "$f"; return 0; fi
   done
   return 1
 }
